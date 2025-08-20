@@ -93,4 +93,3 @@ impl RolesHandler {
         self.client.get(&format!("/v1/roles/{}/users", uid)).await
     }
 }
-

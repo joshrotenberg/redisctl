@@ -89,4 +89,3 @@ impl EndpointsHandler {
             .await
     }
 }
-

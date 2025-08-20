@@ -17,11 +17,11 @@ async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
 
     let cli = Cli::parse();
-    
+
     info!("Starting redis-cloud CLI");
 
     let config = Config::load()?;
-    
+
     match cli.command {
         Commands::Profile { command } => {
             profile::handle_profile_command(command, &config, cli.output).await
@@ -48,14 +48,20 @@ async fn main() -> Result<()> {
     }
 }
 
-fn get_cloud_profile<'a>(config: &'a Config, profile_name: &Option<String>) -> Result<&'a redis_common::Profile> {
+fn get_cloud_profile<'a>(
+    config: &'a Config,
+    profile_name: &Option<String>,
+) -> Result<&'a redis_common::Profile> {
     let env_profile = std::env::var("REDISCTL_PROFILE").ok();
-    let profile_name = profile_name.as_deref()
+    let profile_name = profile_name
+        .as_deref()
         .or(config.default.as_deref())
         .or(env_profile.as_deref())
         .ok_or_else(|| anyhow::anyhow!("No profile specified"))?;
-    
-    let profile = config.profiles.get(profile_name)
+
+    let profile = config
+        .profiles
+        .get(profile_name)
         .ok_or_else(|| anyhow::anyhow!("Profile '{}' not found", profile_name))?;
 
     if profile.deployment_type != DeploymentType::Cloud {

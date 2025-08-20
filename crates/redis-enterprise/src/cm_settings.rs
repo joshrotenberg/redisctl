@@ -52,4 +52,3 @@ impl CmSettingsHandler {
         self.client.delete("/v1/cm_settings").await
     }
 }
-

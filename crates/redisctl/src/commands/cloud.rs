@@ -1,10 +1,10 @@
 use anyhow::Result;
 use redis_cloud::{CloudClient, CloudConfig};
-use redis_common::{OutputFormat, Profile, ProfileCredentials, print_output};
+use redis_common::{print_output, OutputFormat, Profile, ProfileCredentials};
 
 use crate::cli::{
-    CloudCommands, DatabaseCommands, UserCommands, AccountCommands,
-    SubscriptionCommands, RegionCommands, TaskCommands, AclCommands,
+    AccountCommands, AclCommands, CloudCommands, DatabaseCommands, RegionCommands,
+    SubscriptionCommands, TaskCommands, UserCommands,
 };
 
 pub async fn handle_cloud_command(
@@ -51,48 +51,78 @@ pub async fn handle_database_command(
             // For Cloud, we need to list databases across all subscriptions
             let subscriptions = client.get_raw("/subscriptions").await?;
             let mut all_databases = Vec::new();
-            
+
             if let Some(subs) = subscriptions.as_array() {
                 for subscription in subs {
-                    if let Some(subscription_id) = subscription.get("id").and_then(|id| id.as_u64()) {
-                        let databases = client.get_raw(&format!("/subscriptions/{}/databases", subscription_id)).await?;
+                    if let Some(subscription_id) = subscription.get("id").and_then(|id| id.as_u64())
+                    {
+                        let databases = client
+                            .get_raw(&format!("/subscriptions/{}/databases", subscription_id))
+                            .await?;
                         if let Some(dbs) = databases.as_array() {
                             all_databases.extend(dbs.iter().cloned());
                         }
                     }
                 }
             }
-            
+
             print_output(all_databases, output_format, query)?;
         }
         DatabaseCommands::Show { id } => {
             // Parse subscription_id:database_id format or just database_id
             let (subscription_id, database_id) = parse_database_id(&id)?;
-            let database = client.get_raw(&format!("/subscriptions/{}/databases/{}", subscription_id, database_id)).await?;
+            let database = client
+                .get_raw(&format!(
+                    "/subscriptions/{}/databases/{}",
+                    subscription_id, database_id
+                ))
+                .await?;
             print_output(database, output_format, query)?;
         }
-        DatabaseCommands::Create { name, memory_limit, modules } => {
+        DatabaseCommands::Create {
+            name,
+            memory_limit,
+            modules,
+        } => {
             anyhow::bail!("Database creation requires subscription context. Use 'redisctl cloud subscription create-database' instead.");
         }
-        DatabaseCommands::Update { id, name, memory_limit } => {
+        DatabaseCommands::Update {
+            id,
+            name,
+            memory_limit,
+        } => {
             let (subscription_id, database_id) = parse_database_id(&id)?;
             let mut update_data = serde_json::Map::new();
-            
+
             if let Some(name) = name {
                 update_data.insert("name".to_string(), serde_json::Value::String(name));
             }
             if let Some(memory_limit) = memory_limit {
-                update_data.insert("memoryLimitInGb".to_string(), serde_json::Value::Number(
-                    serde_json::Number::from(memory_limit / 1024)
-                ));
+                update_data.insert(
+                    "memoryLimitInGb".to_string(),
+                    serde_json::Value::Number(serde_json::Number::from(memory_limit / 1024)),
+                );
             }
-            
-            let database = client.put_raw(&format!("/subscriptions/{}/databases/{}", subscription_id, database_id), serde_json::Value::Object(update_data)).await?;
+
+            let database = client
+                .put_raw(
+                    &format!(
+                        "/subscriptions/{}/databases/{}",
+                        subscription_id, database_id
+                    ),
+                    serde_json::Value::Object(update_data),
+                )
+                .await?;
             print_output(database, output_format, query)?;
         }
         DatabaseCommands::Delete { id, force: _ } => {
             let (subscription_id, database_id) = parse_database_id(&id)?;
-            client.delete_raw(&format!("/subscriptions/{}/databases/{}", subscription_id, database_id)).await?;
+            client
+                .delete_raw(&format!(
+                    "/subscriptions/{}/databases/{}",
+                    subscription_id, database_id
+                ))
+                .await?;
             println!("Database {} deleted successfully", id);
         }
         DatabaseCommands::Backup { id } => {
@@ -123,7 +153,11 @@ pub async fn handle_subscription_command(
             let subscription = client.get_raw(&format!("/subscriptions/{}", id)).await?;
             print_output(subscription, output_format, query)?;
         }
-        SubscriptionCommands::Create { name, provider, region } => {
+        SubscriptionCommands::Create {
+            name,
+            provider,
+            region,
+        } => {
             anyhow::bail!("Subscription creation not yet implemented");
         }
         SubscriptionCommands::Update { id, name } => {
@@ -176,10 +210,19 @@ pub async fn handle_user_command(
             let user = client.get_raw(&format!("/users/{}", id)).await?;
             print_output(user, output_format, query)?;
         }
-        UserCommands::Create { name, email, password, roles } => {
+        UserCommands::Create {
+            name,
+            email,
+            password,
+            roles,
+        } => {
             anyhow::bail!("User creation not yet implemented");
         }
-        UserCommands::Update { id, email, password } => {
+        UserCommands::Update {
+            id,
+            email,
+            password,
+        } => {
             anyhow::bail!("User update not yet implemented");
         }
         UserCommands::Delete { id, force: _ } => {
@@ -240,7 +283,12 @@ async fn handle_acl_command(
 }
 
 fn create_cloud_client(profile: &Profile) -> Result<CloudClient> {
-    if let ProfileCredentials::Cloud { api_key, api_secret, api_url } = &profile.credentials {
+    if let ProfileCredentials::Cloud {
+        api_key,
+        api_secret,
+        api_url,
+    } = &profile.credentials
+    {
         let config = CloudConfig {
             api_key: api_key.clone(),
             api_secret: api_secret.clone(),
@@ -257,6 +305,8 @@ fn parse_database_id(id: &str) -> Result<(u32, u32)> {
     if let Some((sub_id, db_id)) = id.split_once(':') {
         Ok((sub_id.parse()?, db_id.parse()?))
     } else {
-        anyhow::bail!("Database ID must be in format 'subscription_id:database_id' for Cloud databases")
+        anyhow::bail!(
+            "Database ID must be in format 'subscription_id:database_id' for Cloud databases"
+        )
     }
 }

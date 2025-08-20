@@ -91,4 +91,3 @@ impl DiagnosticsHandler {
         self.client.get("/v1/diagnostics/reports").await
     }
 }
-

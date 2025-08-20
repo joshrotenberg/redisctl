@@ -1,5 +1,7 @@
 use anyhow::Result;
-use redis_common::{Config, DeploymentType, OutputFormat, Profile, ProfileCredentials, print_output};
+use redis_common::{
+    print_output, Config, DeploymentType, OutputFormat, Profile, ProfileCredentials,
+};
 
 use crate::cli::ProfileCommands;
 
@@ -31,9 +33,13 @@ pub async fn handle_profile_command(
                 .as_deref()
                 .or(config.default.as_deref())
                 .or(env_profile.as_deref())
-                .ok_or_else(|| anyhow::anyhow!("No profile specified and no default profile set"))?;
+                .ok_or_else(|| {
+                    anyhow::anyhow!("No profile specified and no default profile set")
+                })?;
 
-            let profile = config.profiles.get(profile_name)
+            let profile = config
+                .profiles
+                .get(profile_name)
                 .ok_or_else(|| anyhow::anyhow!("Profile '{}' not found", profile_name))?;
 
             let profile_info = serde_json::json!({
@@ -91,7 +97,8 @@ pub async fn handle_profile_command(
                         .ok_or_else(|| anyhow::anyhow!("URL required for Enterprise profile. Use --url or set REDIS_ENTERPRISE_URL"))?;
                     let username = username.or_else(|| std::env::var("REDIS_ENTERPRISE_USER").ok())
                         .ok_or_else(|| anyhow::anyhow!("Username required for Enterprise profile. Use --username or set REDIS_ENTERPRISE_USER"))?;
-                    let password = password.or_else(|| std::env::var("REDIS_ENTERPRISE_PASSWORD").ok());
+                    let password =
+                        password.or_else(|| std::env::var("REDIS_ENTERPRISE_PASSWORD").ok());
 
                     ProfileCredentials::Enterprise {
                         url,
@@ -137,4 +144,3 @@ pub async fn handle_profile_command(
 
     Ok(())
 }
-

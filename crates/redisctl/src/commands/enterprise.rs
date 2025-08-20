@@ -1,11 +1,11 @@
 use anyhow::Result;
-use std::io::Write;
+use redis_common::{print_output, OutputFormat, Profile, ProfileCredentials};
 use redis_enterprise::{EnterpriseClient, EnterpriseConfig};
-use redis_common::{OutputFormat, Profile, ProfileCredentials, print_output};
+use std::io::Write;
 
 use crate::cli::{
-    EnterpriseCommands, DatabaseCommands, UserCommands, ClusterCommands,
-    NodeCommands, BootstrapCommands, ModuleCommands, RoleCommands, LicenseCommands,
+    BootstrapCommands, ClusterCommands, DatabaseCommands, EnterpriseCommands, LicenseCommands,
+    ModuleCommands, NodeCommands, RoleCommands, UserCommands,
 };
 
 pub async fn handle_enterprise_command(
@@ -59,7 +59,11 @@ pub async fn handle_database_command(
             let database = client.get_raw(&format!("/v1/bdbs/{}", id)).await?;
             print_output(database, output_format, query)?;
         }
-        DatabaseCommands::Create { name, memory_limit, modules } => {
+        DatabaseCommands::Create {
+            name,
+            memory_limit,
+            modules,
+        } => {
             let mut create_data = serde_json::json!({
                 "name": name,
                 "type": "redis",
@@ -68,26 +72,38 @@ pub async fn handle_database_command(
 
             if !modules.is_empty() {
                 create_data["module_list"] = serde_json::Value::Array(
-                    modules.into_iter().map(serde_json::Value::String).collect()
+                    modules.into_iter().map(serde_json::Value::String).collect(),
                 );
             }
 
             let database = client.post_raw("/v1/bdbs", create_data).await?;
             print_output(database, output_format, query)?;
         }
-        DatabaseCommands::Update { id, name, memory_limit } => {
+        DatabaseCommands::Update {
+            id,
+            name,
+            memory_limit,
+        } => {
             let mut update_data = serde_json::Map::new();
-            
+
             if let Some(name) = name {
                 update_data.insert("name".to_string(), serde_json::Value::String(name));
             }
             if let Some(memory_limit) = memory_limit {
-                update_data.insert("memory_size".to_string(), serde_json::Value::Number(
-                    serde_json::Number::from((memory_limit * 1024 * 1024) as u64)
-                ));
+                update_data.insert(
+                    "memory_size".to_string(),
+                    serde_json::Value::Number(serde_json::Number::from(
+                        (memory_limit * 1024 * 1024) as u64,
+                    )),
+                );
             }
-            
-            let database = client.put_raw(&format!("/v1/bdbs/{}", id), serde_json::Value::Object(update_data)).await?;
+
+            let database = client
+                .put_raw(
+                    &format!("/v1/bdbs/{}", id),
+                    serde_json::Value::Object(update_data),
+                )
+                .await?;
             print_output(database, output_format, query)?;
         }
         DatabaseCommands::Delete { id, force: _ } => {
@@ -95,14 +111,18 @@ pub async fn handle_database_command(
             println!("Database {} deleted successfully", id);
         }
         DatabaseCommands::Backup { id } => {
-            let backup = client.post_raw(&format!("/v1/bdbs/{}/backup", id), serde_json::json!({})).await?;
+            let backup = client
+                .post_raw(&format!("/v1/bdbs/{}/backup", id), serde_json::json!({}))
+                .await?;
             print_output(backup, output_format, query)?;
         }
         DatabaseCommands::Import { id, url } => {
             let import_data = serde_json::json!({
                 "source_file": url
             });
-            let import_result = client.post_raw(&format!("/v1/bdbs/{}/import", id), import_data).await?;
+            let import_result = client
+                .post_raw(&format!("/v1/bdbs/{}/import", id), import_data)
+                .await?;
             print_output(import_result, output_format, query)?;
         }
     }
@@ -160,14 +180,20 @@ async fn handle_node_command(
         }
         NodeCommands::Update { id, external_addr } => {
             let mut update_data = serde_json::Map::new();
-            
+
             if let Some(external_addr) = external_addr {
-                update_data.insert("external_addr".to_string(), serde_json::Value::Array(
-                    vec![serde_json::Value::String(external_addr)]
-                ));
+                update_data.insert(
+                    "external_addr".to_string(),
+                    serde_json::Value::Array(vec![serde_json::Value::String(external_addr)]),
+                );
             }
-            
-            let node = client.put_raw(&format!("/v1/nodes/{}", id), serde_json::Value::Object(update_data)).await?;
+
+            let node = client
+                .put_raw(
+                    &format!("/v1/nodes/{}", id),
+                    serde_json::Value::Object(update_data),
+                )
+                .await?;
             print_output(node, output_format, query)?;
         }
     }
@@ -192,7 +218,12 @@ pub async fn handle_user_command(
             let user = client.get_raw(&format!("/v1/users/{}", id)).await?;
             print_output(user, output_format, query)?;
         }
-        UserCommands::Create { name, email, password, roles } => {
+        UserCommands::Create {
+            name,
+            email,
+            password,
+            roles,
+        } => {
             let create_data = serde_json::json!({
                 "name": name,
                 "email": email,
@@ -203,17 +234,26 @@ pub async fn handle_user_command(
             let user = client.post_raw("/v1/users", create_data).await?;
             print_output(user, output_format, query)?;
         }
-        UserCommands::Update { id, email, password } => {
+        UserCommands::Update {
+            id,
+            email,
+            password,
+        } => {
             let mut update_data = serde_json::Map::new();
-            
+
             if let Some(email) = email {
                 update_data.insert("email".to_string(), serde_json::Value::String(email));
             }
             if let Some(password) = password {
                 update_data.insert("password".to_string(), serde_json::Value::String(password));
             }
-            
-            let user = client.put_raw(&format!("/v1/users/{}", id), serde_json::Value::Object(update_data)).await?;
+
+            let user = client
+                .put_raw(
+                    &format!("/v1/users/{}", id),
+                    serde_json::Value::Object(update_data),
+                )
+                .await?;
             print_output(user, output_format, query)?;
         }
         UserCommands::Delete { id, force: _ } => {
@@ -234,14 +274,20 @@ async fn handle_bootstrap_command(
     let client = create_enterprise_client(profile).await?;
 
     match command {
-        BootstrapCommands::Create { license, email, password } => {
+        BootstrapCommands::Create {
+            license,
+            email,
+            password,
+        } => {
             let bootstrap_data = serde_json::json!({
                 "license": license,
                 "username": email,
                 "password": password
             });
 
-            let result = client.post_bootstrap("/v1/bootstrap", &bootstrap_data).await?;
+            let result = client
+                .post_bootstrap("/v1/bootstrap", &bootstrap_data)
+                .await?;
             print_output(result, output_format, query)?;
         }
     }
@@ -305,8 +351,10 @@ async fn handle_role_command(
             let update_data = serde_json::json!({
                 "redis_acl_rule": permissions.join(" ")
             });
-            
-            let role = client.put_raw(&format!("/v1/roles/{}", id), update_data).await?;
+
+            let role = client
+                .put_raw(&format!("/v1/roles/{}", id), update_data)
+                .await?;
             print_output(role, output_format, query)?;
         }
         RoleCommands::Delete { id, force: _ } => {
@@ -335,7 +383,7 @@ async fn handle_license_command(
             let update_data = serde_json::json!({
                 "license": key
             });
-            
+
             let result = client.put_raw("/v1/license", update_data).await?;
             print_output(result, output_format, query)?;
         }
@@ -345,7 +393,13 @@ async fn handle_license_command(
 }
 
 async fn create_enterprise_client(profile: &Profile) -> Result<EnterpriseClient> {
-    if let ProfileCredentials::Enterprise { url, username, password, insecure } = &profile.credentials {
+    if let ProfileCredentials::Enterprise {
+        url,
+        username,
+        password,
+        insecure,
+    } = &profile.credentials
+    {
         let password = if let Some(pwd) = password {
             pwd.clone()
         } else {
@@ -364,7 +418,7 @@ async fn create_enterprise_client(profile: &Profile) -> Result<EnterpriseClient>
             timeout: std::time::Duration::from_secs(30),
             insecure: *insecure,
         };
-        
+
         EnterpriseClient::new(config).map_err(Into::into)
     } else {
         anyhow::bail!("Invalid profile type for Enterprise commands")

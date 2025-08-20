@@ -1,6 +1,6 @@
 //! Private Service Connect operations handler
 
-use crate::{Result, client::CloudClient};
+use crate::{client::CloudClient, Result};
 use serde_json::Value;
 
 /// Handler for Cloud Private Service Connect operations

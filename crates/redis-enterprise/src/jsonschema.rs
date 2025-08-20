@@ -58,4 +58,3 @@ impl JsonSchemaHandler {
             .await
     }
 }
-

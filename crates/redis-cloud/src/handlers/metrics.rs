@@ -1,6 +1,6 @@
 //! Metrics operations handler
 
-use crate::{Result, client::CloudClient, models::CloudMetrics};
+use crate::{client::CloudClient, models::CloudMetrics, Result};
 use serde_json::Value;
 
 /// Handler for Cloud metrics operations

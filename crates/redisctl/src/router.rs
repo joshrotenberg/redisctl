@@ -8,7 +8,7 @@ use crate::commands::{cloud, enterprise, profile};
 pub async fn route_command(cli: Cli, config: &Config) -> Result<()> {
     let output_format = cli.output;
     let query = cli.query.as_deref();
-    
+
     match cli.command {
         Commands::Profile { command } => {
             profile::handle_profile_command(command, config, output_format).await
@@ -18,21 +18,54 @@ pub async fn route_command(cli: Cli, config: &Config) -> Result<()> {
             cloud::handle_cloud_command(command, profile, output_format, query).await
         }
         Commands::Enterprise { command } => {
-            let profile = get_profile_for_deployment(config, &cli.profile, DeploymentType::Enterprise)?;
+            let profile =
+                get_profile_for_deployment(config, &cli.profile, DeploymentType::Enterprise)?;
             enterprise::handle_enterprise_command(command, profile, output_format, query).await
         }
         // Smart routing commands
         Commands::Database { command } => {
-            route_database_command(config, &cli.profile, cli.deployment, command, output_format, query).await
+            route_database_command(
+                config,
+                &cli.profile,
+                cli.deployment,
+                command,
+                output_format,
+                query,
+            )
+            .await
         }
         Commands::Cluster { command } => {
-            route_cluster_command(config, &cli.profile, cli.deployment, command, output_format, query).await
+            route_cluster_command(
+                config,
+                &cli.profile,
+                cli.deployment,
+                command,
+                output_format,
+                query,
+            )
+            .await
         }
         Commands::User { command } => {
-            route_user_command(config, &cli.profile, cli.deployment, command, output_format, query).await
+            route_user_command(
+                config,
+                &cli.profile,
+                cli.deployment,
+                command,
+                output_format,
+                query,
+            )
+            .await
         }
         Commands::Account { command } => {
-            route_account_command(config, &cli.profile, cli.deployment, command, output_format, query).await
+            route_account_command(
+                config,
+                &cli.profile,
+                cli.deployment,
+                command,
+                output_format,
+                query,
+            )
+            .await
         }
     }
 }
@@ -166,13 +199,17 @@ fn get_profile_with_type<'a>(
     profile_name: &Option<String>,
 ) -> Result<(&'a Profile, DeploymentType)> {
     let env_profile = std::env::var("REDISCTL_PROFILE").ok();
-    let profile_name = profile_name.as_deref()
+    let profile_name = profile_name
+        .as_deref()
         .or(config.default.as_deref())
         .or(env_profile.as_deref());
 
     if let Some(name) = profile_name {
         if let Some(profile) = config.profiles.get(name) {
-            info!("Using profile '{}' with deployment type {:?}", name, profile.deployment_type);
+            info!(
+                "Using profile '{}' with deployment type {:?}",
+                name, profile.deployment_type
+            );
             return Ok((profile, profile.deployment_type));
         }
     }
@@ -187,14 +224,20 @@ fn get_profile_for_deployment<'a>(
     expected_type: DeploymentType,
 ) -> Result<&'a Profile> {
     let env_profile = std::env::var("REDISCTL_PROFILE").ok();
-    let profile_name = profile_name.as_deref()
+    let profile_name = profile_name
+        .as_deref()
         .or(config.default.as_deref())
         .or(env_profile.as_deref());
 
     let profile_name = profile_name.ok_or(RoutingError::NoProfileSpecified)?;
-    
-    let profile = config.profiles.get(profile_name)
-        .ok_or_else(|| ProfileError::MissingCredentials { name: profile_name.to_string() })?;
+
+    let profile =
+        config
+            .profiles
+            .get(profile_name)
+            .ok_or_else(|| ProfileError::MissingCredentials {
+                name: profile_name.to_string(),
+            })?;
 
     if profile.deployment_type != expected_type {
         bail!(ProfileError::TypeMismatch {

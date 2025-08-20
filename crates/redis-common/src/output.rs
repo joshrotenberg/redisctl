@@ -34,8 +34,8 @@ pub fn print_output<T: Serialize>(
         let result = expr.search(&data).context("JMESPath query failed")?;
         // Convert result back to JSON string then parse as Value
         let result_str = result.to_string();
-        json_value = serde_json::from_str(&result_str)
-            .context("Failed to parse JMESPath result")?;
+        json_value =
+            serde_json::from_str(&result_str).context("Failed to parse JMESPath result")?;
     }
 
     match format {
@@ -57,12 +57,12 @@ fn print_as_table(value: &Value) -> Result<()> {
     match value {
         Value::Array(arr) if !arr.is_empty() => {
             let mut table = Table::new();
-            
+
             // Get headers from first object
             if let Value::Object(first) = &arr[0] {
                 let headers: Vec<String> = first.keys().cloned().collect();
                 table.set_header(&headers);
-                
+
                 // Add rows
                 for item in arr {
                     if let Value::Object(obj) = item {
@@ -80,24 +80,24 @@ fn print_as_table(value: &Value) -> Result<()> {
                     table.add_row(vec![format_value(item)]);
                 }
             }
-            
+
             println!("{}", table);
         }
         Value::Object(obj) => {
             let mut table = Table::new();
             table.set_header(vec!["Key", "Value"]);
-            
+
             for (key, val) in obj {
                 table.add_row(vec![key.clone(), format_value(val)]);
             }
-            
+
             println!("{}", table);
         }
         _ => {
             println!("{}", format_value(value));
         }
     }
-    
+
     Ok(())
 }
 
