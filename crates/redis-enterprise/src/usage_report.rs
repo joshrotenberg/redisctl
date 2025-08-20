@@ -129,4 +129,3 @@ impl UsageReportHandler {
             .await
     }
 }
-

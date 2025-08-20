@@ -1,6 +1,6 @@
 //! Fixed (Essentials) subscription operations handler
 
-use crate::{Result, client::CloudClient};
+use crate::{client::CloudClient, Result};
 use serde_json::Value;
 
 /// Handler for Cloud fixed/essentials subscription operations

@@ -86,4 +86,3 @@ impl LicenseHandler {
         self.client.get("/v1/cluster/license").await
     }
 }
-

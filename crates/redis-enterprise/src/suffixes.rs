@@ -73,4 +73,3 @@ impl SuffixesHandler {
         self.client.get("/v1/cluster/suffixes").await
     }
 }
-

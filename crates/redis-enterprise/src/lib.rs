@@ -43,7 +43,9 @@ pub use client::{EnterpriseClient, EnterpriseClientBuilder, EnterpriseConfig};
 pub use error::{RestError, Result};
 
 // Database management
-pub use bdb::{BdbHandler, CreateDatabaseRequest, CreateDatabaseRequestBuilder, Database, ModuleConfig};
+pub use bdb::{
+    BdbHandler, CreateDatabaseRequest, CreateDatabaseRequestBuilder, Database, ModuleConfig,
+};
 
 // Cluster management
 pub use cluster::{

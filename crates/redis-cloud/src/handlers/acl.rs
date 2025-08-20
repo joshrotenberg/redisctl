@@ -1,6 +1,6 @@
 //! ACL and RBAC operations handler
 
-use crate::{Result, client::CloudClient};
+use crate::{client::CloudClient, Result};
 use serde_json::Value;
 
 /// Handler for Cloud ACL/RBAC operations
@@ -12,41 +12,73 @@ impl CloudAclHandler {
     pub fn new(client: CloudClient) -> Self {
         CloudAclHandler { client }
     }
-    
+
     // Database ACL methods for CLI compatibility
     pub async fn list(&self, subscription_id: u32, database_id: u32) -> Result<Value> {
-        self.client.get(&format!(
-            "/subscriptions/{}/databases/{}/acl",
-            subscription_id, database_id
-        )).await
+        self.client
+            .get(&format!(
+                "/subscriptions/{}/databases/{}/acl",
+                subscription_id, database_id
+            ))
+            .await
     }
-    
+
     pub async fn get(&self, subscription_id: u32, database_id: u32, acl_id: u32) -> Result<Value> {
-        self.client.get(&format!(
-            "/subscriptions/{}/databases/{}/acl/{}",
-            subscription_id, database_id, acl_id
-        )).await
+        self.client
+            .get(&format!(
+                "/subscriptions/{}/databases/{}/acl/{}",
+                subscription_id, database_id, acl_id
+            ))
+            .await
     }
-    
-    pub async fn create(&self, subscription_id: u32, database_id: u32, request: Value) -> Result<Value> {
-        self.client.post(
-            &format!("/subscriptions/{}/databases/{}/acl", subscription_id, database_id),
-            &request
-        ).await
+
+    pub async fn create(
+        &self,
+        subscription_id: u32,
+        database_id: u32,
+        request: Value,
+    ) -> Result<Value> {
+        self.client
+            .post(
+                &format!(
+                    "/subscriptions/{}/databases/{}/acl",
+                    subscription_id, database_id
+                ),
+                &request,
+            )
+            .await
     }
-    
-    pub async fn update(&self, subscription_id: u32, database_id: u32, acl_id: u32, request: Value) -> Result<Value> {
-        self.client.put(
-            &format!("/subscriptions/{}/databases/{}/acl/{}", subscription_id, database_id, acl_id),
-            &request
-        ).await
+
+    pub async fn update(
+        &self,
+        subscription_id: u32,
+        database_id: u32,
+        acl_id: u32,
+        request: Value,
+    ) -> Result<Value> {
+        self.client
+            .put(
+                &format!(
+                    "/subscriptions/{}/databases/{}/acl/{}",
+                    subscription_id, database_id, acl_id
+                ),
+                &request,
+            )
+            .await
     }
-    
-    pub async fn delete(&self, subscription_id: u32, database_id: u32, acl_id: u32) -> Result<Value> {
-        self.client.delete(&format!(
-            "/subscriptions/{}/databases/{}/acl/{}",
-            subscription_id, database_id, acl_id
-        )).await?;
+
+    pub async fn delete(
+        &self,
+        subscription_id: u32,
+        database_id: u32,
+        acl_id: u32,
+    ) -> Result<Value> {
+        self.client
+            .delete(&format!(
+                "/subscriptions/{}/databases/{}/acl/{}",
+                subscription_id, database_id, acl_id
+            ))
+            .await?;
         Ok(serde_json::json!({"message": format!("ACL rule {} deleted", acl_id)}))
     }
 

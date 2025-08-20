@@ -1,11 +1,11 @@
 //! Subscription operations handler
 
 use crate::{
-    Result,
     client::CloudClient,
     models::{
         CloudDatabase, CloudSubscription, CreateSubscriptionRequest, UpdateSubscriptionRequest,
     },
+    Result,
 };
 use serde_json::Value;
 
@@ -93,52 +93,62 @@ impl CloudSubscriptionHandler {
     pub async fn cloud_accounts(&self) -> Result<Value> {
         self.client.get("/cloud-accounts").await
     }
-    
+
     /// List with result as Value for CLI filtering
     pub async fn list_raw(&self) -> Result<Value> {
         self.client.get("/subscriptions").await
     }
-    
+
     /// Get as Value for CLI
     pub async fn get_raw(&self, subscription_id: u32) -> Result<Value> {
         self.client
             .get(&format!("/subscriptions/{}", subscription_id))
             .await
     }
-    
+
     /// Create with Value for flexibility
     pub async fn create_raw(&self, request: Value) -> Result<Value> {
         self.client.post("/subscriptions", &request).await
     }
-    
+
     /// Update with Value
     pub async fn update_raw(&self, subscription_id: u32, request: Value) -> Result<Value> {
         self.client
             .put(&format!("/subscriptions/{}", subscription_id), &request)
             .await
     }
-    
+
     /// Get pricing
     pub async fn get_pricing(&self, subscription_id: u32) -> Result<Value> {
         self.client
             .get(&format!("/subscriptions/{}/pricing", subscription_id))
             .await
     }
-    
+
     /// Get CIDR whitelist
     pub async fn get_cidr_whitelist(&self, subscription_id: u32) -> Result<Value> {
         self.client
-            .get(&format!("/subscriptions/{}/cidr-whitelist", subscription_id))
+            .get(&format!(
+                "/subscriptions/{}/cidr-whitelist",
+                subscription_id
+            ))
             .await
     }
-    
+
     /// Update CIDR whitelist
-    pub async fn update_cidr_whitelist(&self, subscription_id: u32, request: Value) -> Result<Value> {
+    pub async fn update_cidr_whitelist(
+        &self,
+        subscription_id: u32,
+        request: Value,
+    ) -> Result<Value> {
         self.client
-            .put(&format!("/subscriptions/{}/cidr-whitelist", subscription_id), &request)
+            .put(
+                &format!("/subscriptions/{}/cidr-whitelist", subscription_id),
+                &request,
+            )
             .await
     }
-    
+
     /// Get VPC peerings
     pub async fn get_vpc_peerings(&self, subscription_id: u32) -> Result<Value> {
         self.client

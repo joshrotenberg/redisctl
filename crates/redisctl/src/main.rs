@@ -16,12 +16,12 @@ async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
 
     let cli = Cli::parse();
-    
+
     info!("Starting redisctl");
 
     // Load configuration
     let config = Config::load()?;
-    
+
     // Route and execute command
     route_command(cli, &config).await
 }

@@ -96,4 +96,3 @@ impl BootstrapHandler {
         self.client.delete("/v1/bootstrap").await
     }
 }
-

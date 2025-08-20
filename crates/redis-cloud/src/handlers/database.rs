@@ -1,9 +1,9 @@
 //! Database operations handler
 
 use crate::{
-    Result,
     client::CloudClient,
     models::{CloudDatabase, CreateDatabaseRequest, UpdateDatabaseRequest},
+    Result,
 };
 use serde_json::Value;
 
@@ -104,7 +104,7 @@ impl CloudDatabaseHandler {
             .get(&format!("/subscriptions/{}/databases", subscription_id))
             .await
     }
-    
+
     /// Get database as Value
     pub async fn get_raw(&self, subscription_id: u32, database_id: u32) -> Result<Value> {
         self.client
@@ -114,7 +114,7 @@ impl CloudDatabaseHandler {
             ))
             .await
     }
-    
+
     /// Create database with Value
     pub async fn create_raw(&self, subscription_id: u32, request: Value) -> Result<Value> {
         self.client
@@ -124,9 +124,14 @@ impl CloudDatabaseHandler {
             )
             .await
     }
-    
+
     /// Update database with Value
-    pub async fn update_raw(&self, subscription_id: u32, database_id: u32, request: Value) -> Result<Value> {
+    pub async fn update_raw(
+        &self,
+        subscription_id: u32,
+        database_id: u32,
+        request: Value,
+    ) -> Result<Value> {
         self.client
             .put(
                 &format!(
@@ -137,7 +142,7 @@ impl CloudDatabaseHandler {
             )
             .await
     }
-    
+
     /// Backup database
     pub async fn backup(&self, subscription_id: u32, database_id: u32) -> Result<Value> {
         self.client
@@ -150,9 +155,14 @@ impl CloudDatabaseHandler {
             )
             .await
     }
-    
+
     /// Import data
-    pub async fn import(&self, subscription_id: u32, database_id: u32, request: Value) -> Result<Value> {
+    pub async fn import(
+        &self,
+        subscription_id: u32,
+        database_id: u32,
+        request: Value,
+    ) -> Result<Value> {
         self.client
             .post(
                 &format!(
@@ -163,9 +173,15 @@ impl CloudDatabaseHandler {
             )
             .await
     }
-    
+
     /// Get metrics
-    pub async fn get_metrics(&self, subscription_id: u32, database_id: u32, metrics: &str, period: &str) -> Result<Value> {
+    pub async fn get_metrics(
+        &self,
+        subscription_id: u32,
+        database_id: u32,
+        metrics: &str,
+        period: &str,
+    ) -> Result<Value> {
         self.client
             .get(&format!(
                 "/subscriptions/{}/databases/{}/metrics?metrics={}&period={}",
@@ -173,7 +189,7 @@ impl CloudDatabaseHandler {
             ))
             .await
     }
-    
+
     /// Get database backup status
     pub async fn backup_status(&self, subscription_id: u32, database_id: u32) -> Result<Value> {
         self.client
@@ -183,5 +199,4 @@ impl CloudDatabaseHandler {
             ))
             .await
     }
-
 }

@@ -118,4 +118,3 @@ impl MigrationsHandler {
             .await
     }
 }
-

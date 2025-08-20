@@ -1,9 +1,9 @@
 //! Account operations handler
 
 use crate::{
-    Result,
     client::CloudClient,
     models::{AccountResponse, CloudAccount},
+    Result,
 };
 use serde_json::Value;
 
@@ -32,20 +32,20 @@ impl CloudAccountHandler {
     pub async fn users(&self) -> Result<Value> {
         self.client.get("/users").await
     }
-    
+
     // Aliases for CLI compatibility
     pub async fn get_account(&self) -> Result<Value> {
         self.client.get("/").await
     }
-    
+
     pub async fn get_users(&self) -> Result<Value> {
         self.users().await
     }
-    
+
     pub async fn get_owner(&self) -> Result<Value> {
         self.owner().await
     }
-    
+
     pub async fn get_payment_methods(&self) -> Result<Value> {
         self.client.get("/payment-methods").await
     }
