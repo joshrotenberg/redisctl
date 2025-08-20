@@ -1,0 +1,50 @@
+[package]
+name = "redisctl"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Unified CLI for Redis Cloud and Enterprise"
+keywords = ["redis", "cli", "cloud", "enterprise", "database"]
+categories = ["command-line-utilities", "api-bindings"]
+
+[[bin]]
+name = "redisctl"
+path = "src/main.rs"
+
+# Optional feature-gated binaries for deployment-specific builds
+[[bin]]
+name = "redis-cloud"
+path = "src/cloud_bin.rs"
+required-features = ["cloud-only"]
+
+[[bin]]
+name = "redis-enterprise"
+path = "src/enterprise_bin.rs"
+required-features = ["enterprise-only"]
+
+[dependencies]
+redis-common = { path = "../redis-common" }
+redis-cloud = { path = "../redis-cloud" }
+redis-enterprise = { path = "../redis-enterprise" }
+
+# CLI dependencies
+clap = { workspace = true }
+anyhow = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+rpassword = { workspace = true }
+
+# Conditional dependencies for feature-gated binaries
+[features]
+default = ["full"]
+full = ["cloud", "enterprise"]
+cloud = []
+enterprise = []
+cloud-only = ["cloud"]
+enterprise-only = ["enterprise"]
