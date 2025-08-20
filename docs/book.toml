@@ -1,0 +1,16 @@
+[book]
+authors = ["Josh Rotenberg"]
+language = "en"
+src = "src"
+title = "Redis Enterprise API Documentation"
+
+[output.html]
+default-theme = "light"
+preferred-dark-theme = "ayu"
+git-repository-url = "https://github.com/joshrotenberg/redis-enterprise-rs"
+git-repository-icon = "fa-github"
+edit-url-template = "https://github.com/joshrotenberg/redis-enterprise-rs/edit/main/docs/{path}"
+
+[output.html.fold]
+enable = true
+level = 1
