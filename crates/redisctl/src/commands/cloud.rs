@@ -80,9 +80,9 @@ pub async fn handle_database_command(
             print_output(database, output_format, query)?;
         }
         DatabaseCommands::Create {
-            name,
-            memory_limit,
-            modules,
+            name: _,
+            memory_limit: _,
+            modules: _,
         } => {
             anyhow::bail!("Database creation requires subscription context. Use 'redisctl cloud subscription create-database' instead.");
         }
@@ -125,10 +125,10 @@ pub async fn handle_database_command(
                 .await?;
             println!("Database {} deleted successfully", id);
         }
-        DatabaseCommands::Backup { id } => {
+        DatabaseCommands::Backup { id: _ } => {
             anyhow::bail!("Backup operations not yet implemented for Cloud databases");
         }
-        DatabaseCommands::Import { id, url } => {
+        DatabaseCommands::Import { id: _, url: _ } => {
             anyhow::bail!("Import operations not yet implemented for Cloud databases");
         }
     }
@@ -154,16 +154,16 @@ pub async fn handle_subscription_command(
             print_output(subscription, output_format, query)?;
         }
         SubscriptionCommands::Create {
-            name,
-            provider,
-            region,
+            name: _,
+            provider: _,
+            region: _,
         } => {
             anyhow::bail!("Subscription creation not yet implemented");
         }
-        SubscriptionCommands::Update { id, name } => {
+        SubscriptionCommands::Update { id: _, name: _ } => {
             anyhow::bail!("Subscription update not yet implemented");
         }
-        SubscriptionCommands::Delete { id, force: _ } => {
+        SubscriptionCommands::Delete { id: _, force: _ } => {
             anyhow::bail!("Subscription deletion not yet implemented");
         }
     }
@@ -211,21 +211,21 @@ pub async fn handle_user_command(
             print_output(user, output_format, query)?;
         }
         UserCommands::Create {
-            name,
-            email,
-            password,
-            roles,
+            name: _,
+            email: _,
+            password: _,
+            roles: _,
         } => {
             anyhow::bail!("User creation not yet implemented");
         }
         UserCommands::Update {
-            id,
-            email,
-            password,
+            id: _,
+            email: _,
+            password: _,
         } => {
             anyhow::bail!("User update not yet implemented");
         }
-        UserCommands::Delete { id, force: _ } => {
+        UserCommands::Delete { id: _, force: _ } => {
             anyhow::bail!("User deletion not yet implemented");
         }
     }
@@ -233,7 +233,7 @@ pub async fn handle_user_command(
     Ok(())
 }
 
-async fn handle_region_command(
+pub async fn handle_region_command(
     command: RegionCommands,
     profile: &Profile,
     output_format: OutputFormat,
@@ -251,7 +251,7 @@ async fn handle_region_command(
     Ok(())
 }
 
-async fn handle_task_command(
+pub async fn handle_task_command(
     command: TaskCommands,
     profile: &Profile,
     output_format: OutputFormat,
@@ -273,16 +273,16 @@ async fn handle_task_command(
     Ok(())
 }
 
-async fn handle_acl_command(
-    command: AclCommands,
-    profile: &Profile,
-    output_format: OutputFormat,
-    query: Option<&str>,
+pub async fn handle_acl_command(
+    _command: AclCommands,
+    _profile: &Profile,
+    _output_format: OutputFormat,
+    _query: Option<&str>,
 ) -> Result<()> {
     anyhow::bail!("ACL commands not yet implemented for Cloud");
 }
 
-fn create_cloud_client(profile: &Profile) -> Result<CloudClient> {
+pub fn create_cloud_client(profile: &Profile) -> Result<CloudClient> {
     if let ProfileCredentials::Cloud {
         api_key,
         api_secret,
@@ -301,7 +301,7 @@ fn create_cloud_client(profile: &Profile) -> Result<CloudClient> {
     }
 }
 
-fn parse_database_id(id: &str) -> Result<(u32, u32)> {
+pub fn parse_database_id(id: &str) -> Result<(u32, u32)> {
     if let Some((sub_id, db_id)) = id.split_once(':') {
         Ok((sub_id.parse()?, db_id.parse()?))
     } else {

@@ -92,9 +92,7 @@ pub async fn handle_database_command(
             if let Some(memory_limit) = memory_limit {
                 update_data.insert(
                     "memory_size".to_string(),
-                    serde_json::Value::Number(serde_json::Number::from(
-                        (memory_limit * 1024 * 1024) as u64,
-                    )),
+                    serde_json::Value::Number(serde_json::Number::from(memory_limit * 1024 * 1024)),
                 );
             }
 
@@ -161,7 +159,7 @@ pub async fn handle_cluster_command(
     Ok(())
 }
 
-async fn handle_node_command(
+pub async fn handle_node_command(
     command: NodeCommands,
     profile: &Profile,
     output_format: OutputFormat,
@@ -265,7 +263,7 @@ pub async fn handle_user_command(
     Ok(())
 }
 
-async fn handle_bootstrap_command(
+pub async fn handle_bootstrap_command(
     command: BootstrapCommands,
     profile: &Profile,
     output_format: OutputFormat,
@@ -295,7 +293,7 @@ async fn handle_bootstrap_command(
     Ok(())
 }
 
-async fn handle_module_command(
+pub async fn handle_module_command(
     command: ModuleCommands,
     profile: &Profile,
     output_format: OutputFormat,
@@ -312,7 +310,7 @@ async fn handle_module_command(
             let module = client.get_raw(&format!("/v1/modules/{}", id)).await?;
             print_output(module, output_format, query)?;
         }
-        ModuleCommands::Upload { path } => {
+        ModuleCommands::Upload { path: _ } => {
             anyhow::bail!("Module upload not yet implemented");
         }
     }
@@ -320,7 +318,7 @@ async fn handle_module_command(
     Ok(())
 }
 
-async fn handle_role_command(
+pub async fn handle_role_command(
     command: RoleCommands,
     profile: &Profile,
     output_format: OutputFormat,
@@ -366,7 +364,7 @@ async fn handle_role_command(
     Ok(())
 }
 
-async fn handle_license_command(
+pub async fn handle_license_command(
     command: LicenseCommands,
     profile: &Profile,
     output_format: OutputFormat,
@@ -392,7 +390,7 @@ async fn handle_license_command(
     Ok(())
 }
 
-async fn create_enterprise_client(profile: &Profile) -> Result<EnterpriseClient> {
+pub async fn create_enterprise_client(profile: &Profile) -> Result<EnterpriseClient> {
     if let ProfileCredentials::Enterprise {
         url,
         username,
