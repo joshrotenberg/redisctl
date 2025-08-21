@@ -105,6 +105,47 @@ impl ClusterHandler {
     pub async fn license(&self) -> Result<LicenseInfo> {
         self.client.get("/v1/license").await
     }
+
+    /// Join node to cluster (CLUSTER.JOIN)
+    pub async fn join_node(&self, node_address: &str, username: &str, password: &str) -> Result<Value> {
+        let body = serde_json::json!({
+            "action": "join_cluster",
+            "cluster": {
+                "nodes": [node_address]
+            },
+            "credentials": {
+                "username": username,
+                "password": password
+            }
+        });
+        self.client.post("/v1/bootstrap/join", &body).await
+    }
+
+    /// Remove node from cluster (CLUSTER.REMOVE_NODE)
+    pub async fn remove_node(&self, node_uid: u32) -> Result<Value> {
+        self.client.delete(&format!("/v1/nodes/{}", node_uid)).await?;
+        Ok(serde_json::json!({"message": format!("Node {} removed", node_uid)}))
+    }
+
+    /// Reset cluster to factory defaults (CLUSTER.RESET) - DANGEROUS
+    pub async fn reset(&self) -> Result<Value> {
+        self.client.post("/v1/cluster/actions/reset", &serde_json::json!({})).await
+    }
+
+    /// Recover cluster from failure (CLUSTER.RECOVER)
+    pub async fn recover(&self) -> Result<Value> {
+        self.client.post("/v1/cluster/actions/recover", &serde_json::json!({})).await
+    }
+
+    /// Get cluster settings (CLUSTER.SETTINGS)
+    pub async fn settings(&self) -> Result<Value> {
+        self.client.get("/v1/cluster/settings").await
+    }
+
+    /// Get cluster topology (CLUSTER.TOPOLOGY)
+    pub async fn topology(&self) -> Result<Value> {
+        self.client.get("/v1/cluster/topology").await
+    }
 }
 
 /// Node information
