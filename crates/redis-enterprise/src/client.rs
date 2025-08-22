@@ -160,6 +160,40 @@ impl EnterpriseClient {
         self.handle_response(response).await
     }
 
+    /// Make a GET request for text content
+    pub async fn get_text(&self, path: &str) -> Result<String> {
+        let url = format!("{}{}", self.base_url, path);
+        debug!("GET {} (text)", url);
+
+        let response = self
+            .client
+            .get(&url)
+            .basic_auth(&self.username, Some(&self.password))
+            .send()
+            .await
+            .map_err(|e| self.map_reqwest_error(e, &url))?;
+
+        trace!("Response status: {}", response.status());
+
+        if response.status().is_success() {
+            let text = response
+                .text()
+                .await
+                .map_err(crate::error::RestError::RequestFailed)?;
+            Ok(text)
+        } else {
+            let status = response.status();
+            let error_text = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "Unknown error".to_string());
+            Err(crate::error::RestError::ApiError {
+                code: status.as_u16(),
+                message: error_text,
+            })
+        }
+    }
+
     /// Make a POST request
     pub async fn post<B: Serialize, T: DeserializeOwned>(&self, path: &str, body: &B) -> Result<T> {
         let url = format!("{}{}", self.base_url, path);
@@ -237,6 +271,34 @@ impl EnterpriseClient {
     /// Execute raw PUT request with JSON body
     pub async fn put_raw(&self, path: &str, body: serde_json::Value) -> Result<serde_json::Value> {
         self.put(path, &body).await
+    }
+
+    /// POST request for actions that return no content
+    pub async fn post_action<B: Serialize>(&self, path: &str, body: &B) -> Result<()> {
+        let url = format!("{}{}", self.base_url, path);
+        debug!("POST {}", url);
+        trace!("Request body: {:?}", serde_json::to_value(body).ok());
+
+        let response = self
+            .client
+            .post(&url)
+            .basic_auth(&self.username, Some(&self.password))
+            .json(body)
+            .send()
+            .await
+            .map_err(|e| self.map_reqwest_error(e, &url))?;
+
+        trace!("Response status: {}", response.status());
+        if response.status().is_success() {
+            Ok(())
+        } else {
+            let status = response.status();
+            let text = response.text().await.unwrap_or_default();
+            Err(RestError::ApiError {
+                code: status.as_u16(),
+                message: text,
+            })
+        }
     }
 
     /// Get a reference to self for handler construction

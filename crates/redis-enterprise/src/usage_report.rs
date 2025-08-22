@@ -125,7 +125,7 @@ impl UsageReportHandler {
     /// Download usage report as CSV
     pub async fn download_csv(&self, report_id: &str) -> Result<String> {
         self.client
-            .get(&format!("/v1/usage_report/{}/csv", report_id))
+            .get_text(&format!("/v1/usage_report/{}/csv", report_id))
             .await
     }
 }

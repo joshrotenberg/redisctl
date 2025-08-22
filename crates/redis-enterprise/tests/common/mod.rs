@@ -78,8 +78,8 @@ pub fn test_node() -> serde_json::Value {
         "address": "192.168.1.10",
         "status": "active",
         "role": "master",
-        "total_memory": 16000000000,
-        "used_memory": 8000000000
+        "total_memory": 16000000000i64,
+        "used_memory": 8000000000i64
     })
 }
 

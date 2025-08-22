@@ -1,9 +1,9 @@
 //! Database (BDB) endpoint tests for Redis Enterprise
 
-use redis_enterprise::{EnterpriseClient, BdbHandler};
-use wiremock::{Mock, MockServer, ResponseTemplate};
-use wiremock::matchers::{method, path, basic_auth};
+use redis_enterprise::{BdbHandler, EnterpriseClient};
 use serde_json::json;
+use wiremock::matchers::{basic_auth, method, path};
+use wiremock::{Mock, MockServer, ResponseTemplate};
 
 // Test helper functions
 fn success_response(body: serde_json::Value) -> ResponseTemplate {
@@ -32,7 +32,7 @@ fn test_database() -> serde_json::Value {
 #[tokio::test]
 async fn test_database_list() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/v1/bdbs"))
         .and(basic_auth("admin", "password"))
@@ -68,7 +68,7 @@ async fn test_database_list() {
 #[tokio::test]
 async fn test_database_get() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/v1/bdbs/1"))
         .and(basic_auth("admin", "password"))
@@ -95,7 +95,7 @@ async fn test_database_get() {
 #[tokio::test]
 async fn test_database_create() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("POST"))
         .and(path("/v1/bdbs"))
         .and(basic_auth("admin", "password"))
@@ -111,11 +111,9 @@ async fn test_database_create() {
         .unwrap();
 
     let handler = BdbHandler::new(client);
-    let request = handler.create_with_builder(|b| {
-        b.name("test-db")
-            .memory_size(1073741824)
-            .port(12000)
-    }).await;
+    let request = handler
+        .create_with_builder(|b| b.name("test-db").memory_size(1073741824).port(12000))
+        .await;
 
     assert!(request.is_ok());
     let db = request.unwrap();
@@ -126,7 +124,7 @@ async fn test_database_create() {
 #[tokio::test]
 async fn test_database_delete() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("DELETE"))
         .and(path("/v1/bdbs/1"))
         .and(basic_auth("admin", "password"))

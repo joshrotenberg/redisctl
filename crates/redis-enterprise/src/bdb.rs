@@ -228,21 +228,30 @@ impl DatabaseHandler {
     /// Start database (BDB.START)
     pub async fn start(&self, uid: u32) -> Result<Value> {
         self.client
-            .post(&format!("/v1/bdbs/{}/actions/start", uid), &serde_json::json!({}))
+            .post(
+                &format!("/v1/bdbs/{}/actions/start", uid),
+                &serde_json::json!({}),
+            )
             .await
     }
 
     /// Stop database (BDB.STOP)
     pub async fn stop(&self, uid: u32) -> Result<Value> {
         self.client
-            .post(&format!("/v1/bdbs/{}/actions/stop", uid), &serde_json::json!({}))
+            .post(
+                &format!("/v1/bdbs/{}/actions/stop", uid),
+                &serde_json::json!({}),
+            )
             .await
     }
 
     /// Restart database (BDB.RESTART)
     pub async fn restart(&self, uid: u32) -> Result<Value> {
         self.client
-            .post(&format!("/v1/bdbs/{}/actions/restart", uid), &serde_json::json!({}))
+            .post(
+                &format!("/v1/bdbs/{}/actions/restart", uid),
+                &serde_json::json!({}),
+            )
             .await
     }
 
@@ -270,14 +279,20 @@ impl DatabaseHandler {
     /// Flush database (BDB.FLUSH)
     pub async fn flush(&self, uid: u32) -> Result<Value> {
         self.client
-            .post(&format!("/v1/bdbs/{}/actions/flush", uid), &serde_json::json!({}))
+            .post(
+                &format!("/v1/bdbs/{}/actions/flush", uid),
+                &serde_json::json!({}),
+            )
             .await
     }
 
     /// Backup database (BDB.BACKUP)
     pub async fn backup(&self, uid: u32) -> Result<Value> {
         self.client
-            .post(&format!("/v1/bdbs/{}/actions/backup", uid), &serde_json::json!({}))
+            .post(
+                &format!("/v1/bdbs/{}/actions/backup", uid),
+                &serde_json::json!({}),
+            )
             .await
     }
 
@@ -298,9 +313,11 @@ impl DatabaseHandler {
         self.client.get(&format!("/v1/bdbs/{}/shards", uid)).await
     }
 
-    /// Get database endpoints (BDB.ENDPOINTS) 
+    /// Get database endpoints (BDB.ENDPOINTS)
     pub async fn endpoints(&self, uid: u32) -> Result<Value> {
-        self.client.get(&format!("/v1/bdbs/{}/endpoints", uid)).await
+        self.client
+            .get(&format!("/v1/bdbs/{}/endpoints", uid))
+            .await
     }
 
     /// Upgrade database with new module version (BDB.UPGRADE)

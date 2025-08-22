@@ -261,7 +261,8 @@ mod tests {
             .and(path("/v1/bdbs/1/actions/export"))
             .and(basic_auth("admin", "password"))
             .respond_with(
-                ResponseTemplate::new(200).set_body_json(serde_json::json!({"task_id": "export-123"})),
+                ResponseTemplate::new(200)
+                    .set_body_json(serde_json::json!({"task_id": "export-123"})),
             )
             .mount(&mock_server)
             .await;
@@ -288,7 +289,8 @@ mod tests {
             .and(path("/v1/bdbs/1/actions/import"))
             .and(basic_auth("admin", "password"))
             .respond_with(
-                ResponseTemplate::new(200).set_body_json(serde_json::json!({"task_id": "import-456"})),
+                ResponseTemplate::new(200)
+                    .set_body_json(serde_json::json!({"task_id": "import-456"})),
             )
             .mount(&mock_server)
             .await;
@@ -315,7 +317,8 @@ mod tests {
             .and(path("/v1/bdbs/1/actions/backup"))
             .and(basic_auth("admin", "password"))
             .respond_with(
-                ResponseTemplate::new(200).set_body_json(serde_json::json!({"backup_id": "backup-789"})),
+                ResponseTemplate::new(200)
+                    .set_body_json(serde_json::json!({"backup_id": "backup-789"})),
             )
             .mount(&mock_server)
             .await;
@@ -341,12 +344,10 @@ mod tests {
         Mock::given(method("GET"))
             .and(path("/v1/bdbs/1/shards"))
             .and(basic_auth("admin", "password"))
-            .respond_with(
-                ResponseTemplate::new(200).set_body_json(serde_json::json!([
-                    {"shard_id": 1, "role": "master"},
-                    {"shard_id": 2, "role": "slave"}
-                ])),
-            )
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+                {"shard_id": 1, "role": "master"},
+                {"shard_id": 2, "role": "slave"}
+            ])))
             .mount(&mock_server)
             .await;
 

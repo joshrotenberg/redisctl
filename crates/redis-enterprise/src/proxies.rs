@@ -91,7 +91,7 @@ impl ProxyHandler {
     /// Reload proxy configuration
     pub async fn reload(&self, uid: u32) -> Result<()> {
         self.client
-            .post(&format!("/v1/proxies/{}/actions/reload", uid), &Value::Null)
+            .post_action(&format!("/v1/proxies/{}/actions/reload", uid), &Value::Null)
             .await
     }
 }

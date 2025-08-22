@@ -1,9 +1,9 @@
 //! Module endpoint tests for Redis Enterprise
 
 use redis_enterprise::{EnterpriseClient, ModuleHandler};
-use wiremock::{Mock, MockServer, ResponseTemplate};
-use wiremock::matchers::{method, path, basic_auth};
 use serde_json::json;
+use wiremock::matchers::{basic_auth, method, path};
+use wiremock::{Mock, MockServer, ResponseTemplate};
 
 // Test helper functions
 fn success_response(body: serde_json::Value) -> ResponseTemplate {
@@ -20,7 +20,7 @@ fn no_content_response() -> ResponseTemplate {
 
 fn test_module() -> serde_json::Value {
     json!({
-        "uid": 1,
+        "uid": "1",
         "name": "RedisSearch",
         "version": "2.6.1",
         "status": "loaded",
@@ -31,14 +31,14 @@ fn test_module() -> serde_json::Value {
 #[tokio::test]
 async fn test_module_list() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/v1/modules"))
         .and(basic_auth("admin", "password"))
         .respond_with(success_response(json!([
             test_module(),
             {
-                "uid": 2,
+                "uid": "2",
                 "name": "RedisJSON",
                 "version": "2.4.0",
                 "status": "loaded",
@@ -66,7 +66,7 @@ async fn test_module_list() {
 #[tokio::test]
 async fn test_module_get() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/v1/modules/1"))
         .and(basic_auth("admin", "password"))
@@ -93,7 +93,7 @@ async fn test_module_get() {
 #[tokio::test]
 async fn test_module_upload() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("POST"))
         .and(path("/v1/modules"))
         .and(basic_auth("admin", "password"))
@@ -120,7 +120,7 @@ async fn test_module_upload() {
 #[tokio::test]
 async fn test_module_delete() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("DELETE"))
         .and(path("/v1/modules/1"))
         .and(basic_auth("admin", "password"))

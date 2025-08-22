@@ -1,9 +1,9 @@
 //! Redis ACL endpoint tests for Redis Enterprise
 
-use redis_enterprise::{EnterpriseClient, RedisAclHandler, CreateRedisAclRequest};
-use wiremock::{Mock, MockServer, ResponseTemplate};
-use wiremock::matchers::{method, path, basic_auth, body_json};
+use redis_enterprise::{CreateRedisAclRequest, EnterpriseClient, RedisAclHandler};
 use serde_json::json;
+use wiremock::matchers::{basic_auth, body_json, method, path};
+use wiremock::{Mock, MockServer, ResponseTemplate};
 
 // Test helper functions
 fn success_response(body: serde_json::Value) -> ResponseTemplate {
@@ -56,7 +56,7 @@ fn custom_redis_acl() -> serde_json::Value {
 #[tokio::test]
 async fn test_redis_acl_list() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/v1/redis_acls"))
         .and(basic_auth("admin", "password"))
@@ -82,21 +82,27 @@ async fn test_redis_acl_list() {
     assert!(result.is_ok());
     let acls = result.unwrap();
     assert_eq!(acls.len(), 4);
-    
+
     // Verify first ACL details
     let read_only_acl = &acls[0];
     assert_eq!(read_only_acl.uid, 1);
     assert_eq!(read_only_acl.name, "read_only_acl");
     assert_eq!(read_only_acl.acl, "+@read -@write");
-    assert_eq!(read_only_acl.description, Some("Read-only access to Redis commands".to_string()));
-    
+    assert_eq!(
+        read_only_acl.description,
+        Some("Read-only access to Redis commands".to_string())
+    );
+
     // Verify admin ACL
     let admin_acl = &acls[1];
     assert_eq!(admin_acl.uid, 2);
     assert_eq!(admin_acl.name, "admin_acl");
     assert_eq!(admin_acl.acl, "+@all");
-    assert_eq!(admin_acl.description, Some("Full administrative access".to_string()));
-    
+    assert_eq!(
+        admin_acl.description,
+        Some("Full administrative access".to_string())
+    );
+
     // Verify minimal ACL (no description)
     let minimal_acl = &acls[2];
     assert_eq!(minimal_acl.uid, 3);
@@ -108,7 +114,7 @@ async fn test_redis_acl_list() {
 #[tokio::test]
 async fn test_redis_acl_list_empty() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/v1/redis_acls"))
         .and(basic_auth("admin", "password"))
@@ -134,7 +140,7 @@ async fn test_redis_acl_list_empty() {
 #[tokio::test]
 async fn test_redis_acl_get() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/v1/redis_acls/1"))
         .and(basic_auth("admin", "password"))
@@ -157,13 +163,16 @@ async fn test_redis_acl_get() {
     assert_eq!(acl.uid, 1);
     assert_eq!(acl.name, "read_only_acl");
     assert_eq!(acl.acl, "+@read -@write");
-    assert_eq!(acl.description, Some("Read-only access to Redis commands".to_string()));
+    assert_eq!(
+        acl.description,
+        Some("Read-only access to Redis commands".to_string())
+    );
 }
 
 #[tokio::test]
 async fn test_redis_acl_get_minimal() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/v1/redis_acls/3"))
         .and(basic_auth("admin", "password"))
@@ -192,7 +201,7 @@ async fn test_redis_acl_get_minimal() {
 #[tokio::test]
 async fn test_redis_acl_create() {
     let mock_server = MockServer::start().await;
-    
+
     let create_request = CreateRedisAclRequest {
         name: "new_acl".to_string(),
         acl: "+@read +@string -del".to_string(),
@@ -227,13 +236,16 @@ async fn test_redis_acl_create() {
     assert_eq!(acl.uid, 5);
     assert_eq!(acl.name, "new_acl");
     assert_eq!(acl.acl, "+@read +@string -del");
-    assert_eq!(acl.description, Some("Custom read access with string operations".to_string()));
+    assert_eq!(
+        acl.description,
+        Some("Custom read access with string operations".to_string())
+    );
 }
 
 #[tokio::test]
 async fn test_redis_acl_create_minimal() {
     let mock_server = MockServer::start().await;
-    
+
     let create_request = CreateRedisAclRequest {
         name: "simple_acl".to_string(),
         acl: "+ping".to_string(),
@@ -273,7 +285,7 @@ async fn test_redis_acl_create_minimal() {
 #[tokio::test]
 async fn test_redis_acl_update() {
     let mock_server = MockServer::start().await;
-    
+
     let update_request = CreateRedisAclRequest {
         name: "updated_acl".to_string(),
         acl: "+@all -flushall -config".to_string(),
@@ -308,13 +320,16 @@ async fn test_redis_acl_update() {
     assert_eq!(acl.uid, 1);
     assert_eq!(acl.name, "updated_acl");
     assert_eq!(acl.acl, "+@all -flushall -config");
-    assert_eq!(acl.description, Some("Updated ACL with restrictions".to_string()));
+    assert_eq!(
+        acl.description,
+        Some("Updated ACL with restrictions".to_string())
+    );
 }
 
 #[tokio::test]
 async fn test_redis_acl_update_remove_description() {
     let mock_server = MockServer::start().await;
-    
+
     let update_request = CreateRedisAclRequest {
         name: "no_desc_acl".to_string(),
         acl: "+@read".to_string(),
@@ -354,7 +369,7 @@ async fn test_redis_acl_update_remove_description() {
 #[tokio::test]
 async fn test_redis_acl_delete() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("DELETE"))
         .and(path("/v1/redis_acls/1"))
         .and(basic_auth("admin", "password"))
@@ -378,7 +393,7 @@ async fn test_redis_acl_delete() {
 #[tokio::test]
 async fn test_redis_acl_get_nonexistent() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/v1/redis_acls/999"))
         .and(basic_auth("admin", "password"))
@@ -404,7 +419,7 @@ async fn test_redis_acl_get_nonexistent() {
 #[tokio::test]
 async fn test_redis_acl_create_invalid_name() {
     let mock_server = MockServer::start().await;
-    
+
     let invalid_request = CreateRedisAclRequest {
         name: "".to_string(), // Invalid empty name
         acl: "+ping".to_string(),
@@ -438,7 +453,7 @@ async fn test_redis_acl_create_invalid_name() {
 #[tokio::test]
 async fn test_redis_acl_create_invalid_acl_syntax() {
     let mock_server = MockServer::start().await;
-    
+
     let invalid_request = CreateRedisAclRequest {
         name: "test_acl".to_string(),
         acl: "invalid-acl-syntax".to_string(), // Invalid ACL syntax
@@ -472,7 +487,7 @@ async fn test_redis_acl_create_invalid_acl_syntax() {
 #[tokio::test]
 async fn test_redis_acl_update_nonexistent() {
     let mock_server = MockServer::start().await;
-    
+
     let update_request = CreateRedisAclRequest {
         name: "updated_acl".to_string(),
         acl: "+@read".to_string(),
@@ -505,7 +520,7 @@ async fn test_redis_acl_update_nonexistent() {
 #[tokio::test]
 async fn test_redis_acl_delete_nonexistent() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("DELETE"))
         .and(path("/v1/redis_acls/999"))
         .and(basic_auth("admin", "password"))
