@@ -68,30 +68,31 @@
 
 ## Redis Cloud API
 
-### Implemented Endpoints (Based on file structure)
+### Implemented Endpoints
 
 #### Core Resources
 - ✅ Account management
-- ✅ ACL management
+- ✅ ACL management (users, roles, redis rules)
+- ✅ API Keys management (CRUD, permissions, usage stats)
 - ✅ Backup operations
+- ✅ Billing & Payment (invoices, payment methods, usage, credits)
 - ✅ Cloud accounts (AWS, GCP, Azure)
-- ✅ Database operations
+- ✅ Active-Active databases (CRDB) - full CRUD, regions, metrics
+- ✅ Database operations (CRUD, backup, import, metrics)
 - ✅ Fixed plans
 - ✅ Logs
 - ✅ Metrics
 - ✅ Peering
 - ✅ Private service connect
 - ✅ Region information
-- ✅ Subscription management
+- ✅ SSO/SAML configuration (full SAML support, user/group mappings)
+- ✅ Subscription management (CRUD, pricing, CIDR whitelist)
 - ✅ Tasks
 - ✅ Transit gateway
 - ✅ Users
 
-### Potentially Missing Cloud API Endpoints
-- ❓ Active-Active database specific operations
-- ❓ SAML SSO configuration
-- ❓ Billing/Payment methods
-- ❓ API Keys management
+### Cloud API Status
+✅ **100% Complete** - All known Cloud API endpoints are now implemented
 
 ## Recommendations
 
