@@ -1,9 +1,9 @@
 //! Action endpoint tests for Redis Enterprise
 
-use redis_enterprise::{EnterpriseClient, ActionHandler};
-use wiremock::{Mock, MockServer, ResponseTemplate};
-use wiremock::matchers::{method, path, basic_auth};
+use redis_enterprise::{ActionHandler, EnterpriseClient};
 use serde_json::json;
+use wiremock::matchers::{basic_auth, method, path};
+use wiremock::{Mock, MockServer, ResponseTemplate};
 
 // Test helper functions
 fn success_response(body: serde_json::Value) -> ResponseTemplate {
@@ -56,7 +56,7 @@ fn failed_action() -> serde_json::Value {
 #[tokio::test]
 async fn test_action_list() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/v1/actions"))
         .and(basic_auth("admin", "password"))
@@ -81,7 +81,7 @@ async fn test_action_list() {
     assert!(result.is_ok());
     let actions = result.unwrap();
     assert_eq!(actions.len(), 3);
-    
+
     // Verify first action details
     let running_action = &actions[0];
     assert_eq!(running_action.action_uid, "action-123-abc");
@@ -95,7 +95,7 @@ async fn test_action_list() {
 #[tokio::test]
 async fn test_action_list_empty() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/v1/actions"))
         .and(basic_auth("admin", "password"))
@@ -121,7 +121,7 @@ async fn test_action_list_empty() {
 #[tokio::test]
 async fn test_action_get_running() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/v1/actions/action-123-abc"))
         .and(basic_auth("admin", "password"))
@@ -145,7 +145,10 @@ async fn test_action_get_running() {
     assert_eq!(action.name, "database_backup");
     assert_eq!(action.status, "running");
     assert_eq!(action.progress, Some(45.5));
-    assert_eq!(action.description, Some("Backing up database test-db".to_string()));
+    assert_eq!(
+        action.description,
+        Some("Backing up database test-db".to_string())
+    );
     assert!(action.end_time.is_none());
     assert!(action.error.is_none());
 }
@@ -153,7 +156,7 @@ async fn test_action_get_running() {
 #[tokio::test]
 async fn test_action_get_completed() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/v1/actions/action-456-def"))
         .and(basic_auth("admin", "password"))
@@ -183,7 +186,7 @@ async fn test_action_get_completed() {
 #[tokio::test]
 async fn test_action_get_failed() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/v1/actions/action-789-ghi"))
         .and(basic_auth("admin", "password"))
@@ -206,14 +209,17 @@ async fn test_action_get_failed() {
     assert_eq!(action.action_uid, "action-789-ghi");
     assert_eq!(action.status, "failed");
     assert_eq!(action.progress, Some(25.0));
-    assert_eq!(action.error, Some("Connection timeout to new node".to_string()));
+    assert_eq!(
+        action.error,
+        Some("Connection timeout to new node".to_string())
+    );
     assert!(action.end_time.is_some());
 }
 
 #[tokio::test]
 async fn test_action_cancel() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("DELETE"))
         .and(path("/v1/actions/action-123-abc"))
         .and(basic_auth("admin", "password"))
@@ -237,7 +243,7 @@ async fn test_action_cancel() {
 #[tokio::test]
 async fn test_action_cancel_nonexistent() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("DELETE"))
         .and(path("/v1/actions/nonexistent-action"))
         .and(basic_auth("admin", "password"))
@@ -263,7 +269,7 @@ async fn test_action_cancel_nonexistent() {
 #[tokio::test]
 async fn test_action_get_nonexistent() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/v1/actions/nonexistent-action"))
         .and(basic_auth("admin", "password"))

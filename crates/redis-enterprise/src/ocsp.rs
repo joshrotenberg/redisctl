@@ -88,7 +88,9 @@ impl OcspHandler {
 
     /// Trigger OCSP query
     pub async fn query(&self) -> Result<()> {
-        self.client.post("/v1/ocsp/query", &Value::Null).await
+        self.client
+            .post_action("/v1/ocsp/query", &Value::Null)
+            .await
     }
 
     /// Clear OCSP cache

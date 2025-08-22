@@ -19,7 +19,11 @@ impl CloudBillingHandler {
     }
 
     /// Get billing history
-    pub async fn get_history(&self, start_date: Option<&str>, end_date: Option<&str>) -> Result<Value> {
+    pub async fn get_history(
+        &self,
+        start_date: Option<&str>,
+        end_date: Option<&str>,
+    ) -> Result<Value> {
         let mut path = "/billing/history".to_string();
         if let (Some(start), Some(end)) = (start_date, end_date) {
             path = format!("{}?start={}&end={}", path, start, end);

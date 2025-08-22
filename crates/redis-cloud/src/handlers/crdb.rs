@@ -58,7 +58,9 @@ impl CloudCrdbHandler {
         self.client
             .delete(&format!("/crdb/{}/regions/{}", crdb_id, region_id))
             .await?;
-        Ok(serde_json::json!({"message": format!("Region {} removed from Active-Active database {}", region_id, crdb_id)}))
+        Ok(
+            serde_json::json!({"message": format!("Region {} removed from Active-Active database {}", region_id, crdb_id)}),
+        )
     }
 
     /// Get Active-Active database tasks/jobs

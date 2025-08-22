@@ -1,9 +1,9 @@
 //! Database endpoint tests for Redis Cloud
 
 use redis_cloud::{CloudClient, CloudConfig, CloudDatabaseHandler};
-use wiremock::{Mock, MockServer, ResponseTemplate};
-use wiremock::matchers::{method, path, header};
 use serde_json::json;
+use wiremock::matchers::{header, method, path};
+use wiremock::{Mock, MockServer, ResponseTemplate};
 
 // Test helper functions
 fn success_response(body: serde_json::Value) -> ResponseTemplate {
@@ -23,7 +23,7 @@ fn create_test_client(base_url: String) -> CloudClient {
 #[tokio::test]
 async fn test_database_get() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/subscriptions/12345/databases/67890"))
         .and(header("x-api-key", "test-api-key"))
@@ -55,7 +55,7 @@ async fn test_database_get() {
 #[tokio::test]
 async fn test_database_delete() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("DELETE"))
         .and(path("/subscriptions/12345/databases/67890"))
         .and(header("x-api-key", "test-api-key"))

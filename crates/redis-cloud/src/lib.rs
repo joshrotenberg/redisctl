@@ -15,9 +15,10 @@ pub use client::{CloudClient, CloudConfig};
 
 // Re-export handlers explicitly
 pub use handlers::{
-    CloudAccountHandler, CloudAccountsHandler, CloudAclHandler, CloudBackupHandler,
-    CloudDatabaseHandler, CloudFixedHandler, CloudLogsHandler, CloudMetricsHandler,
-    CloudPeeringHandler, CloudPrivateServiceConnectHandler, CloudRegionHandler,
+    CloudAccountHandler, CloudAccountsHandler, CloudAclHandler, CloudApiKeysHandler,
+    CloudBackupHandler, CloudBillingHandler, CloudCrdbHandler, CloudDatabaseHandler,
+    CloudFixedHandler, CloudLogsHandler, CloudMetricsHandler, CloudPeeringHandler,
+    CloudPrivateServiceConnectHandler, CloudRegionHandler, CloudSsoHandler,
     CloudSubscriptionHandler, CloudTasksHandler, CloudTransitGatewayHandler, CloudUsersHandler,
 };
 

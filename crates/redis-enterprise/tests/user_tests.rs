@@ -1,9 +1,9 @@
 //! User endpoint tests for Redis Enterprise
 
-use redis_enterprise::{EnterpriseClient, UserHandler, CreateUserRequest, UpdateUserRequest};
-use wiremock::{Mock, MockServer, ResponseTemplate};
-use wiremock::matchers::{method, path, basic_auth};
+use redis_enterprise::{CreateUserRequest, EnterpriseClient, UpdateUserRequest, UserHandler};
 use serde_json::json;
+use wiremock::matchers::{basic_auth, method, path};
+use wiremock::{Mock, MockServer, ResponseTemplate};
 
 // Test helper functions
 fn success_response(body: serde_json::Value) -> ResponseTemplate {
@@ -31,7 +31,7 @@ fn test_user() -> serde_json::Value {
 #[tokio::test]
 async fn test_user_list() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/v1/users"))
         .and(basic_auth("admin", "password"))
@@ -66,7 +66,7 @@ async fn test_user_list() {
 #[tokio::test]
 async fn test_user_get() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/v1/users/1"))
         .and(basic_auth("admin", "password"))
@@ -93,7 +93,7 @@ async fn test_user_get() {
 #[tokio::test]
 async fn test_user_create() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("POST"))
         .and(path("/v1/users"))
         .and(basic_auth("admin", "password"))
@@ -127,7 +127,7 @@ async fn test_user_create() {
 #[tokio::test]
 async fn test_user_update() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("PUT"))
         .and(path("/v1/users/1"))
         .and(basic_auth("admin", "password"))
@@ -159,7 +159,7 @@ async fn test_user_update() {
 #[tokio::test]
 async fn test_user_delete() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("DELETE"))
         .and(path("/v1/users/1"))
         .and(basic_auth("admin", "password"))

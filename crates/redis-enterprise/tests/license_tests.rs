@@ -1,9 +1,9 @@
 //! License endpoint tests for Redis Enterprise
 
 use redis_enterprise::{EnterpriseClient, LicenseHandler, LicenseUpdateRequest};
-use wiremock::{Mock, MockServer, ResponseTemplate};
-use wiremock::matchers::{method, path, basic_auth, body_json};
 use serde_json::json;
+use wiremock::matchers::{basic_auth, body_json, method, path};
+use wiremock::{Mock, MockServer, ResponseTemplate};
 
 // Test helper functions
 fn success_response(body: serde_json::Value) -> ResponseTemplate {
@@ -58,7 +58,7 @@ fn minimal_license() -> serde_json::Value {
 #[tokio::test]
 async fn test_license_get() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/v1/license"))
         .and(basic_auth("admin", "password"))
@@ -81,17 +81,27 @@ async fn test_license_get() {
     assert_eq!(license.license_key, "lic-123-456-789");
     assert_eq!(license.type_, "production");
     assert!(!license.expired);
-    assert_eq!(license.expiration_date, Some("2025-12-31T23:59:59Z".to_string()));
+    assert_eq!(
+        license.expiration_date,
+        Some("2025-12-31T23:59:59Z".to_string())
+    );
     assert_eq!(license.shards_limit, Some(100));
     assert_eq!(license.node_limit, Some(10));
-    assert_eq!(license.features, Some(vec!["clustering".to_string(), "modules".to_string(), "flash".to_string()]));
+    assert_eq!(
+        license.features,
+        Some(vec![
+            "clustering".to_string(),
+            "modules".to_string(),
+            "flash".to_string()
+        ])
+    );
     assert_eq!(license.owner, Some("test-company".to_string()));
 }
 
 #[tokio::test]
 async fn test_license_get_expired() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/v1/license"))
         .and(basic_auth("admin", "password"))
@@ -114,7 +124,10 @@ async fn test_license_get_expired() {
     assert_eq!(license.license_key, "lic-expired-123");
     assert_eq!(license.type_, "trial");
     assert!(license.expired);
-    assert_eq!(license.expiration_date, Some("2023-01-01T00:00:00Z".to_string()));
+    assert_eq!(
+        license.expiration_date,
+        Some("2023-01-01T00:00:00Z".to_string())
+    );
     assert_eq!(license.shards_limit, Some(10));
     assert_eq!(license.node_limit, Some(3));
 }
@@ -122,7 +135,7 @@ async fn test_license_get_expired() {
 #[tokio::test]
 async fn test_license_get_minimal() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/v1/license"))
         .and(basic_auth("admin", "password"))
@@ -155,7 +168,7 @@ async fn test_license_get_minimal() {
 #[tokio::test]
 async fn test_license_update() {
     let mock_server = MockServer::start().await;
-    
+
     let update_request = LicenseUpdateRequest {
         license: "new-license-key-12345".to_string(),
     };
@@ -194,13 +207,21 @@ async fn test_license_update() {
     assert!(!license.expired);
     assert_eq!(license.shards_limit, Some(200));
     assert_eq!(license.node_limit, Some(20));
-    assert_eq!(license.features, Some(vec!["clustering".to_string(), "modules".to_string(), "flash".to_string(), "search".to_string()]));
+    assert_eq!(
+        license.features,
+        Some(vec![
+            "clustering".to_string(),
+            "modules".to_string(),
+            "flash".to_string(),
+            "search".to_string()
+        ])
+    );
 }
 
 #[tokio::test]
 async fn test_license_usage() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/v1/license/usage"))
         .and(basic_auth("admin", "password"))
@@ -231,7 +252,7 @@ async fn test_license_usage() {
 #[tokio::test]
 async fn test_license_usage_minimal() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/v1/license/usage"))
         .and(basic_auth("admin", "password"))
@@ -267,7 +288,7 @@ async fn test_license_usage_minimal() {
 #[tokio::test]
 async fn test_license_validate_valid() {
     let mock_server = MockServer::start().await;
-    
+
     let validate_request = LicenseUpdateRequest {
         license: "valid-license-to-validate".to_string(),
     };
@@ -311,7 +332,7 @@ async fn test_license_validate_valid() {
 #[tokio::test]
 async fn test_license_validate_expired() {
     let mock_server = MockServer::start().await;
-    
+
     let validate_request = LicenseUpdateRequest {
         license: "expired-license-key".to_string(),
     };
@@ -343,7 +364,7 @@ async fn test_license_validate_expired() {
 #[tokio::test]
 async fn test_license_cluster_license() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/v1/cluster/license"))
         .and(basic_auth("admin", "password"))
@@ -377,14 +398,23 @@ async fn test_license_cluster_license() {
     assert!(!license.expired);
     assert_eq!(license.shards_limit, Some(1000));
     assert_eq!(license.node_limit, Some(100));
-    assert_eq!(license.features, Some(vec!["clustering".to_string(), "modules".to_string(), "flash".to_string(), "search".to_string(), "json".to_string()]));
+    assert_eq!(
+        license.features,
+        Some(vec![
+            "clustering".to_string(),
+            "modules".to_string(),
+            "flash".to_string(),
+            "search".to_string(),
+            "json".to_string()
+        ])
+    );
     assert_eq!(license.owner, Some("enterprise-customer".to_string()));
 }
 
 #[tokio::test]
 async fn test_license_get_not_found() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/v1/license"))
         .and(basic_auth("admin", "password"))
@@ -410,7 +440,7 @@ async fn test_license_get_not_found() {
 #[tokio::test]
 async fn test_license_update_invalid() {
     let mock_server = MockServer::start().await;
-    
+
     let invalid_request = LicenseUpdateRequest {
         license: "invalid-license-format".to_string(),
     };
