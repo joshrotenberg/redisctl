@@ -132,6 +132,21 @@ pub enum CloudCommands {
         #[command(subcommand)]
         command: CrdbCommands,
     },
+    /// API Keys management
+    ApiKey {
+        #[command(subcommand)]
+        command: ApiKeyCommands,
+    },
+    /// Metrics and monitoring
+    Metrics {
+        #[command(subcommand)]
+        command: MetricsCommands,
+    },
+    /// Logs and audit trails
+    Logs {
+        #[command(subcommand)]
+        command: LogsCommands,
+    },
 }
 
 #[derive(Subcommand)]
@@ -745,5 +760,124 @@ pub enum LicenseCommands {
     Update {
         /// License key
         key: String,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum ApiKeyCommands {
+    /// List API keys
+    List,
+    /// Show API key details
+    Show {
+        /// API key ID
+        key_id: u32,
+    },
+    /// Create API key
+    Create {
+        /// API key name
+        name: String,
+        /// API key role
+        #[arg(long)]
+        role: String,
+    },
+    /// Update API key
+    Update {
+        /// API key ID
+        key_id: u32,
+        /// New name
+        #[arg(long)]
+        name: Option<String>,
+        /// New role
+        #[arg(long)]
+        role: Option<String>,
+    },
+    /// Delete API key
+    Delete {
+        /// API key ID
+        key_id: u32,
+        /// Force deletion without confirmation
+        #[arg(long)]
+        force: bool,
+    },
+    /// Regenerate API key
+    Regenerate {
+        /// API key ID
+        key_id: u32,
+    },
+    /// Enable API key
+    Enable {
+        /// API key ID
+        key_id: u32,
+    },
+    /// Disable API key
+    Disable {
+        /// API key ID
+        key_id: u32,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum MetricsCommands {
+    /// Get database metrics
+    Database {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Database ID
+        database_id: u32,
+        /// Metric name
+        #[arg(long)]
+        metric: String,
+        /// Time period
+        #[arg(long, default_value = "1hour")]
+        period: String,
+    },
+    /// Get subscription metrics
+    Subscription {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Metric name
+        #[arg(long)]
+        metric: String,
+        /// Time period
+        #[arg(long, default_value = "1hour")]
+        period: String,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum LogsCommands {
+    /// Get database logs
+    Database {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Database ID
+        database_id: u32,
+        /// Log type (slowlog, audit)
+        #[arg(long, default_value = "slowlog")]
+        log_type: String,
+        /// Number of entries to retrieve
+        #[arg(long, default_value = "100")]
+        limit: u32,
+        /// Offset for pagination
+        #[arg(long, default_value = "0")]
+        offset: u32,
+    },
+    /// Get system logs
+    System {
+        /// Number of entries to retrieve
+        #[arg(long, default_value = "100")]
+        limit: u32,
+        /// Offset for pagination
+        #[arg(long, default_value = "0")]
+        offset: u32,
+    },
+    /// Get session logs
+    Session {
+        /// Number of entries to retrieve
+        #[arg(long, default_value = "100")]
+        limit: u32,
+        /// Offset for pagination
+        #[arg(long, default_value = "0")]
+        offset: u32,
     },
 }

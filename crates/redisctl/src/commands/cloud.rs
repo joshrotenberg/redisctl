@@ -3,9 +3,9 @@ use redis_cloud::{CloudClient, CloudConfig};
 use redis_common::{print_output, OutputFormat, Profile, ProfileCredentials};
 
 use crate::cli::{
-    AccountCommands, AclCommands, BackupCommands, CloudCommands, CrdbCommands, DatabaseCommands,
-    PeeringCommands, RegionCommands, SubscriptionCommands, TaskCommands, TransitGatewayCommands,
-    UserCommands,
+    AccountCommands, AclCommands, ApiKeyCommands, BackupCommands, CloudCommands, CrdbCommands,
+    DatabaseCommands, LogsCommands, MetricsCommands, PeeringCommands, RegionCommands,
+    SubscriptionCommands, TaskCommands, TransitGatewayCommands, UserCommands,
 };
 use crate::commands::api::handle_cloud_api;
 
@@ -53,6 +53,15 @@ pub async fn handle_cloud_command(
         }
         CloudCommands::Crdb { command } => {
             handle_crdb_command(command, profile, output_format, query).await
+        }
+        CloudCommands::ApiKey { command } => {
+            handle_api_key_command(command, profile, output_format, query).await
+        }
+        CloudCommands::Metrics { command } => {
+            handle_metrics_command(command, profile, output_format, query).await
+        }
+        CloudCommands::Logs { command } => {
+            handle_logs_command(command, profile, output_format, query).await
         }
     }
 }
@@ -711,6 +720,172 @@ pub async fn handle_crdb_command(
                 .delete_raw(&format!("/crdbs/{}/regions/{}", crdb_id, region_id))
                 .await?;
             println!("Region {} removed from CRDB {}", region_id, crdb_id);
+        }
+    }
+
+    Ok(())
+}
+
+pub async fn handle_api_key_command(
+    command: ApiKeyCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_cloud_client(profile)?;
+
+    match command {
+        ApiKeyCommands::List => {
+            let keys = client.get_raw("/api-keys").await?;
+            print_output(keys, output_format, query)?;
+        }
+        ApiKeyCommands::Show { key_id } => {
+            let key = client.get_raw(&format!("/api-keys/{}", key_id)).await?;
+            print_output(key, output_format, query)?;
+        }
+        ApiKeyCommands::Create { name, role } => {
+            let create_data = serde_json::json!({
+                "name": name,
+                "role": role
+            });
+            let key = client.post_raw("/api-keys", create_data).await?;
+            print_output(key, output_format, query)?;
+        }
+        ApiKeyCommands::Update { key_id, name, role } => {
+            let mut update_data = serde_json::Map::new();
+            if let Some(name) = name {
+                update_data.insert("name".to_string(), serde_json::Value::String(name));
+            }
+            if let Some(role) = role {
+                update_data.insert("role".to_string(), serde_json::Value::String(role));
+            }
+            let key = client
+                .put_raw(
+                    &format!("/api-keys/{}", key_id),
+                    serde_json::Value::Object(update_data),
+                )
+                .await?;
+            print_output(key, output_format, query)?;
+        }
+        ApiKeyCommands::Delete { key_id, force } => {
+            if !force {
+                println!(
+                    "Are you sure you want to delete API key {}? Use --force to skip confirmation.",
+                    key_id
+                );
+                return Ok(());
+            }
+            client.delete_raw(&format!("/api-keys/{}", key_id)).await?;
+            println!("API key {} deleted successfully", key_id);
+        }
+        ApiKeyCommands::Regenerate { key_id } => {
+            let result = client
+                .post_raw(
+                    &format!("/api-keys/{}/regenerate", key_id),
+                    serde_json::json!({}),
+                )
+                .await?;
+            print_output(result, output_format, query)?;
+        }
+        ApiKeyCommands::Enable { key_id } => {
+            let result = client
+                .post_raw(
+                    &format!("/api-keys/{}/enable", key_id),
+                    serde_json::json!({}),
+                )
+                .await?;
+            print_output(result, output_format, query)?;
+        }
+        ApiKeyCommands::Disable { key_id } => {
+            let result = client
+                .post_raw(
+                    &format!("/api-keys/{}/disable", key_id),
+                    serde_json::json!({}),
+                )
+                .await?;
+            print_output(result, output_format, query)?;
+        }
+    }
+
+    Ok(())
+}
+
+pub async fn handle_metrics_command(
+    command: MetricsCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_cloud_client(profile)?;
+
+    match command {
+        MetricsCommands::Database {
+            subscription_id,
+            database_id,
+            metric,
+            period,
+        } => {
+            let metrics = client
+                .get_raw(&format!(
+                    "/subscriptions/{}/databases/{}/metrics?metric={}&period={}",
+                    subscription_id, database_id, metric, period
+                ))
+                .await?;
+            print_output(metrics, output_format, query)?;
+        }
+        MetricsCommands::Subscription {
+            subscription_id,
+            metric,
+            period,
+        } => {
+            let metrics = client
+                .get_raw(&format!(
+                    "/subscriptions/{}/metrics?metric={}&period={}",
+                    subscription_id, metric, period
+                ))
+                .await?;
+            print_output(metrics, output_format, query)?;
+        }
+    }
+
+    Ok(())
+}
+
+pub async fn handle_logs_command(
+    command: LogsCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_cloud_client(profile)?;
+
+    match command {
+        LogsCommands::Database {
+            subscription_id,
+            database_id,
+            log_type,
+            limit,
+            offset,
+        } => {
+            let logs = client
+                .get_raw(&format!(
+                    "/subscriptions/{}/databases/{}/logs?type={}&limit={}&offset={}",
+                    subscription_id, database_id, log_type, limit, offset
+                ))
+                .await?;
+            print_output(logs, output_format, query)?;
+        }
+        LogsCommands::System { limit, offset } => {
+            let logs = client
+                .get_raw(&format!("/logs/system?limit={}&offset={}", limit, offset))
+                .await?;
+            print_output(logs, output_format, query)?;
+        }
+        LogsCommands::Session { limit, offset } => {
+            let logs = client
+                .get_raw(&format!("/logs/session?limit={}&offset={}", limit, offset))
+                .await?;
+            print_output(logs, output_format, query)?;
         }
     }
 
