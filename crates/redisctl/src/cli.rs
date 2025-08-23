@@ -112,6 +112,61 @@ pub enum CloudCommands {
         #[command(subcommand)]
         command: AclCommands,
     },
+    /// VPC Peering management
+    Peering {
+        #[command(subcommand)]
+        command: PeeringCommands,
+    },
+    /// Transit Gateway management
+    TransitGateway {
+        #[command(subcommand)]
+        command: TransitGatewayCommands,
+    },
+    /// Backup management
+    Backup {
+        #[command(subcommand)]
+        command: BackupCommands,
+    },
+    /// Active-Active database management
+    Crdb {
+        #[command(subcommand)]
+        command: CrdbCommands,
+    },
+    /// API Keys management
+    ApiKey {
+        #[command(subcommand)]
+        command: ApiKeyCommands,
+    },
+    /// Metrics and monitoring
+    Metrics {
+        #[command(subcommand)]
+        command: MetricsCommands,
+    },
+    /// Logs and audit trails
+    Logs {
+        #[command(subcommand)]
+        command: LogsCommands,
+    },
+    /// Cloud account management
+    CloudAccount {
+        #[command(subcommand)]
+        command: CloudAccountCommands,
+    },
+    /// Fixed plan management
+    FixedPlan {
+        #[command(subcommand)]
+        command: FixedPlanCommands,
+    },
+    /// Flexible plan management
+    FlexiblePlan {
+        #[command(subcommand)]
+        command: FlexiblePlanCommands,
+    },
+    /// Private Service Connect
+    PrivateServiceConnect {
+        #[command(subcommand)]
+        command: PrivateServiceConnectCommands,
+    },
 }
 
 #[derive(Subcommand)]
@@ -412,11 +467,241 @@ pub enum TaskCommands {
 #[derive(Subcommand)]
 pub enum AclCommands {
     /// List ACL rules
-    List,
+    List {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Database ID
+        database_id: u32,
+    },
     /// Show ACL rule details
     Show {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Database ID
+        database_id: u32,
         /// ACL rule ID
-        id: String,
+        acl_id: u32,
+    },
+    /// Create ACL rule
+    Create {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Database ID
+        database_id: u32,
+        /// ACL name
+        name: String,
+        /// ACL rule
+        #[arg(long)]
+        rule: String,
+    },
+    /// Update ACL rule
+    Update {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Database ID
+        database_id: u32,
+        /// ACL rule ID
+        acl_id: u32,
+        /// New ACL rule
+        #[arg(long)]
+        rule: String,
+    },
+    /// Delete ACL rule
+    Delete {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Database ID
+        database_id: u32,
+        /// ACL rule ID
+        acl_id: u32,
+        /// Force deletion without confirmation
+        #[arg(long)]
+        force: bool,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum PeeringCommands {
+    /// List VPC peerings
+    List {
+        /// Subscription ID
+        subscription_id: u32,
+    },
+    /// Show peering details
+    Show {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Peering ID
+        peering_id: String,
+    },
+    /// Create VPC peering
+    Create {
+        /// Subscription ID
+        subscription_id: u32,
+        /// AWS account ID or GCP project ID
+        #[arg(long)]
+        provider_account_id: String,
+        /// VPC ID (AWS) or network name (GCP)
+        #[arg(long)]
+        vpc_id: String,
+        /// VPC CIDR
+        #[arg(long)]
+        vpc_cidr: String,
+        /// Region
+        #[arg(long)]
+        region: String,
+    },
+    /// Delete VPC peering
+    Delete {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Peering ID
+        peering_id: String,
+        /// Force deletion without confirmation
+        #[arg(long)]
+        force: bool,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum TransitGatewayCommands {
+    /// List Transit Gateway attachments
+    List {
+        /// Subscription ID
+        subscription_id: u32,
+    },
+    /// Show Transit Gateway attachment details
+    Show {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Transit Gateway ID
+        tgw_id: String,
+    },
+    /// Create Transit Gateway attachment
+    Create {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Transit Gateway ID
+        tgw_id: String,
+        /// AWS account ID
+        #[arg(long)]
+        aws_account_id: String,
+        /// VPC CIDRs
+        #[arg(long)]
+        cidrs: Vec<String>,
+    },
+    /// Delete Transit Gateway attachment
+    Delete {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Transit Gateway ID
+        tgw_id: String,
+        /// Force deletion without confirmation
+        #[arg(long)]
+        force: bool,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum BackupCommands {
+    /// List backups
+    List {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Database ID
+        database_id: u32,
+    },
+    /// Show backup details
+    Show {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Database ID
+        database_id: u32,
+        /// Backup ID
+        backup_id: u32,
+    },
+    /// Create backup
+    Create {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Database ID
+        database_id: u32,
+    },
+    /// Restore from backup
+    Restore {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Database ID
+        database_id: u32,
+        /// Backup ID
+        backup_id: u32,
+    },
+    /// Delete backup
+    Delete {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Database ID
+        database_id: u32,
+        /// Backup ID
+        backup_id: u32,
+        /// Force deletion without confirmation
+        #[arg(long)]
+        force: bool,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum CrdbCommands {
+    /// List Active-Active databases
+    List,
+    /// Show Active-Active database details
+    Show {
+        /// CRDB ID
+        crdb_id: u32,
+    },
+    /// Create Active-Active database
+    Create {
+        /// Database name
+        name: String,
+        /// Memory limit per region (MB)
+        #[arg(long)]
+        memory_limit: u64,
+        /// Participating regions
+        #[arg(long)]
+        regions: Vec<String>,
+    },
+    /// Update Active-Active database
+    Update {
+        /// CRDB ID
+        crdb_id: u32,
+        /// New name
+        #[arg(long)]
+        name: Option<String>,
+        /// New memory limit (MB)
+        #[arg(long)]
+        memory_limit: Option<u64>,
+    },
+    /// Delete Active-Active database
+    Delete {
+        /// CRDB ID
+        crdb_id: u32,
+        /// Force deletion without confirmation
+        #[arg(long)]
+        force: bool,
+    },
+    /// Add region to Active-Active database
+    AddRegion {
+        /// CRDB ID
+        crdb_id: u32,
+        /// Region to add
+        region: String,
+    },
+    /// Remove region from Active-Active database
+    RemoveRegion {
+        /// CRDB ID
+        crdb_id: u32,
+        /// Region ID to remove
+        region_id: u32,
     },
 }
 
@@ -495,5 +780,283 @@ pub enum LicenseCommands {
     Update {
         /// License key
         key: String,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum ApiKeyCommands {
+    /// List API keys
+    List,
+    /// Show API key details
+    Show {
+        /// API key ID
+        key_id: u32,
+    },
+    /// Create API key
+    Create {
+        /// API key name
+        name: String,
+        /// API key role
+        #[arg(long)]
+        role: String,
+    },
+    /// Update API key
+    Update {
+        /// API key ID
+        key_id: u32,
+        /// New name
+        #[arg(long)]
+        name: Option<String>,
+        /// New role
+        #[arg(long)]
+        role: Option<String>,
+    },
+    /// Delete API key
+    Delete {
+        /// API key ID
+        key_id: u32,
+        /// Force deletion without confirmation
+        #[arg(long)]
+        force: bool,
+    },
+    /// Regenerate API key
+    Regenerate {
+        /// API key ID
+        key_id: u32,
+    },
+    /// Enable API key
+    Enable {
+        /// API key ID
+        key_id: u32,
+    },
+    /// Disable API key
+    Disable {
+        /// API key ID
+        key_id: u32,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum MetricsCommands {
+    /// Get database metrics
+    Database {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Database ID
+        database_id: u32,
+        /// Metric name
+        #[arg(long)]
+        metric: String,
+        /// Time period
+        #[arg(long, default_value = "1hour")]
+        period: String,
+    },
+    /// Get subscription metrics
+    Subscription {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Metric name
+        #[arg(long)]
+        metric: String,
+        /// Time period
+        #[arg(long, default_value = "1hour")]
+        period: String,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum LogsCommands {
+    /// Get database logs
+    Database {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Database ID
+        database_id: u32,
+        /// Log type (slowlog, audit)
+        #[arg(long, default_value = "slowlog")]
+        log_type: String,
+        /// Number of entries to retrieve
+        #[arg(long, default_value = "100")]
+        limit: u32,
+        /// Offset for pagination
+        #[arg(long, default_value = "0")]
+        offset: u32,
+    },
+    /// Get system logs
+    System {
+        /// Number of entries to retrieve
+        #[arg(long, default_value = "100")]
+        limit: u32,
+        /// Offset for pagination
+        #[arg(long, default_value = "0")]
+        offset: u32,
+    },
+    /// Get session logs
+    Session {
+        /// Number of entries to retrieve
+        #[arg(long, default_value = "100")]
+        limit: u32,
+        /// Offset for pagination
+        #[arg(long, default_value = "0")]
+        offset: u32,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum CloudAccountCommands {
+    /// List cloud accounts
+    List,
+    /// Show cloud account details
+    Show {
+        /// Cloud account ID
+        account_id: String,
+    },
+    /// Create cloud account
+    Create {
+        /// Account name
+        #[arg(long)]
+        name: String,
+        /// Provider (AWS, GCP, Azure)
+        #[arg(long)]
+        provider: String,
+        /// Access key ID
+        #[arg(long)]
+        access_key_id: String,
+        /// Secret access key
+        #[arg(long)]
+        secret_access_key: String,
+    },
+    /// Update cloud account
+    Update {
+        /// Cloud account ID
+        account_id: String,
+        /// Account name
+        #[arg(long)]
+        name: Option<String>,
+        /// Access key ID
+        #[arg(long)]
+        access_key_id: Option<String>,
+        /// Secret access key
+        #[arg(long)]
+        secret_access_key: Option<String>,
+    },
+    /// Delete cloud account
+    Delete {
+        /// Cloud account ID
+        account_id: String,
+        /// Force deletion without confirmation
+        #[arg(long)]
+        force: bool,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum FixedPlanCommands {
+    /// List fixed plans
+    List,
+    /// Show fixed plan details
+    Show {
+        /// Plan ID
+        plan_id: u32,
+    },
+    /// List available plans for region
+    Plans {
+        /// Region name
+        region: String,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum FlexiblePlanCommands {
+    /// List flexible plans
+    List,
+    /// Show flexible plan details
+    Show {
+        /// Plan ID
+        plan_id: u32,
+    },
+    /// Create flexible plan
+    Create {
+        /// Plan name
+        #[arg(long)]
+        name: String,
+        /// Memory limit in GB
+        #[arg(long)]
+        memory_limit_in_gb: f64,
+        /// Maximum number of databases
+        #[arg(long)]
+        maximum_databases: u32,
+    },
+    /// Update flexible plan
+    Update {
+        /// Plan ID
+        plan_id: u32,
+        /// Plan name
+        #[arg(long)]
+        name: Option<String>,
+        /// Memory limit in GB
+        #[arg(long)]
+        memory_limit_in_gb: Option<f64>,
+        /// Maximum number of databases
+        #[arg(long)]
+        maximum_databases: Option<u32>,
+    },
+    /// Delete flexible plan
+    Delete {
+        /// Plan ID
+        plan_id: u32,
+        /// Force deletion without confirmation
+        #[arg(long)]
+        force: bool,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum PrivateServiceConnectCommands {
+    /// List Private Service Connect endpoints
+    List {
+        /// Subscription ID
+        subscription_id: u32,
+    },
+    /// Show Private Service Connect endpoint details
+    Show {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Endpoint ID
+        endpoint_id: u32,
+    },
+    /// Create Private Service Connect endpoint
+    Create {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Service name
+        #[arg(long)]
+        service_name: String,
+        /// Allowed principals (comma-separated)
+        #[arg(long)]
+        allowed_principals: String,
+    },
+    /// Update Private Service Connect endpoint
+    Update {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Endpoint ID
+        endpoint_id: u32,
+        /// Service name
+        #[arg(long)]
+        service_name: Option<String>,
+        /// Allowed principals (comma-separated)
+        #[arg(long)]
+        allowed_principals: Option<String>,
+    },
+    /// Delete Private Service Connect endpoint
+    Delete {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Endpoint ID
+        endpoint_id: u32,
+        /// Force deletion without confirmation
+        #[arg(long)]
+        force: bool,
     },
 }
