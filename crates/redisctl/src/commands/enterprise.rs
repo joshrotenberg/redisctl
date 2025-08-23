@@ -7,7 +7,9 @@ use crate::cli::{
     BootstrapCommands, ClusterCommands, DatabaseCommands, EnterpriseCommands, LicenseCommands,
     ModuleCommands, NodeCommands, RoleCommands, UserCommands,
 };
+use crate::commands::api::handle_enterprise_api;
 
+#[allow(dead_code)]
 pub async fn handle_enterprise_command(
     command: EnterpriseCommands,
     profile: &Profile,
@@ -15,6 +17,10 @@ pub async fn handle_enterprise_command(
     query: Option<&str>,
 ) -> Result<()> {
     match command {
+        EnterpriseCommands::Api { command } => {
+            let client = create_enterprise_client(profile).await?;
+            handle_enterprise_api(&client, command, output_format, query).await
+        }
         EnterpriseCommands::Database { command } => {
             handle_database_command(command, profile, output_format, query).await
         }
