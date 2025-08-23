@@ -1,3 +1,4 @@
+use crate::commands::api::ApiCommands;
 use clap::{Parser, Subcommand};
 use redis_common::{DeploymentType, OutputFormat};
 
@@ -71,6 +72,11 @@ pub enum Commands {
 
 #[derive(Subcommand)]
 pub enum CloudCommands {
+    /// Raw API access
+    Api {
+        #[command(subcommand)]
+        command: ApiCommands,
+    },
     /// Subscription management
     Subscription {
         #[command(subcommand)]
@@ -110,6 +116,11 @@ pub enum CloudCommands {
 
 #[derive(Subcommand)]
 pub enum EnterpriseCommands {
+    /// Raw API access
+    Api {
+        #[command(subcommand)]
+        command: ApiCommands,
+    },
     /// Cluster management
     Cluster {
         #[command(subcommand)]

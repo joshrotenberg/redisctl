@@ -39,6 +39,7 @@ tracing-subscriber = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 rpassword = { workspace = true }
+urlencoding = "2.1"
 
 # Conditional dependencies for feature-gated binaries
 [features]
@@ -48,3 +49,8 @@ cloud = []
 enterprise = []
 cloud-only = ["cloud"]
 enterprise-only = ["enterprise"]
+
+[dev-dependencies]
+assert_cmd = "2.0"
+predicates = "3.0"
+tempfile = "3.8"

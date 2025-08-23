@@ -6,7 +6,9 @@ use crate::cli::{
     AccountCommands, AclCommands, CloudCommands, DatabaseCommands, RegionCommands,
     SubscriptionCommands, TaskCommands, UserCommands,
 };
+use crate::commands::api::handle_cloud_api;
 
+#[allow(dead_code)]
 pub async fn handle_cloud_command(
     command: CloudCommands,
     profile: &Profile,
@@ -14,6 +16,10 @@ pub async fn handle_cloud_command(
     query: Option<&str>,
 ) -> Result<()> {
     match command {
+        CloudCommands::Api { command } => {
+            let client = create_cloud_client(profile)?;
+            handle_cloud_api(&client, command, output_format, query).await
+        }
         CloudCommands::Database { command } => {
             handle_database_command(command, profile, output_format, query).await
         }

@@ -23,9 +23,27 @@ redisctl/
 
 ### Key Crates
 - **redis-common**: Shared utilities for config, output formatting (JSON/YAML/Table), JMESPath queries, errors
-- **redis-cloud**: Cloud API client with handlers for subscriptions, databases, users, backups, ACLs, peering
-- **redis-enterprise**: Enterprise API client with handlers for clusters, bdbs, nodes, users, modules, stats
+- **redis-cloud**: Cloud API client with handlers for subscriptions, databases, users, backups, ACLs, peering (100% test coverage)
+- **redis-enterprise**: Enterprise API client with handlers for clusters, bdbs, nodes, users, modules, stats (100% test coverage)
 - **redisctl**: Main CLI with smart routing logic in `router.rs`, profile management, deployment detection
+
+### CLI Architecture (Three-Tier Design)
+
+The CLI provides three levels of functionality:
+
+1. **Raw API Access** (`api` command) - Direct REST API calls with auth handling
+   - `redisctl enterprise api GET /v1/bdbs`
+   - `redisctl cloud api POST /subscriptions/123/databases --data @db.json`
+
+2. **Human-Friendly Commands** - Single API call wrappers with nice output
+   - `redisctl cloud database list`
+   - `redisctl enterprise cluster info`
+
+3. **Workflow Commands** - Multi-step operations with orchestration
+   - `redisctl enterprise workflow init-cluster --config @cluster.yaml`
+   - `redisctl cloud workflow provision-ha-database --name prod --regions us-east-1,us-west-2`
+
+See GitHub issues #82-85 for implementation roadmap.
 
 ## Development Commands
 
@@ -62,8 +80,9 @@ cargo test test_cloud_config_default
 cargo fmt --all -- --check
 cargo clippy --all-targets --all-features -- -D warnings
 
-# Quick validation before commit
-make pre-commit  # runs fmt, test, clippy
+# Pre-commit hooks (recommended)
+./scripts/install-hooks.sh  # one-time setup
+pre-commit run --all-files   # run manually
 ```
 
 ### Docker Development Environment
