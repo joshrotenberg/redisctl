@@ -225,19 +225,21 @@ Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
 
 ## API Coverage
 
-### Redis Cloud (100% Coverage) ✅
-- ✅ Subscriptions (full CRUD operations)
-- ✅ Databases (full CRUD operations) 
+### Redis Cloud (40% Coverage) ⚠️
+- ✅ Subscriptions (basic operations)
+- ✅ Databases (basic CRUD operations) 
 - ✅ Cloud Accounts (AWS, GCP, Azure integration)
-- ✅ Users & ACLs (complete access control)
-- ✅ Backup & Restore (full backup lifecycle)
-- ✅ VPC Peering (AWS, GCP networking)
+- ✅ Users (basic operations)
+- ✅ ACLs (database access control)
+- ✅ Backup & Restore (backup lifecycle)
+- ✅ VPC Peering (networking)
 - ✅ Transit Gateway (enterprise networking)
 - ✅ Active-Active databases (CRDB operations)
-- ✅ API Keys (complete key management)
-- ✅ Metrics & Logs (monitoring & observability)
-- ✅ Fixed & Flexible Plans (subscription management)
+- ✅ API Keys (key management)
+- ✅ Metrics & Logs (monitoring)
+- ✅ Fixed & Flexible Plans (plan management)
 - ✅ Private Service Connect (GCP PSC endpoints)
+- 🚧 Many advanced features still planned
 
 ### Redis Enterprise (50% Coverage) ⚠️
 - ✅ Cluster management
@@ -255,8 +257,8 @@ Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
 See our [GitHub Issues](https://github.com/redis-field-engineering/redisctl/issues) for the complete roadmap.
 
 ### ✅ **Phase 1** - Raw API Access (Complete)
-   - Complete Redis Cloud API coverage (100%)
-   - Complete Redis Enterprise API coverage (50%) 
+   - Redis Cloud API coverage (40% → includes major workflows)
+   - Redis Enterprise API coverage (50%) 
    - Comprehensive test suite (500+ tests)
    - CI/CD automation with pre-commit hooks
 
@@ -264,7 +266,7 @@ See our [GitHub Issues](https://github.com/redis-field-engineering/redisctl/issu
    - Enhanced command interface with smart routing
    - Consistent --force flags and output formatting
    - JMESPath queries and multiple output formats
-   - 56 new commands across 12 API categories
+   - Major Cloud API categories now supported
 
 ### 🚧 **Phase 3** - Workflow Commands (In Progress)
    - High-level operations for complex multi-step tasks
