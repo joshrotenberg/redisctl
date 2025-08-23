@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use redis_common::{Config, DeploymentType, Profile, ProfileError, RoutingError};
 use tracing::{debug, info};
 
@@ -113,7 +113,9 @@ async fn route_cluster_command(
         let profile = get_profile_for_deployment(config, profile_name, dep_type)?;
         match dep_type {
             DeploymentType::Cloud => {
-                bail!("Cluster commands are not available for Redis Cloud. Use 'redisctl cloud subscription' instead.")
+                bail!(
+                    "Cluster commands are not available for Redis Cloud. Use 'redisctl cloud subscription' instead."
+                )
             }
             DeploymentType::Enterprise => {
                 enterprise::handle_cluster_command(command, profile, output_format, query).await
@@ -123,7 +125,9 @@ async fn route_cluster_command(
         let (profile, dep_type) = get_profile_with_type(config, profile_name)?;
         match dep_type {
             DeploymentType::Cloud => {
-                bail!("Cluster commands are not available for Redis Cloud. Use 'redisctl cloud subscription' instead.")
+                bail!(
+                    "Cluster commands are not available for Redis Cloud. Use 'redisctl cloud subscription' instead."
+                )
             }
             DeploymentType::Enterprise => {
                 enterprise::handle_cluster_command(command, profile, output_format, query).await
@@ -178,7 +182,9 @@ async fn route_account_command(
                 cloud::handle_account_command(command, profile, output_format, query).await
             }
             DeploymentType::Enterprise => {
-                bail!("Account commands are not available for Redis Enterprise. Use 'redisctl enterprise cluster' instead.")
+                bail!(
+                    "Account commands are not available for Redis Enterprise. Use 'redisctl enterprise cluster' instead."
+                )
             }
         }
     } else {
@@ -188,7 +194,9 @@ async fn route_account_command(
                 cloud::handle_account_command(command, profile, output_format, query).await
             }
             DeploymentType::Enterprise => {
-                bail!("Account commands are not available for Redis Enterprise. Use 'redisctl enterprise cluster' instead.")
+                bail!(
+                    "Account commands are not available for Redis Enterprise. Use 'redisctl enterprise cluster' instead."
+                )
             }
         }
     }
@@ -204,14 +212,14 @@ fn get_profile_with_type<'a>(
         .or(config.default.as_deref())
         .or(env_profile.as_deref());
 
-    if let Some(name) = profile_name {
-        if let Some(profile) = config.profiles.get(name) {
-            info!(
-                "Using profile '{}' with deployment type {:?}",
-                name, profile.deployment_type
-            );
-            return Ok((profile, profile.deployment_type));
-        }
+    if let Some(name) = profile_name
+        && let Some(profile) = config.profiles.get(name)
+    {
+        info!(
+            "Using profile '{}' with deployment type {:?}",
+            name, profile.deployment_type
+        );
+        return Ok((profile, profile.deployment_type));
     }
 
     // No profile specified or found

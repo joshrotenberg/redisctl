@@ -30,3 +30,7 @@ lcov.info
 # Redis dump files
 *.rdb
 dump.rdb
+
+# Claude
+CLAUDE.md
+.claude/

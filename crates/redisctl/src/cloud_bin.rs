@@ -43,7 +43,9 @@ async fn main() -> Result<()> {
             cloud::handle_account_command(command, profile, cli.output, cli.query.as_deref()).await
         }
         _ => {
-            anyhow::bail!("Command not supported in Cloud-only binary. Use full 'redisctl' for Enterprise commands.")
+            anyhow::bail!(
+                "Command not supported in Cloud-only binary. Use full 'redisctl' for Enterprise commands."
+            )
         }
     }
 }

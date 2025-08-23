@@ -1,9 +1,9 @@
 //! VPC Peering operations handler
 
 use crate::{
+    Result,
     client::CloudClient,
     models::{CloudPeering, CreatePeeringRequest},
-    Result,
 };
 use serde_json::Value;
 

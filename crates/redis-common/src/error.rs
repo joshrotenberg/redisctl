@@ -39,7 +39,9 @@ pub enum ProfileError {
 
 #[derive(Error, Debug)]
 pub enum RoutingError {
-    #[error("Command '{command}' exists in both cloud and enterprise. Use 'redisctl cloud {command}' or 'redisctl enterprise {command}'")]
+    #[error(
+        "Command '{command}' exists in both cloud and enterprise. Use 'redisctl cloud {command}' or 'redisctl enterprise {command}'"
+    )]
     AmbiguousCommand { command: String },
 
     #[error("Command '{command}' not found in {deployment_type}")]

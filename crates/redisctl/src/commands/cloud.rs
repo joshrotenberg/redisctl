@@ -1,6 +1,6 @@
 use anyhow::Result;
 use redis_cloud::{CloudClient, CloudConfig};
-use redis_common::{print_output, OutputFormat, Profile, ProfileCredentials};
+use redis_common::{OutputFormat, Profile, ProfileCredentials, print_output};
 
 use crate::cli::{
     AccountCommands, AclCommands, ApiKeyCommands, BackupCommands, CloudAccountCommands,
@@ -128,7 +128,9 @@ pub async fn handle_database_command(
             memory_limit: _,
             modules: _,
         } => {
-            anyhow::bail!("Database creation requires subscription context. Use 'redisctl cloud subscription create-database' instead.");
+            anyhow::bail!(
+                "Database creation requires subscription context. Use 'redisctl cloud subscription create-database' instead."
+            );
         }
         DatabaseCommands::Update {
             id,
@@ -1467,7 +1469,9 @@ pub async fn handle_sso_command(
         }
         SsoCommands::Delete { force } => {
             if !force {
-                println!("Are you sure you want to delete SSO configuration? Use --force to skip confirmation.");
+                println!(
+                    "Are you sure you want to delete SSO configuration? Use --force to skip confirmation."
+                );
                 return Ok(());
             }
             client.delete_raw("/sso").await?;

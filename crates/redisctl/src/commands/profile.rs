@@ -1,6 +1,6 @@
 use anyhow::Result;
 use redis_common::{
-    print_output, Config, DeploymentType, OutputFormat, Profile, ProfileCredentials,
+    Config, DeploymentType, OutputFormat, Profile, ProfileCredentials, print_output,
 };
 
 use crate::cli::ProfileCommands;

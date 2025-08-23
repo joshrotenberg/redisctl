@@ -1,9 +1,9 @@
 //! Database operations handler
 
 use crate::{
+    Result,
     client::CloudClient,
     models::{CloudDatabase, CreateDatabaseRequest, UpdateDatabaseRequest},
-    Result,
 };
 use serde_json::Value;
 

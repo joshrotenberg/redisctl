@@ -1,6 +1,6 @@
 //! Active-Active (CRDB) database operations handler
 
-use crate::{client::CloudClient, Result};
+use crate::{Result, client::CloudClient};
 use serde_json::Value;
 
 /// Handler for Cloud Active-Active database operations

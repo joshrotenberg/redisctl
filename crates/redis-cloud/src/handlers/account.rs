@@ -1,9 +1,9 @@
 //! Account operations handler
 
 use crate::{
+    Result,
     client::CloudClient,
     models::{AccountResponse, CloudAccount},
-    Result,
 };
 use serde_json::Value;
 

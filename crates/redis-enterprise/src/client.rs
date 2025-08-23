@@ -2,7 +2,7 @@
 
 use crate::error::{RestError, Result};
 use reqwest::{Client, Response};
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 use std::sync::Arc;
 use std::time::Duration;
 use tracing::{debug, trace};

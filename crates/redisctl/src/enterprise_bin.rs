@@ -52,7 +52,9 @@ async fn main() -> Result<()> {
                 .await
         }
         _ => {
-            anyhow::bail!("Command not supported in Enterprise-only binary. Use full 'redisctl' for Cloud commands.")
+            anyhow::bail!(
+                "Command not supported in Enterprise-only binary. Use full 'redisctl' for Cloud commands."
+            )
         }
     }
 }

@@ -431,16 +431,20 @@ async fn test_get_creation_scripts() {
     let scripts = &response["scripts"];
     assert!(scripts["terraform"].is_object());
     assert!(scripts["gcloud"].is_object());
-    assert!(scripts["terraform"]["main"]
-        .as_str()
-        .unwrap()
-        .contains("google_compute_forwarding_rule"));
+    assert!(
+        scripts["terraform"]["main"]
+            .as_str()
+            .unwrap()
+            .contains("google_compute_forwarding_rule")
+    );
     let gcloud_cmds = scripts["gcloud"]["commands"].as_array().unwrap();
     assert!(!gcloud_cmds.is_empty());
-    assert!(scripts["documentation"]
-        .as_str()
-        .unwrap()
-        .starts_with("https://"));
+    assert!(
+        scripts["documentation"]
+            .as_str()
+            .unwrap()
+            .starts_with("https://")
+    );
 }
 
 #[tokio::test]
@@ -485,14 +489,18 @@ async fn test_get_deletion_scripts() {
     assert!(result.is_ok());
     let response = result.unwrap();
     let scripts = &response["scripts"];
-    assert!(scripts["terraform"]["warning"]
-        .as_str()
-        .unwrap()
-        .contains("permanently delete"));
-    assert!(scripts["gcloud"]["warning"]
-        .as_str()
-        .unwrap()
-        .contains("permanently delete"));
+    assert!(
+        scripts["terraform"]["warning"]
+            .as_str()
+            .unwrap()
+            .contains("permanently delete")
+    );
+    assert!(
+        scripts["gcloud"]["warning"]
+            .as_str()
+            .unwrap()
+            .contains("permanently delete")
+    );
     let checklist = scripts["preDeleteChecklist"].as_array().unwrap();
     assert_eq!(checklist.len(), 4);
     assert!(checklist[0].as_str().unwrap().contains("applications"));
@@ -791,10 +799,12 @@ async fn test_get_regional_creation_scripts() {
     assert!(result.is_ok());
     let response = result.unwrap();
     let scripts = &response["scripts"];
-    assert!(scripts["terraform"]["main"]
-        .as_str()
-        .unwrap()
-        .contains("redis_psc_regional_endpoint"));
+    assert!(
+        scripts["terraform"]["main"]
+            .as_str()
+            .unwrap()
+            .contains("redis_psc_regional_endpoint")
+    );
 }
 
 #[tokio::test]
@@ -836,10 +846,12 @@ async fn test_get_regional_deletion_scripts() {
     assert!(result.is_ok());
     let response = result.unwrap();
     let scripts = &response["scripts"];
-    assert!(scripts["terraform"]["main"]
-        .as_str()
-        .unwrap()
-        .contains("terraform destroy"));
+    assert!(
+        scripts["terraform"]["main"]
+            .as_str()
+            .unwrap()
+            .contains("terraform destroy")
+    );
 }
 
 #[tokio::test]

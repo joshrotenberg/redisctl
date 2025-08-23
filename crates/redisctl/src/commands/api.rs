@@ -5,7 +5,7 @@
 use anyhow::{Context, Result};
 use clap::Subcommand;
 use redis_cloud::CloudClient;
-use redis_common::{print_output, OutputFormat};
+use redis_common::{OutputFormat, print_output};
 use redis_enterprise::EnterpriseClient;
 use serde_json::Value;
 use std::fs;

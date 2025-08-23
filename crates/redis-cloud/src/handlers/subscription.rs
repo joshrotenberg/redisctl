@@ -1,11 +1,11 @@
 //! Subscription operations handler
 
 use crate::{
+    Result,
     client::CloudClient,
     models::{
         CloudDatabase, CloudSubscription, CreateSubscriptionRequest, UpdateSubscriptionRequest,
     },
-    Result,
 };
 use serde_json::Value;
 

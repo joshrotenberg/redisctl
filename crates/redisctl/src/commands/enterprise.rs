@@ -1,5 +1,5 @@
 use anyhow::Result;
-use redis_common::{print_output, OutputFormat, Profile, ProfileCredentials};
+use redis_common::{OutputFormat, Profile, ProfileCredentials, print_output};
 use redis_enterprise::{EnterpriseClient, EnterpriseConfig};
 use std::io::Write;
 
@@ -358,7 +358,10 @@ pub async fn handle_module_command(
         }
         ModuleCommands::Upload { path } => {
             // For now, provide a meaningful error about file upload limitations
-            anyhow::bail!("Module upload requires multipart file upload functionality. Please use the Redis Enterprise web UI or direct API calls for module uploads. Module path would be: {}", path);
+            anyhow::bail!(
+                "Module upload requires multipart file upload functionality. Please use the Redis Enterprise web UI or direct API calls for module uploads. Module path would be: {}",
+                path
+            );
         }
     }
 
