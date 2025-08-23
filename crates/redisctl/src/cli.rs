@@ -147,6 +147,26 @@ pub enum CloudCommands {
         #[command(subcommand)]
         command: LogsCommands,
     },
+    /// Cloud account management
+    CloudAccount {
+        #[command(subcommand)]
+        command: CloudAccountCommands,
+    },
+    /// Fixed plan management
+    FixedPlan {
+        #[command(subcommand)]
+        command: FixedPlanCommands,
+    },
+    /// Flexible plan management
+    FlexiblePlan {
+        #[command(subcommand)]
+        command: FlexiblePlanCommands,
+    },
+    /// Private Service Connect
+    PrivateServiceConnect {
+        #[command(subcommand)]
+        command: PrivateServiceConnectCommands,
+    },
 }
 
 #[derive(Subcommand)]
@@ -879,5 +899,164 @@ pub enum LogsCommands {
         /// Offset for pagination
         #[arg(long, default_value = "0")]
         offset: u32,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum CloudAccountCommands {
+    /// List cloud accounts
+    List,
+    /// Show cloud account details
+    Show {
+        /// Cloud account ID
+        account_id: String,
+    },
+    /// Create cloud account
+    Create {
+        /// Account name
+        #[arg(long)]
+        name: String,
+        /// Provider (AWS, GCP, Azure)
+        #[arg(long)]
+        provider: String,
+        /// Access key ID
+        #[arg(long)]
+        access_key_id: String,
+        /// Secret access key
+        #[arg(long)]
+        secret_access_key: String,
+    },
+    /// Update cloud account
+    Update {
+        /// Cloud account ID
+        account_id: String,
+        /// Account name
+        #[arg(long)]
+        name: Option<String>,
+        /// Access key ID
+        #[arg(long)]
+        access_key_id: Option<String>,
+        /// Secret access key
+        #[arg(long)]
+        secret_access_key: Option<String>,
+    },
+    /// Delete cloud account
+    Delete {
+        /// Cloud account ID
+        account_id: String,
+        /// Force deletion without confirmation
+        #[arg(long)]
+        force: bool,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum FixedPlanCommands {
+    /// List fixed plans
+    List,
+    /// Show fixed plan details
+    Show {
+        /// Plan ID
+        plan_id: u32,
+    },
+    /// List available plans for region
+    Plans {
+        /// Region name
+        region: String,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum FlexiblePlanCommands {
+    /// List flexible plans
+    List,
+    /// Show flexible plan details
+    Show {
+        /// Plan ID
+        plan_id: u32,
+    },
+    /// Create flexible plan
+    Create {
+        /// Plan name
+        #[arg(long)]
+        name: String,
+        /// Memory limit in GB
+        #[arg(long)]
+        memory_limit_in_gb: f64,
+        /// Maximum number of databases
+        #[arg(long)]
+        maximum_databases: u32,
+    },
+    /// Update flexible plan
+    Update {
+        /// Plan ID
+        plan_id: u32,
+        /// Plan name
+        #[arg(long)]
+        name: Option<String>,
+        /// Memory limit in GB
+        #[arg(long)]
+        memory_limit_in_gb: Option<f64>,
+        /// Maximum number of databases
+        #[arg(long)]
+        maximum_databases: Option<u32>,
+    },
+    /// Delete flexible plan
+    Delete {
+        /// Plan ID
+        plan_id: u32,
+        /// Force deletion without confirmation
+        #[arg(long)]
+        force: bool,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum PrivateServiceConnectCommands {
+    /// List Private Service Connect endpoints
+    List {
+        /// Subscription ID
+        subscription_id: u32,
+    },
+    /// Show Private Service Connect endpoint details
+    Show {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Endpoint ID
+        endpoint_id: u32,
+    },
+    /// Create Private Service Connect endpoint
+    Create {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Service name
+        #[arg(long)]
+        service_name: String,
+        /// Allowed principals (comma-separated)
+        #[arg(long)]
+        allowed_principals: String,
+    },
+    /// Update Private Service Connect endpoint
+    Update {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Endpoint ID
+        endpoint_id: u32,
+        /// Service name
+        #[arg(long)]
+        service_name: Option<String>,
+        /// Allowed principals (comma-separated)
+        #[arg(long)]
+        allowed_principals: Option<String>,
+    },
+    /// Delete Private Service Connect endpoint
+    Delete {
+        /// Subscription ID
+        subscription_id: u32,
+        /// Endpoint ID
+        endpoint_id: u32,
+        /// Force deletion without confirmation
+        #[arg(long)]
+        force: bool,
     },
 }

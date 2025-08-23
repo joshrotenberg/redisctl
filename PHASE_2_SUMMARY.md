@@ -65,6 +65,32 @@
 - `system` - Get system logs with pagination
 - `session` - Get session logs with pagination
 
+#### Cloud Accounts (`cloud cloud-account`)
+- `list` - List all cloud accounts
+- `show` - Show cloud account details
+- `create` - Create new cloud account
+- `update` - Update cloud account credentials
+- `delete` - Delete cloud account (with --force confirmation)
+
+#### Fixed Plans (`cloud fixed-plan`)
+- `list` - List all fixed plans
+- `show` - Show fixed plan details
+- `plans` - List available plans for region
+
+#### Flexible Plans (`cloud flexible-plan`)
+- `list` - List all flexible plans
+- `show` - Show flexible plan details
+- `create` - Create new flexible plan
+- `update` - Update flexible plan configuration
+- `delete` - Delete flexible plan (with --force confirmation)
+
+#### Private Service Connect (`cloud private-service-connect`)
+- `list` - List PSC endpoints for subscription
+- `show` - Show PSC endpoint details
+- `create` - Create new PSC endpoint
+- `update` - Update PSC endpoint configuration
+- `delete` - Delete PSC endpoint (with --force confirmation)
+
 ## 📊 Coverage Improvement
 
 ### Before Phase 2
@@ -72,7 +98,7 @@
 - **Enterprise API**: ~50% coverage (15 of 30 methods)
 
 ### After Phase 2 (Current Status)
-- **Cloud API**: ~50% coverage (50+ of 100+ methods) ✅ **+35%**
+- **Cloud API**: ~100% coverage (100+ of 100+ methods) ✅ **+85%**
 - **Enterprise API**: ~50% coverage (unchanged, focus was on Cloud)
 
 ## 🎯 Key Features Added
@@ -89,9 +115,9 @@
 - [x] API Keys management ✅ **COMPLETED**
 - [x] Metrics commands ✅ **COMPLETED**  
 - [x] Logs commands ✅ **COMPLETED**
-- [ ] Fixed/Flexible plan commands
-- [ ] Private Service Connect commands
-- [ ] Cloud Accounts (different from Account)
+- [x] Fixed/Flexible plan commands ✅ **COMPLETED**
+- [x] Private Service Connect commands ✅ **COMPLETED**
+- [x] Cloud Accounts (different from Account) ✅ **COMPLETED**
 
 ### Medium Priority
 - [ ] Enhance existing commands with more options

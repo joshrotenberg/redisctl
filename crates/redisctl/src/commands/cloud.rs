@@ -3,8 +3,9 @@ use redis_cloud::{CloudClient, CloudConfig};
 use redis_common::{print_output, OutputFormat, Profile, ProfileCredentials};
 
 use crate::cli::{
-    AccountCommands, AclCommands, ApiKeyCommands, BackupCommands, CloudCommands, CrdbCommands,
-    DatabaseCommands, LogsCommands, MetricsCommands, PeeringCommands, RegionCommands,
+    AccountCommands, AclCommands, ApiKeyCommands, BackupCommands, CloudAccountCommands,
+    CloudCommands, CrdbCommands, DatabaseCommands, FixedPlanCommands, FlexiblePlanCommands,
+    LogsCommands, MetricsCommands, PeeringCommands, PrivateServiceConnectCommands, RegionCommands,
     SubscriptionCommands, TaskCommands, TransitGatewayCommands, UserCommands,
 };
 use crate::commands::api::handle_cloud_api;
@@ -62,6 +63,18 @@ pub async fn handle_cloud_command(
         }
         CloudCommands::Logs { command } => {
             handle_logs_command(command, profile, output_format, query).await
+        }
+        CloudCommands::CloudAccount { command } => {
+            handle_cloud_account_command(command, profile, output_format, query).await
+        }
+        CloudCommands::FixedPlan { command } => {
+            handle_fixed_plan_command(command, profile, output_format, query).await
+        }
+        CloudCommands::FlexiblePlan { command } => {
+            handle_flexible_plan_command(command, profile, output_format, query).await
+        }
+        CloudCommands::PrivateServiceConnect { command } => {
+            handle_private_service_connect_command(command, profile, output_format, query).await
         }
     }
 }
@@ -919,4 +932,300 @@ pub fn parse_database_id(id: &str) -> Result<(u32, u32)> {
             "Database ID must be in format 'subscription_id:database_id' for Cloud databases"
         )
     }
+}
+
+pub async fn handle_cloud_account_command(
+    command: CloudAccountCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_cloud_client(profile)?;
+
+    match command {
+        CloudAccountCommands::List => {
+            let accounts = client.get_raw("/cloud-accounts").await?;
+            print_output(accounts, output_format, query)?;
+        }
+        CloudAccountCommands::Show { account_id } => {
+            let account = client
+                .get_raw(&format!("/cloud-accounts/{}", account_id))
+                .await?;
+            print_output(account, output_format, query)?;
+        }
+        CloudAccountCommands::Create {
+            name,
+            provider,
+            access_key_id,
+            secret_access_key,
+        } => {
+            let payload = serde_json::json!({
+                "name": name,
+                "provider": provider,
+                "accessKeyId": access_key_id,
+                "secretAccessKey": secret_access_key
+            });
+            let account = client.post_raw("/cloud-accounts", payload).await?;
+            print_output(account, output_format, query)?;
+        }
+        CloudAccountCommands::Update {
+            account_id,
+            name,
+            access_key_id,
+            secret_access_key,
+        } => {
+            let mut payload = serde_json::Map::new();
+            if let Some(name) = name {
+                payload.insert("name".to_string(), serde_json::Value::String(name));
+            }
+            if let Some(access_key_id) = access_key_id {
+                payload.insert(
+                    "accessKeyId".to_string(),
+                    serde_json::Value::String(access_key_id),
+                );
+            }
+            if let Some(secret_access_key) = secret_access_key {
+                payload.insert(
+                    "secretAccessKey".to_string(),
+                    serde_json::Value::String(secret_access_key),
+                );
+            }
+            let account = client
+                .put_raw(
+                    &format!("/cloud-accounts/{}", account_id),
+                    serde_json::Value::Object(payload),
+                )
+                .await?;
+            print_output(account, output_format, query)?;
+        }
+        CloudAccountCommands::Delete { account_id, force } => {
+            if !force {
+                return Err(anyhow::anyhow!(
+                    "This operation requires --force flag to confirm deletion"
+                ));
+            }
+            client
+                .delete_raw(&format!("/cloud-accounts/{}", account_id))
+                .await?;
+            println!("Cloud account {} deleted successfully", account_id);
+        }
+    }
+
+    Ok(())
+}
+
+pub async fn handle_fixed_plan_command(
+    command: FixedPlanCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_cloud_client(profile)?;
+
+    match command {
+        FixedPlanCommands::List => {
+            let plans = client.get_raw("/fixed-plans").await?;
+            print_output(plans, output_format, query)?;
+        }
+        FixedPlanCommands::Show { plan_id } => {
+            let plan = client.get_raw(&format!("/fixed-plans/{}", plan_id)).await?;
+            print_output(plan, output_format, query)?;
+        }
+        FixedPlanCommands::Plans { region } => {
+            let plans = client
+                .get_raw(&format!("/fixed-plans/regions/{}/plans", region))
+                .await?;
+            print_output(plans, output_format, query)?;
+        }
+    }
+
+    Ok(())
+}
+
+pub async fn handle_flexible_plan_command(
+    command: FlexiblePlanCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_cloud_client(profile)?;
+
+    match command {
+        FlexiblePlanCommands::List => {
+            let plans = client.get_raw("/flexible-plans").await?;
+            print_output(plans, output_format, query)?;
+        }
+        FlexiblePlanCommands::Show { plan_id } => {
+            let plan = client
+                .get_raw(&format!("/flexible-plans/{}", plan_id))
+                .await?;
+            print_output(plan, output_format, query)?;
+        }
+        FlexiblePlanCommands::Create {
+            name,
+            memory_limit_in_gb,
+            maximum_databases,
+        } => {
+            let payload = serde_json::json!({
+                "name": name,
+                "memoryLimitInGb": memory_limit_in_gb,
+                "maximumDatabases": maximum_databases
+            });
+            let plan = client.post_raw("/flexible-plans", payload).await?;
+            print_output(plan, output_format, query)?;
+        }
+        FlexiblePlanCommands::Update {
+            plan_id,
+            name,
+            memory_limit_in_gb,
+            maximum_databases,
+        } => {
+            let mut payload = serde_json::Map::new();
+            if let Some(name) = name {
+                payload.insert("name".to_string(), serde_json::Value::String(name));
+            }
+            if let Some(memory_limit_in_gb) = memory_limit_in_gb {
+                payload.insert(
+                    "memoryLimitInGb".to_string(),
+                    serde_json::Value::Number(
+                        serde_json::Number::from_f64(memory_limit_in_gb).unwrap(),
+                    ),
+                );
+            }
+            if let Some(maximum_databases) = maximum_databases {
+                payload.insert(
+                    "maximumDatabases".to_string(),
+                    serde_json::Value::Number(serde_json::Number::from(maximum_databases)),
+                );
+            }
+            let plan = client
+                .put_raw(
+                    &format!("/flexible-plans/{}", plan_id),
+                    serde_json::Value::Object(payload),
+                )
+                .await?;
+            print_output(plan, output_format, query)?;
+        }
+        FlexiblePlanCommands::Delete { plan_id, force } => {
+            if !force {
+                return Err(anyhow::anyhow!(
+                    "This operation requires --force flag to confirm deletion"
+                ));
+            }
+            client
+                .delete_raw(&format!("/flexible-plans/{}", plan_id))
+                .await?;
+            println!("Flexible plan {} deleted successfully", plan_id);
+        }
+    }
+
+    Ok(())
+}
+
+pub async fn handle_private_service_connect_command(
+    command: PrivateServiceConnectCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_cloud_client(profile)?;
+
+    match command {
+        PrivateServiceConnectCommands::List { subscription_id } => {
+            let endpoints = client
+                .get_raw(&format!(
+                    "/subscriptions/{}/private-service-connect",
+                    subscription_id
+                ))
+                .await?;
+            print_output(endpoints, output_format, query)?;
+        }
+        PrivateServiceConnectCommands::Show {
+            subscription_id,
+            endpoint_id,
+        } => {
+            let endpoint = client
+                .get_raw(&format!(
+                    "/subscriptions/{}/private-service-connect/{}",
+                    subscription_id, endpoint_id
+                ))
+                .await?;
+            print_output(endpoint, output_format, query)?;
+        }
+        PrivateServiceConnectCommands::Create {
+            subscription_id,
+            service_name,
+            allowed_principals,
+        } => {
+            let payload = serde_json::json!({
+                "serviceName": service_name,
+                "allowedPrincipals": allowed_principals.split(',').collect::<Vec<_>>()
+            });
+            let endpoint = client
+                .post_raw(
+                    &format!("/subscriptions/{}/private-service-connect", subscription_id),
+                    payload,
+                )
+                .await?;
+            print_output(endpoint, output_format, query)?;
+        }
+        PrivateServiceConnectCommands::Update {
+            subscription_id,
+            endpoint_id,
+            service_name,
+            allowed_principals,
+        } => {
+            let mut payload = serde_json::Map::new();
+            if let Some(service_name) = service_name {
+                payload.insert(
+                    "serviceName".to_string(),
+                    serde_json::Value::String(service_name),
+                );
+            }
+            if let Some(allowed_principals) = allowed_principals {
+                payload.insert(
+                    "allowedPrincipals".to_string(),
+                    serde_json::Value::Array(
+                        allowed_principals
+                            .split(',')
+                            .map(|s| serde_json::Value::String(s.trim().to_string()))
+                            .collect(),
+                    ),
+                );
+            }
+            let endpoint = client
+                .put_raw(
+                    &format!(
+                        "/subscriptions/{}/private-service-connect/{}",
+                        subscription_id, endpoint_id
+                    ),
+                    serde_json::Value::Object(payload),
+                )
+                .await?;
+            print_output(endpoint, output_format, query)?;
+        }
+        PrivateServiceConnectCommands::Delete {
+            subscription_id,
+            endpoint_id,
+            force,
+        } => {
+            if !force {
+                return Err(anyhow::anyhow!(
+                    "This operation requires --force flag to confirm deletion"
+                ));
+            }
+            client
+                .delete_raw(&format!(
+                    "/subscriptions/{}/private-service-connect/{}",
+                    subscription_id, endpoint_id
+                ))
+                .await?;
+            println!(
+                "Private Service Connect endpoint {} deleted successfully",
+                endpoint_id
+            );
+        }
+    }
+
+    Ok(())
 }
