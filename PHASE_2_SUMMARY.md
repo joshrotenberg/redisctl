@@ -45,14 +45,34 @@
 - `add-region` - Add region to CRDB
 - `remove-region` - Remove region from CRDB
 
+#### API Keys (`cloud api-key`)
+- `list` - List all API keys
+- `show` - Show API key details
+- `create` - Create new API key
+- `update` - Update API key name/role
+- `delete` - Delete API key (with --force confirmation)
+- `regenerate` - Regenerate API key secret
+- `enable` - Enable API key
+- `disable` - Disable API key
+
+#### Metrics (`cloud metrics`)
+- `database` - Get database metrics with filtering
+- `subscription` - Get subscription metrics with filtering
+- Support for custom metric names and time periods
+
+#### Logs (`cloud logs`)
+- `database` - Get database logs (slowlog, audit) with pagination
+- `system` - Get system logs with pagination
+- `session` - Get session logs with pagination
+
 ## 📊 Coverage Improvement
 
 ### Before Phase 2
 - **Cloud API**: ~15% coverage (15 of 100+ methods)
 - **Enterprise API**: ~50% coverage (15 of 30 methods)
 
-### After Phase 2 (So Far)
-- **Cloud API**: ~40% coverage (40+ of 100+ methods) ✅ **+25%**
+### After Phase 2 (Current Status)
+- **Cloud API**: ~50% coverage (50+ of 100+ methods) ✅ **+35%**
 - **Enterprise API**: ~50% coverage (unchanged, focus was on Cloud)
 
 ## 🎯 Key Features Added
@@ -66,14 +86,14 @@
 ## 📝 Still TODO for Phase 2
 
 ### High Priority
-- [ ] API Keys management
-- [ ] Metrics commands
-- [ ] Logs commands
+- [x] API Keys management ✅ **COMPLETED**
+- [x] Metrics commands ✅ **COMPLETED**  
+- [x] Logs commands ✅ **COMPLETED**
 - [ ] Fixed/Flexible plan commands
 - [ ] Private Service Connect commands
+- [ ] Cloud Accounts (different from Account)
 
 ### Medium Priority
-- [ ] Cloud Accounts (different from Account)
 - [ ] Enhance existing commands with more options
 - [ ] Add --wait flag for async operations
 - [ ] Add progress indicators
