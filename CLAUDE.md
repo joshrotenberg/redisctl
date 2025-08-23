@@ -455,3 +455,4 @@ Based on Redis Enterprise REST API v7+ documentation:
 4. Check for outdated dependencies: `cargo outdated`
 5. Review GitHub issues for priority tasks
 - remember to run clippy and fmt before pushing to github
+- these shoulnd't be in prs: 🤖 Generated with Claude Code

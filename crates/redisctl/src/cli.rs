@@ -167,6 +167,11 @@ pub enum CloudCommands {
         #[command(subcommand)]
         command: PrivateServiceConnectCommands,
     },
+    /// SSO/SAML management
+    Sso {
+        #[command(subcommand)]
+        command: SsoCommands,
+    },
 }
 
 #[derive(Subcommand)]
@@ -1126,6 +1131,131 @@ pub enum PrivateServiceConnectCommands {
         /// Endpoint ID
         endpoint_id: u32,
         /// Force deletion without confirmation
+        #[arg(long)]
+        force: bool,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum SsoCommands {
+    /// Show SSO configuration
+    Show,
+    /// Update SSO configuration
+    Update {
+        /// Provider name (e.g., okta, azure)
+        #[arg(long)]
+        provider: String,
+        /// SSO login URL
+        #[arg(long)]
+        login_url: String,
+        /// SSO logout URL
+        #[arg(long)]
+        logout_url: Option<String>,
+        /// Enable SSO
+        #[arg(long)]
+        enabled: Option<bool>,
+    },
+    /// Delete SSO configuration
+    Delete {
+        /// Skip confirmation
+        #[arg(long)]
+        force: bool,
+    },
+    /// Test SSO configuration
+    Test {
+        /// Test user email
+        #[arg(long)]
+        email: String,
+    },
+
+    // SAML specific commands
+    /// Show SAML configuration
+    SamlShow,
+    /// Update SAML configuration
+    SamlUpdate {
+        /// SAML issuer URL
+        #[arg(long)]
+        issuer: String,
+        /// SAML SSO URL
+        #[arg(long)]
+        sso_url: String,
+        /// SAML certificate content
+        #[arg(long)]
+        certificate: Option<String>,
+    },
+    /// Get SAML metadata
+    SamlMetadata,
+    /// Upload SAML certificate
+    SamlUploadCert {
+        /// Certificate file path or content
+        certificate: String,
+    },
+
+    // User mapping commands
+    /// List SSO users
+    UserList,
+    /// Show SSO user details
+    UserShow {
+        /// User ID
+        id: u32,
+    },
+    /// Create SSO user mapping
+    UserCreate {
+        /// SSO user email
+        #[arg(long)]
+        email: String,
+        /// Local user ID to map to
+        #[arg(long)]
+        local_user_id: u32,
+        /// User role
+        #[arg(long)]
+        role: String,
+    },
+    /// Update SSO user mapping
+    UserUpdate {
+        /// User ID
+        id: u32,
+        /// Local user ID to map to
+        #[arg(long)]
+        local_user_id: Option<u32>,
+        /// User role
+        #[arg(long)]
+        role: Option<String>,
+    },
+    /// Delete SSO user mapping
+    UserDelete {
+        /// User ID
+        id: u32,
+        /// Skip confirmation
+        #[arg(long)]
+        force: bool,
+    },
+
+    // Group mapping commands
+    /// List SSO groups
+    GroupList,
+    /// Create SSO group mapping
+    GroupCreate {
+        /// SSO group name
+        #[arg(long)]
+        name: String,
+        /// Local role to map to
+        #[arg(long)]
+        role: String,
+    },
+    /// Update SSO group mapping
+    GroupUpdate {
+        /// Group ID
+        id: u32,
+        /// Local role to map to
+        #[arg(long)]
+        role: String,
+    },
+    /// Delete SSO group mapping
+    GroupDelete {
+        /// Group ID
+        id: u32,
+        /// Skip confirmation
         #[arg(long)]
         force: bool,
     },
