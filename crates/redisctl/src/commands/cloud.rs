@@ -6,7 +6,7 @@ use crate::cli::{
     AccountCommands, AclCommands, ApiKeyCommands, BackupCommands, CloudAccountCommands,
     CloudCommands, CrdbCommands, DatabaseCommands, FixedPlanCommands, FlexiblePlanCommands,
     LogsCommands, MetricsCommands, PeeringCommands, PrivateServiceConnectCommands, RegionCommands,
-    SubscriptionCommands, TaskCommands, TransitGatewayCommands, UserCommands,
+    SsoCommands, SubscriptionCommands, TaskCommands, TransitGatewayCommands, UserCommands,
 };
 use crate::commands::api::handle_cloud_api;
 
@@ -75,6 +75,9 @@ pub async fn handle_cloud_command(
         }
         CloudCommands::PrivateServiceConnect { command } => {
             handle_private_service_connect_command(command, profile, output_format, query).await
+        }
+        CloudCommands::Sso { command } => {
+            handle_sso_command(command, profile, output_format, query).await
         }
     }
 }
@@ -166,8 +169,21 @@ pub async fn handle_database_command(
                 .await?;
             println!("Database {} deleted successfully", id);
         }
-        DatabaseCommands::Backup { id: _ } => {
-            anyhow::bail!("Backup operations not yet implemented for Cloud databases");
+        DatabaseCommands::Backup { id } => {
+            let (subscription_id, database_id) = parse_database_id(&id)?;
+            let backup_data = serde_json::json!({
+                "description": format!("Database backup for {}", id)
+            });
+            let task = client
+                .post_raw(
+                    &format!(
+                        "/subscriptions/{}/databases/{}/backup",
+                        subscription_id, database_id
+                    ),
+                    backup_data,
+                )
+                .await?;
+            print_output(task, output_format, query)?;
         }
         DatabaseCommands::Import { id, url } => {
             let (subscription_id, database_id) = parse_database_id(&id)?;
@@ -1409,6 +1425,189 @@ pub async fn handle_private_service_connect_command(
                 "Private Service Connect endpoint {} deleted successfully",
                 endpoint_id
             );
+        }
+    }
+
+    Ok(())
+}
+
+pub async fn handle_sso_command(
+    command: SsoCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_cloud_client(profile)?;
+
+    match command {
+        SsoCommands::Show => {
+            let sso_config = client.get_raw("/sso").await?;
+            print_output(sso_config, output_format, query)?;
+        }
+        SsoCommands::Update {
+            provider,
+            login_url,
+            logout_url,
+            enabled,
+        } => {
+            let mut update_data = serde_json::json!({
+                "provider": provider,
+                "loginUrl": login_url
+            });
+
+            if let Some(logout_url) = logout_url {
+                update_data["logoutUrl"] = serde_json::Value::String(logout_url);
+            }
+            if let Some(enabled) = enabled {
+                update_data["enabled"] = serde_json::Value::Bool(enabled);
+            }
+
+            let sso_config = client.put_raw("/sso", update_data).await?;
+            print_output(sso_config, output_format, query)?;
+        }
+        SsoCommands::Delete { force } => {
+            if !force {
+                println!("Are you sure you want to delete SSO configuration? Use --force to skip confirmation.");
+                return Ok(());
+            }
+            client.delete_raw("/sso").await?;
+            println!("SSO configuration deleted successfully");
+        }
+        SsoCommands::Test { email } => {
+            let test_data = serde_json::json!({
+                "email": email
+            });
+            let result = client.post_raw("/sso/test", test_data).await?;
+            print_output(result, output_format, query)?;
+        }
+
+        // SAML specific commands
+        SsoCommands::SamlShow => {
+            let saml_config = client.get_raw("/sso/saml").await?;
+            print_output(saml_config, output_format, query)?;
+        }
+        SsoCommands::SamlUpdate {
+            issuer,
+            sso_url,
+            certificate,
+        } => {
+            let mut update_data = serde_json::json!({
+                "issuer": issuer,
+                "ssoUrl": sso_url
+            });
+
+            if let Some(certificate) = certificate {
+                update_data["certificate"] = serde_json::Value::String(certificate);
+            }
+
+            let saml_config = client.put_raw("/sso/saml", update_data).await?;
+            print_output(saml_config, output_format, query)?;
+        }
+        SsoCommands::SamlMetadata => {
+            let metadata = client.get_raw("/sso/saml/metadata").await?;
+            print_output(metadata, output_format, query)?;
+        }
+        SsoCommands::SamlUploadCert { certificate } => {
+            let cert_data = serde_json::json!({
+                "certificate": certificate
+            });
+            let result = client.post_raw("/sso/saml/certificate", cert_data).await?;
+            print_output(result, output_format, query)?;
+        }
+
+        // User mapping commands
+        SsoCommands::UserList => {
+            let users = client.get_raw("/sso/users").await?;
+            print_output(users, output_format, query)?;
+        }
+        SsoCommands::UserShow { id } => {
+            let user = client.get_raw(&format!("/sso/users/{}", id)).await?;
+            print_output(user, output_format, query)?;
+        }
+        SsoCommands::UserCreate {
+            email,
+            local_user_id,
+            role,
+        } => {
+            let create_data = serde_json::json!({
+                "email": email,
+                "localUserId": local_user_id,
+                "role": role
+            });
+            let user = client.post_raw("/sso/users", create_data).await?;
+            print_output(user, output_format, query)?;
+        }
+        SsoCommands::UserUpdate {
+            id,
+            local_user_id,
+            role,
+        } => {
+            let mut update_data = serde_json::Map::new();
+            if let Some(local_user_id) = local_user_id {
+                update_data.insert(
+                    "localUserId".to_string(),
+                    serde_json::Value::Number(local_user_id.into()),
+                );
+            }
+            if let Some(role) = role {
+                update_data.insert("role".to_string(), serde_json::Value::String(role));
+            }
+            if update_data.is_empty() {
+                anyhow::bail!("No update fields provided");
+            }
+
+            let user = client
+                .put_raw(
+                    &format!("/sso/users/{}", id),
+                    serde_json::Value::Object(update_data),
+                )
+                .await?;
+            print_output(user, output_format, query)?;
+        }
+        SsoCommands::UserDelete { id, force } => {
+            if !force {
+                println!(
+                    "Are you sure you want to delete SSO user mapping {}? Use --force to skip confirmation.",
+                    id
+                );
+                return Ok(());
+            }
+            client.delete_raw(&format!("/sso/users/{}", id)).await?;
+            println!("SSO user mapping {} deleted successfully", id);
+        }
+
+        // Group mapping commands
+        SsoCommands::GroupList => {
+            let groups = client.get_raw("/sso/groups").await?;
+            print_output(groups, output_format, query)?;
+        }
+        SsoCommands::GroupCreate { name, role } => {
+            let create_data = serde_json::json!({
+                "name": name,
+                "role": role
+            });
+            let group = client.post_raw("/sso/groups", create_data).await?;
+            print_output(group, output_format, query)?;
+        }
+        SsoCommands::GroupUpdate { id, role } => {
+            let update_data = serde_json::json!({
+                "role": role
+            });
+            let group = client
+                .put_raw(&format!("/sso/groups/{}", id), update_data)
+                .await?;
+            print_output(group, output_format, query)?;
+        }
+        SsoCommands::GroupDelete { id, force } => {
+            if !force {
+                println!(
+                    "Are you sure you want to delete SSO group mapping {}? Use --force to skip confirmation.",
+                    id
+                );
+                return Ok(());
+            }
+            client.delete_raw(&format!("/sso/groups/{}", id)).await?;
+            println!("SSO group mapping {} deleted successfully", id);
         }
     }
 
