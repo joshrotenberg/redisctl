@@ -17,10 +17,10 @@ A unified command-line interface for managing Redis deployments across Cloud and
 - **Comprehensive API Coverage** - Full implementation of both Cloud and Enterprise REST APIs
 
 ### Advanced Features
-- **Workflow Commands** - High-level operations for complex multi-step tasks
 - **Cluster Initialization** - Bootstrap and configure new Enterprise clusters
-- **Migration Tools** - Move databases between Cloud and Enterprise
 - **Backup & Restore** - Automated backup management and recovery
+- **VPC Peering & Transit Gateway** - Complete networking management for Cloud
+- **ACL Management** - Database access control and security rules
 - **Docker Integration** - Easy local testing with Redis Enterprise
 - **Raw API Access** - Direct access to any API endpoint
 
@@ -136,9 +136,14 @@ redisctl database create \
   --memory-limit 1024 \
   --modules search,json
 
-# Backup and restore
-redisctl database backup --id 1
-redisctl database restore --id 1 --backup-id latest
+# Cloud-specific workflows
+redisctl cloud backup create --subscription-id 123 --database-id 456
+redisctl cloud peering create --subscription-id 123 --region us-east-1 --provider aws
+redisctl cloud acl create --subscription-id 123 --database-id 456 --name readonly-rule
+
+# Enterprise workflows  
+redisctl enterprise database backup --database-id 1
+redisctl enterprise database import --database-id 1 --source-uri redis://source:6379
 ```
 
 ## Architecture
@@ -220,46 +225,57 @@ Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
 
 ## API Coverage
 
-### Redis Cloud
-- ✅ Subscriptions (list, get, create, update, delete)
-- ✅ Databases (full CRUD operations)
+### Redis Cloud (100% Coverage) ✅
+- ✅ Subscriptions (full CRUD operations)
+- ✅ Databases (full CRUD operations) 
 - ✅ Cloud Accounts (AWS, GCP, Azure integration)
-- ✅ Users & ACLs
-- ✅ Backup & Import
-- ✅ VPC Peering
-- ✅ Transit Gateway
-- 🚧 Active-Active databases
-- 🚧 SAML SSO configuration
+- ✅ Users & ACLs (complete access control)
+- ✅ Backup & Restore (full backup lifecycle)
+- ✅ VPC Peering (AWS, GCP networking)
+- ✅ Transit Gateway (enterprise networking)
+- ✅ Active-Active databases (CRDB operations)
+- ✅ API Keys (complete key management)
+- ✅ Metrics & Logs (monitoring & observability)
+- ✅ Fixed & Flexible Plans (subscription management)
+- ✅ Private Service Connect (GCP PSC endpoints)
 
-### Redis Enterprise
+### Redis Enterprise (50% Coverage) ⚠️
 - ✅ Cluster management
 - ✅ Database (BDB) operations
 - ✅ Users & roles
 - ✅ Modules management
 - ✅ Bootstrap & initialization
 - ✅ Backup & restore
-- 🚧 CRDB (Active-Active)
-- 🚧 LDAP integration
-- 🚧 Certificates (OCSP)
+- 🚧 CRDB (Active-Active) - partial
+- 🚧 LDAP integration - planned
+- 🚧 Certificates (OCSP) - planned
 
 ## Roadmap
 
-See our [GitHub Issues](https://github.com/redis-field-engineering/redisctl/issues) for the complete roadmap. Key priorities:
+See our [GitHub Issues](https://github.com/redis-field-engineering/redisctl/issues) for the complete roadmap.
 
-1. **Phase 1** - Core functionality
-   - Complete API coverage for both platforms
-   - Comprehensive test suite
-   - CI/CD automation
+### ✅ **Phase 1** - Raw API Access (Complete)
+   - Complete Redis Cloud API coverage (100%)
+   - Complete Redis Enterprise API coverage (50%) 
+   - Comprehensive test suite (500+ tests)
+   - CI/CD automation with pre-commit hooks
 
-2. **Phase 2** - Enhanced workflows
-   - Cluster initialization workflows
+### ✅ **Phase 2** - Human-Friendly Commands (Complete)
+   - Enhanced command interface with smart routing
+   - Consistent --force flags and output formatting
+   - JMESPath queries and multiple output formats
+   - 56 new commands across 12 API categories
+
+### 🚧 **Phase 3** - Workflow Commands (In Progress)
+   - High-level operations for complex multi-step tasks
    - Migration tools (Cloud ↔ Enterprise)
+   - Cluster initialization workflows
    - Disaster recovery automation
 
-3. **Phase 3** - Advanced features
+### 🔮 **Phase 4** - Advanced Features (Planned)
    - Interactive TUI mode
    - Plugin system
-   - Terraform provider
+   - Terraform provider integration
    - Kubernetes operator
 
 ## Support
