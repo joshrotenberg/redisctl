@@ -129,6 +129,15 @@ pub async fn handle_database_command(
                 .await?;
             print_output(import_result, output_format, query)?;
         }
+        DatabaseCommands::Export { id, format } => {
+            let export_data = serde_json::json!({
+                "format": format
+            });
+            let export_result = client
+                .post_raw(&format!("/v1/bdbs/{}/export", id), export_data)
+                .await?;
+            print_output(export_result, output_format, query)?;
+        }
     }
 
     Ok(())
@@ -199,6 +208,37 @@ pub async fn handle_node_command(
                 )
                 .await?;
             print_output(node, output_format, query)?;
+        }
+        NodeCommands::Add {
+            addr,
+            username,
+            password,
+            external_addr,
+        } => {
+            let mut add_data = serde_json::json!({
+                "addr": addr,
+                "username": username,
+                "password": password
+            });
+
+            if let Some(external_addr) = external_addr {
+                add_data["external_addr"] =
+                    serde_json::Value::Array(vec![serde_json::Value::String(external_addr)]);
+            }
+
+            let node = client.post_raw("/v1/nodes", add_data).await?;
+            print_output(node, output_format, query)?;
+        }
+        NodeCommands::Remove { id, force } => {
+            if !force {
+                println!(
+                    "Are you sure you want to remove node {}? Use --force to skip confirmation.",
+                    id
+                );
+                return Ok(());
+            }
+            client.delete_raw(&format!("/v1/nodes/{}", id)).await?;
+            println!("Node {} removed successfully", id);
         }
     }
 
@@ -316,8 +356,9 @@ pub async fn handle_module_command(
             let module = client.get_raw(&format!("/v1/modules/{}", id)).await?;
             print_output(module, output_format, query)?;
         }
-        ModuleCommands::Upload { path: _ } => {
-            anyhow::bail!("Module upload not yet implemented");
+        ModuleCommands::Upload { path } => {
+            // For now, provide a meaningful error about file upload limitations
+            anyhow::bail!("Module upload requires multipart file upload functionality. Please use the Redis Enterprise web UI or direct API calls for module uploads. Module path would be: {}", path);
         }
     }
 

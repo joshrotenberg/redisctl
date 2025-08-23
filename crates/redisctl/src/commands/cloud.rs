@@ -169,8 +169,37 @@ pub async fn handle_database_command(
         DatabaseCommands::Backup { id: _ } => {
             anyhow::bail!("Backup operations not yet implemented for Cloud databases");
         }
-        DatabaseCommands::Import { id: _, url: _ } => {
-            anyhow::bail!("Import operations not yet implemented for Cloud databases");
+        DatabaseCommands::Import { id, url } => {
+            let (subscription_id, database_id) = parse_database_id(&id)?;
+            let import_data = serde_json::json!({
+                "sourceUri": url
+            });
+            let task = client
+                .post_raw(
+                    &format!(
+                        "/subscriptions/{}/databases/{}/import",
+                        subscription_id, database_id
+                    ),
+                    import_data,
+                )
+                .await?;
+            print_output(task, output_format, query)?;
+        }
+        DatabaseCommands::Export { id, format } => {
+            let (subscription_id, database_id) = parse_database_id(&id)?;
+            let export_data = serde_json::json!({
+                "format": format
+            });
+            let task = client
+                .post_raw(
+                    &format!(
+                        "/subscriptions/{}/databases/{}/export",
+                        subscription_id, database_id
+                    ),
+                    export_data,
+                )
+                .await?;
+            print_output(task, output_format, query)?;
         }
     }
 
@@ -195,17 +224,72 @@ pub async fn handle_subscription_command(
             print_output(subscription, output_format, query)?;
         }
         SubscriptionCommands::Create {
-            name: _,
-            provider: _,
-            region: _,
+            name,
+            provider,
+            region,
         } => {
-            anyhow::bail!("Subscription creation not yet implemented");
+            let create_data = serde_json::json!({
+                "name": name,
+                "cloudProvider": provider,
+                "region": region
+            });
+            let subscription = client.post_raw("/subscriptions", create_data).await?;
+            print_output(subscription, output_format, query)?;
         }
-        SubscriptionCommands::Update { id: _, name: _ } => {
-            anyhow::bail!("Subscription update not yet implemented");
+        SubscriptionCommands::Update { id, name } => {
+            let mut update_data = serde_json::Map::new();
+            if let Some(name) = name {
+                update_data.insert("name".to_string(), serde_json::Value::String(name));
+            }
+            if update_data.is_empty() {
+                anyhow::bail!("No update fields provided");
+            }
+            let subscription = client
+                .put_raw(
+                    &format!("/subscriptions/{}", id),
+                    serde_json::Value::Object(update_data),
+                )
+                .await?;
+            print_output(subscription, output_format, query)?;
         }
-        SubscriptionCommands::Delete { id: _, force: _ } => {
-            anyhow::bail!("Subscription deletion not yet implemented");
+        SubscriptionCommands::Delete { id, force } => {
+            if !force {
+                println!(
+                    "Are you sure you want to delete subscription {}? Use --force to skip confirmation.",
+                    id
+                );
+                return Ok(());
+            }
+            client.delete_raw(&format!("/subscriptions/{}", id)).await?;
+            println!("Subscription {} deleted successfully", id);
+        }
+        SubscriptionCommands::Pricing { id } => {
+            let pricing = client
+                .get_raw(&format!("/subscriptions/{}/pricing", id))
+                .await?;
+            print_output(pricing, output_format, query)?;
+        }
+        SubscriptionCommands::Databases { id } => {
+            let databases = client
+                .get_raw(&format!("/subscriptions/{}/databases", id))
+                .await?;
+            print_output(databases, output_format, query)?;
+        }
+        SubscriptionCommands::CidrList { id } => {
+            let cidr = client
+                .get_raw(&format!("/subscriptions/{}/cidr", id))
+                .await?;
+            print_output(cidr, output_format, query)?;
+        }
+        SubscriptionCommands::CidrUpdate { id, cidrs } => {
+            let cidr_list: Vec<&str> = cidrs.split(',').map(|s| s.trim()).collect();
+            let update_data = serde_json::json!({
+                "cidr": cidr_list
+            });
+            let cidr = client
+                .put_raw(&format!("/subscriptions/{}/cidr", id), update_data)
+                .await?;
+            print_output(cidr, output_format, query)?;
         }
     }
 
@@ -228,6 +312,22 @@ pub async fn handle_account_command(
         AccountCommands::Show { id } => {
             let account = client.get_raw(&format!("/accounts/{}", id)).await?;
             print_output(account, output_format, query)?;
+        }
+        AccountCommands::Info => {
+            let account_info = client.get_raw("/accounts/info").await?;
+            print_output(account_info, output_format, query)?;
+        }
+        AccountCommands::Owner => {
+            let owner = client.get_raw("/accounts/owner").await?;
+            print_output(owner, output_format, query)?;
+        }
+        AccountCommands::Users => {
+            let users = client.get_raw("/accounts/users").await?;
+            print_output(users, output_format, query)?;
+        }
+        AccountCommands::PaymentMethods => {
+            let payment_methods = client.get_raw("/accounts/payment-methods").await?;
+            print_output(payment_methods, output_format, query)?;
         }
     }
 
@@ -252,22 +352,63 @@ pub async fn handle_user_command(
             print_output(user, output_format, query)?;
         }
         UserCommands::Create {
-            name: _,
-            email: _,
-            password: _,
-            roles: _,
+            name,
+            email,
+            password,
+            roles,
         } => {
-            anyhow::bail!("User creation not yet implemented");
+            let mut create_data = serde_json::json!({
+                "name": name
+            });
+
+            if let Some(email) = email {
+                create_data["email"] = serde_json::Value::String(email);
+            }
+            if let Some(password) = password {
+                create_data["password"] = serde_json::Value::String(password);
+            }
+            if !roles.is_empty() {
+                create_data["roles"] = serde_json::Value::Array(
+                    roles.into_iter().map(serde_json::Value::String).collect(),
+                );
+            }
+
+            let user = client.post_raw("/users", create_data).await?;
+            print_output(user, output_format, query)?;
         }
         UserCommands::Update {
-            id: _,
-            email: _,
-            password: _,
+            id,
+            email,
+            password,
         } => {
-            anyhow::bail!("User update not yet implemented");
+            let mut update_data = serde_json::Map::new();
+            if let Some(email) = email {
+                update_data.insert("email".to_string(), serde_json::Value::String(email));
+            }
+            if let Some(password) = password {
+                update_data.insert("password".to_string(), serde_json::Value::String(password));
+            }
+            if update_data.is_empty() {
+                anyhow::bail!("No update fields provided");
+            }
+            let user = client
+                .put_raw(
+                    &format!("/users/{}", id),
+                    serde_json::Value::Object(update_data),
+                )
+                .await?;
+            print_output(user, output_format, query)?;
         }
-        UserCommands::Delete { id: _, force: _ } => {
-            anyhow::bail!("User deletion not yet implemented");
+        UserCommands::Delete { id, force } => {
+            if !force {
+                println!(
+                    "Are you sure you want to delete user {}? Use --force to skip confirmation.",
+                    id
+                );
+                return Ok(());
+            }
+            client.delete_raw(&format!("/users/{}", id)).await?;
+            println!("User {} deleted successfully", id);
         }
     }
 
@@ -308,6 +449,50 @@ pub async fn handle_task_command(
         TaskCommands::Show { id } => {
             let task = client.get_raw(&format!("/tasks/{}", id)).await?;
             print_output(task, output_format, query)?;
+        }
+        TaskCommands::Wait { id, timeout } => {
+            use std::time::{Duration, Instant};
+            use tokio::time::sleep;
+
+            let start = Instant::now();
+            let timeout_duration = Duration::from_secs(timeout);
+
+            loop {
+                let task = client.get_raw(&format!("/tasks/{}", id)).await?;
+
+                // Check if task has a status field and if it's completed
+                if let Some(status) = task.get("status").and_then(|s| s.as_str()) {
+                    match status {
+                        "completed" => {
+                            println!("Task {} completed successfully", id);
+                            print_output(task, output_format, query)?;
+                            break;
+                        }
+                        "failed" => {
+                            println!("Task {} failed", id);
+                            print_output(task, output_format, query)?;
+                            anyhow::bail!("Task failed");
+                        }
+                        _ => {
+                            // Task still running, check timeout
+                            if start.elapsed() > timeout_duration {
+                                println!(
+                                    "Timeout waiting for task {} after {} seconds",
+                                    id, timeout
+                                );
+                                print_output(task, output_format, query)?;
+                                anyhow::bail!("Task wait timeout");
+                            }
+                            // Wait 5 seconds before checking again
+                            sleep(Duration::from_secs(5)).await;
+                        }
+                    }
+                } else {
+                    // No status field, print task and break
+                    print_output(task, output_format, query)?;
+                    break;
+                }
+            }
         }
     }
 

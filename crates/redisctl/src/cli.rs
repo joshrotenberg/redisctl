@@ -316,6 +316,14 @@ pub enum DatabaseCommands {
         /// Import URL
         url: String,
     },
+    /// Export data
+    Export {
+        /// Database ID
+        id: String,
+        /// Export format (rdb, json)
+        #[arg(long, default_value = "rdb")]
+        format: String,
+    },
 }
 
 #[derive(Subcommand, Clone)]
@@ -388,6 +396,14 @@ pub enum AccountCommands {
         /// Account/Subscription ID
         id: String,
     },
+    /// Show account information (different from show)
+    Info,
+    /// Show account owner information
+    Owner,
+    /// List users for this account
+    Users,
+    /// List payment methods
+    PaymentMethods,
 }
 
 #[derive(Subcommand)]
@@ -426,6 +442,29 @@ pub enum SubscriptionCommands {
         #[arg(long)]
         force: bool,
     },
+    /// Get subscription pricing
+    Pricing {
+        /// Subscription ID
+        id: String,
+    },
+    /// List subscription databases
+    Databases {
+        /// Subscription ID
+        id: String,
+    },
+    /// Get CIDR whitelist
+    CidrList {
+        /// Subscription ID
+        id: String,
+    },
+    /// Update CIDR whitelist
+    CidrUpdate {
+        /// Subscription ID
+        id: String,
+        /// CIDR blocks (comma-separated)
+        #[arg(long)]
+        cidrs: String,
+    },
 }
 
 #[derive(Subcommand)]
@@ -445,6 +484,29 @@ pub enum NodeCommands {
         #[arg(long)]
         external_addr: Option<String>,
     },
+    /// Add a new node to the cluster
+    Add {
+        /// Node IP address
+        #[arg(long)]
+        addr: String,
+        /// Node username (default: admin)
+        #[arg(long, default_value = "admin")]
+        username: String,
+        /// Node password
+        #[arg(long)]
+        password: String,
+        /// External address
+        #[arg(long)]
+        external_addr: Option<String>,
+    },
+    /// Remove a node from the cluster
+    Remove {
+        /// Node ID
+        id: String,
+        /// Skip confirmation
+        #[arg(long)]
+        force: bool,
+    },
 }
 
 #[derive(Subcommand)]
@@ -461,6 +523,14 @@ pub enum TaskCommands {
     Show {
         /// Task ID
         id: String,
+    },
+    /// Wait for task completion
+    Wait {
+        /// Task ID
+        id: String,
+        /// Timeout in seconds (default: 300)
+        #[arg(long, default_value = "300")]
+        timeout: u64,
     },
 }
 
