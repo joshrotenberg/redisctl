@@ -3,8 +3,9 @@ use redis_cloud::{CloudClient, CloudConfig};
 use redis_common::{print_output, OutputFormat, Profile, ProfileCredentials};
 
 use crate::cli::{
-    AccountCommands, AclCommands, CloudCommands, DatabaseCommands, RegionCommands,
-    SubscriptionCommands, TaskCommands, UserCommands,
+    AccountCommands, AclCommands, BackupCommands, CloudCommands, CrdbCommands, DatabaseCommands,
+    PeeringCommands, RegionCommands, SubscriptionCommands, TaskCommands, TransitGatewayCommands,
+    UserCommands,
 };
 use crate::commands::api::handle_cloud_api;
 
@@ -40,6 +41,18 @@ pub async fn handle_cloud_command(
         }
         CloudCommands::Acl { command } => {
             handle_acl_command(command, profile, output_format, query).await
+        }
+        CloudCommands::Peering { command } => {
+            handle_peering_command(command, profile, output_format, query).await
+        }
+        CloudCommands::TransitGateway { command } => {
+            handle_transit_gateway_command(command, profile, output_format, query).await
+        }
+        CloudCommands::Backup { command } => {
+            handle_backup_command(command, profile, output_format, query).await
+        }
+        CloudCommands::Crdb { command } => {
+            handle_crdb_command(command, profile, output_format, query).await
         }
     }
 }
@@ -280,12 +293,428 @@ pub async fn handle_task_command(
 }
 
 pub async fn handle_acl_command(
-    _command: AclCommands,
-    _profile: &Profile,
-    _output_format: OutputFormat,
-    _query: Option<&str>,
+    command: AclCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
 ) -> Result<()> {
-    anyhow::bail!("ACL commands not yet implemented for Cloud");
+    let client = create_cloud_client(profile)?;
+
+    match command {
+        AclCommands::List {
+            subscription_id,
+            database_id,
+        } => {
+            let acls = client
+                .get_raw(&format!(
+                    "/subscriptions/{}/databases/{}/acls",
+                    subscription_id, database_id
+                ))
+                .await?;
+            print_output(acls, output_format, query)?;
+        }
+        AclCommands::Show {
+            subscription_id,
+            database_id,
+            acl_id,
+        } => {
+            let acl = client
+                .get_raw(&format!(
+                    "/subscriptions/{}/databases/{}/acls/{}",
+                    subscription_id, database_id, acl_id
+                ))
+                .await?;
+            print_output(acl, output_format, query)?;
+        }
+        AclCommands::Create {
+            subscription_id,
+            database_id,
+            name,
+            rule,
+        } => {
+            let create_data = serde_json::json!({
+                "name": name,
+                "aclRule": rule
+            });
+            let acl = client
+                .post_raw(
+                    &format!(
+                        "/subscriptions/{}/databases/{}/acls",
+                        subscription_id, database_id
+                    ),
+                    create_data,
+                )
+                .await?;
+            print_output(acl, output_format, query)?;
+        }
+        AclCommands::Update {
+            subscription_id,
+            database_id,
+            acl_id,
+            rule,
+        } => {
+            let update_data = serde_json::json!({
+                "aclRule": rule
+            });
+            let acl = client
+                .put_raw(
+                    &format!(
+                        "/subscriptions/{}/databases/{}/acls/{}",
+                        subscription_id, database_id, acl_id
+                    ),
+                    update_data,
+                )
+                .await?;
+            print_output(acl, output_format, query)?;
+        }
+        AclCommands::Delete {
+            subscription_id,
+            database_id,
+            acl_id,
+            force,
+        } => {
+            if !force {
+                println!(
+                    "Are you sure you want to delete ACL {}? Use --force to skip confirmation.",
+                    acl_id
+                );
+                return Ok(());
+            }
+            client
+                .delete_raw(&format!(
+                    "/subscriptions/{}/databases/{}/acls/{}",
+                    subscription_id, database_id, acl_id
+                ))
+                .await?;
+            println!("ACL {} deleted successfully", acl_id);
+        }
+    }
+
+    Ok(())
+}
+
+pub async fn handle_peering_command(
+    command: PeeringCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_cloud_client(profile)?;
+
+    match command {
+        PeeringCommands::List { subscription_id } => {
+            let peerings = client
+                .get_raw(&format!("/subscriptions/{}/peerings", subscription_id))
+                .await?;
+            print_output(peerings, output_format, query)?;
+        }
+        PeeringCommands::Show {
+            subscription_id,
+            peering_id,
+        } => {
+            let peering = client
+                .get_raw(&format!(
+                    "/subscriptions/{}/peerings/{}",
+                    subscription_id, peering_id
+                ))
+                .await?;
+            print_output(peering, output_format, query)?;
+        }
+        PeeringCommands::Create {
+            subscription_id,
+            provider_account_id,
+            vpc_id,
+            vpc_cidr,
+            region,
+        } => {
+            let create_data = serde_json::json!({
+                "providerAccountId": provider_account_id,
+                "vpcId": vpc_id,
+                "vpcCidr": vpc_cidr,
+                "region": region
+            });
+            let peering = client
+                .post_raw(
+                    &format!("/subscriptions/{}/peerings", subscription_id),
+                    create_data,
+                )
+                .await?;
+            print_output(peering, output_format, query)?;
+        }
+        PeeringCommands::Delete {
+            subscription_id,
+            peering_id,
+            force,
+        } => {
+            if !force {
+                println!(
+                    "Are you sure you want to delete peering {}? Use --force to skip confirmation.",
+                    peering_id
+                );
+                return Ok(());
+            }
+            client
+                .delete_raw(&format!(
+                    "/subscriptions/{}/peerings/{}",
+                    subscription_id, peering_id
+                ))
+                .await?;
+            println!("Peering {} deleted successfully", peering_id);
+        }
+    }
+
+    Ok(())
+}
+
+pub async fn handle_transit_gateway_command(
+    command: TransitGatewayCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_cloud_client(profile)?;
+
+    match command {
+        TransitGatewayCommands::List { subscription_id } => {
+            let tgws = client
+                .get_raw(&format!("/subscriptions/{}/tgws", subscription_id))
+                .await?;
+            print_output(tgws, output_format, query)?;
+        }
+        TransitGatewayCommands::Show {
+            subscription_id,
+            tgw_id,
+        } => {
+            let tgw = client
+                .get_raw(&format!(
+                    "/subscriptions/{}/tgws/{}",
+                    subscription_id, tgw_id
+                ))
+                .await?;
+            print_output(tgw, output_format, query)?;
+        }
+        TransitGatewayCommands::Create {
+            subscription_id,
+            tgw_id,
+            aws_account_id,
+            cidrs,
+        } => {
+            let create_data = serde_json::json!({
+                "tgwId": tgw_id,
+                "awsAccountId": aws_account_id,
+                "cidrs": cidrs
+            });
+            let tgw = client
+                .post_raw(
+                    &format!("/subscriptions/{}/tgws", subscription_id),
+                    create_data,
+                )
+                .await?;
+            print_output(tgw, output_format, query)?;
+        }
+        TransitGatewayCommands::Delete {
+            subscription_id,
+            tgw_id,
+            force,
+        } => {
+            if !force {
+                println!(
+                    "Are you sure you want to delete Transit Gateway attachment {}? Use --force to skip confirmation.",
+                    tgw_id
+                );
+                return Ok(());
+            }
+            client
+                .delete_raw(&format!(
+                    "/subscriptions/{}/tgws/{}",
+                    subscription_id, tgw_id
+                ))
+                .await?;
+            println!("Transit Gateway attachment {} deleted successfully", tgw_id);
+        }
+    }
+
+    Ok(())
+}
+
+pub async fn handle_backup_command(
+    command: BackupCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_cloud_client(profile)?;
+
+    match command {
+        BackupCommands::List {
+            subscription_id,
+            database_id,
+        } => {
+            let backups = client
+                .get_raw(&format!(
+                    "/subscriptions/{}/databases/{}/backups",
+                    subscription_id, database_id
+                ))
+                .await?;
+            print_output(backups, output_format, query)?;
+        }
+        BackupCommands::Show {
+            subscription_id,
+            database_id,
+            backup_id,
+        } => {
+            let backup = client
+                .get_raw(&format!(
+                    "/subscriptions/{}/databases/{}/backups/{}",
+                    subscription_id, database_id, backup_id
+                ))
+                .await?;
+            print_output(backup, output_format, query)?;
+        }
+        BackupCommands::Create {
+            subscription_id,
+            database_id,
+        } => {
+            let backup = client
+                .post_raw(
+                    &format!(
+                        "/subscriptions/{}/databases/{}/backups",
+                        subscription_id, database_id
+                    ),
+                    serde_json::json!({}),
+                )
+                .await?;
+            print_output(backup, output_format, query)?;
+        }
+        BackupCommands::Restore {
+            subscription_id,
+            database_id,
+            backup_id,
+        } => {
+            let restore_data = serde_json::json!({
+                "backupId": backup_id
+            });
+            let result = client
+                .post_raw(
+                    &format!(
+                        "/subscriptions/{}/databases/{}/restore",
+                        subscription_id, database_id
+                    ),
+                    restore_data,
+                )
+                .await?;
+            print_output(result, output_format, query)?;
+        }
+        BackupCommands::Delete {
+            subscription_id,
+            database_id,
+            backup_id,
+            force,
+        } => {
+            if !force {
+                println!(
+                    "Are you sure you want to delete backup {}? Use --force to skip confirmation.",
+                    backup_id
+                );
+                return Ok(());
+            }
+            client
+                .delete_raw(&format!(
+                    "/subscriptions/{}/databases/{}/backups/{}",
+                    subscription_id, database_id, backup_id
+                ))
+                .await?;
+            println!("Backup {} deleted successfully", backup_id);
+        }
+    }
+
+    Ok(())
+}
+
+pub async fn handle_crdb_command(
+    command: CrdbCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_cloud_client(profile)?;
+
+    match command {
+        CrdbCommands::List => {
+            let crdbs = client.get_raw("/crdbs").await?;
+            print_output(crdbs, output_format, query)?;
+        }
+        CrdbCommands::Show { crdb_id } => {
+            let crdb = client.get_raw(&format!("/crdbs/{}", crdb_id)).await?;
+            print_output(crdb, output_format, query)?;
+        }
+        CrdbCommands::Create {
+            name,
+            memory_limit,
+            regions,
+        } => {
+            let create_data = serde_json::json!({
+                "name": name,
+                "memoryLimitInGb": memory_limit as f64 / 1024.0,
+                "regions": regions
+            });
+            let crdb = client.post_raw("/crdbs", create_data).await?;
+            print_output(crdb, output_format, query)?;
+        }
+        CrdbCommands::Update {
+            crdb_id,
+            name,
+            memory_limit,
+        } => {
+            let mut update_data = serde_json::Map::new();
+            if let Some(name) = name {
+                update_data.insert("name".to_string(), serde_json::Value::String(name));
+            }
+            if let Some(memory_limit) = memory_limit {
+                update_data.insert(
+                    "memoryLimitInGb".to_string(),
+                    serde_json::Value::Number(
+                        serde_json::Number::from_f64(memory_limit as f64 / 1024.0).unwrap(),
+                    ),
+                );
+            }
+            let crdb = client
+                .put_raw(
+                    &format!("/crdbs/{}", crdb_id),
+                    serde_json::Value::Object(update_data),
+                )
+                .await?;
+            print_output(crdb, output_format, query)?;
+        }
+        CrdbCommands::Delete { crdb_id, force } => {
+            if !force {
+                println!(
+                    "Are you sure you want to delete CRDB {}? Use --force to skip confirmation.",
+                    crdb_id
+                );
+                return Ok(());
+            }
+            client.delete_raw(&format!("/crdbs/{}", crdb_id)).await?;
+            println!("CRDB {} deleted successfully", crdb_id);
+        }
+        CrdbCommands::AddRegion { crdb_id, region } => {
+            let add_data = serde_json::json!({
+                "region": region
+            });
+            let result = client
+                .post_raw(&format!("/crdbs/{}/regions", crdb_id), add_data)
+                .await?;
+            print_output(result, output_format, query)?;
+        }
+        CrdbCommands::RemoveRegion { crdb_id, region_id } => {
+            client
+                .delete_raw(&format!("/crdbs/{}/regions/{}", crdb_id, region_id))
+                .await?;
+            println!("Region {} removed from CRDB {}", region_id, crdb_id);
+        }
+    }
+
+    Ok(())
 }
 
 pub fn create_cloud_client(profile: &Profile) -> Result<CloudClient> {
