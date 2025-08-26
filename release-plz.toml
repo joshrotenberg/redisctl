@@ -1,0 +1,39 @@
+[workspace]
+# Enable changelog generation
+changelog_update = true
+
+# Customize changelog
+changelog_config = "cliff.toml"
+
+# Dependencies update
+dependencies_update = true
+
+# Git configuration
+allow_dirty = false
+git_release_enable = true
+git_tag_enable = true
+
+# PR settings
+pr_labels = ["release"]
+
+# Publish settings
+publish = true
+publish_allow_dirty = false
+
+[[package]]
+name = "redis-common"
+# Common utilities published first
+
+[[package]]
+name = "redis-cloud"
+# Depends on redis-common
+
+[[package]]
+name = "redis-enterprise"
+# Depends on redis-common
+
+[[package]]
+name = "redisctl"
+# Main CLI, depends on all others
+# This one gets the GitHub release
+release = true

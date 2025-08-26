@@ -1,6 +1,0 @@
-{
-  "crates/redisctl": "0.1.0",
-  "crates/redis-cloud": "0.1.0",
-  "crates/redis-enterprise": "0.1.0",
-  "crates/redis-common": "0.1.0"
-}
