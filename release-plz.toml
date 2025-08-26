@@ -1,0 +1,32 @@
+# Configuration for release-plz
+# See: https://release-plz.ieni.dev/docs/config
+
+[workspace]
+# Enable changelog generation
+changelog_update = true
+
+# Publish to crates.io
+publish = true
+
+# Dependencies update
+dependencies_update = true
+
+# Git configuration
+git_release_enable = true
+git_tag_enable = true
+
+# PR configuration
+pr_labels = ["release"]
+
+# Publish order (dependencies first)
+[[package]]
+name = "redis-common"
+
+[[package]]
+name = "redis-cloud"
+
+[[package]]
+name = "redis-enterprise"
+
+[[package]]
+name = "redisctl"
