@@ -26,9 +26,9 @@ path = "src/enterprise_bin.rs"
 required-features = ["enterprise-only"]
 
 [dependencies]
-redis-common = { path = "../redis-common" }
-redis-cloud = { path = "../redis-cloud" }
-redis-enterprise = { path = "../redis-enterprise" }
+redis-common = { version = "0.1.0", path = "../redis-common" }
+redis-cloud = { version = "0.1.0", path = "../redis-cloud" }
+redis-enterprise = { version = "0.1.0", path = "../redis-enterprise" }
 
 # CLI dependencies
 clap = { workspace = true }
