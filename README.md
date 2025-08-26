@@ -29,7 +29,7 @@ A unified command-line interface for managing Redis deployments across Cloud and
 ### From Source
 ```bash
 # Clone and build
-git clone https://github.com/redis-field-engineering/redisctl.git
+git clone https://github.com/joshrotenberg/redisctl.git
 cd redisctl
 cargo build --release
 
@@ -254,7 +254,7 @@ Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
 
 ## Roadmap
 
-See our [GitHub Issues](https://github.com/redis-field-engineering/redisctl/issues) for the complete roadmap.
+See our [GitHub Issues](https://github.com/joshrotenberg/redisctl/issues) for the complete roadmap.
 
 ### ✅ **Phase 1** - Raw API Access (Complete)
    - Redis Cloud API coverage (40% → includes major workflows)
@@ -282,8 +282,8 @@ See our [GitHub Issues](https://github.com/redis-field-engineering/redisctl/issu
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/redis-field-engineering/redisctl/issues)
-- **Documentation**: [Online Docs](https://redis-field-engineering.github.io/redisctl/)
+- **Issues**: [GitHub Issues](https://github.com/joshrotenberg/redisctl/issues)
+- **Documentation**: [Online Docs](https://joshrotenberg.github.io/redisctl/)
 - **Examples**: See the [examples/](examples/) directory
 
 ## License

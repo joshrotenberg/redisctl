@@ -481,6 +481,11 @@ pub enum NodeCommands {
         /// Node ID
         id: String,
     },
+    /// Show node statistics
+    Stats {
+        /// Node ID
+        id: String,
+    },
     /// Update node
     Update {
         /// Node ID

@@ -191,6 +191,10 @@ pub async fn handle_node_command(
             let node = client.get_raw(&format!("/v1/nodes/{}", id)).await?;
             print_output(node, output_format, query)?;
         }
+        NodeCommands::Stats { id } => {
+            let stats = client.get_raw(&format!("/v1/nodes/{}/stats", id)).await?;
+            print_output(stats, output_format, query)?;
+        }
         NodeCommands::Update { id, external_addr } => {
             let mut update_data = serde_json::Map::new();
 

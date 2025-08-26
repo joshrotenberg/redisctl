@@ -11,10 +11,10 @@ members = [
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.89"
-authors = ["Redis Field Engineering <redis-field-engineering@redis.com>"]
+authors = ["Josh Rotenberg <joshrotenberg@gmail.com>"]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/redis-field-engineering/redisctl"
-homepage = "https://github.com/redis-field-engineering/redisctl"
+repository = "https://github.com/joshrotenberg/redisctl"
+homepage = "https://github.com/joshrotenberg/redisctl"
 documentation = "https://docs.rs/redisctl"
 
 [workspace.dependencies]
