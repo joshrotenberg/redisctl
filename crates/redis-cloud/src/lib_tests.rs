@@ -2,40 +2,14 @@
 
 #[cfg(test)]
 mod tests {
-    use crate::{CloudClient, CloudConfig, CloudError, Result};
+    use crate::{CloudClient, CloudError, Result};
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
     #[tokio::test]
-    async fn test_cloud_config_default() {
-        let config = CloudConfig::default();
-        assert_eq!(config.base_url, "https://api.redislabs.com/v1");
-        assert_eq!(config.timeout, std::time::Duration::from_secs(30));
-        assert!(config.api_key.is_empty());
-        assert!(config.api_secret.is_empty());
-    }
-
-    #[tokio::test]
     async fn test_cloud_client_creation() {
-        let config = CloudConfig {
-            api_key: "test_key".to_string(),
-            api_secret: "test_secret".to_string(),
-            base_url: "https://example.com".to_string(),
-            timeout: std::time::Duration::from_secs(10),
-        };
-
-        let result = CloudClient::new(config.clone());
-
-        // Client should be created successfully
-        assert!(result.is_ok());
-    }
-
-    #[tokio::test]
-    async fn test_cloud_client_get_request() {
-        // Start a background HTTP server on a random local port
         let mock_server = MockServer::start().await;
 
-        // Arrange the behaviour of the MockServer adding a Mock
         Mock::given(method("GET"))
             .and(path("/test"))
             .respond_with(
@@ -44,14 +18,12 @@ mod tests {
             .mount(&mock_server)
             .await;
 
-        let config = CloudConfig {
-            api_key: "test_key".to_string(),
-            api_secret: "test_secret".to_string(),
-            base_url: mock_server.uri(),
-            timeout: std::time::Duration::from_secs(10),
-        };
-
-        let client = CloudClient::new(config).unwrap();
+        let client = CloudClient::builder()
+            .api_key("test_key")
+            .api_secret("test_secret")
+            .base_url(mock_server.uri())
+            .build()
+            .unwrap();
         let result: Result<serde_json::Value> = client.get("/test").await;
 
         assert!(result.is_ok());
@@ -71,14 +43,12 @@ mod tests {
             .mount(&mock_server)
             .await;
 
-        let config = CloudConfig {
-            api_key: "test_key".to_string(),
-            api_secret: "test_secret".to_string(),
-            base_url: mock_server.uri(),
-            timeout: std::time::Duration::from_secs(10),
-        };
-
-        let client = CloudClient::new(config).unwrap();
+        let client = CloudClient::builder()
+            .api_key("test_key")
+            .api_secret("test_secret")
+            .base_url(mock_server.uri())
+            .build()
+            .unwrap();
         let test_data = serde_json::json!({"name": "test"});
         let result: Result<serde_json::Value> = client.post("/test", &test_data).await;
 
@@ -99,14 +69,12 @@ mod tests {
             .mount(&mock_server)
             .await;
 
-        let config = CloudConfig {
-            api_key: "test_key".to_string(),
-            api_secret: "test_secret".to_string(),
-            base_url: mock_server.uri(),
-            timeout: std::time::Duration::from_secs(10),
-        };
-
-        let client = CloudClient::new(config).unwrap();
+        let client = CloudClient::builder()
+            .api_key("test_key")
+            .api_secret("test_secret")
+            .base_url(mock_server.uri())
+            .build()
+            .unwrap();
         let result: Result<serde_json::Value> = client.get("/error").await;
 
         assert!(result.is_err());

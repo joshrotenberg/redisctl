@@ -1,6 +1,6 @@
 //! Database endpoint tests for Redis Cloud
 
-use redis_cloud::{CloudClient, CloudConfig, CloudDatabaseHandler};
+use redis_cloud::{CloudClient, CloudDatabaseHandler};
 use serde_json::json;
 use wiremock::matchers::{header, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -11,13 +11,12 @@ fn success_response(body: serde_json::Value) -> ResponseTemplate {
 }
 
 fn create_test_client(base_url: String) -> CloudClient {
-    let config = CloudConfig {
-        api_key: "test-api-key".to_string(),
-        api_secret: "test-secret-key".to_string(),
-        base_url,
-        timeout: std::time::Duration::from_secs(30),
-    };
-    CloudClient::new(config).unwrap()
+    CloudClient::builder()
+        .api_key("test-api-key")
+        .api_secret("test-secret-key")
+        .base_url(base_url)
+        .build()
+        .unwrap()
 }
 
 #[tokio::test]

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use redis_cloud::{CloudClient, CloudConfig};
+use redis_cloud::CloudClient;
 use redis_common::{OutputFormat, Profile, ProfileCredentials, print_output};
 
 use crate::cli::{
@@ -78,6 +78,16 @@ pub async fn handle_cloud_command(
         }
         CloudCommands::Sso { command } => {
             handle_sso_command(command, profile, output_format, query).await
+        }
+        CloudCommands::Billing { command } => {
+            let client = create_cloud_client(profile)?;
+            crate::commands::cloud_billing::handle_billing_command(
+                command,
+                &client,
+                output_format,
+                query,
+            )
+            .await
         }
     }
 }
@@ -1115,13 +1125,13 @@ pub fn create_cloud_client(profile: &Profile) -> Result<CloudClient> {
         api_url,
     } = &profile.credentials
     {
-        let config = CloudConfig {
-            api_key: api_key.clone(),
-            api_secret: api_secret.clone(),
-            base_url: api_url.clone(),
-            timeout: std::time::Duration::from_secs(30),
-        };
-        CloudClient::new(config).map_err(Into::into)
+        CloudClient::builder()
+            .api_key(api_key.clone())
+            .api_secret(api_secret.clone())
+            .base_url(api_url.clone())
+            .timeout(std::time::Duration::from_secs(30))
+            .build()
+            .map_err(Into::into)
     } else {
         anyhow::bail!("Invalid profile type for Cloud commands")
     }

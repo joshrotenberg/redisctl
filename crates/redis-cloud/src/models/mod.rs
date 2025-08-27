@@ -1,4 +1,27 @@
 //! Cloud API data models
+//!
+//! This module contains all data structures used for Redis Cloud API requests and responses.
+//! Models are organized by functional area and include both request/response types and
+//! configuration structures.
+//!
+//! # Module Organization
+//!
+//! - [`account`] - Account information, users, and payment method models
+//! - [`backup`] - Database backup and restore operation models  
+//! - [`database`] - Database configuration, status, and operational models
+//! - [`metrics`] - Performance metrics, measurements, and monitoring models
+//! - [`peering`] - VPC peering connection and networking models
+//! - [`subscription`] - Subscription management and cloud provider models
+//!
+//! # Common Patterns
+//!
+//! Most models follow consistent patterns:
+//! - Request models: `Create*Request`, `Update*Request` for API inputs
+//! - Response models: Plain struct names like `CloudDatabase`, `CloudSubscription`
+//! - Configuration models: `*Config` for nested configuration objects
+//!
+//! All models implement `Serialize` and `Deserialize` for JSON handling and many
+//! include `Debug`, `Clone`, and other useful derives.
 
 pub mod account;
 pub mod backup;

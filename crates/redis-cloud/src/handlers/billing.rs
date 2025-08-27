@@ -1,9 +1,46 @@
 //! Billing and payment operations handler
+//!
+//! This module provides comprehensive billing and payment management for Redis Cloud,
+//! including invoice management, payment method handling, cost analysis, and usage reporting.
+//!
+//! # Examples
+//!
+//! ```rust,no_run
+//! use redis_cloud::{CloudClient, CloudBillingHandler};
+//! use serde_json::json;
+//!
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = CloudClient::builder()
+//!     .api_key("your-api-key")
+//!     .api_secret("your-api-secret")
+//!     .build()?;
+//!
+//! let billing_handler = CloudBillingHandler::new(client);
+//!
+//! // Get current billing information
+//! let billing_info = billing_handler.get_info().await?;
+//!
+//! // List all invoices
+//! let invoices = billing_handler.list_invoices().await?;
+//!
+//! // Get usage report for date range
+//! let usage = billing_handler.get_usage("2024-01-01", "2024-01-31").await?;
+//!
+//! // List payment methods
+//! let payment_methods = billing_handler.list_payment_methods().await?;
+//! # Ok(())
+//! # }
+//! ```
 
 use crate::{Result, client::CloudClient};
 use serde_json::Value;
 
 /// Handler for Cloud billing and payment operations
+///
+/// Provides access to billing information, invoice management, payment methods,
+/// cost analysis, and usage reporting. Essential for monitoring and managing
+/// Redis Cloud costs and payment configuration.
 pub struct CloudBillingHandler {
     client: CloudClient,
 }

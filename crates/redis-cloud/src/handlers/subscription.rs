@@ -1,4 +1,39 @@
 //! Subscription operations handler
+//!
+//! This module provides comprehensive subscription management for Redis Cloud,
+//! including creating, updating, and managing subscriptions across multiple cloud providers.
+//!
+//! # Examples
+//!
+//! ```rust,no_run
+//! use redis_cloud::{CloudClient, CloudSubscriptionHandler};
+//! use serde_json::json;
+//!
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = CloudClient::builder()
+//!     .api_key("your-api-key")
+//!     .api_secret("your-api-secret")
+//!     .build()?;
+//!
+//! let sub_handler = CloudSubscriptionHandler::new(client.clone());
+//!
+//! // List all subscriptions
+//! let subscriptions = sub_handler.list().await?;
+//!
+//! // Create a new AWS subscription
+//! let aws_subscription = json!({
+//!     "name": "production-cluster",
+//!     "provider": "AWS",
+//!     "regions": [{"region": "us-east-1", "networking": {}}],
+//!     "plan": "flexible",
+//!     "payment_method_id": 12345
+//! });
+//! // Use raw client for JSON requests
+//! let result = client.post_raw("/subscriptions", aws_subscription).await?;
+//! # Ok(())
+//! # }
+//! ```
 
 use crate::{
     Result,
@@ -10,6 +45,10 @@ use crate::{
 use serde_json::Value;
 
 /// Handler for Cloud subscription operations
+///
+/// Manages Redis Cloud subscriptions which define the cloud provider, regions,
+/// and infrastructure configuration for hosting databases. Subscriptions serve
+/// as containers for databases and define billing, networking, and scaling policies.
 pub struct CloudSubscriptionHandler {
     client: CloudClient,
 }
