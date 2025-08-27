@@ -7,30 +7,8 @@ use std::sync::Arc;
 use std::time::Duration;
 use tracing::{debug, trace};
 
-/// Enterprise API configuration (deprecated - use builder pattern)
-#[derive(Debug, Clone)]
-pub struct EnterpriseConfig {
-    pub base_url: String,
-    pub username: String,
-    pub password: String,
-    pub timeout: Duration,
-    pub insecure: bool,
-}
-
-impl Default for EnterpriseConfig {
-    fn default() -> Self {
-        EnterpriseConfig {
-            base_url: "https://localhost:9443".to_string(),
-            username: String::new(),
-            password: String::new(),
-            timeout: Duration::from_secs(30),
-            insecure: true,
-        }
-    }
-}
-
-// Alias for backwards compatibility
-pub type RestConfig = EnterpriseConfig;
+// Legacy alias for backwards compatibility during migration
+pub type RestConfig = EnterpriseClientBuilder;
 
 /// Builder for EnterpriseClient
 #[derive(Debug, Clone)]
@@ -130,17 +108,6 @@ impl EnterpriseClient {
     /// Create a new builder for the client
     pub fn builder() -> EnterpriseClientBuilder {
         EnterpriseClientBuilder::new()
-    }
-
-    /// Create a new REST API client (deprecated - use builder())
-    pub fn new(config: EnterpriseConfig) -> Result<Self> {
-        Self::builder()
-            .base_url(config.base_url)
-            .username(config.username)
-            .password(config.password)
-            .timeout(config.timeout)
-            .insecure(config.insecure)
-            .build()
     }
 
     /// Make a GET request

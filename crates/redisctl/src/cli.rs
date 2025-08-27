@@ -221,6 +221,31 @@ pub enum EnterpriseCommands {
         #[command(subcommand)]
         command: LicenseCommands,
     },
+    /// Alert management
+    Alert {
+        #[command(subcommand)]
+        command: AlertCommands,
+    },
+    /// Active-Active database (CRDB) management
+    Crdb {
+        #[command(subcommand)]
+        command: EnterpriseCrdbCommands,
+    },
+    /// Action/task management
+    Actions {
+        #[command(subcommand)]
+        command: EnterpriseActionCommands,
+    },
+    /// Statistics and metrics
+    Stats {
+        #[command(subcommand)]
+        command: EnterpriseStatsCommands,
+    },
+    /// Log management
+    Logs {
+        #[command(subcommand)]
+        command: EnterpriseLogsCommands,
+    },
 }
 
 #[derive(Subcommand)]
@@ -789,16 +814,27 @@ pub enum CrdbCommands {
 pub enum BootstrapCommands {
     /// Create initial cluster setup
     Create {
-        /// License key
+        /// Cluster name
         #[arg(long)]
-        license: String,
-        /// Admin email
+        name: String,
+        /// Admin username (usually email)
         #[arg(long)]
-        email: String,
+        username: String,
         /// Admin password
         #[arg(long)]
         password: String,
+        /// License file path (optional)
+        #[arg(long)]
+        license_file: Option<String>,
+        /// Enable rack awareness
+        #[arg(long)]
+        rack_aware: bool,
+        /// DNS suffixes (optional)
+        #[arg(long)]
+        dns_suffixes: Option<Vec<String>>,
     },
+    /// Get bootstrap status
+    Status,
 }
 
 #[derive(Subcommand)]
@@ -860,6 +896,184 @@ pub enum LicenseCommands {
     Update {
         /// License key
         key: String,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum AlertCommands {
+    /// List all alerts
+    List,
+    /// Show alert details
+    Show {
+        /// Alert UID
+        uid: String,
+    },
+    /// List alerts for a database
+    Database {
+        /// Database UID
+        uid: u32,
+    },
+    /// List alerts for a node
+    Node {
+        /// Node UID
+        uid: u32,
+    },
+    /// List cluster alerts
+    Cluster,
+    /// Clear/acknowledge an alert
+    Clear {
+        /// Alert UID
+        uid: String,
+    },
+    /// Clear all alerts
+    ClearAll,
+    /// Get alert settings
+    Settings {
+        /// Alert name
+        name: String,
+    },
+    /// Update alert settings
+    UpdateSettings {
+        /// Alert name
+        name: String,
+        /// Enable/disable alert
+        #[arg(long)]
+        enabled: Option<bool>,
+        /// Email recipients (comma-separated)
+        #[arg(long)]
+        emails: Option<String>,
+        /// Webhook URL
+        #[arg(long)]
+        webhook_url: Option<String>,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum EnterpriseActionCommands {
+    /// List all actions/tasks
+    List,
+    /// Show action details
+    Show {
+        /// Action UID
+        uid: String,
+    },
+    /// Cancel a running action
+    Cancel {
+        /// Action UID
+        uid: String,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum EnterpriseStatsCommands {
+    /// Get cluster statistics
+    Cluster {
+        /// Time interval (e.g., "1hour", "1day")
+        #[arg(long)]
+        interval: Option<String>,
+    },
+    /// Get node statistics
+    Node {
+        /// Node UID
+        uid: u32,
+        /// Time interval
+        #[arg(long)]
+        interval: Option<String>,
+    },
+    /// Get database statistics
+    Database {
+        /// Database UID
+        uid: u32,
+        /// Time interval
+        #[arg(long)]
+        interval: Option<String>,
+    },
+    /// Get shard statistics
+    Shard {
+        /// Shard UID
+        uid: String,
+        /// Time interval
+        #[arg(long)]
+        interval: Option<String>,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum EnterpriseLogsCommands {
+    /// List log entries
+    List {
+        /// Filter by severity
+        #[arg(long)]
+        severity: Option<String>,
+        /// Filter by module
+        #[arg(long)]
+        module: Option<String>,
+        /// Limit number of entries
+        #[arg(long)]
+        limit: Option<u32>,
+    },
+    /// Show specific log entry
+    Show {
+        /// Log entry ID
+        id: u64,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum EnterpriseCrdbCommands {
+    /// List all Active-Active databases
+    List,
+    /// Show CRDB details
+    Show {
+        /// CRDB GUID
+        guid: String,
+    },
+    /// Create new Active-Active database
+    Create {
+        /// Database name
+        name: String,
+        /// Memory size in bytes
+        #[arg(long)]
+        memory_size: u64,
+        /// Cluster instances (format: cluster_url:username:password)
+        #[arg(long)]
+        instances: Vec<String>,
+        /// Enable encryption
+        #[arg(long)]
+        encryption: bool,
+        /// Data persistence type
+        #[arg(long)]
+        persistence: Option<String>,
+        /// Eviction policy
+        #[arg(long)]
+        eviction_policy: Option<String>,
+    },
+    /// Update CRDB configuration
+    Update {
+        /// CRDB GUID
+        guid: String,
+        /// Memory size in bytes
+        #[arg(long)]
+        memory_size: Option<u64>,
+        /// Data persistence type
+        #[arg(long)]
+        persistence: Option<String>,
+        /// Eviction policy
+        #[arg(long)]
+        eviction_policy: Option<String>,
+    },
+    /// Delete Active-Active database
+    Delete {
+        /// CRDB GUID
+        guid: String,
+        /// Force deletion without confirmation
+        #[arg(long)]
+        force: bool,
+    },
+    /// Get CRDB tasks
+    Tasks {
+        /// CRDB GUID
+        guid: String,
     },
 }
 

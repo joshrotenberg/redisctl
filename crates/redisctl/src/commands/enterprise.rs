@@ -1,11 +1,12 @@
 use anyhow::Result;
 use redis_common::{OutputFormat, Profile, ProfileCredentials, print_output};
-use redis_enterprise::{EnterpriseClient, EnterpriseConfig};
+use redis_enterprise::EnterpriseClient;
 use std::io::Write;
 
 use crate::cli::{
-    BootstrapCommands, ClusterCommands, DatabaseCommands, EnterpriseCommands, LicenseCommands,
-    ModuleCommands, NodeCommands, RoleCommands, UserCommands,
+    AlertCommands, BootstrapCommands, ClusterCommands, DatabaseCommands, EnterpriseActionCommands,
+    EnterpriseCommands, EnterpriseCrdbCommands, EnterpriseLogsCommands, EnterpriseStatsCommands,
+    LicenseCommands, ModuleCommands, NodeCommands, RoleCommands, UserCommands,
 };
 use crate::commands::api::handle_enterprise_api;
 
@@ -44,6 +45,21 @@ pub async fn handle_enterprise_command(
         }
         EnterpriseCommands::License { command } => {
             handle_license_command(command, profile, output_format, query).await
+        }
+        EnterpriseCommands::Alert { command } => {
+            handle_alert_command(command, profile, output_format, query).await
+        }
+        EnterpriseCommands::Crdb { command } => {
+            handle_crdb_command(command, profile, output_format, query).await
+        }
+        EnterpriseCommands::Actions { command } => {
+            handle_action_command(command, profile, output_format, query).await
+        }
+        EnterpriseCommands::Stats { command } => {
+            handle_stats_command(command, profile, output_format, query).await
+        }
+        EnterpriseCommands::Logs { command } => {
+            handle_logs_command(command, profile, output_format, query).await
         }
     }
 }
@@ -323,19 +339,44 @@ pub async fn handle_bootstrap_command(
 
     match command {
         BootstrapCommands::Create {
-            license,
-            email,
+            name,
+            username,
             password,
+            license_file,
+            rack_aware,
+            dns_suffixes,
         } => {
-            let bootstrap_data = serde_json::json!({
-                "license": license,
-                "username": email,
-                "password": password
-            });
+            // Read license file if provided
+            let license_content = if let Some(path) = license_file {
+                Some(std::fs::read_to_string(path)?)
+            } else {
+                None
+            };
 
-            let result = client
-                .post_bootstrap("/v1/bootstrap", &bootstrap_data)
-                .await?;
+            // Create proper bootstrap structure
+            use redis_enterprise::{BootstrapConfig, ClusterBootstrap, CredentialsBootstrap};
+
+            let config = BootstrapConfig {
+                action: "create_cluster".to_string(),
+                cluster: Some(ClusterBootstrap {
+                    name,
+                    dns_suffixes,
+                    rack_aware: Some(rack_aware),
+                }),
+                node: None, // Will use default paths
+                credentials: Some(CredentialsBootstrap { username, password }),
+                extra: if let Some(license) = license_content {
+                    serde_json::json!({ "license_file": license })
+                } else {
+                    serde_json::json!({})
+                },
+            };
+
+            let result = client.post_bootstrap("/v1/bootstrap", &config).await?;
+            print_output(result, output_format, query)?;
+        }
+        BootstrapCommands::Status => {
+            let result = client.get_raw("/v1/bootstrap").await?;
             print_output(result, output_format, query)?;
         }
     }
@@ -463,16 +504,336 @@ pub async fn create_enterprise_client(profile: &Profile) -> Result<EnterpriseCli
             }
         };
 
-        let config = EnterpriseConfig {
-            base_url: url.clone(),
-            username: username.clone(),
-            password,
-            timeout: std::time::Duration::from_secs(30),
-            insecure: *insecure,
-        };
-
-        EnterpriseClient::new(config).map_err(Into::into)
+        EnterpriseClient::builder()
+            .base_url(url.clone())
+            .username(username.clone())
+            .password(password)
+            .timeout(std::time::Duration::from_secs(30))
+            .insecure(*insecure)
+            .build()
+            .map_err(Into::into)
     } else {
         anyhow::bail!("Invalid profile type for Enterprise commands")
     }
+}
+
+pub async fn handle_alert_command(
+    command: AlertCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+
+    match command {
+        AlertCommands::List => {
+            let result = client.get_raw("/v1/alerts").await?;
+            print_output(result, output_format, query)?;
+        }
+        AlertCommands::Show { uid } => {
+            let result = client.get_raw(&format!("/v1/alerts/{}", uid)).await?;
+            print_output(result, output_format, query)?;
+        }
+        AlertCommands::Database { uid } => {
+            let result = client.get_raw(&format!("/v1/bdbs/{}/alerts", uid)).await?;
+            print_output(result, output_format, query)?;
+        }
+        AlertCommands::Node { uid } => {
+            let result = client.get_raw(&format!("/v1/nodes/{}/alerts", uid)).await?;
+            print_output(result, output_format, query)?;
+        }
+        AlertCommands::Cluster => {
+            let result = client.get_raw("/v1/cluster/alerts").await?;
+            print_output(result, output_format, query)?;
+        }
+        AlertCommands::Clear { uid } => {
+            client.delete_raw(&format!("/v1/alerts/{}", uid)).await?;
+            print_output(
+                serde_json::json!({"message": "Alert cleared successfully"}),
+                output_format,
+                query,
+            )?;
+        }
+        AlertCommands::ClearAll => {
+            client.delete_raw("/v1/alerts").await?;
+            print_output(
+                serde_json::json!({"message": "All alerts cleared successfully"}),
+                output_format,
+                query,
+            )?;
+        }
+        AlertCommands::Settings { name } => {
+            let result = client
+                .get_raw(&format!("/v1/cluster/alert_settings/{}", name))
+                .await?;
+            print_output(result, output_format, query)?;
+        }
+        AlertCommands::UpdateSettings {
+            name,
+            enabled,
+            emails,
+            webhook_url,
+        } => {
+            let mut settings = serde_json::json!({});
+
+            if let Some(enabled) = enabled {
+                settings["enabled"] = enabled.into();
+            }
+
+            if let Some(emails) = emails {
+                let email_list: Vec<&str> = emails.split(',').map(|s| s.trim()).collect();
+                settings["email_recipients"] = email_list.into();
+            }
+
+            if let Some(webhook_url) = webhook_url {
+                settings["webhook_url"] = webhook_url.into();
+            }
+
+            let result = client
+                .put_raw(&format!("/v1/cluster/alert_settings/{}", name), settings)
+                .await?;
+            print_output(result, output_format, query)?;
+        }
+    }
+
+    Ok(())
+}
+
+pub async fn handle_crdb_command(
+    command: EnterpriseCrdbCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+
+    match command {
+        EnterpriseCrdbCommands::List => {
+            let result = client.get_raw("/v1/crdbs").await?;
+            print_output(result, output_format, query)?;
+        }
+        EnterpriseCrdbCommands::Show { guid } => {
+            let result = client.get_raw(&format!("/v1/crdbs/{}", guid)).await?;
+            print_output(result, output_format, query)?;
+        }
+        EnterpriseCrdbCommands::Create {
+            name,
+            memory_size,
+            instances,
+            encryption,
+            persistence,
+            eviction_policy,
+        } => {
+            use redis_enterprise::{CreateCrdbInstance, CreateCrdbRequest};
+
+            // Parse instances from "cluster_url:username:password" format
+            let mut crdb_instances = Vec::new();
+            for instance_str in instances {
+                let parts: Vec<&str> = instance_str.splitn(3, ':').collect();
+                if parts.len() != 3 {
+                    anyhow::bail!(
+                        "Invalid instance format. Expected: cluster_url:username:password"
+                    );
+                }
+
+                crdb_instances.push(CreateCrdbInstance {
+                    cluster: parts[0].to_string(),
+                    cluster_url: Some(parts[0].to_string()),
+                    username: Some(parts[1].to_string()),
+                    password: Some(parts[2].to_string()),
+                });
+            }
+
+            let request = CreateCrdbRequest {
+                name,
+                memory_size,
+                instances: crdb_instances,
+                encryption: Some(encryption),
+                data_persistence: persistence,
+                eviction_policy,
+            };
+
+            let result = client
+                .post_raw("/v1/crdbs", serde_json::to_value(&request)?)
+                .await?;
+            print_output(result, output_format, query)?;
+        }
+        EnterpriseCrdbCommands::Update {
+            guid,
+            memory_size,
+            persistence,
+            eviction_policy,
+        } => {
+            let mut updates = serde_json::json!({});
+
+            if let Some(memory_size) = memory_size {
+                updates["memory_size"] = memory_size.into();
+            }
+
+            if let Some(persistence) = persistence {
+                updates["data_persistence"] = persistence.into();
+            }
+
+            if let Some(eviction_policy) = eviction_policy {
+                updates["eviction_policy"] = eviction_policy.into();
+            }
+
+            let result = client
+                .put_raw(&format!("/v1/crdbs/{}", guid), updates)
+                .await?;
+            print_output(result, output_format, query)?;
+        }
+        EnterpriseCrdbCommands::Delete { guid, force } => {
+            if !force {
+                print!("Are you sure you want to delete CRDB '{}'? (y/N): ", guid);
+                std::io::stdout().flush()?;
+                let mut input = String::new();
+                std::io::stdin().read_line(&mut input)?;
+
+                if !input.trim().to_lowercase().starts_with('y') {
+                    println!("Operation cancelled.");
+                    return Ok(());
+                }
+            }
+
+            client.delete_raw(&format!("/v1/crdbs/{}", guid)).await?;
+            print_output(
+                serde_json::json!({"message": "CRDB deleted successfully"}),
+                output_format,
+                query,
+            )?;
+        }
+        EnterpriseCrdbCommands::Tasks { guid } => {
+            let result = client.get_raw(&format!("/v1/crdbs/{}/tasks", guid)).await?;
+            print_output(result, output_format, query)?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle action commands
+pub async fn handle_action_command(
+    command: EnterpriseActionCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+
+    match command {
+        EnterpriseActionCommands::List => {
+            let result = client.get_raw("/v1/actions").await?;
+            print_output(result, output_format, query)?;
+        }
+        EnterpriseActionCommands::Show { uid } => {
+            let result = client.get_raw(&format!("/v1/actions/{}", uid)).await?;
+            print_output(result, output_format, query)?;
+        }
+        EnterpriseActionCommands::Cancel { uid } => {
+            client.delete_raw(&format!("/v1/actions/{}", uid)).await?;
+            print_output(
+                serde_json::json!({"message": "Action cancelled successfully"}),
+                output_format,
+                query,
+            )?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle stats commands
+pub async fn handle_stats_command(
+    command: EnterpriseStatsCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+
+    match command {
+        EnterpriseStatsCommands::Cluster { interval } => {
+            let endpoint = if let Some(interval) = interval {
+                format!("/v1/cluster/stats?interval={}", interval)
+            } else {
+                "/v1/cluster/stats/last".to_string()
+            };
+            let result = client.get_raw(&endpoint).await?;
+            print_output(result, output_format, query)?;
+        }
+        EnterpriseStatsCommands::Node { uid, interval } => {
+            let endpoint = if let Some(interval) = interval {
+                format!("/v1/nodes/{}/stats?interval={}", uid, interval)
+            } else {
+                format!("/v1/nodes/{}/stats/last", uid)
+            };
+            let result = client.get_raw(&endpoint).await?;
+            print_output(result, output_format, query)?;
+        }
+        EnterpriseStatsCommands::Database { uid, interval } => {
+            let endpoint = if let Some(interval) = interval {
+                format!("/v1/bdbs/{}/stats?interval={}", uid, interval)
+            } else {
+                format!("/v1/bdbs/{}/stats/last", uid)
+            };
+            let result = client.get_raw(&endpoint).await?;
+            print_output(result, output_format, query)?;
+        }
+        EnterpriseStatsCommands::Shard { uid, interval } => {
+            let endpoint = if let Some(interval) = interval {
+                format!("/v1/shards/{}/stats?interval={}", uid, interval)
+            } else {
+                format!("/v1/shards/{}/stats/last", uid)
+            };
+            let result = client.get_raw(&endpoint).await?;
+            print_output(result, output_format, query)?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle logs commands
+pub async fn handle_logs_command(
+    command: EnterpriseLogsCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+
+    match command {
+        EnterpriseLogsCommands::List {
+            severity,
+            module,
+            limit,
+        } => {
+            let mut params = Vec::new();
+            if let Some(severity) = severity {
+                params.push(format!("severity={}", severity));
+            }
+            if let Some(module) = module {
+                params.push(format!("module={}", module));
+            }
+            if let Some(limit) = limit {
+                params.push(format!("limit={}", limit));
+            }
+
+            let endpoint = if params.is_empty() {
+                "/v1/logs".to_string()
+            } else {
+                format!("/v1/logs?{}", params.join("&"))
+            };
+
+            let result = client.get_raw(&endpoint).await?;
+            print_output(result, output_format, query)?;
+        }
+        EnterpriseLogsCommands::Show { id } => {
+            let result = client.get_raw(&format!("/v1/logs/{}", id)).await?;
+            print_output(result, output_format, query)?;
+        }
+    }
+
+    Ok(())
 }
