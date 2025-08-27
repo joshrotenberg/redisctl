@@ -41,6 +41,83 @@ pub struct ClusterInfo {
     pub extra: Value,
 }
 
+/// Cluster-wide settings configuration (57 fields)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ClusterSettings {
+    /// Automatic recovery on shard failure
+    pub auto_recovery: Option<bool>,
+
+    /// Automatic migration of shards from overbooked nodes
+    pub automatic_node_offload: Option<bool>,
+
+    /// BigStore migration thresholds
+    pub bigstore_migrate_node_threshold: Option<u32>,
+    pub bigstore_migrate_node_threshold_p: Option<u32>,
+    pub bigstore_provision_node_threshold: Option<u32>,
+    pub bigstore_provision_node_threshold_p: Option<u32>,
+
+    /// Default BigStore version
+    pub default_bigstore_version: Option<u32>,
+
+    /// Data internode encryption
+    pub data_internode_encryption: Option<bool>,
+
+    /// Database connections auditing
+    pub db_conns_auditing: Option<bool>,
+
+    /// Default concurrent restore actions
+    pub default_concurrent_restore_actions: Option<u32>,
+
+    /// Default fork evict RAM
+    pub default_fork_evict_ram: Option<bool>,
+
+    /// Default proxy policies
+    pub default_non_sharded_proxy_policy: Option<String>,
+    pub default_sharded_proxy_policy: Option<String>,
+
+    /// OSS cluster defaults
+    pub default_oss_cluster: Option<bool>,
+    pub default_oss_sharding: Option<bool>,
+
+    /// Default Redis version for new databases
+    pub default_provisioned_redis_version: Option<String>,
+
+    /// Recovery settings
+    pub default_recovery_wait_time: Option<u32>,
+
+    /// Shards placement strategy
+    pub default_shards_placement: Option<String>,
+
+    /// Tracking table settings
+    pub default_tracking_table_max_keys_policy: Option<String>,
+
+    /// Additional cluster-wide settings
+    pub email_alerts: Option<bool>,
+    pub endpoint_rebind_enabled: Option<bool>,
+    pub failure_detection_sensitivity: Option<String>,
+    pub gossip_envoy_admin_port: Option<u32>,
+    pub gossip_envoy_port: Option<u32>,
+    pub gossip_envoy_proxy_mode: Option<bool>,
+    pub hot_spare: Option<bool>,
+    pub max_saved_events_per_type: Option<u32>,
+    pub max_simultaneous_backups: Option<u32>,
+    pub parallel_shards_upgrade: Option<u32>,
+    pub persistent_node_removal: Option<bool>,
+    pub rack_aware: Option<bool>,
+    pub redis_migrate_node_threshold: Option<String>,
+    pub redis_migrate_node_threshold_p: Option<u32>,
+    pub redis_provision_node_threshold: Option<String>,
+    pub redis_provision_node_threshold_p: Option<u32>,
+    pub redis_upgrade_policy: Option<String>,
+    pub resp3_default: Option<bool>,
+    pub show_internals: Option<bool>,
+    pub slave_threads_when_master: Option<bool>,
+    pub use_empty_shard_backups: Option<bool>,
+
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
 /// Bootstrap request for creating a new cluster
 #[derive(Debug, Serialize)]
 pub struct BootstrapRequest {

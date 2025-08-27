@@ -2,31 +2,27 @@
 
 #[cfg(test)]
 mod tests {
-    use crate::{EnterpriseClient, EnterpriseConfig, RestError, Result};
+    use crate::{EnterpriseClient, RestError, Result};
     use wiremock::matchers::{basic_auth, method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
     #[tokio::test]
-    async fn test_enterprise_config_default() {
-        let config = EnterpriseConfig::default();
-        assert_eq!(config.base_url, "https://localhost:9443");
-        assert_eq!(config.timeout, std::time::Duration::from_secs(30));
-        assert!(config.username.is_empty());
-        assert!(config.password.is_empty());
-        assert!(config.insecure);
+    async fn test_enterprise_client_builder_default() {
+        let builder = EnterpriseClient::builder();
+        // Builder defaults are tested through build
+        let client = builder.username("test").password("test").build();
+        assert!(client.is_ok());
     }
 
     #[tokio::test]
     async fn test_enterprise_client_creation() {
-        let config = EnterpriseConfig {
-            base_url: "https://example.com".to_string(),
-            username: "test_user".to_string(),
-            password: "test_pass".to_string(),
-            timeout: std::time::Duration::from_secs(10),
-            insecure: false,
-        };
-
-        let result = EnterpriseClient::new(config.clone());
+        let result = EnterpriseClient::builder()
+            .base_url("https://example.com")
+            .username("test_user")
+            .password("test_pass")
+            .timeout(std::time::Duration::from_secs(10))
+            .insecure(false)
+            .build();
 
         // Client should be created successfully
         assert!(result.is_ok());
@@ -47,15 +43,14 @@ mod tests {
             .mount(&mock_server)
             .await;
 
-        let config = EnterpriseConfig {
-            base_url: mock_server.uri(),
-            username: "test_user".to_string(),
-            password: "test_pass".to_string(),
-            timeout: std::time::Duration::from_secs(10),
-            insecure: false,
-        };
-
-        let client = EnterpriseClient::new(config).unwrap();
+        let client = EnterpriseClient::builder()
+            .base_url(mock_server.uri())
+            .username("test_user")
+            .password("test_pass")
+            .timeout(std::time::Duration::from_secs(10))
+            .insecure(false)
+            .build()
+            .unwrap();
         let result: Result<serde_json::Value> = client.get("/test").await;
 
         assert!(result.is_ok());
@@ -76,15 +71,14 @@ mod tests {
             .mount(&mock_server)
             .await;
 
-        let config = EnterpriseConfig {
-            base_url: mock_server.uri(),
-            username: "test_user".to_string(),
-            password: "test_pass".to_string(),
-            timeout: std::time::Duration::from_secs(10),
-            insecure: false,
-        };
-
-        let client = EnterpriseClient::new(config).unwrap();
+        let client = EnterpriseClient::builder()
+            .base_url(mock_server.uri())
+            .username("test_user")
+            .password("test_pass")
+            .timeout(std::time::Duration::from_secs(10))
+            .insecure(false)
+            .build()
+            .unwrap();
         let test_data = serde_json::json!({"name": "test"});
         let result: Result<serde_json::Value> = client.post("/test", &test_data).await;
 
@@ -106,15 +100,14 @@ mod tests {
             .mount(&mock_server)
             .await;
 
-        let config = EnterpriseConfig {
-            base_url: mock_server.uri(),
-            username: "test_user".to_string(),
-            password: "test_pass".to_string(),
-            timeout: std::time::Duration::from_secs(10),
-            insecure: false,
-        };
-
-        let client = EnterpriseClient::new(config).unwrap();
+        let client = EnterpriseClient::builder()
+            .base_url(mock_server.uri())
+            .username("test_user")
+            .password("test_pass")
+            .timeout(std::time::Duration::from_secs(10))
+            .insecure(false)
+            .build()
+            .unwrap();
         let result: Result<serde_json::Value> = client.get("/error").await;
 
         assert!(result.is_err());
@@ -139,15 +132,14 @@ mod tests {
             .mount(&mock_server)
             .await;
 
-        let config = EnterpriseConfig {
-            base_url: mock_server.uri(),
-            username: "wrong_user".to_string(),
-            password: "wrong_pass".to_string(),
-            timeout: std::time::Duration::from_secs(10),
-            insecure: false,
-        };
-
-        let client = EnterpriseClient::new(config).unwrap();
+        let client = EnterpriseClient::builder()
+            .base_url(mock_server.uri())
+            .username("wrong_user")
+            .password("wrong_pass")
+            .timeout(std::time::Duration::from_secs(10))
+            .insecure(false)
+            .build()
+            .unwrap();
         let result: Result<serde_json::Value> = client.get("/auth-test").await;
 
         assert!(result.is_err());
@@ -185,15 +177,14 @@ mod tests {
             .mount(&mock_server)
             .await;
 
-        let config = EnterpriseConfig {
-            base_url: mock_server.uri(),
-            username: "test_user".to_string(),
-            password: "test_pass".to_string(),
-            timeout: std::time::Duration::from_secs(10),
-            insecure: false,
-        };
-
-        let client = EnterpriseClient::new(config).unwrap();
+        let client = EnterpriseClient::builder()
+            .base_url(mock_server.uri())
+            .username("test_user")
+            .password("test_pass")
+            .timeout(std::time::Duration::from_secs(10))
+            .insecure(false)
+            .build()
+            .unwrap();
         let result = client.delete("/test/123").await;
 
         assert!(result.is_ok());

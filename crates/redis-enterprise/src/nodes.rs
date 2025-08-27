@@ -9,20 +9,73 @@ use serde_json::Value;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Node {
     pub uid: u32,
-    pub address: String,
-    pub status: String,
-    pub role: Option<String>,
-    pub shards: Option<Vec<u32>>,
-    pub total_memory: Option<u64>,
-    pub used_memory: Option<u64>,
-    pub cpu_cores: Option<u32>,
-    pub os_version: Option<String>,
-    pub ephemeral_storage_size: Option<u64>,
-    pub ephemeral_storage_used: Option<u64>,
-    pub persistent_storage_size: Option<u64>,
-    pub persistent_storage_used: Option<u64>,
-    pub rack_id: Option<String>,
 
+    /// IP address of the node (renamed from 'address' to match API)
+    #[serde(rename = "addr")]
+    pub addr: Option<String>,
+
+    pub status: String,
+
+    /// Whether node accepts new shards
+    pub accept_servers: Option<bool>,
+
+    /// System architecture (e.g., "aarch64", "x86_64")
+    pub architecture: Option<String>,
+
+    /// CPU cores (renamed from 'cpu_cores' to match API)
+    #[serde(rename = "cores")]
+    pub cores: Option<u32>,
+
+    /// External IP addresses
+    pub external_addr: Option<Vec<String>>,
+
+    /// Total memory in bytes
+    pub total_memory: Option<u64>,
+
+    /// OS version information
+    pub os_version: Option<String>,
+    pub os_name: Option<String>,
+    pub os_family: Option<String>,
+    pub os_semantic_version: Option<String>,
+
+    /// Storage sizes (API returns f64, not u64)
+    pub ephemeral_storage_size: Option<f64>,
+    pub persistent_storage_size: Option<f64>,
+
+    /// Storage paths
+    pub ephemeral_storage_path: Option<String>,
+    pub persistent_storage_path: Option<String>,
+    pub bigredis_storage_path: Option<String>,
+
+    /// Rack configuration
+    pub rack_id: Option<String>,
+    pub second_rack_id: Option<String>,
+
+    /// Shard information
+    pub shard_count: Option<u32>,
+    pub shard_list: Option<Vec<u32>>,
+    pub ram_shard_count: Option<u32>,
+    pub flash_shard_count: Option<u32>,
+
+    /// Features and capabilities
+    pub bigstore_enabled: Option<bool>,
+    pub fips_enabled: Option<bool>,
+    pub use_internal_ipv6: Option<bool>,
+
+    /// Limits and settings
+    pub max_listeners: Option<u32>,
+    pub max_redis_servers: Option<u32>,
+    pub max_redis_forks: Option<i32>,
+    pub max_slave_full_syncs: Option<i32>,
+
+    /// Runtime information
+    pub uptime: Option<u64>,
+    pub software_version: Option<String>,
+
+    /// Supported Redis versions
+    pub supported_database_versions: Option<Vec<Value>>,
+
+    /// Capture any additional fields not explicitly defined
     #[serde(flatten)]
     pub extra: Value,
 }

@@ -24,34 +24,33 @@ fn no_content_response() -> ResponseTemplate {
 fn test_node() -> serde_json::Value {
     json!({
         "uid": 1,
-        "address": "10.0.0.1",
+        "addr": "10.0.0.1",
         "status": "active",
-        "role": "master",
-        "shards": [1, 2, 3],
+        "shard_list": [1, 2, 3],
         "total_memory": 8589934592u64,
-        "used_memory": 4294967296u64,
-        "cpu_cores": 8,
+        "cores": 8,
         "os_version": "Ubuntu 20.04",
-        "ephemeral_storage_size": 107374182400u64,
-        "ephemeral_storage_used": 53687091200u64,
-        "persistent_storage_size": 214748364800u64,
-        "persistent_storage_used": 107374182400u64,
-        "rack_id": "rack-1"
+        "ephemeral_storage_size": 107374182400.0,
+        "persistent_storage_size": 214748364800.0,
+        "rack_id": "rack-1",
+        "accept_servers": true,
+        "architecture": "x86_64",
+        "shard_count": 3
     })
 }
 
 fn test_slave_node() -> serde_json::Value {
     json!({
         "uid": 2,
-        "address": "10.0.0.2",
+        "addr": "10.0.0.2",
         "status": "active",
-        "role": "slave",
-        "shards": [4, 5],
+        "shard_list": [4, 5],
         "total_memory": 8589934592u64,
-        "used_memory": 2147483648u64,
-        "cpu_cores": 4,
+        "cores": 4,
         "os_version": "Ubuntu 20.04",
-        "rack_id": "rack-2"
+        "rack_id": "rack-2",
+        "accept_servers": true,
+        "shard_count": 2
     })
 }
 
@@ -111,10 +110,8 @@ async fn test_nodes_list() {
     let nodes = result.unwrap();
     assert_eq!(nodes.len(), 2);
     assert_eq!(nodes[0].uid, 1);
-    assert_eq!(nodes[0].address, "10.0.0.1");
-    assert_eq!(nodes[0].role.as_ref().unwrap(), "master");
+    assert_eq!(nodes[0].addr.as_ref().unwrap(), "10.0.0.1");
     assert_eq!(nodes[1].uid, 2);
-    assert_eq!(nodes[1].role.as_ref().unwrap(), "slave");
 }
 
 #[tokio::test]
@@ -167,12 +164,11 @@ async fn test_node_get() {
     assert!(result.is_ok());
     let node = result.unwrap();
     assert_eq!(node.uid, 1);
-    assert_eq!(node.address, "10.0.0.1");
+    assert_eq!(node.addr.as_ref().unwrap(), "10.0.0.1");
     assert_eq!(node.status, "active");
-    assert_eq!(node.role.unwrap(), "master");
-    assert_eq!(node.shards.unwrap(), vec![1, 2, 3]);
+    assert_eq!(node.shard_list.as_ref().unwrap(), &vec![1, 2, 3]);
     assert_eq!(node.total_memory.unwrap(), 8589934592u64);
-    assert_eq!(node.cpu_cores.unwrap(), 8);
+    assert_eq!(node.cores.unwrap(), 8);
     assert_eq!(node.rack_id.unwrap(), "rack-1");
 }
 
@@ -205,18 +201,15 @@ async fn test_node_update() {
     let mock_server = MockServer::start().await;
 
     let updates = json!({
-        "rack_id": "rack-3",
-        "role": "slave"
+        "rack_id": "rack-3"
     });
 
     let updated_node = json!({
         "uid": 1,
-        "address": "10.0.0.1",
+        "addr": "10.0.0.1",
         "status": "active",
-        "role": "slave",
         "rack_id": "rack-3",
-        "total_memory": 8589934592u64,
-        "used_memory": 4294967296u64
+        "total_memory": 8589934592u64
     });
 
     Mock::given(method("PUT"))
@@ -240,7 +233,6 @@ async fn test_node_update() {
     assert!(result.is_ok());
     let node = result.unwrap();
     assert_eq!(node.uid, 1);
-    assert_eq!(node.role.unwrap(), "slave");
     assert_eq!(node.rack_id.unwrap(), "rack-3");
 }
 

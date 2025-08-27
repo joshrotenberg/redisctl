@@ -2,6 +2,184 @@
 //!
 //! This module provides a client for interacting with Redis Enterprise's REST API,
 //! enabling cluster management, database operations, and monitoring.
+//!
+//! # Examples
+//!
+//! ## Creating a Client
+//!
+//! ```ignore
+//! use redis_enterprise::EnterpriseClient;
+//!
+//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = EnterpriseClient::builder()
+//!     .base_url("https://cluster.example.com:9443")
+//!     .username("admin@example.com")
+//!     .password("password")
+//!     .insecure(false)
+//!     .build()?;
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ## Working with Databases
+//!
+//! ```ignore
+//! use redis_enterprise::{EnterpriseClient, BdbHandler, CreateDatabaseRequestBuilder};
+//!
+//! # async fn example(client: EnterpriseClient) -> Result<(), Box<dyn std::error::Error>> {
+//! // List all databases
+//! let handler = BdbHandler::new(client.clone());
+//! let databases = handler.list().await?;
+//! for db in databases {
+//!     println!("Database: {} ({})", db.name, db.uid);
+//! }
+//!
+//! // Create a new database
+//! let request = CreateDatabaseRequestBuilder::new("my-database")
+//!     .memory_size(1024 * 1024 * 1024) // 1GB
+//!     .port(12000)
+//!     .replication(false)
+//!     .persistence("aof")
+//!     .build();
+//!
+//! let new_db = handler.create(request).await?;
+//! println!("Created database: {}", new_db.uid);
+//!
+//! // Get database stats
+//! let stats = handler.get_stats(new_db.uid).await?;
+//! println!("Ops/sec: {:?}", stats);
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ## Managing Nodes
+//!
+//! ```ignore
+//! use redis_enterprise::{EnterpriseClient, NodeHandler};
+//!
+//! # async fn example(client: EnterpriseClient) -> Result<(), Box<dyn std::error::Error>> {
+//! let handler = NodeHandler::new(client);
+//!
+//! // List all nodes in the cluster
+//! let nodes = handler.list().await?;
+//! for node in nodes {
+//!     println!("Node {}: {} ({})", node.uid, node.addr, node.status);
+//! }
+//!
+//! // Get detailed node information
+//! let node_info = handler.get(1).await?;
+//! println!("Node memory: {} / {} bytes",
+//!     node_info.total_memory, node_info.free_memory);
+//!
+//! // Check node stats
+//! let stats = handler.get_stats(1).await?;
+//! println!("CPU usage: {:?}", stats);
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ## Cluster Operations
+//!
+//! ```ignore
+//! use redis_enterprise::{EnterpriseClient, ClusterHandler};
+//!
+//! # async fn example(client: EnterpriseClient) -> Result<(), Box<dyn std::error::Error>> {
+//! let handler = ClusterHandler::new(client);
+//!
+//! // Get cluster information
+//! let cluster_info = handler.get().await?;
+//! println!("Cluster name: {}", cluster_info.name);
+//! println!("Nodes: {}", cluster_info.nodes.len());
+//!
+//! // Get cluster statistics
+//! let stats = handler.get_stats().await?;
+//! println!("Total memory: {:?}", stats);
+//!
+//! // Check license status
+//! let license = handler.get_license().await?;
+//! println!("License expires: {:?}", license);
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ## User Management
+//!
+//! ```ignore
+//! use redis_enterprise::{EnterpriseClient, UserHandler, CreateUserRequest};
+//!
+//! # async fn example(client: EnterpriseClient) -> Result<(), Box<dyn std::error::Error>> {
+//! let handler = UserHandler::new(client);
+//!
+//! // List all users
+//! let users = handler.list().await?;
+//! for user in users {
+//!     println!("User: {} ({})", user.username, user.role);
+//! }
+//!
+//! // Create a new user
+//! let request = CreateUserRequest {
+//!     username: "newuser".to_string(),
+//!     password: "secure_password".to_string(),
+//!     role: "db_member".to_string(),
+//!     email: Some("newuser@example.com".to_string()),
+//!     email_alerts: Some(true),
+//! };
+//!
+//! let new_user = handler.create(request).await?;
+//! println!("Created user: {}", new_user.uid);
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ## Monitoring and Alerts
+//!
+//! ```ignore
+//! use redis_enterprise::{EnterpriseClient, AlertHandler, StatsHandler};
+//!
+//! # async fn example(client: EnterpriseClient) -> Result<(), Box<dyn std::error::Error>> {
+//! // Check active alerts
+//! let alert_handler = AlertHandler::new(client.clone());
+//! let alerts = alert_handler.list().await?;
+//! for alert in alerts {
+//!     println!("Alert: {} - {}", alert.alert_type, alert.message);
+//! }
+//!
+//! // Get cluster statistics
+//! let stats_handler = StatsHandler::new(client);
+//! let cluster_stats = stats_handler.cluster_stats(None).await?;
+//! println!("Cluster stats: {:?}", cluster_stats);
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ## Active-Active Databases (CRDB)
+//!
+//! ```ignore
+//! use redis_enterprise::{EnterpriseClient, CrdbHandler, CreateCrdbRequest};
+//!
+//! # async fn example(client: EnterpriseClient) -> Result<(), Box<dyn std::error::Error>> {
+//! let handler = CrdbHandler::new(client);
+//!
+//! // List Active-Active databases
+//! let crdbs = handler.list().await?;
+//! for crdb in crdbs {
+//!     println!("CRDB: {} ({})", crdb.name, crdb.guid);
+//! }
+//!
+//! // Create an Active-Active database
+//! let request = CreateCrdbRequest {
+//!     name: "global-cache".to_string(),
+//!     memory_size: 1024 * 1024 * 1024, // 1GB per instance
+//!     instances: vec![
+//!         // Define instances for each participating cluster
+//!     ],
+//! };
+//!
+//! let new_crdb = handler.create(request).await?;
+//! println!("Created CRDB: {}", new_crdb.guid);
+//! # Ok(())
+//! # }
+//! ```
 
 pub mod actions;
 pub mod alerts;
@@ -32,6 +210,7 @@ pub mod services;
 pub mod shards;
 pub mod stats;
 pub mod suffixes;
+pub mod types;
 pub mod usage_report;
 pub mod users;
 
@@ -39,7 +218,7 @@ pub mod users;
 mod lib_tests;
 
 // Core client and error types
-pub use client::{EnterpriseClient, EnterpriseClientBuilder, EnterpriseConfig};
+pub use client::{EnterpriseClient, EnterpriseClientBuilder};
 pub use error::{RestError, Result};
 
 // Database management
