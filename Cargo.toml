@@ -55,6 +55,8 @@ wiremock = "0.6"
 mockall = "0.13"
 serial_test = "3.1"
 pretty_assertions = "1.4"
+docker-wrapper = { version = "0.8.1", features = ["template-redis-enterprise", "templates"] }
+tempfile = "3.14"
 
 # Internal crates
 redis-cloud = { path = "crates/redis-cloud" }

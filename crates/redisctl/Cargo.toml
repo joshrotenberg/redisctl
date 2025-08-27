@@ -55,3 +55,5 @@ enterprise-only = ["enterprise"]
 assert_cmd = "2.0"
 predicates = "3.0"
 tempfile = "3.8"
+docker-wrapper = { version = "0.8.1", features = ["template-redis-enterprise", "templates"] }
+wiremock = { workspace = true }
