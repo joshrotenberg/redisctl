@@ -1,5 +1,10 @@
 # redisctl
 
+[![CI](https://github.com/joshrotenberg/redisctl/actions/workflows/ci.yml/badge.svg)](https://github.com/joshrotenberg/redisctl/actions/workflows/ci.yml)
+[![Crates.io](https://img.shields.io/crates/v/redisctl.svg)](https://crates.io/crates/redisctl)
+[![Documentation](https://docs.rs/redisctl/badge.svg)](https://docs.rs/redisctl)
+[![License](https://img.shields.io/crates/l/redisctl.svg)](https://github.com/joshrotenberg/redisctl/blob/main/LICENSE-MIT)
+
 A unified command-line interface for managing Redis deployments across Cloud and Enterprise.
 
 ## Overview
