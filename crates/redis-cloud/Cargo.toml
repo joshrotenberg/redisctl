@@ -11,6 +11,7 @@ description = "Redis Cloud REST API client library"
 keywords = ["redis", "cloud", "api", "rest", "client"]
 categories = ["api-bindings", "database"]
 readme = "README.md"
+publish = false
 
 [dependencies]
 async-trait = { workspace = true }

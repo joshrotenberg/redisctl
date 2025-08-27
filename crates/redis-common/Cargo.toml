@@ -9,6 +9,7 @@ homepage.workspace = true
 description = "Shared utilities for Redis CLI tools"
 keywords = ["redis", "cli", "common", "utilities"]
 categories = ["command-line-utilities", "api-bindings"]
+publish = false
 
 [dependencies]
 anyhow = { workspace = true }
