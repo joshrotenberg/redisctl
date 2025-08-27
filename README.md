@@ -1,5 +1,10 @@
 # redisctl
 
+[![CI](https://github.com/joshrotenberg/redisctl/actions/workflows/ci.yml/badge.svg)](https://github.com/joshrotenberg/redisctl/actions/workflows/ci.yml)
+[![Crates.io](https://img.shields.io/crates/v/redisctl.svg)](https://crates.io/crates/redisctl)
+[![Documentation](https://docs.rs/redisctl/badge.svg)](https://docs.rs/redisctl)
+[![License](https://img.shields.io/crates/l/redisctl.svg)](https://github.com/joshrotenberg/redisctl/blob/main/LICENSE-MIT)
+
 A unified command-line interface for managing Redis deployments across Cloud and Enterprise.
 
 ## Overview
@@ -25,6 +30,16 @@ A unified command-line interface for managing Redis deployments across Cloud and
 - **Raw API Access** - Direct access to any API endpoint
 
 ## Installation
+
+### From crates.io (Recommended)
+```bash
+# Install the latest version
+cargo install redisctl
+
+# Or install specific library crates
+cargo install redis-cloud
+cargo install redis-enterprise
+```
 
 ### From Source
 ```bash
@@ -214,6 +229,9 @@ cd docs && mdbook serve
 
 # Generate API docs
 cargo doc --no-deps --open
+
+# Pre-commit hooks (recommended)
+./scripts/install-hooks.sh
 ```
 
 ### Contributing
@@ -225,42 +243,35 @@ Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
 
 ## API Coverage
 
-### Redis Cloud (40% Coverage) ⚠️
-- ✅ Subscriptions (basic operations)
-- ✅ Databases (basic CRUD operations) 
-- ✅ Cloud Accounts (AWS, GCP, Azure integration)
-- ✅ Users (basic operations)
-- ✅ ACLs (database access control)
-- ✅ Backup & Restore (backup lifecycle)
-- ✅ VPC Peering (networking)
-- ✅ Transit Gateway (enterprise networking)
-- ✅ Active-Active databases (CRDB operations)
-- ✅ API Keys (key management)
-- ✅ Metrics & Logs (monitoring)
-- ✅ Fixed & Flexible Plans (plan management)
-- ✅ Private Service Connect (GCP PSC endpoints)
-- 🚧 Many advanced features still planned
+### Redis Cloud API (95%+ Coverage)
+- ✅ **Core Operations**: Subscriptions, Databases, Users, Payment Methods
+- ✅ **Security**: ACLs, API Keys, Redis Rules, SSO/SAML Integration
+- ✅ **Networking**: VPC Peering, Transit Gateway, Private Service Connect
+- ✅ **Data Management**: Backup/Restore, Import/Export, Active-Active (CRDB)
+- ✅ **Monitoring**: Metrics, Logs, Tasks, Alerts
+- ✅ **Cloud Integration**: AWS, GCP, Azure Cloud Accounts
+- ✅ **Billing**: Invoices, Payment Methods, Cost Analysis
+- ✅ **21 Handler Modules** with 200+ API endpoints implemented
 
-### Redis Enterprise (50% Coverage) ⚠️
-- ✅ Cluster management
-- ✅ Database (BDB) operations
-- ✅ Users & roles
-- ✅ Modules management
-- ✅ Bootstrap & initialization
-- ✅ Backup & restore
-- 🚧 CRDB (Active-Active) - partial
-- 🚧 LDAP integration - planned
-- 🚧 Certificates (OCSP) - planned
+### Redis Enterprise API (100% Coverage)
+- ✅ **Cluster Operations**: Bootstrap, Join, Management, Recovery
+- ✅ **Database Management**: Full BDB lifecycle, Actions, Stats, Shards
+- ✅ **Security**: Users, Roles, LDAP, Redis ACLs, OCSP
+- ✅ **Active-Active**: CRDB management, Tasks, Multi-region
+- ✅ **Monitoring**: Alerts, Stats, Logs, Diagnostics
+- ✅ **Advanced Features**: Modules, Proxies, Services, Migrations
+- ✅ **29 Handler Modules** covering all documented REST API endpoints
 
 ## Roadmap
 
 See our [GitHub Issues](https://github.com/joshrotenberg/redisctl/issues) for the complete roadmap.
 
 ### ✅ **Phase 1** - Raw API Access (Complete)
-   - Redis Cloud API coverage (40% → includes major workflows)
-   - Redis Enterprise API coverage (50%) 
+   - Redis Cloud API coverage (95%+)
+   - Redis Enterprise API coverage (100%)
    - Comprehensive test suite (500+ tests)
    - CI/CD automation with pre-commit hooks
+   - Published to crates.io as v0.1.0
 
 ### ✅ **Phase 2** - Human-Friendly Commands (Complete)
    - Enhanced command interface with smart routing
@@ -280,11 +291,45 @@ See our [GitHub Issues](https://github.com/joshrotenberg/redisctl/issues) for th
    - Terraform provider integration
    - Kubernetes operator
 
+## Using as a Library
+
+Add to your `Cargo.toml`:
+```toml
+[dependencies]
+redis-cloud = "0.1.0"        # For Cloud API
+redis-enterprise = "0.1.0"   # For Enterprise API
+redis-common = "0.1.0"       # For shared utilities
+```
+
+Example usage:
+```rust
+use redis_cloud::CloudClient;
+use redis_enterprise::EnterpriseClient;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Cloud API
+    let cloud = CloudClient::new("api_key", "api_secret")?;
+    let databases = cloud.database().list(123).await?;
+    
+    // Enterprise API
+    let enterprise = EnterpriseClient::builder()
+        .url("https://cluster:9443")
+        .username("admin")
+        .password("pass")
+        .build()?;
+    let cluster_info = enterprise.cluster().get().await?;
+    
+    Ok(())
+}
+```
+
 ## Support
 
 - **Issues**: [GitHub Issues](https://github.com/joshrotenberg/redisctl/issues)
-- **Documentation**: [Online Docs](https://joshrotenberg.github.io/redisctl/)
+- **Documentation**: [docs.rs/redisctl](https://docs.rs/redisctl/)
 - **Examples**: See the [examples/](examples/) directory
+- **Crates.io**: [crates.io/crates/redisctl](https://crates.io/crates/redisctl)
 
 ## License
 
