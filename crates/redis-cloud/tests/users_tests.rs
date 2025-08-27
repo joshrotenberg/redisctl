@@ -1,6 +1,6 @@
 //! Users endpoint tests for Redis Cloud
 
-use redis_cloud::{CloudClient, CloudConfig, CloudUsersHandler};
+use redis_cloud::{CloudClient, CloudUsersHandler};
 use serde_json::json;
 use wiremock::matchers::{body_json, header, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -23,13 +23,12 @@ fn no_content_response() -> ResponseTemplate {
 }
 
 fn create_test_client(base_url: String) -> CloudClient {
-    let config = CloudConfig {
-        api_key: "test-api-key".to_string(),
-        api_secret: "test-secret-key".to_string(),
-        base_url,
-        timeout: std::time::Duration::from_secs(30),
-    };
-    CloudClient::new(config).unwrap()
+    CloudClient::builder()
+        .api_key("test-api-key")
+        .api_secret("test-secret-key")
+        .base_url(base_url)
+        .build()
+        .unwrap()
 }
 
 #[tokio::test]
@@ -333,13 +332,12 @@ async fn test_users_list_unauthorized() {
         .mount(&mock_server)
         .await;
 
-    let config = CloudConfig {
-        api_key: "invalid-key".to_string(),
-        api_secret: "test-secret-key".to_string(),
-        base_url: mock_server.uri(),
-        timeout: std::time::Duration::from_secs(30),
-    };
-    let client = CloudClient::new(config).unwrap();
+    let client = CloudClient::builder()
+        .api_key("invalid-key")
+        .api_secret("test-secret-key")
+        .base_url(mock_server.uri())
+        .build()
+        .unwrap();
     let handler = CloudUsersHandler::new(client);
     let result = handler.list().await;
 

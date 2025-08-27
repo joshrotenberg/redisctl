@@ -1,61 +1,141 @@
 //! Redis Cloud API client core implementation
+//!
+//! This module contains the core HTTP client for interacting with the Redis Cloud REST API.
+//! It provides authentication handling, request/response processing, and error management.
+//!
+//! The client is designed around a builder pattern for flexible configuration and supports
+//! both typed and untyped API interactions.
 
 use crate::{CloudError as RestError, Result};
 use reqwest::Client;
 use serde::Serialize;
 use std::sync::Arc;
 
-/// Redis Cloud API configuration
+/// Builder for constructing a CloudClient with custom configuration
+///
+/// Provides a fluent interface for configuring API credentials, base URL, timeouts,
+/// and other client settings before creating the final CloudClient instance.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use redis_cloud::CloudClient;
+///
+/// // Basic configuration
+/// let client = CloudClient::builder()
+///     .api_key("your-api-key")
+///     .api_secret("your-api-secret")
+///     .build()?;
+///
+/// // Advanced configuration
+/// let client = CloudClient::builder()
+///     .api_key("your-api-key")
+///     .api_secret("your-api-secret")
+///     .base_url("https://api.redislabs.com/v1".to_string())
+///     .timeout(std::time::Duration::from_secs(120))
+///     .build()?;
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
 #[derive(Debug, Clone)]
-pub struct CloudConfig {
-    pub api_key: String,
-    pub api_secret: String,
-    pub base_url: String,
-    pub timeout: std::time::Duration,
+pub struct CloudClientBuilder {
+    api_key: Option<String>,
+    api_secret: Option<String>,
+    base_url: String,
+    timeout: std::time::Duration,
 }
 
-impl Default for CloudConfig {
+impl Default for CloudClientBuilder {
     fn default() -> Self {
-        CloudConfig {
-            api_key: String::new(),
-            api_secret: String::new(),
+        Self {
+            api_key: None,
+            api_secret: None,
             base_url: "https://api.redislabs.com/v1".to_string(),
             timeout: std::time::Duration::from_secs(30),
         }
     }
 }
 
-/// Redis Cloud API client
-#[derive(Clone)]
-pub struct CloudClient {
-    pub(crate) config: CloudConfig,
-    pub(crate) client: Arc<Client>,
-}
+impl CloudClientBuilder {
+    /// Create a new builder
+    pub fn new() -> Self {
+        Self::default()
+    }
 
-impl CloudClient {
-    /// Create a new Cloud API client
-    pub fn new(config: CloudConfig) -> Result<Self> {
+    /// Set the API key
+    pub fn api_key(mut self, key: impl Into<String>) -> Self {
+        self.api_key = Some(key.into());
+        self
+    }
+
+    /// Set the API secret
+    pub fn api_secret(mut self, secret: impl Into<String>) -> Self {
+        self.api_secret = Some(secret.into());
+        self
+    }
+
+    /// Set the base URL
+    pub fn base_url(mut self, url: impl Into<String>) -> Self {
+        self.base_url = url.into();
+        self
+    }
+
+    /// Set the timeout
+    pub fn timeout(mut self, timeout: std::time::Duration) -> Self {
+        self.timeout = timeout;
+        self
+    }
+
+    /// Build the client
+    pub fn build(self) -> Result<CloudClient> {
+        let api_key = self
+            .api_key
+            .ok_or_else(|| RestError::ConnectionError("API key is required".to_string()))?;
+        let api_secret = self
+            .api_secret
+            .ok_or_else(|| RestError::ConnectionError("API secret is required".to_string()))?;
+
         let client = Client::builder()
-            .timeout(config.timeout)
+            .timeout(self.timeout)
             .build()
             .map_err(|e| RestError::ConnectionError(e.to_string()))?;
 
         Ok(CloudClient {
-            config,
+            api_key,
+            api_secret,
+            base_url: self.base_url,
+            timeout: self.timeout,
             client: Arc::new(client),
         })
+    }
+}
+
+/// Redis Cloud API client
+#[derive(Clone)]
+pub struct CloudClient {
+    pub(crate) api_key: String,
+    pub(crate) api_secret: String,
+    pub(crate) base_url: String,
+    #[allow(dead_code)]
+    pub(crate) timeout: std::time::Duration,
+    pub(crate) client: Arc<Client>,
+}
+
+impl CloudClient {
+    /// Create a new builder for the client
+    pub fn builder() -> CloudClientBuilder {
+        CloudClientBuilder::new()
     }
 
     /// Make a GET request with API key authentication
     pub async fn get<T: serde::de::DeserializeOwned>(&self, path: &str) -> Result<T> {
-        let url = format!("{}{}", self.config.base_url, path);
+        let url = format!("{}{}", self.base_url, path);
 
         // Redis Cloud API uses these headers for authentication
         let response = self
             .client
             .get(&url)
-            .header("x-api-key", &self.config.api_key)
-            .header("x-api-secret-key", &self.config.api_secret)
+            .header("x-api-key", &self.api_key)
+            .header("x-api-secret-key", &self.api_secret)
             .send()
             .await?;
 
@@ -68,14 +148,14 @@ impl CloudClient {
         path: &str,
         body: &B,
     ) -> Result<T> {
-        let url = format!("{}{}", self.config.base_url, path);
+        let url = format!("{}{}", self.base_url, path);
 
         // Same backwards header naming as GET
         let response = self
             .client
             .post(&url)
-            .header("x-api-key", &self.config.api_key)
-            .header("x-api-secret-key", &self.config.api_secret)
+            .header("x-api-key", &self.api_key)
+            .header("x-api-secret-key", &self.api_secret)
             .json(body)
             .send()
             .await?;
@@ -89,14 +169,14 @@ impl CloudClient {
         path: &str,
         body: &B,
     ) -> Result<T> {
-        let url = format!("{}{}", self.config.base_url, path);
+        let url = format!("{}{}", self.base_url, path);
 
         // Same backwards header naming as GET
         let response = self
             .client
             .put(&url)
-            .header("x-api-key", &self.config.api_key)
-            .header("x-api-secret-key", &self.config.api_secret)
+            .header("x-api-key", &self.api_key)
+            .header("x-api-secret-key", &self.api_secret)
             .json(body)
             .send()
             .await?;
@@ -106,14 +186,14 @@ impl CloudClient {
 
     /// Make a DELETE request
     pub async fn delete(&self, path: &str) -> Result<()> {
-        let url = format!("{}{}", self.config.base_url, path);
+        let url = format!("{}{}", self.base_url, path);
 
         // Same backwards header naming as GET
         let response = self
             .client
             .delete(&url)
-            .header("x-api-key", &self.config.api_key)
-            .header("x-api-secret-key", &self.config.api_secret)
+            .header("x-api-key", &self.api_key)
+            .header("x-api-secret-key", &self.api_secret)
             .send()
             .await?;
 
@@ -150,14 +230,14 @@ impl CloudClient {
         path: &str,
         body: serde_json::Value,
     ) -> Result<serde_json::Value> {
-        let url = format!("{}{}", self.config.base_url, path);
+        let url = format!("{}{}", self.base_url, path);
 
         // Use backwards header names for compatibility
         let response = self
             .client
             .patch(&url)
-            .header("x-api-key", &self.config.api_key)
-            .header("x-api-secret-key", &self.config.api_secret)
+            .header("x-api-key", &self.api_key)
+            .header("x-api-secret-key", &self.api_secret)
             .json(&body)
             .send()
             .await?;
@@ -167,14 +247,14 @@ impl CloudClient {
 
     /// Execute raw DELETE request returning any response body
     pub async fn delete_raw(&self, path: &str) -> Result<serde_json::Value> {
-        let url = format!("{}{}", self.config.base_url, path);
+        let url = format!("{}{}", self.base_url, path);
 
         // Use backwards header names for compatibility
         let response = self
             .client
             .delete(&url)
-            .header("x-api-key", &self.config.api_key)
-            .header("x-api-secret-key", &self.config.api_secret)
+            .header("x-api-key", &self.api_key)
+            .header("x-api-secret-key", &self.api_secret)
             .send()
             .await?;
 

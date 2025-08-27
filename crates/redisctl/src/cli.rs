@@ -172,6 +172,11 @@ pub enum CloudCommands {
         #[command(subcommand)]
         command: SsoCommands,
     },
+    /// Billing and payment management
+    Billing {
+        #[command(subcommand)]
+        command: BillingCommands,
+    },
 }
 
 #[derive(Subcommand)]
@@ -1477,5 +1482,105 @@ pub enum SsoCommands {
         /// Skip confirmation
         #[arg(long)]
         force: bool,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum BillingCommands {
+    /// Get billing information
+    Info,
+    /// List invoices
+    InvoiceList {
+        /// Number of invoices to return
+        #[arg(long)]
+        limit: Option<u32>,
+        /// Filter by status
+        #[arg(long)]
+        status: Option<String>,
+    },
+    /// Get invoice details
+    InvoiceGet {
+        /// Invoice ID
+        id: String,
+    },
+    /// Download invoice PDF
+    InvoiceDownload {
+        /// Invoice ID
+        id: String,
+        /// Output file path
+        #[arg(long)]
+        output: Option<String>,
+    },
+    /// Get current month invoice
+    InvoiceCurrent,
+    /// List payment methods
+    PaymentMethodList,
+    /// Get payment method details
+    PaymentMethodGet {
+        /// Payment method ID
+        id: String,
+    },
+    /// Add payment method
+    PaymentMethodAdd {
+        /// Payment method JSON data
+        #[arg(long)]
+        data: String,
+    },
+    /// Update payment method
+    PaymentMethodUpdate {
+        /// Payment method ID
+        id: String,
+        /// Payment method JSON data
+        #[arg(long)]
+        data: String,
+    },
+    /// Delete payment method
+    PaymentMethodDelete {
+        /// Payment method ID
+        id: String,
+        /// Skip confirmation
+        #[arg(long)]
+        force: bool,
+    },
+    /// Set default payment method
+    PaymentMethodDefault {
+        /// Payment method ID
+        id: String,
+    },
+    /// Get cost breakdown
+    CostBreakdown {
+        /// Subscription ID (optional)
+        #[arg(long)]
+        subscription: Option<u32>,
+    },
+    /// Get usage report
+    Usage {
+        /// Start date (YYYY-MM-DD)
+        #[arg(long)]
+        from: Option<String>,
+        /// End date (YYYY-MM-DD)
+        #[arg(long)]
+        to: Option<String>,
+    },
+    /// Get billing history
+    History {
+        /// Number of months
+        #[arg(long)]
+        months: Option<u32>,
+    },
+    /// Get available credits
+    Credits,
+    /// Apply promo code
+    PromoApply {
+        /// Promo code
+        code: String,
+    },
+    /// Get billing alerts
+    AlertList,
+    /// Update billing alerts
+    AlertUpdate {
+        /// Alert settings JSON
+        #[arg(long)]
+        data: String,
     },
 }
