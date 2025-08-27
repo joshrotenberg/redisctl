@@ -71,3 +71,8 @@ panic = "abort"
 [profile.dev]
 opt-level = 0
 debug = true
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
