@@ -1,0 +1,101 @@
+name: Security Audit
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '**/Cargo.toml'
+      - '**/Cargo.lock'
+      - '.github/workflows/security.yml'
+  pull_request:
+    paths:
+      - '**/Cargo.toml'
+      - '**/Cargo.lock'
+      - '.github/workflows/security.yml'
+  schedule:
+    - cron: '0 0 * * *'  # Daily at midnight UTC
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Cache cargo registry
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+      
+      - name: Install cargo-audit
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-audit
+      
+      - name: Run security audit
+        run: cargo audit --deny warnings
+      
+      - name: Run audit and generate SARIF
+        run: cargo audit --json | python3 -c "
+import sys, json
+sarif = {
+  'version': '2.1.0',
+  'runs': [{
+    'tool': {'driver': {'name': 'cargo-audit', 'informationUri': 'https://rustsec.org/'}},
+    'results': []
+  }]
+}
+try:
+  data = json.load(sys.stdin)
+  for vuln in data.get('vulnerabilities', {}).get('list', []):
+    sarif['runs'][0]['results'].append({
+      'ruleId': vuln['advisory']['id'],
+      'level': 'error' if vuln['advisory'].get('cvss') and float(vuln['advisory']['cvss'].split('/')[0].split(':')[-1]) >= 7 else 'warning',
+      'message': {'text': vuln['advisory']['title']},
+      'locations': [{'physicalLocation': {'artifactLocation': {'uri': 'Cargo.lock'}}}]
+    })
+except: pass
+print(json.dumps(sarif))
+" > audit.sarif || echo '{"version":"2.1.0","runs":[{"tool":{"driver":{"name":"cargo-audit"}},"results":[]}]}' > audit.sarif
+      
+      - name: Upload audit results to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: audit.sarif
+          category: dependency-audit
+
+  cargo-deny:
+    name: Dependency Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run cargo-deny
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
+          arguments: --all-features
+        continue-on-error: true  # Don't fail until deny.toml is configured
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          deny-licenses: GPL-3.0, AGPL-3.0

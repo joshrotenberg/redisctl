@@ -9,6 +9,7 @@ homepage.workspace = true
 description = "Unified CLI for Redis Cloud and Enterprise"
 keywords = ["redis", "cli", "cloud", "enterprise", "database"]
 categories = ["command-line-utilities", "api-bindings"]
+readme = "../../README.md"
 
 [[bin]]
 name = "redisctl"

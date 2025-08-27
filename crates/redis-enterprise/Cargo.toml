@@ -10,7 +10,7 @@ documentation.workspace = true
 description = "Redis Enterprise REST API client library"
 keywords = ["redis", "enterprise", "api", "rest", "client"]
 categories = ["api-bindings", "database"]
-readme = "README.md"
+readme = "../../README.md"
 
 [dependencies]
 async-trait = { workspace = true }
