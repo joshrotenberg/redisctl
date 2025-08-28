@@ -12,7 +12,6 @@
 - [Installation](./cli/installation.md)
 - [Docker Testing](./cli/docker.md)
 - [Configuration](./cli/configuration.md)
-- [Configuration Audit](./cli/configuration-audit.md)
 - [Commands](./cli/commands.md)
 - [Output Formats](./cli/output-formats.md)
 - [Examples](./cli/examples.md)
