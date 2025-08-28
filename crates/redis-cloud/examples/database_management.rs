@@ -71,16 +71,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Uncomment and modify as needed
     /*
     println!("\nCreating a new database...");
-    let new_database = CreateDatabaseRequest {
-        name: "example-db".to_string(),
-        memory_limit_in_gb: 0.1, // 100 MB
-        data_persistence: "none".to_string(),
-        replication: false,
-        data_eviction: Some("volatile-lru".to_string()),
-        password: None,
-        support_oss_cluster_api: Some(false),
-        use_external_endpoint_for_oss_cluster_api: None,
-    };
+    // Using the new builder pattern for cleaner API
+    let new_database = CreateDatabaseRequest::builder()
+        .name("example-db")
+        .memory_limit_in_gb(0.1) // 100 MB
+        .data_persistence("none")
+        .replication(false)
+        .data_eviction("volatile-lru")
+        .support_oss_cluster_api(false)
+        .build();
 
     let created_db = db_handler
         .create(subscription_id, new_database)

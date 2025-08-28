@@ -4,6 +4,7 @@ use crate::client::RestClient;
 use crate::error::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use typed_builder::TypedBuilder;
 
 /// User information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -22,27 +23,61 @@ pub struct User {
 }
 
 /// Create user request
-#[derive(Debug, Serialize)]
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use redis_enterprise::CreateUserRequest;
+///
+/// let request = CreateUserRequest::builder()
+///     .username("john.doe")
+///     .password("secure-password-123")
+///     .role("db_admin")
+///     .email("john.doe@example.com")
+///     .email_alerts(true)
+///     .build();
+/// ```
+#[derive(Debug, Serialize, TypedBuilder)]
 pub struct CreateUserRequest {
+    #[builder(setter(into))]
     pub username: String,
+    #[builder(setter(into))]
     pub password: String,
+    #[builder(setter(into))]
     pub role: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub email: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
     pub email_alerts: Option<bool>,
 }
 
 /// Update user request
-#[derive(Debug, Serialize)]
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use redis_enterprise::UpdateUserRequest;
+///
+/// let request = UpdateUserRequest::builder()
+///     .password("new-secure-password")
+///     .email_alerts(false)
+///     .build();
+/// ```
+#[derive(Debug, Serialize, TypedBuilder)]
 pub struct UpdateUserRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub password: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub role: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub email: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
     pub email_alerts: Option<bool>,
 }
 

@@ -4,6 +4,7 @@ use crate::client::RestClient;
 use crate::error::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use typed_builder::TypedBuilder;
 
 /// Migration task
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -42,15 +43,18 @@ pub struct MigrationEndpoint {
 }
 
 /// Create migration request
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
 pub struct CreateMigrationRequest {
     pub source: MigrationEndpoint,
     pub target: MigrationEndpoint,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub migration_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub key_pattern: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
     pub flush_target: Option<bool>,
 }
 

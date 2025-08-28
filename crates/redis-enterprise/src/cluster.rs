@@ -4,6 +4,7 @@ use crate::client::RestClient;
 use crate::error::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use typed_builder::TypedBuilder;
 
 /// Node information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -119,23 +120,27 @@ pub struct ClusterSettings {
 }
 
 /// Bootstrap request for creating a new cluster
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, TypedBuilder)]
 pub struct BootstrapRequest {
+    #[builder(setter(into))]
     pub action: String,
     pub cluster: ClusterBootstrapInfo,
     pub credentials: BootstrapCredentials,
 }
 
 /// Cluster information for bootstrap
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, TypedBuilder)]
 pub struct ClusterBootstrapInfo {
+    #[builder(setter(into))]
     pub name: String,
 }
 
 /// Credentials for bootstrap
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, TypedBuilder)]
 pub struct BootstrapCredentials {
+    #[builder(setter(into))]
     pub username: String,
+    #[builder(setter(into))]
     pub password: String,
 }
 
