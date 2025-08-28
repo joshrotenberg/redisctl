@@ -1,0 +1,31 @@
+# mdbook-lint configuration for redisctl documentation
+# https://github.com/joshrotenberg/mdbook-lint
+
+# Temporarily disable rules with known issues
+disabled-rules = [
+    "MDBOOK010",  # Math block detection - false positives with $ in shell code blocks (issue #141)
+    "MDBOOK005",  # Orphaned files - incorrectly checking outside src directory (issue #142)
+]
+
+# Don't fail the build on warnings during initial setup
+fail-on-warnings = false
+
+# Configure specific rules
+[rules.MD013]
+# Allow longer lines for code examples and CLI output
+line_length = 120
+
+[rules.MD024]
+# Allow duplicate headings in different sections
+enabled = true
+
+[rules.MD041]
+# Require first line to be a heading
+enabled = true
+
+# Future configuration options when issues are resolved:
+# [rules.MDBOOK005]
+# search-path = "src"  # Only check within src directory
+# 
+# [rules.MDBOOK010]  
+# skip-code-blocks = true  # Skip math detection in code blocks

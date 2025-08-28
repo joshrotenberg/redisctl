@@ -45,12 +45,7 @@ jobs:
         run: |
           command -v mdbook-lint || cargo install mdbook-lint
 
-      - name: Lint book
-        run: |
-          mdbook-lint lint docs/src --config-format=disabled || true
-          # Note: Linting is informational only for now due to false positives with $ in code blocks
-
-      - name: Build book
+      - name: Build book (includes linting via preprocessor)
         run: |
           cd docs
           mdbook build
