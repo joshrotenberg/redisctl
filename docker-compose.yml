@@ -1,8 +1,12 @@
 # Redis Enterprise Test Environment
-# Usage: docker compose up -d
+# 
+# Usage:
+#   docker compose up -d        # Start enterprise and initialize cluster
+#   docker compose logs init    # Check initialization status
+#   docker compose down -v      # Clean up everything
 
 services:
-  # Redis Enterprise single node for testing
+  # Redis Enterprise server
   enterprise:
     image: ${REDIS_ENTERPRISE_IMAGE:-redislabs/redis:latest}
     container_name: redis-enterprise
@@ -11,7 +15,7 @@ services:
     ports:
       - "9443:9443"   # REST API
       - "8443:8443"   # Web UI  
-      - "12000-12010:12000-12010" # Database ports
+      - "12000:12000" # Database port
     environment:
       ACCEPT_EULA: "yes"
     volumes:
@@ -22,8 +26,10 @@ services:
       timeout: 5s
       retries: 30
       start_period: 60s
+    networks:
+      - redis-net
 
-  # Initialize Enterprise cluster using our CLI
+  # Initialize cluster and create database
   init:
     build:
       context: .
@@ -35,47 +41,54 @@ services:
         condition: service_healthy
     environment:
       REDIS_ENTERPRISE_URL: "https://enterprise:9443"
-      REDIS_ENTERPRISE_USER: "admin@redis.local"
-      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
       RUST_LOG: ${RUST_LOG:-info}
+    networks:
+      - redis-net
     command: |
       sh -c '
-      echo "Waiting for cluster to be ready..." &&
-      sleep 10 &&
-      echo "Initializing cluster..." &&
-      ./target/release/redisctl bootstrap create \
+      echo "========================================" &&
+      echo "Initializing Redis Enterprise cluster..." &&
+      echo "========================================" &&
+      
+      # Initialize cluster
+      redisctl enterprise workflow init-cluster \
         --insecure \
         --name "test-cluster" \
         --username "admin@redis.local" \
         --password "Redis123!" \
         --accept-eula &&
+      
+      echo "" &&
+      echo "========================================" &&
       echo "Creating test database..." &&
-      ./target/release/redisctl database create \
+      echo "========================================" &&
+      
+      # Create database using the workflow
+      redisctl enterprise workflow create-database \
         --insecure \
         --name "test-db" \
         --memory 100MB \
         --port 12000 &&
-      echo "Cluster initialization complete!"
+      
+      echo "" &&
+      echo "========================================" &&
+      echo "Setup complete!" &&
+      echo "" &&
+      echo "Web UI: https://localhost:8443" &&
+      echo "Username: admin@redis.local" &&
+      echo "Password: Redis123!" &&
+      echo "" &&
+      echo "API: https://localhost:9443" &&
+      echo "Database: redis://localhost:12000" &&
+      echo "========================================" &&
+      
+      # List databases to confirm
+      redisctl enterprise database list --insecure --output table
       '
 
-  # CLI container for interactive testing
-  cli:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: redis-cli
-    stdin_open: true
-    tty: true
-    environment:
-      REDIS_ENTERPRISE_URL: "https://enterprise:9443"
-      REDIS_ENTERPRISE_USER: "admin@redis.local"
-      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
-      RUST_LOG: ${RUST_LOG:-info}
-    volumes:
-      - ./:/workspace:ro
-    working_dir: /workspace
-    command: ["/bin/sh"]
-    profiles: ["cli"]
+networks:
+  redis-net:
+    driver: bridge
 
 volumes:
   enterprise-data:
