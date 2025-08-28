@@ -12,8 +12,8 @@ COPY crates/ ./crates/
 # Build release binary
 RUN cargo build --release --bin redisctl
 
-# Runtime stage - Debian for compatibility
-FROM debian:bookworm-slim
+# Runtime stage - Ubuntu for newer GLIBC
+FROM ubuntu:24.04
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
