@@ -64,3 +64,8 @@ enterprise-only = ["enterprise"]
 assert_cmd = "2.0"
 predicates = "3.0"
 tempfile = "3.8"
+criterion = "0.5"
+
+[[bench]]
+name = "api_performance"
+harness = false

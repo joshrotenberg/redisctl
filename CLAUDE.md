@@ -195,3 +195,4 @@ make docker-down
 - Conventional commits: `feat:`, `fix:`, `docs:`, `test:`, `chore:`, etc.
 - Feature branch workflow (never commit directly to main)
 - No emoji in code, commits, or documentation
+- always squash commits on a branch/pr
