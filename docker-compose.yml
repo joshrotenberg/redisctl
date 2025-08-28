@@ -46,6 +46,7 @@ services:
       RUST_LOG: ${RUST_LOG:-info}
     networks:
       - redis-net
+    entrypoint: ["/bin/sh", "-c"]
     command: |
       sh -c '
       echo "========================================" &&
@@ -80,6 +81,7 @@ services:
       RUST_LOG: ${RUST_LOG:-info}
     networks:
       - redis-net
+    entrypoint: ["/bin/sh", "-c"]
     command: |
       sh -c '
       echo "========================================" &&
@@ -113,6 +115,7 @@ services:
       RUST_LOG: ${RUST_LOG:-info}
     networks:
       - redis-net
+    entrypoint: ["/bin/sh", "-c"]
     command: |
       sh -c '
       echo "========================================" &&
