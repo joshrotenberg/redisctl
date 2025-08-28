@@ -170,8 +170,11 @@ pub async fn handle_cluster_command(
 
     match command {
         ClusterCommands::Info => {
-            let info = client.get_raw("/v1/cluster").await?;
-            print_output(info, output_format, query)?;
+            // Use typed API to get cluster info
+            let handler = redis_enterprise::ClusterHandler::new(client.clone());
+            let info = handler.info().await?;
+            let value = serde_json::to_value(info)?;
+            print_output(value, output_format, query)?;
         }
         ClusterCommands::Nodes => {
             let nodes = client.get_raw("/v1/nodes").await?;

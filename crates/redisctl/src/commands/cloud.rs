@@ -103,25 +103,11 @@ pub async fn handle_database_command(
 
     match command {
         DatabaseCommands::List => {
-            // For Cloud, we need to list databases across all subscriptions
-            let subscriptions = client.get_raw("/subscriptions").await?;
-            let mut all_databases = Vec::new();
-
-            if let Some(subs) = subscriptions.as_array() {
-                for subscription in subs {
-                    if let Some(subscription_id) = subscription.get("id").and_then(|id| id.as_u64())
-                    {
-                        let databases = client
-                            .get_raw(&format!("/subscriptions/{}/databases", subscription_id))
-                            .await?;
-                        if let Some(dbs) = databases.as_array() {
-                            all_databases.extend(dbs.iter().cloned());
-                        }
-                    }
-                }
-            }
-
-            print_output(all_databases, output_format, query)?;
+            // Use typed API to list all databases
+            let handler = redis_cloud::CloudDatabaseHandler::new(client.clone());
+            let databases = handler.list_all().await?;
+            let value = serde_json::to_value(databases)?;
+            print_output(value, output_format, query)?;
         }
         DatabaseCommands::Show { id } => {
             // Parse subscription_id:database_id format or just database_id
