@@ -1,0 +1,50 @@
+# Redis CLI Docker Image - Optimized for Docker Hub
+# Multi-platform build with minimal size
+
+ARG RUST_VERSION=1.89
+FROM --platform=$BUILDPLATFORM rust:${RUST_VERSION} AS builder
+
+# Install cross-compilation tools
+RUN apt-get update && apt-get install -y \
+    gcc-aarch64-linux-gnu \
+    gcc-x86-64-linux-gnu \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+# Copy workspace files
+COPY Cargo.toml ./
+COPY crates/ ./crates/
+
+# Set up for cross-compilation
+ARG TARGETPLATFORM
+RUN case "$TARGETPLATFORM" in \
+    "linux/amd64") echo "x86_64-unknown-linux-gnu" > /target.txt ;; \
+    "linux/arm64") echo "aarch64-unknown-linux-gnu" > /target.txt ;; \
+    *) echo "Unsupported platform: $TARGETPLATFORM" && exit 1 ;; \
+    esac
+
+# Build for the target platform
+RUN export TARGET=$(cat /target.txt) && \
+    rustup target add $TARGET && \
+    cargo build --release --target $TARGET --bin redisctl && \
+    cp target/$TARGET/release/redisctl /redisctl
+
+# Runtime stage - distroless for minimal size and security
+FROM gcr.io/distroless/cc-debian12:nonroot
+
+# Copy the binary
+COPY --from=builder /redisctl /usr/local/bin/redisctl
+
+# Set environment variables
+ENV REDIS_ENTERPRISE_URL=""
+ENV REDIS_ENTERPRISE_USER=""
+ENV REDIS_ENTERPRISE_PASSWORD=""
+ENV REDIS_CLOUD_API_KEY=""
+ENV REDIS_CLOUD_SECRET_KEY=""
+
+# Use the nonroot user
+USER nonroot
+
+ENTRYPOINT ["redisctl"]
+CMD ["--help"]

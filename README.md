@@ -83,16 +83,58 @@ cargo build --release --features enterprise-only --bin redis-enterprise
 cargo build --release --bin redisctl
 ```
 
-### Using Docker (for Enterprise testing)
+### Using Docker Hub Image
+
+The official Docker images are available on Docker Hub at [joshrotenberg/redisctl](https://hub.docker.com/r/joshrotenberg/redisctl):
+
+#### Available Tags
+- `latest` - Latest stable release
+- `v0.1.0`, `v0.2.0`, etc. - Specific version tags
+- `main` - Latest development build from main branch
+
+```bash
+# Pull the latest image
+docker pull joshrotenberg/redisctl:latest
+
+# Or pull a specific version
+docker pull joshrotenberg/redisctl:v0.1.0
+
+# Run a command directly
+docker run --rm joshrotenberg/redisctl:latest --help
+
+# Use with environment variables for Redis Cloud
+docker run --rm \
+  -e REDIS_CLOUD_API_KEY="your-key" \
+  -e REDIS_CLOUD_API_SECRET="your-secret" \
+  joshrotenberg/redisctl:latest cloud subscription list
+
+# Use with environment variables for Redis Enterprise
+docker run --rm \
+  -e REDIS_ENTERPRISE_URL="https://your-cluster:9443" \
+  -e REDIS_ENTERPRISE_USER="admin@example.com" \
+  -e REDIS_ENTERPRISE_PASSWORD="your-password" \
+  -e REDIS_ENTERPRISE_INSECURE="true" \
+  joshrotenberg/redisctl:latest enterprise cluster info
+
+# Run interactively with a shell
+docker run -it --rm \
+  -e REDIS_ENTERPRISE_URL="https://your-cluster:9443" \
+  -e REDIS_ENTERPRISE_USER="admin@example.com" \
+  -e REDIS_ENTERPRISE_PASSWORD="your-password" \
+  --entrypoint /bin/sh \
+  joshrotenberg/redisctl:latest
+```
+
+### Local Development with Docker Compose
 ```bash
 # Start Redis Enterprise cluster with initialization
 docker compose up -d
 
 # Check cluster status
-docker compose logs init
+docker compose logs init-cluster
 
-# Access interactive CLI
-docker compose run --rm cli
+# Watch logs
+docker compose logs -f
 
 # Clean up
 docker compose down -v
