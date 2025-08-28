@@ -31,15 +31,31 @@ A unified command-line interface for managing Redis deployments across Cloud and
 
 ## Installation
 
-### From crates.io (Recommended)
+### CLI Tool (Recommended for most users)
 ```bash
-# Install the latest version
+# Install the CLI tool
 cargo install redisctl
-
-# Or install specific library crates
-cargo install redis-cloud
-cargo install redis-enterprise
 ```
+
+### Rust Libraries (For developers building custom tools)
+
+This project also provides **comprehensive Rust client libraries** for both Redis Cloud and Enterprise REST APIs:
+
+```toml
+# Add to your Cargo.toml
+[dependencies]
+redis-cloud = "0.1.0"       # Full Redis Cloud REST API client
+redis-enterprise = "0.1.0"  # Full Redis Enterprise REST API client
+```
+
+These libraries offer:
+- **100% API coverage** - Every documented endpoint implemented
+- **Full type safety** - Strongly typed request/response structures
+- **Async/await** - Modern async Rust with Tokio
+- **Builder patterns** - Ergonomic client configuration
+- **Comprehensive testing** - Battle-tested with 500+ tests
+
+Perfect for building custom automation, integrations, or management tools.
 
 ### From Source
 ```bash
@@ -284,7 +300,9 @@ See our [GitHub Issues](https://github.com/joshrotenberg/redisctl/issues) for th
    - Terraform provider integration
    - Kubernetes operator
 
-## Using as a Library
+## Rust Library Usage
+
+For developers who want to build their own tools, our libraries provide complete, type-safe access to Redis Cloud and Enterprise APIs:
 
 Add to your `Cargo.toml`:
 ```toml
@@ -293,28 +311,58 @@ redis-cloud = "0.1.0"        # For Cloud API
 redis-enterprise = "0.1.0"   # For Enterprise API
 ```
 
-Example usage:
+### Quick Example
 ```rust
 use redis_cloud::CloudClient;
 use redis_enterprise::EnterpriseClient;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Cloud API
+    // Redis Cloud API client
     let cloud = CloudClient::new("api_key", "api_secret")?;
-    let databases = cloud.database().list(123).await?;
     
-    // Enterprise API
+    // List all databases in a subscription
+    let databases = cloud.database().list(subscription_id).await?;
+    
+    // Create a new database
+    let new_db = cloud.database()
+        .create(subscription_id, CreateDatabaseRequest {
+            name: "production-cache".to_string(),
+            memory_limit_in_gb: 10.0,
+            // ... other settings
+        })
+        .await?;
+    
+    // Redis Enterprise API client
     let enterprise = EnterpriseClient::builder()
         .url("https://cluster:9443")
-        .username("admin")
-        .password("pass")
+        .username("admin@example.com")
+        .password("secure_password")
+        .insecure(false)  // Set true for self-signed certs
         .build()?;
-    let cluster_info = enterprise.cluster().get().await?;
+    
+    // Get cluster information
+    let cluster = enterprise.cluster().get().await?;
+    
+    // Create a database
+    let db = enterprise.database()
+        .create(CreateDatabaseRequest {
+            name: "mydb".to_string(),
+            memory_size: 1073741824,  // 1GB in bytes
+            // ... other settings
+        })
+        .await?;
     
     Ok(())
 }
 ```
+
+### Library Features
+- **Comprehensive handlers** for all API endpoints (subscriptions, databases, users, ACLs, etc.)
+- **Builder patterns** for complex request construction
+- **Error handling** with detailed context and retry logic
+- **Both typed and untyped** responses (use `.raw()` methods for `serde_json::Value`)
+- **Extensive documentation** on [docs.rs](https://docs.rs/redis-cloud) and [docs.rs](https://docs.rs/redis-enterprise)
 
 ## Support
 

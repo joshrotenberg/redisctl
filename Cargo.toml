@@ -74,3 +74,4 @@ debug = true
 [profile.dist]
 inherits = "release"
 lto = "thin"
+

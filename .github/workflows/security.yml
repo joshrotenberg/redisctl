@@ -18,26 +18,31 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
+# Cancel previous runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   security-audit:
     name: Security Audit
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
       
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a  # stable
       
       - name: Cache cargo registry
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab  # v2.7.5
         with:
           cache-on-failure: true
       
       - name: Install cargo-audit
         uses: taiki-e/install-action@v2
         with:
-          tool: cargo-audit
+          tool: cargo-audit@0.20.5
       
       - name: Run security audit
         run: cargo audit --deny warnings
@@ -67,7 +72,7 @@ print(json.dumps(sarif))
       
       - name: Upload audit results to GitHub Security
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@ea9e4e37992a54ee68a9622e985e60c8e8f12d9f2  # v3.27.4
         with:
           sarif_file: audit.sarif
           category: dependency-audit
@@ -77,10 +82,10 @@ print(json.dumps(sarif))
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
       
       - name: Run cargo-deny
-        uses: EmbarkStudios/cargo-deny-action@v2
+        uses: EmbarkStudios/cargo-deny-action@8371184bd11e21dcf8ac82ebf8c9c9f74ebf7268  # v2.0.3
         with:
           command: check
           arguments: --all-features
@@ -92,10 +97,10 @@ print(json.dumps(sarif))
     if: github.event_name == 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
       
       - name: Dependency Review
-        uses: actions/dependency-review-action@v4
+        uses: actions/dependency-review-action@a6993e2c61fd5dc440b409aa1d6904921c5e1894  # v5.0.0
         with:
           fail-on-severity: high
           deny-licenses: GPL-3.0, AGPL-3.0
