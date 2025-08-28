@@ -43,24 +43,25 @@ services:
         condition: service_healthy
     environment:
       REDIS_ENTERPRISE_URL: "https://enterprise:9443"
+      REDIS_ENTERPRISE_INSECURE: "true"
       RUST_LOG: ${RUST_LOG:-info}
     networks:
       - redis-net
-    entrypoint: ["/bin/sh", "-c"]
-    command: |
-      echo "========================================" &&
-      echo "Step 1: Initializing Redis Enterprise cluster..." &&
-      echo "========================================" &&
-      
-      redisctl enterprise workflow init-cluster \
-        --insecure \
-        --name "test-cluster" \
-        --username "admin@redis.local" \
-        --password "Redis123!" \
-        --accept-eula &&
-      
-      echo "✓ Cluster initialized successfully" &&
-      echo ""
+    entrypoint: 
+      - /bin/sh
+      - -c
+      - |
+        echo "========================================"
+        echo "Step 1: Initializing Redis Enterprise cluster..."
+        echo "========================================"
+        
+        redisctl enterprise bootstrap create \
+          --name "test-cluster" \
+          --username "admin@redis.local" \
+          --password "Redis123!"
+        
+        echo "✓ Cluster initialized successfully"
+        echo ""
 
   # Create database
   create-db:
@@ -76,23 +77,23 @@ services:
       REDIS_ENTERPRISE_URL: "https://enterprise:9443"
       REDIS_ENTERPRISE_USER: "admin@redis.local"
       REDIS_ENTERPRISE_PASSWORD: "Redis123!"
+      REDIS_ENTERPRISE_INSECURE: "true"
       RUST_LOG: ${RUST_LOG:-info}
     networks:
       - redis-net
-    entrypoint: ["/bin/sh", "-c"]
-    command: |
-      echo "========================================" &&
-      echo "Step 2: Creating test database..." &&
-      echo "========================================" &&
-      
-      redisctl enterprise workflow create-database \
-        --insecure \
-        --name "test-db" \
-        --memory 100MB \
-        --port 12000 &&
-      
-      echo "✓ Database created successfully" &&
-      echo ""
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        echo "========================================"
+        echo "Step 2: Creating test database..."
+        echo "========================================"
+        
+        redisctl enterprise database create test-db \
+          --memory-limit 100
+        
+        echo "✓ Database created successfully"
+        echo ""
 
   # Validate API
   validate-api:
@@ -108,28 +109,31 @@ services:
       REDIS_ENTERPRISE_URL: "https://enterprise:9443"
       REDIS_ENTERPRISE_USER: "admin@redis.local"
       REDIS_ENTERPRISE_PASSWORD: "Redis123!"
+      REDIS_ENTERPRISE_INSECURE: "true"
       RUST_LOG: ${RUST_LOG:-info}
     networks:
       - redis-net
-    entrypoint: ["/bin/sh", "-c"]
-    command: |
-      echo "========================================" &&
-      echo "Step 3: Validating API endpoints..." &&
-      echo "========================================" &&
-      
-      echo "→ Listing databases..." &&
-      redisctl enterprise database list --insecure --output table &&
-      
-      echo "" &&
-      echo "→ Getting database info..." &&
-      redisctl enterprise database get 1 --insecure --output json | head -20 &&
-      
-      echo "" &&
-      echo "→ Checking cluster info..." &&
-      redisctl enterprise cluster info --insecure --query "name" &&
-      
-      echo "✓ API validation successful" &&
-      echo ""
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        echo "========================================"
+        echo "Step 3: Validating API endpoints..."
+        echo "========================================"
+        
+        echo "→ Listing databases..."
+        redisctl --output table enterprise database list
+        
+        echo ""
+        echo "→ Getting database info..."
+        redisctl --output json enterprise database show 1 | head -20
+        
+        echo ""
+        echo "→ Checking cluster info..."
+        redisctl --query "name" enterprise cluster info
+        
+        echo "✓ API validation successful"
+        echo ""
 
   # Test Redis connection
   test-redis:
@@ -141,39 +145,40 @@ services:
         condition: service_completed_successfully
     networks:
       - redis-net
-    command: |
-      sh -c '
-      echo "========================================" &&
-      echo "Step 4: Testing Redis connection..." &&
-      echo "========================================" &&
-      
-      # Wait for database to be fully ready
-      sleep 5 &&
-      
-      echo "→ Setting test key..." &&
-      redis-cli -h enterprise -p 12000 SET test:key "Hello from Docker!" &&
-      
-      echo "→ Getting test key..." &&
-      redis-cli -h enterprise -p 12000 GET test:key &&
-      
-      echo "→ Running PING..." &&
-      redis-cli -h enterprise -p 12000 PING &&
-      
-      echo "→ Getting INFO..." &&
-      redis-cli -h enterprise -p 12000 INFO server | head -10 &&
-      
-      echo "" &&
-      echo "========================================" &&
-      echo "✅ All tests passed successfully!" &&
-      echo "" &&
-      echo "Web UI: https://localhost:8443" &&
-      echo "Username: admin@redis.local" &&
-      echo "Password: Redis123!" &&
-      echo "" &&
-      echo "API: https://localhost:9443" &&
-      echo "Database: redis://localhost:12000" &&
-      echo "========================================" 
-      '
+    command:
+      - sh
+      - -c
+      - |
+        echo "========================================"
+        echo "Step 4: Testing Redis connection..."
+        echo "========================================"
+        
+        # Wait for database to be fully ready
+        sleep 5
+        
+        echo "→ Setting test key..."
+        redis-cli -h enterprise -p 12000 SET test:key "Hello from Docker!"
+        
+        echo "→ Getting test key..."
+        redis-cli -h enterprise -p 12000 GET test:key
+        
+        echo "→ Running PING..."
+        redis-cli -h enterprise -p 12000 PING
+        
+        echo "→ Getting INFO..."
+        redis-cli -h enterprise -p 12000 INFO server | head -10
+        
+        echo ""
+        echo "========================================"
+        echo "✅ All tests passed successfully!"
+        echo ""
+        echo "Web UI: https://localhost:8443"
+        echo "Username: admin@redis.local"
+        echo "Password: Redis123!"
+        echo ""
+        echo "API: https://localhost:9443"
+        echo "Database: redis://localhost:12000"
+        echo "========================================"
 
 networks:
   redis-net:
