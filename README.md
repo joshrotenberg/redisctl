@@ -85,17 +85,17 @@ cargo build --release --bin redisctl
 
 ### Using Docker (for Enterprise testing)
 ```bash
-# Start Redis Enterprise cluster
-make docker-up
+# Start Redis Enterprise cluster with initialization
+docker compose up -d
 
-# Access the CLI
-make docker-cli
+# Check cluster status
+docker compose logs init
 
-# Run tests
-make docker-test
+# Access interactive CLI
+docker compose run --rm cli
 
 # Clean up
-make docker-down
+docker compose down -v
 ```
 
 ## Quick Start
