@@ -40,31 +40,43 @@ async fn test_auth(
     config: &Config,
     output: OutputFormatter,
 ) -> Result<()> {
-    // Get the profile to test
-    let (profile_name, profile) = if let Some(name) = profile_name {
+    // Get the profile to test, or use environment variables if no profile is configured
+    let (profile_name, profile_opt, deployment_type) = if let Some(name) = profile_name {
         let p = config
             .profiles
             .get(&name)
             .ok_or_else(|| anyhow::anyhow!("Profile '{}' not found", name))?;
-        (name, p)
+        let dt = deployment_override.unwrap_or(p.deployment_type);
+        (name, Some(p), dt)
     } else {
         // Find active profile with its name
         let env_profile = std::env::var("REDISCTL_PROFILE").ok();
-        let name = env_profile
-            .as_deref()
-            .or(config.default_profile.as_deref())
-            .ok_or_else(|| {
-                anyhow::anyhow!("No profile configured. Run 'redisctl auth setup' to get started.")
-            })?;
-
-        let p = config
-            .profiles
-            .get(name)
-            .ok_or_else(|| anyhow::anyhow!("Profile '{}' not found", name))?;
-        (name.to_string(), p)
+        if let Some(name) = env_profile.as_deref().or(config.default_profile.as_deref()) {
+            let p = config
+                .profiles
+                .get(name)
+                .ok_or_else(|| anyhow::anyhow!("Profile '{}' not found", name))?;
+            let dt = deployment_override.unwrap_or(p.deployment_type);
+            (name.to_string(), Some(p), dt)
+        } else {
+            // No profile configured, try to determine deployment type from environment or flag
+            let deployment_type = if let Some(dt) = deployment_override {
+                dt
+            } else {
+                // Try to detect deployment type from environment variables
+                if std::env::var("REDIS_CLOUD_API_KEY").is_ok() {
+                    DeploymentType::Cloud
+                } else if std::env::var("REDIS_ENTERPRISE_URL").is_ok() {
+                    DeploymentType::Enterprise
+                } else {
+                    anyhow::bail!(
+                        "No profile configured and no deployment type specified. Use --deployment flag or run 'redisctl auth setup' to create a profile."
+                    )
+                }
+            };
+            ("environment".to_string(), None, deployment_type)
+        }
     };
-
-    let deployment_type = deployment_override.unwrap_or(profile.deployment_type);
 
     // Build result object to track all tests
     let mut result = json!({
@@ -74,8 +86,8 @@ async fn test_auth(
     });
 
     match deployment_type {
-        DeploymentType::Cloud => test_cloud_auth(profile, &mut result).await?,
-        DeploymentType::Enterprise => test_enterprise_auth(profile, &mut result).await?,
+        DeploymentType::Cloud => test_cloud_auth(profile_opt, &mut result).await?,
+        DeploymentType::Enterprise => test_enterprise_auth(profile_opt, &mut result).await?,
     }
 
     output.format(&result)?;
@@ -83,19 +95,20 @@ async fn test_auth(
 }
 
 /// Test Redis Cloud authentication
-async fn test_cloud_auth(profile: &Profile, result: &mut serde_json::Value) -> Result<()> {
+async fn test_cloud_auth(profile: Option<&Profile>, result: &mut serde_json::Value) -> Result<()> {
     let tests = result["tests"].as_object_mut().unwrap();
 
     // Check for API credentials from profile or environment
     let (api_key, api_secret, _api_url) =
-        if let Some((key, secret, url)) = profile.cloud_credentials() {
+        if let Some(p) = profile.and_then(|p| p.cloud_credentials()) {
             tests.insert("credentials_present".to_string(), json!(true));
-            (key.to_string(), secret.to_string(), url.to_string())
+            tests.insert("source".to_string(), json!("profile"));
+            (p.0.to_string(), p.1.to_string(), p.2.to_string())
         } else {
             // Try environment variables
             match (
                 std::env::var("REDIS_CLOUD_API_KEY"),
-                std::env::var("REDIS_CLOUD_API_SECRET_KEY"),
+                std::env::var("REDIS_CLOUD_API_SECRET"),
             ) {
                 (Ok(key), Ok(secret)) => {
                     tests.insert("credentials_present".to_string(), json!(true));
@@ -159,18 +172,22 @@ async fn test_cloud_auth(profile: &Profile, result: &mut serde_json::Value) -> R
 }
 
 /// Test Redis Enterprise authentication
-async fn test_enterprise_auth(profile: &Profile, result: &mut serde_json::Value) -> Result<()> {
+async fn test_enterprise_auth(
+    profile: Option<&Profile>,
+    result: &mut serde_json::Value,
+) -> Result<()> {
     let tests = result["tests"].as_object_mut().unwrap();
 
     // Check for credentials from profile or environment
     let (url, username, password, insecure) =
-        if let Some((u, user, pass, ins)) = profile.enterprise_credentials() {
+        if let Some(p) = profile.and_then(|p| p.enterprise_credentials()) {
             tests.insert("credentials_present".to_string(), json!(true));
+            tests.insert("source".to_string(), json!("profile"));
             (
-                u.to_string(),
-                user.to_string(),
-                pass.map(|p| p.to_string()),
-                ins,
+                p.0.to_string(),
+                p.1.to_string(),
+                p.2.map(|p| p.to_string()),
+                p.3,
             )
         } else {
             // Try environment variables
@@ -364,11 +381,13 @@ async fn setup_wizard(config: &Config) -> Result<()> {
 
     let success = match deployment_type {
         DeploymentType::Cloud => {
-            test_cloud_auth(&profile, &mut test_result).await.is_ok()
+            test_cloud_auth(Some(&profile), &mut test_result)
+                .await
+                .is_ok()
                 && test_result["tests"]["authentication"] == json!(true)
         }
         DeploymentType::Enterprise => {
-            test_enterprise_auth(&profile, &mut test_result)
+            test_enterprise_auth(Some(&profile), &mut test_result)
                 .await
                 .is_ok()
                 && test_result["tests"]["authentication"] == json!(true)

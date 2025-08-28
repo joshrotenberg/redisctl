@@ -113,11 +113,11 @@ fn show_config(config: &Config, show_secrets: bool, output: OutputFormatter) -> 
             },
         );
     }
-    if std::env::var("REDIS_CLOUD_API_SECRET_KEY").is_ok() {
+    if std::env::var("REDIS_CLOUD_API_SECRET").is_ok() {
         env_vars.insert(
-            "REDIS_CLOUD_API_SECRET_KEY",
+            "REDIS_CLOUD_API_SECRET",
             if show_secrets {
-                std::env::var("REDIS_CLOUD_API_SECRET_KEY").unwrap()
+                std::env::var("REDIS_CLOUD_API_SECRET").unwrap()
             } else {
                 "***".to_string()
             },
@@ -236,9 +236,9 @@ fn validate_profile(name: &str, profile: &crate::config::Profile) -> serde_json:
             }
 
             // Check for API secret
-            if api_secret.is_empty() && std::env::var("REDIS_CLOUD_API_SECRET_KEY").is_err() {
+            if api_secret.is_empty() && std::env::var("REDIS_CLOUD_API_SECRET").is_err() {
                 issues.push(
-                    "Missing API secret key (set in profile or REDIS_CLOUD_API_SECRET_KEY env var)",
+                    "Missing API secret key (set in profile or REDIS_CLOUD_API_SECRET env var)",
                 );
             }
 
