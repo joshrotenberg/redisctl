@@ -10,6 +10,7 @@ description = "Shared utilities for Redis CLI tools"
 keywords = ["redis", "cli", "common", "utilities"]
 categories = ["command-line-utilities", "api-bindings"]
 readme = "../../README.md"
+publish = false
 
 [dependencies]
 anyhow = { workspace = true }

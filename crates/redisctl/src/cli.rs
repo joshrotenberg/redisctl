@@ -1,6 +1,7 @@
 use crate::commands::api::ApiCommands;
+use crate::config::DeploymentType;
+use crate::output::OutputFormat;
 use clap::{Parser, Subcommand};
-use redis_common::{DeploymentType, OutputFormat};
 
 #[derive(Parser)]
 #[command(name = "redisctl")]
