@@ -25,7 +25,7 @@ RUN apt-get update && apt-get install -y \
 COPY --from=builder /build/target/release/redisctl /usr/local/bin/redisctl
 
 # Create non-root user
-RUN useradd -m -u 1000 redis && \
+RUN useradd -m redis && \
     mkdir -p /home/redis/.config/redisctl && \
     chown -R redis:redis /home/redis
 
