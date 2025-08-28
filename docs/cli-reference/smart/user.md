@@ -1,6 +1,6 @@
 # User Commands (Smart Routing)
 
-```
+```text
 User operations (smart routing)
 
 Usage: redisctl user <COMMAND>
@@ -15,5 +15,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

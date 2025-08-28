@@ -1,6 +1,6 @@
 # Enterprise Node Commands
 
-```
+```text
 Node management
 
 Usage: redisctl enterprise node <COMMAND>
@@ -16,5 +16,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

@@ -1,6 +1,6 @@
 # Enterprise Role Commands
 
-```
+```text
 Role management
 
 Usage: redisctl enterprise role <COMMAND>
@@ -15,5 +15,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

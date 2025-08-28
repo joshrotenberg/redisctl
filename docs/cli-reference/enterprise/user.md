@@ -1,6 +1,6 @@
 # Enterprise User Commands
 
-```
+```text
 User management
 
 Usage: redisctl enterprise user <COMMAND>
@@ -15,5 +15,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

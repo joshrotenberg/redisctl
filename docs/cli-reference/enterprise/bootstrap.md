@@ -1,6 +1,6 @@
 # Enterprise Bootstrap Commands
 
-```
+```text
 Bootstrap operations
 
 Usage: redisctl enterprise bootstrap <COMMAND>
@@ -12,5 +12,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

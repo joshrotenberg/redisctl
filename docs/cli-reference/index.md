@@ -95,7 +95,7 @@ Use JMESPath queries with the `-q/--query` flag to filter output:
 ```bash
 redisctl database list -q "[?status=='active'].name"
 redisctl user list -q "[].{email:email,role:role}"
-```
+```text
 
 ## Examples
 

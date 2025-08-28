@@ -1,6 +1,6 @@
 # Profile Management Commands
 
-```
+```text
 Profile management
 
 Usage: redisctl profile <COMMAND>
@@ -15,5 +15,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

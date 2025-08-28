@@ -1,6 +1,6 @@
 # Enterprise API Commands
 
-```
+```text
 Raw API access
 
 Usage: redisctl enterprise api <COMMAND>
@@ -15,5 +15,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

@@ -1,6 +1,6 @@
 # Redis Enterprise Commands
 
-```
+```text
 Redis Enterprise commands
 
 Usage: redisctl enterprise <COMMAND>
@@ -24,5 +24,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

@@ -1,6 +1,6 @@
 # Configuration Management Commands
 
-```
+```text
 Configuration management
 
 Usage: redisctl config <COMMAND>
@@ -13,5 +13,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

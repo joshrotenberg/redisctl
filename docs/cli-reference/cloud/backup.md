@@ -1,6 +1,6 @@
 # Cloud Backup Commands
 
-```
+```text
 Backup management
 
 Usage: redisctl cloud backup <COMMAND>
@@ -15,5 +15,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

@@ -1,6 +1,6 @@
 # redisctl Command Reference
 
-```
+```text
 Unified Redis CLI for Cloud and Enterprise
 
 Usage: redisctl [OPTIONS] <COMMAND>
@@ -25,5 +25,4 @@ Options:
   -v, --verbose...               Verbose logging
   -h, --help                     Print help
   -V, --version                  Print version
-```
-
+```text

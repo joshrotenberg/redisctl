@@ -1,6 +1,6 @@
 # Cloud Active-Active Commands
 
-```
+```text
 Active-Active database management
 
 Usage: redisctl cloud crdb <COMMAND>
@@ -17,5 +17,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

@@ -1,6 +1,6 @@
 # Enterprise Database Commands
 
-```
+```text
 Database management
 
 Usage: redisctl enterprise database <COMMAND>
@@ -18,5 +18,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

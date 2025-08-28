@@ -1,6 +1,6 @@
 # Cloud Metrics Commands
 
-```
+```text
 Metrics and monitoring
 
 Usage: redisctl cloud metrics <COMMAND>
@@ -12,5 +12,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

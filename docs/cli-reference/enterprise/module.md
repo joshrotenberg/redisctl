@@ -1,6 +1,6 @@
 # Enterprise Module Commands
 
-```
+```text
 Module management
 
 Usage: redisctl enterprise module <COMMAND>
@@ -13,5 +13,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

@@ -1,6 +1,6 @@
 # Authentication Management Commands
 
-```
+```text
 Authentication testing and management
 
 Usage: redisctl auth <COMMAND>
@@ -13,4 +13,3 @@ Commands:
 Options:
   -h, --help  Print help
 ```
-

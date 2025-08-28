@@ -1,6 +1,6 @@
 # Enterprise License Commands
 
-```
+```text
 License management
 
 Usage: redisctl enterprise license <COMMAND>
@@ -12,5 +12,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

@@ -1,6 +1,6 @@
 # Cloud API Commands
 
-```
+```text
 Raw API access
 
 Usage: redisctl cloud api <COMMAND>
@@ -15,5 +15,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

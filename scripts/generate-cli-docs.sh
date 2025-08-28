@@ -19,7 +19,7 @@ generate_command_doc() {
     
     echo "# $title" > "$output_file"
     echo "" >> "$output_file"
-    echo '```' >> "$output_file"
+    echo '```text' >> "$output_file"
     $BINARY $cmd --help 2>/dev/null >> "$output_file" || true
     echo '```' >> "$output_file"
     echo "" >> "$output_file"

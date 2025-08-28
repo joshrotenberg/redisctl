@@ -1,6 +1,6 @@
 # Enterprise Alert Commands
 
-```
+```text
 Alert management
 
 Usage: redisctl enterprise alert <COMMAND>
@@ -19,5 +19,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

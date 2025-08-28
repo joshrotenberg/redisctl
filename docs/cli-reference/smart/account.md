@@ -1,6 +1,6 @@
 # Account Commands (Smart Routing)
 
-```
+```text
 Account operations (smart routing to Cloud subscriptions)
 
 Usage: redisctl account <COMMAND>
@@ -16,5 +16,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

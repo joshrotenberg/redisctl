@@ -1,6 +1,6 @@
 # Enterprise Stats Commands
 
-```
+```text
 Statistics and metrics
 
 Usage: redisctl enterprise stats <COMMAND>
@@ -14,5 +14,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

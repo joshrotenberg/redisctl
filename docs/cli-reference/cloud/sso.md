@@ -1,6 +1,6 @@
 # Cloud SSO/SAML Commands
 
-```
+```text
 SSO/SAML management
 
 Usage: redisctl cloud sso <COMMAND>
@@ -27,5 +27,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text
