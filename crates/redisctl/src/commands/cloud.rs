@@ -470,7 +470,9 @@ pub async fn handle_task_command(
             let timeout_duration = Duration::from_secs(timeout);
 
             loop {
-                let task = client.get_raw(&format!("/tasks/{}", id)).await?;
+                let handler = redis_cloud::CloudTasksHandler::new(client.clone());
+                let task = handler.get(&id).await?;
+                let task = serde_json::to_value(task)?;
 
                 // Check if task has a status field and if it's completed
                 if let Some(status) = task.get("status").and_then(|s| s.as_str()) {
@@ -827,11 +829,13 @@ pub async fn handle_crdb_command(
 
     match command {
         CrdbCommands::List => {
-            let crdbs = client.get_raw("/crdbs").await?;
+            let handler = redis_cloud::CloudCrdbHandler::new(client.clone());
+            let crdbs = handler.list().await?;
             print_output(crdbs, output_format, query)?;
         }
         CrdbCommands::Show { crdb_id } => {
-            let crdb = client.get_raw(&format!("/crdbs/{}", crdb_id)).await?;
+            let handler = redis_cloud::CloudCrdbHandler::new(client.clone());
+            let crdb = handler.get(crdb_id).await?;
             print_output(crdb, output_format, query)?;
         }
         CrdbCommands::Create {
@@ -839,12 +843,13 @@ pub async fn handle_crdb_command(
             memory_limit,
             regions,
         } => {
+            let handler = redis_cloud::CloudCrdbHandler::new(client.clone());
             let create_data = serde_json::json!({
                 "name": name,
                 "memoryLimitInGb": memory_limit as f64 / 1024.0,
                 "regions": regions
             });
-            let crdb = client.post_raw("/crdbs", create_data).await?;
+            let crdb = handler.create(create_data).await?;
             print_output(crdb, output_format, query)?;
         }
         CrdbCommands::Update {
@@ -864,11 +869,9 @@ pub async fn handle_crdb_command(
                     ),
                 );
             }
-            let crdb = client
-                .put_raw(
-                    &format!("/crdbs/{}", crdb_id),
-                    serde_json::Value::Object(update_data),
-                )
+            let handler = redis_cloud::CloudCrdbHandler::new(client.clone());
+            let crdb = handler
+                .update(crdb_id, serde_json::Value::Object(update_data))
                 .await?;
             print_output(crdb, output_format, query)?;
         }
@@ -880,22 +883,21 @@ pub async fn handle_crdb_command(
                 );
                 return Ok(());
             }
-            client.delete_raw(&format!("/crdbs/{}", crdb_id)).await?;
+            let handler = redis_cloud::CloudCrdbHandler::new(client.clone());
+            handler.delete(crdb_id).await?;
             println!("CRDB {} deleted successfully", crdb_id);
         }
         CrdbCommands::AddRegion { crdb_id, region } => {
             let add_data = serde_json::json!({
                 "region": region
             });
-            let result = client
-                .post_raw(&format!("/crdbs/{}/regions", crdb_id), add_data)
-                .await?;
+            let handler = redis_cloud::CloudCrdbHandler::new(client.clone());
+            let result = handler.add_region(crdb_id, add_data).await?;
             print_output(result, output_format, query)?;
         }
         CrdbCommands::RemoveRegion { crdb_id, region_id } => {
-            client
-                .delete_raw(&format!("/crdbs/{}/regions/{}", crdb_id, region_id))
-                .await?;
+            let handler = redis_cloud::CloudCrdbHandler::new(client.clone());
+            handler.remove_region(crdb_id, region_id).await?;
             println!("Region {} removed from CRDB {}", region_id, crdb_id);
         }
     }
@@ -913,19 +915,22 @@ pub async fn handle_api_key_command(
 
     match command {
         ApiKeyCommands::List => {
-            let keys = client.get_raw("/api-keys").await?;
+            let handler = redis_cloud::CloudApiKeysHandler::new(client.clone());
+            let keys = handler.list().await?;
             print_output(keys, output_format, query)?;
         }
         ApiKeyCommands::Show { key_id } => {
-            let key = client.get_raw(&format!("/api-keys/{}", key_id)).await?;
+            let handler = redis_cloud::CloudApiKeysHandler::new(client.clone());
+            let key = handler.get(key_id).await?;
             print_output(key, output_format, query)?;
         }
         ApiKeyCommands::Create { name, role } => {
+            let handler = redis_cloud::CloudApiKeysHandler::new(client.clone());
             let create_data = serde_json::json!({
                 "name": name,
                 "role": role
             });
-            let key = client.post_raw("/api-keys", create_data).await?;
+            let key = handler.create(create_data).await?;
             print_output(key, output_format, query)?;
         }
         ApiKeyCommands::Update { key_id, name, role } => {
@@ -936,11 +941,9 @@ pub async fn handle_api_key_command(
             if let Some(role) = role {
                 update_data.insert("role".to_string(), serde_json::Value::String(role));
             }
-            let key = client
-                .put_raw(
-                    &format!("/api-keys/{}", key_id),
-                    serde_json::Value::Object(update_data),
-                )
+            let handler = redis_cloud::CloudApiKeysHandler::new(client.clone());
+            let key = handler
+                .update(key_id, serde_json::Value::Object(update_data))
                 .await?;
             print_output(key, output_format, query)?;
         }
@@ -952,34 +955,23 @@ pub async fn handle_api_key_command(
                 );
                 return Ok(());
             }
-            client.delete_raw(&format!("/api-keys/{}", key_id)).await?;
+            let handler = redis_cloud::CloudApiKeysHandler::new(client.clone());
+            handler.delete(key_id).await?;
             println!("API key {} deleted successfully", key_id);
         }
         ApiKeyCommands::Regenerate { key_id } => {
-            let result = client
-                .post_raw(
-                    &format!("/api-keys/{}/regenerate", key_id),
-                    serde_json::json!({}),
-                )
-                .await?;
+            let handler = redis_cloud::CloudApiKeysHandler::new(client.clone());
+            let result = handler.regenerate(key_id).await?;
             print_output(result, output_format, query)?;
         }
         ApiKeyCommands::Enable { key_id } => {
-            let result = client
-                .post_raw(
-                    &format!("/api-keys/{}/enable", key_id),
-                    serde_json::json!({}),
-                )
-                .await?;
+            let handler = redis_cloud::CloudApiKeysHandler::new(client.clone());
+            let result = handler.enable(key_id).await?;
             print_output(result, output_format, query)?;
         }
         ApiKeyCommands::Disable { key_id } => {
-            let result = client
-                .post_raw(
-                    &format!("/api-keys/{}/disable", key_id),
-                    serde_json::json!({}),
-                )
-                .await?;
+            let handler = redis_cloud::CloudApiKeysHandler::new(client.clone());
+            let result = handler.disable(key_id).await?;
             print_output(result, output_format, query)?;
         }
     }
@@ -1190,11 +1182,13 @@ pub async fn handle_fixed_plan_command(
 
     match command {
         FixedPlanCommands::List => {
-            let plans = client.get_raw("/fixed-plans").await?;
+            let handler = redis_cloud::CloudFixedHandler::new(client.clone());
+            let plans = handler.plans().await?;
             print_output(plans, output_format, query)?;
         }
         FixedPlanCommands::Show { plan_id } => {
-            let plan = client.get_raw(&format!("/fixed-plans/{}", plan_id)).await?;
+            let handler = redis_cloud::CloudFixedHandler::new(client.clone());
+            let plan = handler.plan(plan_id).await?;
             print_output(plan, output_format, query)?;
         }
         FixedPlanCommands::Plans { region } => {
