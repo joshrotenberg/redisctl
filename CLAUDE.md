@@ -12,7 +12,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```
 redisctl/
 ├── crates/
-│   ├── redis-common/        # Shared utilities (config, output, errors)
 │   ├── redis-cloud/         # Cloud API client library
 │   ├── redis-enterprise/    # Enterprise API client library
 │   └── redisctl/           # Unified CLI application
@@ -22,9 +21,8 @@ redisctl/
 ```
 
 ### Key Components
-- **redis-common**: Shared utilities for config, output formatting (JSON/YAML/Table), JMESPath queries, errors
-- **redis-cloud**: Cloud API client with handlers for subscriptions, databases, users, backups, ACLs, peering
-- **redis-enterprise**: Enterprise API client with handlers for clusters, bdbs, nodes, users, modules, stats
+- **redis-cloud**: Cloud API client with handlers for subscriptions, databases, users, backups, ACLs, peering (100% test coverage)
+- **redis-enterprise**: Enterprise API client with handlers for clusters, bdbs, nodes, users, modules, stats (100% test coverage)
 - **redisctl**: Main CLI with smart routing logic in `router.rs`, profile management, deployment detection
 
 ### CLI Architecture (Three-Tier Design)

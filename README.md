@@ -169,7 +169,6 @@ redisctl/
 ├── crates/
 │   ├── redis-cloud/         # Cloud API client library
 │   ├── redis-enterprise/    # Enterprise API client library
-│   ├── redis-common/        # Shared utilities
 │   └── redisctl/           # Unified CLI application
 ├── docs/                    # Documentation (mdBook)
 ├── tests/                   # Integration tests
@@ -188,12 +187,6 @@ redisctl/
   - All Enterprise API endpoints implemented
   - Support for cluster management, CRDB, modules
   - Bootstrap and initialization workflows
-
-- **redis-common** - Shared utilities
-  - Configuration and profile management
-  - Output formatting (JSON, YAML, Table)
-  - JMESPath query engine
-  - Error handling
 
 #### CLI Application
 - **redisctl** - Unified command-line interface
@@ -298,7 +291,6 @@ Add to your `Cargo.toml`:
 [dependencies]
 redis-cloud = "0.1.0"        # For Cloud API
 redis-enterprise = "0.1.0"   # For Enterprise API
-redis-common = "0.1.0"       # For shared utilities
 ```
 
 Example usage:

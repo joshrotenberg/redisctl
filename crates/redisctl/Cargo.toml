@@ -42,7 +42,7 @@ chrono = "0.4"
 rpassword = { workspace = true }
 urlencoding = "2.1"
 
-# Dependencies from redis-common
+# Shared utility dependencies
 thiserror = { workspace = true }
 serde_yaml = { workspace = true }
 comfy-table = { workspace = true }

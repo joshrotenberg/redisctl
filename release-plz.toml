@@ -21,16 +21,10 @@ publish = true
 publish_allow_dirty = false
 
 [[package]]
-name = "redis-common"
-# Common utilities published first
-
-[[package]]
 name = "redis-cloud"
-# Depends on redis-common
 
 [[package]]
 name = "redis-enterprise"
-# Depends on redis-common
 
 [[package]]
 name = "redisctl"
