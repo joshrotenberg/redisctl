@@ -1,6 +1,6 @@
 [package]
 name = "redisctl"
-version = "0.1.0"
+version = "0.1.1"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -27,8 +27,8 @@ path = "src/enterprise_bin.rs"
 required-features = ["enterprise-only"]
 
 [dependencies]
-redis-cloud = { version = "0.1.0", path = "../redis-cloud" }
-redis-enterprise = { version = "0.1.0", path = "../redis-enterprise" }
+redis-cloud = { version = "0.1.1", path = "../redis-cloud" }
+redis-enterprise = { version = "0.1.1", path = "../redis-enterprise" }
 
 # CLI dependencies
 clap = { workspace = true }
