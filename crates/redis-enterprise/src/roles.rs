@@ -4,6 +4,7 @@ use crate::client::RestClient;
 use crate::error::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use typed_builder::TypedBuilder;
 
 /// Role information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -24,25 +25,49 @@ pub struct RoleInfo {
 }
 
 /// Database-specific role permissions
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
 pub struct BdbRole {
     pub bdb_uid: u32,
+    #[builder(setter(into))]
     pub role: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
     pub redis_acl_uid: Option<u32>,
 }
 
 /// Create role request
-#[derive(Debug, Clone, Serialize, Deserialize)]
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use redis_enterprise::{CreateRoleRequest, BdbRole};
+///
+/// let request = CreateRoleRequest::builder()
+///     .name("database-admin")
+///     .management("admin")
+///     .bdb_roles(vec![
+///         BdbRole::builder()
+///             .bdb_uid(1)
+///             .role("admin")
+///             .build()
+///     ])
+///     .build();
+/// ```
+#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
 pub struct CreateRoleRequest {
+    #[builder(setter(into))]
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub management: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub data_access: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
     pub bdb_roles: Option<Vec<BdbRole>>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
     pub cluster_roles: Option<Vec<String>>,
 }
 
