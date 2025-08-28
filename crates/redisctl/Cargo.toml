@@ -41,6 +41,8 @@ serde_json = { workspace = true }
 chrono = "0.4"
 rpassword = { workspace = true }
 urlencoding = "2.1"
+dialoguer = "0.11"
+colored = "2.1"
 
 # Shared utility dependencies
 thiserror = { workspace = true }

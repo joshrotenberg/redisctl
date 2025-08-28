@@ -5,7 +5,7 @@ use std::borrow::Cow;
 use tracing::{debug, info};
 
 use crate::cli::{Cli, Commands};
-use crate::commands::{cloud, enterprise, profile};
+use crate::commands::{auth, cloud, config, enterprise, profile};
 
 pub async fn route_command(cli: Cli, config: &Config) -> Result<()> {
     let output_format = cli.output;
@@ -68,6 +68,20 @@ pub async fn route_command(cli: Cli, config: &Config) -> Result<()> {
                 query,
             )
             .await
+        }
+        Commands::Auth { command } => {
+            let output = auth::OutputFormatter {
+                format: output_format,
+                query: query.map(|s| s.to_string()),
+            };
+            auth::execute(command, config, output).await
+        }
+        Commands::Config { command } => {
+            let output = config::OutputFormatter {
+                format: output_format,
+                query: query.map(|s| s.to_string()),
+            };
+            config::execute(command, config, output).await
         }
     }
 }
@@ -211,7 +225,7 @@ fn get_profile_with_type<'a>(
     let env_profile = std::env::var("REDISCTL_PROFILE").ok();
     let profile_name = profile_name
         .as_deref()
-        .or(config.default.as_deref())
+        .or(config.default_profile.as_deref())
         .or(env_profile.as_deref());
 
     if let Some(name) = profile_name
@@ -246,7 +260,7 @@ fn get_profile_for_deployment<'a>(
     let env_profile = std::env::var("REDISCTL_PROFILE").ok();
     let profile_name = profile_name
         .as_deref()
-        .or(config.default.as_deref())
+        .or(config.default_profile.as_deref())
         .or(env_profile.as_deref());
 
     // Try to get profile from config first

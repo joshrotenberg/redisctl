@@ -60,7 +60,7 @@ fn get_cloud_profile<'a>(
     let env_profile = std::env::var("REDISCTL_PROFILE").ok();
     let profile_name = profile_name
         .as_deref()
-        .or(config.default.as_deref())
+        .or(config.default_profile.as_deref())
         .or(env_profile.as_deref())
         .ok_or_else(|| anyhow::anyhow!("No profile specified"))?;
 
