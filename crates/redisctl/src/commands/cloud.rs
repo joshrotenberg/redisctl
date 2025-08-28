@@ -112,13 +112,10 @@ pub async fn handle_database_command(
         DatabaseCommands::Show { id } => {
             // Parse subscription_id:database_id format or just database_id
             let (subscription_id, database_id) = parse_database_id(&id)?;
-            let database = client
-                .get_raw(&format!(
-                    "/subscriptions/{}/databases/{}",
-                    subscription_id, database_id
-                ))
-                .await?;
-            print_output(database, output_format, query)?;
+            let handler = redis_cloud::CloudDatabaseHandler::new(client.clone());
+            let database = handler.get(subscription_id, database_id).await?;
+            let value = serde_json::to_value(database)?;
+            print_output(value, output_format, query)?;
         }
         DatabaseCommands::Create {
             name: _,
@@ -231,12 +228,16 @@ pub async fn handle_subscription_command(
 
     match command {
         SubscriptionCommands::List => {
-            let subscriptions = client.get_raw("/subscriptions").await?;
-            print_output(subscriptions, output_format, query)?;
+            let handler = redis_cloud::CloudSubscriptionHandler::new(client.clone());
+            let subscriptions = handler.list().await?;
+            let value = serde_json::to_value(subscriptions)?;
+            print_output(value, output_format, query)?;
         }
         SubscriptionCommands::Show { id } => {
-            let subscription = client.get_raw(&format!("/subscriptions/{}", id)).await?;
-            print_output(subscription, output_format, query)?;
+            let handler = redis_cloud::CloudSubscriptionHandler::new(client.clone());
+            let subscription = handler.get(id.parse()?).await?;
+            let value = serde_json::to_value(subscription)?;
+            print_output(value, output_format, query)?;
         }
         SubscriptionCommands::Create {
             name,
@@ -321,27 +322,34 @@ pub async fn handle_account_command(
 
     match command {
         AccountCommands::List => {
+            // Note: /accounts endpoint doesn't exist in CloudAccountHandler
             let accounts = client.get_raw("/accounts").await?;
             print_output(accounts, output_format, query)?;
         }
         AccountCommands::Show { id } => {
+            // Note: /accounts/{id} endpoint doesn't exist in CloudAccountHandler
             let account = client.get_raw(&format!("/accounts/{}", id)).await?;
             print_output(account, output_format, query)?;
         }
         AccountCommands::Info => {
-            let account_info = client.get_raw("/accounts/info").await?;
-            print_output(account_info, output_format, query)?;
+            let handler = redis_cloud::CloudAccountHandler::new(client.clone());
+            let account_info = handler.info().await?;
+            let value = serde_json::to_value(account_info)?;
+            print_output(value, output_format, query)?;
         }
         AccountCommands::Owner => {
-            let owner = client.get_raw("/accounts/owner").await?;
+            let handler = redis_cloud::CloudAccountHandler::new(client.clone());
+            let owner = handler.owner().await?;
             print_output(owner, output_format, query)?;
         }
         AccountCommands::Users => {
-            let users = client.get_raw("/accounts/users").await?;
+            let handler = redis_cloud::CloudAccountHandler::new(client.clone());
+            let users = handler.users().await?;
             print_output(users, output_format, query)?;
         }
         AccountCommands::PaymentMethods => {
-            let payment_methods = client.get_raw("/accounts/payment-methods").await?;
+            let handler = redis_cloud::CloudAccountHandler::new(client.clone());
+            let payment_methods = handler.get_payment_methods().await?;
             print_output(payment_methods, output_format, query)?;
         }
     }
@@ -359,12 +367,16 @@ pub async fn handle_user_command(
 
     match command {
         UserCommands::List => {
-            let users = client.get_raw("/users").await?;
-            print_output(users, output_format, query)?;
+            let handler = redis_cloud::CloudUsersHandler::new(client.clone());
+            let users = handler.list().await?;
+            let value = serde_json::to_value(users)?;
+            print_output(value, output_format, query)?;
         }
         UserCommands::Show { id } => {
-            let user = client.get_raw(&format!("/users/{}", id)).await?;
-            print_output(user, output_format, query)?;
+            let handler = redis_cloud::CloudUsersHandler::new(client.clone());
+            let user = handler.get(id.parse()?).await?;
+            let value = serde_json::to_value(user)?;
+            print_output(value, output_format, query)?;
         }
         UserCommands::Create {
             name,
@@ -440,6 +452,8 @@ pub async fn handle_region_command(
 
     match command {
         RegionCommands::List => {
+            // Note: CloudRegionHandler list() requires a provider parameter
+            // Using raw API for now
             let regions = client.get_raw("/regions").await?;
             print_output(regions, output_format, query)?;
         }
@@ -458,12 +472,16 @@ pub async fn handle_task_command(
 
     match command {
         TaskCommands::List => {
-            let tasks = client.get_raw("/tasks").await?;
-            print_output(tasks, output_format, query)?;
+            let handler = redis_cloud::CloudTasksHandler::new(client.clone());
+            let tasks = handler.list().await?;
+            let value = serde_json::to_value(tasks)?;
+            print_output(value, output_format, query)?;
         }
         TaskCommands::Show { id } => {
-            let task = client.get_raw(&format!("/tasks/{}", id)).await?;
-            print_output(task, output_format, query)?;
+            let handler = redis_cloud::CloudTasksHandler::new(client.clone());
+            let task = handler.get(&id).await?;
+            let value = serde_json::to_value(task)?;
+            print_output(value, output_format, query)?;
         }
         TaskCommands::Wait { id, timeout } => {
             use std::time::{Duration, Instant};
@@ -1144,8 +1162,10 @@ pub async fn handle_cloud_account_command(
 
     match command {
         CloudAccountCommands::List => {
-            let accounts = client.get_raw("/cloud-accounts").await?;
-            print_output(accounts, output_format, query)?;
+            let handler = redis_cloud::CloudAccountsHandler::new(client.clone());
+            let accounts = handler.list().await?;
+            let value = serde_json::to_value(accounts)?;
+            print_output(value, output_format, query)?;
         }
         CloudAccountCommands::Show { account_id } => {
             let account = client

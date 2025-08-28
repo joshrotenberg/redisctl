@@ -75,12 +75,16 @@ pub async fn handle_database_command(
 
     match command {
         DatabaseCommands::List => {
-            let databases = client.get_raw("/v1/bdbs").await?;
-            print_output(databases, output_format, query)?;
+            let handler = redis_enterprise::BdbHandler::new(client.clone());
+            let databases = handler.list().await?;
+            let value = serde_json::to_value(databases)?;
+            print_output(value, output_format, query)?;
         }
         DatabaseCommands::Show { id } => {
-            let database = client.get_raw(&format!("/v1/bdbs/{}", id)).await?;
-            print_output(database, output_format, query)?;
+            let handler = redis_enterprise::BdbHandler::new(client.clone());
+            let database = handler.info(id.parse()?).await?;
+            let value = serde_json::to_value(database)?;
+            print_output(value, output_format, query)?;
         }
         DatabaseCommands::Create {
             name,
@@ -177,12 +181,16 @@ pub async fn handle_cluster_command(
             print_output(value, output_format, query)?;
         }
         ClusterCommands::Nodes => {
-            let nodes = client.get_raw("/v1/nodes").await?;
-            print_output(nodes, output_format, query)?;
+            let handler = redis_enterprise::NodeHandler::new(client.clone());
+            let nodes = handler.list().await?;
+            let value = serde_json::to_value(nodes)?;
+            print_output(value, output_format, query)?;
         }
         ClusterCommands::Settings => {
-            let settings = client.get_raw("/v1/cluster/settings").await?;
-            print_output(settings, output_format, query)?;
+            let handler = redis_enterprise::CmSettingsHandler::new(client.clone());
+            let settings = handler.get().await?;
+            let value = serde_json::to_value(settings)?;
+            print_output(value, output_format, query)?;
         }
         ClusterCommands::Update { name, value } => {
             let update_data = serde_json::json!({ name: value });
@@ -204,16 +212,22 @@ pub async fn handle_node_command(
 
     match command {
         NodeCommands::List => {
-            let nodes = client.get_raw("/v1/nodes").await?;
-            print_output(nodes, output_format, query)?;
+            let handler = redis_enterprise::NodeHandler::new(client.clone());
+            let nodes = handler.list().await?;
+            let value = serde_json::to_value(nodes)?;
+            print_output(value, output_format, query)?;
         }
         NodeCommands::Show { id } => {
-            let node = client.get_raw(&format!("/v1/nodes/{}", id)).await?;
-            print_output(node, output_format, query)?;
+            let handler = redis_enterprise::NodeHandler::new(client.clone());
+            let node = handler.get(id.parse()?).await?;
+            let value = serde_json::to_value(node)?;
+            print_output(value, output_format, query)?;
         }
         NodeCommands::Stats { id } => {
-            let stats = client.get_raw(&format!("/v1/nodes/{}/stats", id)).await?;
-            print_output(stats, output_format, query)?;
+            let handler = redis_enterprise::NodeHandler::new(client.clone());
+            let stats = handler.stats(id.parse()?).await?;
+            let value = serde_json::to_value(stats)?;
+            print_output(value, output_format, query)?;
         }
         NodeCommands::Update { id, external_addr } => {
             let mut update_data = serde_json::Map::new();
@@ -279,12 +293,16 @@ pub async fn handle_user_command(
 
     match command {
         UserCommands::List => {
-            let users = client.get_raw("/v1/users").await?;
-            print_output(users, output_format, query)?;
+            let handler = redis_enterprise::UserHandler::new(client.clone());
+            let users = handler.list().await?;
+            let value = serde_json::to_value(users)?;
+            print_output(value, output_format, query)?;
         }
         UserCommands::Show { id } => {
-            let user = client.get_raw(&format!("/v1/users/{}", id)).await?;
-            print_output(user, output_format, query)?;
+            let handler = redis_enterprise::UserHandler::new(client.clone());
+            let user = handler.get(id.parse()?).await?;
+            let value = serde_json::to_value(user)?;
+            print_output(value, output_format, query)?;
         }
         UserCommands::Create {
             name,
@@ -427,12 +445,16 @@ pub async fn handle_role_command(
 
     match command {
         RoleCommands::List => {
-            let roles = client.get_raw("/v1/roles").await?;
-            print_output(roles, output_format, query)?;
+            let handler = redis_enterprise::RolesHandler::new(client.clone());
+            let roles = handler.list().await?;
+            let value = serde_json::to_value(roles)?;
+            print_output(value, output_format, query)?;
         }
         RoleCommands::Show { id } => {
-            let role = client.get_raw(&format!("/v1/roles/{}", id)).await?;
-            print_output(role, output_format, query)?;
+            let handler = redis_enterprise::RolesHandler::new(client.clone());
+            let role = handler.get(id.parse()?).await?;
+            let value = serde_json::to_value(role)?;
+            print_output(value, output_format, query)?;
         }
         RoleCommands::Create { name, permissions } => {
             let create_data = serde_json::json!({
@@ -473,8 +495,10 @@ pub async fn handle_license_command(
 
     match command {
         LicenseCommands::Info => {
-            let license = client.get_raw("/v1/license").await?;
-            print_output(license, output_format, query)?;
+            let handler = redis_enterprise::LicenseHandler::new(client.clone());
+            let license = handler.get().await?;
+            let value = serde_json::to_value(license)?;
+            print_output(value, output_format, query)?;
         }
         LicenseCommands::Update { key } => {
             let update_data = serde_json::json!({
@@ -531,24 +555,34 @@ pub async fn handle_alert_command(
 
     match command {
         AlertCommands::List => {
-            let result = client.get_raw("/v1/alerts").await?;
-            print_output(result, output_format, query)?;
+            let handler = redis_enterprise::AlertHandler::new(client.clone());
+            let result = handler.list().await?;
+            let value = serde_json::to_value(result)?;
+            print_output(value, output_format, query)?;
         }
         AlertCommands::Show { uid } => {
-            let result = client.get_raw(&format!("/v1/alerts/{}", uid)).await?;
-            print_output(result, output_format, query)?;
+            let handler = redis_enterprise::AlertHandler::new(client.clone());
+            let result = handler.get(&uid).await?;
+            let value = serde_json::to_value(result)?;
+            print_output(value, output_format, query)?;
         }
         AlertCommands::Database { uid } => {
-            let result = client.get_raw(&format!("/v1/bdbs/{}/alerts", uid)).await?;
-            print_output(result, output_format, query)?;
+            let handler = redis_enterprise::AlertHandler::new(client.clone());
+            let result = handler.list_by_database(uid).await?;
+            let value = serde_json::to_value(result)?;
+            print_output(value, output_format, query)?;
         }
         AlertCommands::Node { uid } => {
-            let result = client.get_raw(&format!("/v1/nodes/{}/alerts", uid)).await?;
-            print_output(result, output_format, query)?;
+            let handler = redis_enterprise::AlertHandler::new(client.clone());
+            let result = handler.list_by_node(uid).await?;
+            let value = serde_json::to_value(result)?;
+            print_output(value, output_format, query)?;
         }
         AlertCommands::Cluster => {
-            let result = client.get_raw("/v1/cluster/alerts").await?;
-            print_output(result, output_format, query)?;
+            let handler = redis_enterprise::AlertHandler::new(client.clone());
+            let result = handler.list_cluster_alerts().await?;
+            let value = serde_json::to_value(result)?;
+            print_output(value, output_format, query)?;
         }
         AlertCommands::Clear { uid } => {
             client.delete_raw(&format!("/v1/alerts/{}", uid)).await?;
@@ -613,12 +647,16 @@ pub async fn handle_crdb_command(
 
     match command {
         EnterpriseCrdbCommands::List => {
-            let result = client.get_raw("/v1/crdbs").await?;
-            print_output(result, output_format, query)?;
+            let handler = redis_enterprise::CrdbHandler::new(client.clone());
+            let result = handler.list().await?;
+            let value = serde_json::to_value(result)?;
+            print_output(value, output_format, query)?;
         }
         EnterpriseCrdbCommands::Show { guid } => {
-            let result = client.get_raw(&format!("/v1/crdbs/{}", guid)).await?;
-            print_output(result, output_format, query)?;
+            let handler = redis_enterprise::CrdbHandler::new(client.clone());
+            let result = handler.get(&guid).await?;
+            let value = serde_json::to_value(result)?;
+            print_output(value, output_format, query)?;
         }
         EnterpriseCrdbCommands::Create {
             name,
@@ -708,8 +746,10 @@ pub async fn handle_crdb_command(
             )?;
         }
         EnterpriseCrdbCommands::Tasks { guid } => {
-            let result = client.get_raw(&format!("/v1/crdbs/{}/tasks", guid)).await?;
-            print_output(result, output_format, query)?;
+            let handler = redis_enterprise::CrdbTasksHandler::new(client.clone());
+            let result = handler.list_by_crdb(&guid).await?;
+            let value = serde_json::to_value(result)?;
+            print_output(value, output_format, query)?;
         }
     }
 
@@ -727,15 +767,20 @@ pub async fn handle_action_command(
 
     match command {
         EnterpriseActionCommands::List => {
-            let result = client.get_raw("/v1/actions").await?;
-            print_output(result, output_format, query)?;
+            let handler = redis_enterprise::ActionHandler::new(client.clone());
+            let result = handler.list().await?;
+            let value = serde_json::to_value(result)?;
+            print_output(value, output_format, query)?;
         }
         EnterpriseActionCommands::Show { uid } => {
-            let result = client.get_raw(&format!("/v1/actions/{}", uid)).await?;
-            print_output(result, output_format, query)?;
+            let handler = redis_enterprise::ActionHandler::new(client.clone());
+            let result = handler.get(&uid).await?;
+            let value = serde_json::to_value(result)?;
+            print_output(value, output_format, query)?;
         }
         EnterpriseActionCommands::Cancel { uid } => {
-            client.delete_raw(&format!("/v1/actions/{}", uid)).await?;
+            let handler = redis_enterprise::ActionHandler::new(client.clone());
+            handler.cancel(&uid).await?;
             print_output(
                 serde_json::json!({"message": "Action cancelled successfully"}),
                 output_format,
@@ -758,39 +803,52 @@ pub async fn handle_stats_command(
 
     match command {
         EnterpriseStatsCommands::Cluster { interval } => {
-            let endpoint = if let Some(interval) = interval {
-                format!("/v1/cluster/stats?interval={}", interval)
-            } else {
-                "/v1/cluster/stats/last".to_string()
+            let handler = redis_enterprise::StatsHandler::new(client.clone());
+            let query_params = redis_enterprise::StatsQuery {
+                interval: interval.clone(),
+                stime: None,
+                etime: None,
+                metrics: None,
             };
-            let result = client.get_raw(&endpoint).await?;
-            print_output(result, output_format, query)?;
+            let result = handler.cluster(Some(query_params)).await?;
+            let value = serde_json::to_value(result)?;
+            print_output(value, output_format, query)?;
         }
         EnterpriseStatsCommands::Node { uid, interval } => {
-            let endpoint = if let Some(interval) = interval {
-                format!("/v1/nodes/{}/stats?interval={}", uid, interval)
-            } else {
-                format!("/v1/nodes/{}/stats/last", uid)
+            let handler = redis_enterprise::StatsHandler::new(client.clone());
+            let query_params = redis_enterprise::StatsQuery {
+                interval: interval.clone(),
+                stime: None,
+                etime: None,
+                metrics: None,
             };
-            let result = client.get_raw(&endpoint).await?;
-            print_output(result, output_format, query)?;
+            let result = handler.node(uid, Some(query_params)).await?;
+            let value = serde_json::to_value(result)?;
+            print_output(value, output_format, query)?;
         }
         EnterpriseStatsCommands::Database { uid, interval } => {
-            let endpoint = if let Some(interval) = interval {
-                format!("/v1/bdbs/{}/stats?interval={}", uid, interval)
-            } else {
-                format!("/v1/bdbs/{}/stats/last", uid)
+            let handler = redis_enterprise::StatsHandler::new(client.clone());
+            let query_params = redis_enterprise::StatsQuery {
+                interval: interval.clone(),
+                stime: None,
+                etime: None,
+                metrics: None,
             };
-            let result = client.get_raw(&endpoint).await?;
-            print_output(result, output_format, query)?;
+            let result = handler.database(uid, Some(query_params)).await?;
+            let value = serde_json::to_value(result)?;
+            print_output(value, output_format, query)?;
         }
         EnterpriseStatsCommands::Shard { uid, interval } => {
-            let endpoint = if let Some(interval) = interval {
-                format!("/v1/shards/{}/stats?interval={}", uid, interval)
+            let handler = redis_enterprise::ShardHandler::new(client.clone());
+            let result = if let Some(_interval) = interval {
+                // Note: Shard stats don't have typed methods with intervals
+                client
+                    .get_raw(&format!("/v1/shards/{}/stats?interval={}", uid, _interval))
+                    .await?
             } else {
-                format!("/v1/shards/{}/stats/last", uid)
+                let stats = handler.stats(&uid).await?;
+                serde_json::to_value(stats)?
             };
-            let result = client.get_raw(&endpoint).await?;
             print_output(result, output_format, query)?;
         }
     }
