@@ -1,6 +1,6 @@
 # Cloud API Key Commands
 
-```
+```text
 API Keys management
 
 Usage: redisctl cloud api-key <COMMAND>
@@ -18,5 +18,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

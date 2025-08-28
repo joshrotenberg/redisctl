@@ -1,6 +1,6 @@
 # Cluster Commands (Smart Routing)
 
-```
+```text
 Cluster operations (smart routing)
 
 Usage: redisctl cluster <COMMAND>
@@ -14,5 +14,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

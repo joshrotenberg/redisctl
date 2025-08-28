@@ -9,7 +9,9 @@ Feature-complete command-line interface and Rust library for managing Redis Ente
 ## Primary Components
 
 ### 1. Command-Line Interface (CLI)
+
 The primary way to interact with Redis Enterprise clusters, featuring:
+
 - **All Operations Exposed**: Every API endpoint accessible via intuitive commands
 - **Multiple Output Formats**: JSON, YAML, and Table output
 - **JMESPath Queries**: Powerful filtering and transformation of output
@@ -25,7 +27,9 @@ redis-enterprise cluster info --query 'name'
 ```
 
 ### 2. Rust Library
+
 For programmatic access and building custom tools:
+
 - **Type-Safe API**: Full Rust type system integration
 - **Builder Pattern**: Fluent API for complex configurations
 - **Async/Await**: Built on Tokio for high performance
@@ -55,21 +59,25 @@ let databases = client.databases().list().await?;
 ## Quick Links
 
 ### Getting Started
+
 - [Installation Guide](./getting-started/installation.md)
 - [Quick Start](./getting-started/quickstart.md)
 - [Docker Environment](./getting-started/docker.md)
 
 ### CLI Documentation (Primary Interface)
+
 - [CLI Commands Reference](./cli/commands.md)
 - [Examples](./cli/examples.md)
 - [Configuration](./cli/configuration.md)
 - [Output Formats](./cli/output-formats.md)
 
 ### Workflows
+
 - [Cluster Bootstrap](./workflows/cluster-bootstrap.md)
 - [Database Creation](./workflows/database-creation.md)
 
 ### API Documentation
+
 - [API Client Reference](./api/endpoints-overview.md)
 - [REST API Reference](./rest-api/cluster.md)
 

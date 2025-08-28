@@ -1,6 +1,6 @@
 # Enterprise Cluster Commands
 
-```
+```text
 Cluster management
 
 Usage: redisctl enterprise cluster <COMMAND>
@@ -14,5 +14,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

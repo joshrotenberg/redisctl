@@ -1,6 +1,6 @@
 # Cloud Task Commands
 
-```
+```text
 Task monitoring
 
 Usage: redisctl cloud task <COMMAND>
@@ -13,5 +13,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

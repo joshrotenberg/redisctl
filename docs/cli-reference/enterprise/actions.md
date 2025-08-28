@@ -1,6 +1,6 @@
 # Enterprise Actions Commands
 
-```
+```text
 Action/task management
 
 Usage: redisctl enterprise actions <COMMAND>
@@ -13,5 +13,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

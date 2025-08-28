@@ -1,6 +1,6 @@
 # Enterprise Active-Active Commands
 
-```
+```text
 Active-Active database (CRDB) management
 
 Usage: redisctl enterprise crdb <COMMAND>
@@ -16,5 +16,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

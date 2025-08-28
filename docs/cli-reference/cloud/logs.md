@@ -1,6 +1,6 @@
 # Cloud Logs Commands
 
-```
+```text
 Logs and audit trails
 
 Usage: redisctl cloud logs <COMMAND>
@@ -13,5 +13,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

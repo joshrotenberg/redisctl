@@ -1,6 +1,6 @@
 # Cloud Region Commands
 
-```
+```text
 Region information
 
 Usage: redisctl cloud region <COMMAND>
@@ -11,5 +11,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

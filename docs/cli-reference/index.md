@@ -47,6 +47,17 @@ Commands for managing configuration profiles:
 - [Remove Profile](profile/remove.md)
 - [Set Default](profile/default.md)
 
+### [Authentication Management](auth/README.md)
+Commands for testing and setting up authentication:
+- [Test Authentication](auth/test.md)
+- [Interactive Setup](auth/setup.md)
+
+### [Configuration Management](config/README.md)
+Commands for inspecting and validating configuration:
+- [Show Configuration](config/show.md)
+- [Configuration Path](config/path.md)
+- [Validate Configuration](config/validate.md)
+
 ### [Smart-Routed Commands](smart/)
 Commands that automatically detect deployment type:
 - [Database Operations](smart/database.md)
@@ -84,7 +95,7 @@ Use JMESPath queries with the `-q/--query` flag to filter output:
 ```bash
 redisctl database list -q "[?status=='active'].name"
 redisctl user list -q "[].{email:email,role:role}"
-```
+```text
 
 ## Examples
 

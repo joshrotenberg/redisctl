@@ -1,6 +1,6 @@
 # Cloud Subscription Commands
 
-```
+```text
 Subscription management
 
 Usage: redisctl cloud subscription <COMMAND>
@@ -19,5 +19,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

@@ -1,6 +1,6 @@
 # Cloud Billing Commands
 
-```
+```text
 Billing and payment management
 
 Usage: redisctl cloud billing <COMMAND>
@@ -28,5 +28,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

@@ -1,6 +1,6 @@
 # Redis Cloud Commands
 
-```
+```text
 Redis Cloud commands
 
 Usage: redisctl cloud <COMMAND>
@@ -31,5 +31,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

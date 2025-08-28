@@ -1,6 +1,6 @@
 # Database Commands (Smart Routing)
 
-```
+```text
 Database operations (smart routing)
 
 Usage: redisctl database <COMMAND>
@@ -18,5 +18,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

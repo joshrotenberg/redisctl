@@ -1,6 +1,6 @@
 # Cloud ACL Commands
 
-```
+```text
 ACL management
 
 Usage: redisctl cloud acl <COMMAND>
@@ -15,5 +15,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

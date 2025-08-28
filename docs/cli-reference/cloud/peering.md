@@ -1,6 +1,6 @@
 # Cloud VPC Peering Commands
 
-```
+```text
 VPC Peering management
 
 Usage: redisctl cloud peering <COMMAND>
@@ -14,5 +14,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

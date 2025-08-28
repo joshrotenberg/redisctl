@@ -1,6 +1,6 @@
 # Cloud Database Commands
 
-```
+```text
 Database management
 
 Usage: redisctl cloud database <COMMAND>
@@ -18,5 +18,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

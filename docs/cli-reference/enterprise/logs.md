@@ -1,6 +1,6 @@
 # Enterprise Logs Commands
 
-```
+```text
 Log management
 
 Usage: redisctl enterprise logs <COMMAND>
@@ -12,5 +12,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

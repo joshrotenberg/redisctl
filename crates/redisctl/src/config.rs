@@ -9,8 +9,8 @@ use std::path::PathBuf;
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct Config {
-    #[serde(default)]
-    pub default: Option<String>, // Name of the default profile
+    #[serde(default, rename = "default_profile")]
+    pub default_profile: Option<String>, // Name of the default profile
     #[serde(default)]
     pub profiles: HashMap<String, Profile>,
 }
@@ -22,10 +22,54 @@ pub struct Profile {
     pub credentials: ProfileCredentials,
 }
 
+impl Profile {
+    pub fn name(&self) -> String {
+        // This is a placeholder - the actual name is stored as the key in the HashMap
+        String::new()
+    }
+
+    pub fn cloud_credentials(&self) -> Option<(&str, &str, &str)> {
+        match &self.credentials {
+            ProfileCredentials::Cloud {
+                api_key,
+                api_secret,
+                api_url,
+            } => Some((api_key.as_str(), api_secret.as_str(), api_url.as_str())),
+            _ => None,
+        }
+    }
+
+    pub fn enterprise_credentials(&self) -> Option<(&str, &str, Option<&str>, bool)> {
+        match &self.credentials {
+            ProfileCredentials::Enterprise {
+                url,
+                username,
+                password,
+                insecure,
+            } => Some((
+                url.as_str(),
+                username.as_str(),
+                password.as_deref(),
+                *insecure,
+            )),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, clap::ValueEnum)]
 pub enum DeploymentType {
     Cloud,
     Enterprise,
+}
+
+impl std::fmt::Display for DeploymentType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DeploymentType::Cloud => write!(f, "cloud"),
+            DeploymentType::Enterprise => write!(f, "enterprise"),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -94,10 +138,24 @@ impl Config {
     pub fn get_profile(&self, name: Option<&str>) -> Option<&Profile> {
         let env_profile = std::env::var("REDISCTL_PROFILE").ok();
         let profile_name = name
-            .or(self.default.as_deref())
+            .or(self.default_profile.as_deref())
             .or(env_profile.as_deref())?;
 
         self.profiles.get(profile_name)
+    }
+
+    pub fn get_active_profile(&self) -> Result<&Profile> {
+        let env_profile = std::env::var("REDISCTL_PROFILE").ok();
+        let profile_name = env_profile
+            .as_deref()
+            .or(self.default_profile.as_deref())
+            .ok_or_else(|| {
+                anyhow::anyhow!("No profile configured. Run 'redisctl auth setup' to get started.")
+            })?;
+
+        self.profiles
+            .get(profile_name)
+            .ok_or_else(|| anyhow::anyhow!("Profile '{}' not found", profile_name))
     }
 
     pub fn set_profile(&mut self, name: String, profile: Profile) {
@@ -114,7 +172,7 @@ impl Config {
         profiles
     }
 
-    fn config_path() -> Result<PathBuf> {
+    pub fn config_path() -> Result<PathBuf> {
         let proj_dirs = ProjectDirs::from("com", "redis", "redisctl")
             .context("Failed to determine config directory")?;
 

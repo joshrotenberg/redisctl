@@ -1,6 +1,6 @@
 # Cloud User Commands
 
-```
+```text
 User management
 
 Usage: redisctl cloud user <COMMAND>
@@ -15,5 +15,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

@@ -19,7 +19,7 @@ generate_command_doc() {
     
     echo "# $title" > "$output_file"
     echo "" >> "$output_file"
-    echo '```' >> "$output_file"
+    echo '```text' >> "$output_file"
     $BINARY $cmd --help 2>/dev/null >> "$output_file" || true
     echo '```' >> "$output_file"
     echo "" >> "$output_file"
@@ -83,6 +83,21 @@ generate_command_doc "profile get" "$OUTPUT_DIR/profile/get.md" "Profile Get Com
 generate_command_doc "profile remove" "$OUTPUT_DIR/profile/remove.md" "Profile Remove Command"
 generate_command_doc "profile default" "$OUTPUT_DIR/profile/default.md" "Profile Default Command"
 
+# Generate Auth commands documentation
+echo "Generating Auth commands..."
+mkdir -p "$OUTPUT_DIR/auth"
+generate_command_doc "auth" "$OUTPUT_DIR/auth/README.md" "Authentication Management Commands"
+generate_command_doc "auth test" "$OUTPUT_DIR/auth/test.md" "Auth Test Command"
+generate_command_doc "auth setup" "$OUTPUT_DIR/auth/setup.md" "Auth Setup Command"
+
+# Generate Config commands documentation
+echo "Generating Config commands..."
+mkdir -p "$OUTPUT_DIR/config"
+generate_command_doc "config" "$OUTPUT_DIR/config/README.md" "Configuration Management Commands"
+generate_command_doc "config show" "$OUTPUT_DIR/config/show.md" "Config Show Command"
+generate_command_doc "config path" "$OUTPUT_DIR/config/path.md" "Config Path Command"
+generate_command_doc "config validate" "$OUTPUT_DIR/config/validate.md" "Config Validate Command"
+
 # Generate Smart-routed commands documentation
 echo "Generating smart-routed commands..."
 mkdir -p "$OUTPUT_DIR/smart"
@@ -144,6 +159,17 @@ Commands for managing configuration profiles:
 - [Get Profile](profile/get.md)
 - [Remove Profile](profile/remove.md)
 - [Set Default](profile/default.md)
+
+### [Authentication Management](auth/README.md)
+Commands for testing and setting up authentication:
+- [Test Authentication](auth/test.md)
+- [Interactive Setup](auth/setup.md)
+
+### [Configuration Management](config/README.md)
+Commands for inspecting and validating configuration:
+- [Show Configuration](config/show.md)
+- [Configuration Path](config/path.md)
+- [Validate Configuration](config/validate.md)
 
 ### [Smart-Routed Commands](smart/)
 Commands that automatically detect deployment type:

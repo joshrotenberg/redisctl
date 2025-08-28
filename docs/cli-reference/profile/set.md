@@ -1,6 +1,6 @@
 # Profile Set Command
 
-```
+```text
 Create or update a profile
 
 Usage: redisctl profile set [OPTIONS] <NAME> <DEPLOYMENT_TYPE>
@@ -17,5 +17,4 @@ Options:
       --api-secret <API_SECRET>  API Secret (Cloud only)
       --insecure                 Allow insecure TLS (Enterprise only)
   -h, --help                     Print help
-```
-
+```text

@@ -1,6 +1,6 @@
 # Cloud Transit Gateway Commands
 
-```
+```text
 Transit Gateway management
 
 Usage: redisctl cloud transit-gateway <COMMAND>
@@ -14,5 +14,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text

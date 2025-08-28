@@ -8,9 +8,30 @@ disabled-rules = [
     "MDBOOK002",  # Internal link validation - false positives with existing files
 ]
 
-# Don't fail the build on warnings or errors during initial setup
+# Don't fail the build on warnings, but show them for fixing
 fail-on-warnings = false
 fail-on-errors = false
+
+# Enable rules that should be fixable
+[rules.MD022]
+# Require blank lines around headings 
+enabled = true
+
+[rules.MD032]
+# Require blank lines around lists
+enabled = true
+
+[rules.MD031]
+# Require blank lines around fenced code blocks
+enabled = true
+
+[rules.MD006]
+# Lists should start at beginning of line
+enabled = true
+
+[rules.MD047]
+# Files should end with single newline
+enabled = true
 
 # Configure specific rules
 [rules.MD013]

@@ -1,6 +1,6 @@
 # Cloud Account Commands
 
-```
+```text
 Account management
 
 Usage: redisctl cloud account <COMMAND>
@@ -16,5 +16,4 @@ Commands:
 
 Options:
   -h, --help  Print help
-```
-
+```text
