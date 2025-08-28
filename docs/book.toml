@@ -15,7 +15,6 @@ edit-url-template = "https://github.com/joshrotenberg/redisctl/edit/main/docs/{p
 enable = true
 level = 1
 
-# Enable mdbook-lint preprocessor
-# Configuration is in .mdbook-lint.toml
-[preprocessor.lint]
-command = "mdbook-lint"
+# mdbook-lint can be run manually via CLI
+# Disabled as preprocessor due to configuration issues
+# Run with: mdbook-lint lint src

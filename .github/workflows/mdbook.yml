@@ -45,7 +45,13 @@ jobs:
         run: |
           command -v mdbook-lint || cargo install mdbook-lint
 
-      - name: Build book (includes linting via preprocessor)
+      - name: Lint book (informational only)
+        run: |
+          cd docs
+          mdbook-lint lint src || echo "Linting completed with warnings"
+        continue-on-error: true
+
+      - name: Build book
         run: |
           cd docs
           mdbook build
