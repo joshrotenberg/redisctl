@@ -48,7 +48,6 @@ services:
       - redis-net
     entrypoint: ["/bin/sh", "-c"]
     command: |
-      sh -c '
       echo "========================================" &&
       echo "Step 1: Initializing Redis Enterprise cluster..." &&
       echo "========================================" &&
@@ -62,7 +61,6 @@ services:
       
       echo "✓ Cluster initialized successfully" &&
       echo ""
-      '
 
   # Create database
   create-db:
@@ -83,7 +81,6 @@ services:
       - redis-net
     entrypoint: ["/bin/sh", "-c"]
     command: |
-      sh -c '
       echo "========================================" &&
       echo "Step 2: Creating test database..." &&
       echo "========================================" &&
@@ -96,7 +93,6 @@ services:
       
       echo "✓ Database created successfully" &&
       echo ""
-      '
 
   # Validate API
   validate-api:
@@ -117,7 +113,6 @@ services:
       - redis-net
     entrypoint: ["/bin/sh", "-c"]
     command: |
-      sh -c '
       echo "========================================" &&
       echo "Step 3: Validating API endpoints..." &&
       echo "========================================" &&
@@ -135,7 +130,6 @@ services:
       
       echo "✓ API validation successful" &&
       echo ""
-      '
 
   # Test Redis connection
   test-redis:
