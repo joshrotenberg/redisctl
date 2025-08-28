@@ -6,7 +6,7 @@ FROM rust:1.89 AS builder
 WORKDIR /build
 
 # Copy workspace files
-COPY Cargo.toml Cargo.lock ./
+COPY Cargo.toml ./
 COPY crates/ ./crates/
 
 # Build release binary
