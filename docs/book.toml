@@ -15,13 +15,5 @@ edit-url-template = "https://github.com/joshrotenberg/redisctl/edit/main/docs/{p
 enable = true
 level = 1
 
-[preprocessor.lint]
-command = "mdbook-lint"
-renderer = ["html"]
-
-# mdbook-lint configuration
-[output.lint]
-# Warn about broken links
-warn-on-broken-links = true
-# Warn about unresolved links
-warn-on-unresolved-links = true
+# mdbook-lint configuration can be added here if needed
+# Currently running lint separately via CI

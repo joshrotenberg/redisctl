@@ -4,13 +4,13 @@ Comprehensive examples for common Redis Cloud and Enterprise operations.
 
 ## Table of Contents
 
-- [Authentication & Configuration](#authentication--configuration)
+- [Authentication & Configuration](#authentication-configuration)
 - [Database Operations](#database-operations)
 - [Cluster Management](#cluster-management)
-- [User & ACL Management](#user--acl-management)
-- [Backup & Recovery](#backup--recovery)
-- [Monitoring & Metrics](#monitoring--metrics)
-- [Networking & Security](#networking--security)
+- [User & ACL Management](#user-acl-management)
+- [Backup & Recovery](#backup-recovery)
+- [Monitoring & Metrics](#monitoring-metrics)
+- [Networking & Security](#networking-security)
 - [Advanced Workflows](#advanced-workflows)
 
 ## Authentication & Configuration
