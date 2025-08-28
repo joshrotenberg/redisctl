@@ -4,6 +4,7 @@ use crate::client::RestClient;
 use crate::error::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use typed_builder::TypedBuilder;
 
 // Aliases for easier use
 pub type Database = DatabaseInfo;
@@ -243,134 +244,60 @@ pub struct EndpointInfo {
     pub dns_name: Option<String>,
 }
 
-/// Builder for CreateDatabaseRequest
-#[derive(Debug, Default)]
-pub struct CreateDatabaseRequestBuilder {
-    name: Option<String>,
-    memory_size: Option<u64>,
-    port: Option<u16>,
-    replication: Option<bool>,
-    persistence: Option<String>,
-    eviction_policy: Option<String>,
-    shards_count: Option<u32>,
-    module_list: Option<Vec<ModuleConfig>>,
-    authentication_redis_pass: Option<String>,
-}
-
-impl CreateDatabaseRequestBuilder {
-    /// Create a new builder
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Set the database name (required)
-    pub fn name(mut self, name: impl Into<String>) -> Self {
-        self.name = Some(name.into());
-        self
-    }
-
-    /// Set the memory size in bytes (required)
-    pub fn memory_size(mut self, size: u64) -> Self {
-        self.memory_size = Some(size);
-        self
-    }
-
-    /// Set the port number
-    pub fn port(mut self, port: u16) -> Self {
-        self.port = Some(port);
-        self
-    }
-
-    /// Enable or disable replication
-    pub fn replication(mut self, enabled: bool) -> Self {
-        self.replication = Some(enabled);
-        self
-    }
-
-    /// Set persistence type ("aof", "snapshot", "disabled")
-    pub fn persistence(mut self, persistence: impl Into<String>) -> Self {
-        self.persistence = Some(persistence.into());
-        self
-    }
-
-    /// Set eviction policy
-    pub fn eviction_policy(mut self, policy: impl Into<String>) -> Self {
-        self.eviction_policy = Some(policy.into());
-        self
-    }
-
-    /// Set number of shards
-    pub fn shards(mut self, count: u32) -> Self {
-        self.shards_count = Some(count);
-        self
-    }
-
-    /// Add Redis modules
-    pub fn modules(mut self, modules: Vec<ModuleConfig>) -> Self {
-        self.module_list = Some(modules);
-        self
-    }
-
-    /// Set database password
-    pub fn password(mut self, password: impl Into<String>) -> Self {
-        self.authentication_redis_pass = Some(password.into());
-        self
-    }
-
-    /// Build the request
-    pub fn build(self) -> Result<CreateDatabaseRequest> {
-        Ok(CreateDatabaseRequest {
-            name: self.name.ok_or_else(|| {
-                crate::error::RestError::ValidationError("Database name is required".to_string())
-            })?,
-            memory_size: self.memory_size.ok_or_else(|| {
-                crate::error::RestError::ValidationError("Memory size is required".to_string())
-            })?,
-            port: self.port,
-            replication: self.replication,
-            persistence: self.persistence,
-            eviction_policy: self.eviction_policy,
-            shards_count: self.shards_count,
-            module_list: self.module_list,
-            authentication_redis_pass: self.authentication_redis_pass,
-        })
-    }
-}
-
 /// Module configuration for database creation
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
 pub struct ModuleConfig {
+    #[builder(setter(into))]
     pub module_name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub module_args: Option<String>,
 }
 
 /// Create database request
-#[derive(Debug, Serialize, Deserialize)]
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use redis_enterprise::{CreateDatabaseRequest, ModuleConfig};
+///
+/// let request = CreateDatabaseRequest::builder()
+///     .name("my-database")
+///     .memory_size(1024 * 1024 * 1024) // 1GB
+///     .port(12000)
+///     .replication(true)
+///     .persistence("aof")
+///     .eviction_policy("volatile-lru")
+///     .shards_count(2)
+///     .authentication_redis_pass("secure-password")
+///     .build();
+/// ```
+#[derive(Debug, Serialize, Deserialize, TypedBuilder)]
 pub struct CreateDatabaseRequest {
+    #[builder(setter(into))]
     pub name: String,
     pub memory_size: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
     pub port: Option<u16>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
     pub replication: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub persistence: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub eviction_policy: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
     pub shards_count: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
     pub module_list: Option<Vec<ModuleConfig>>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub authentication_redis_pass: Option<String>,
-}
-
-impl CreateDatabaseRequest {
-    /// Create a new builder for the request
-    pub fn builder() -> CreateDatabaseRequestBuilder {
-        CreateDatabaseRequestBuilder::new()
-    }
 }
 
 /// Database handler for executing database commands
@@ -396,16 +323,6 @@ impl DatabaseHandler {
     /// Create a new database (BDB.CREATE)
     pub async fn create(&self, request: CreateDatabaseRequest) -> Result<DatabaseInfo> {
         self.client.post("/v1/bdbs", &request).await
-    }
-
-    /// Create a new database using builder pattern
-    pub async fn create_with_builder<F>(&self, f: F) -> Result<DatabaseInfo>
-    where
-        F: FnOnce(CreateDatabaseRequestBuilder) -> CreateDatabaseRequestBuilder,
-    {
-        let builder = CreateDatabaseRequestBuilder::new();
-        let request = f(builder).build()?;
-        self.create(request).await
     }
 
     /// Update database configuration (BDB.UPDATE)

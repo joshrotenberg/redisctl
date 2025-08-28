@@ -4,6 +4,7 @@ use crate::client::RestClient;
 use crate::error::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use typed_builder::TypedBuilder;
 
 /// Scheduled job information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -26,14 +27,19 @@ pub struct ScheduledJob {
 }
 
 /// Create scheduled job request
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
 pub struct CreateScheduledJobRequest {
+    #[builder(setter(into))]
     pub name: String,
+    #[builder(setter(into))]
     pub job_type: String,
+    #[builder(setter(into))]
     pub schedule: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
     pub enabled: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
     pub params: Option<Value>,
 }
 

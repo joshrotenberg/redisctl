@@ -4,6 +4,7 @@ use crate::client::RestClient;
 use crate::error::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use typed_builder::TypedBuilder;
 
 /// License information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -27,8 +28,9 @@ pub struct License {
 }
 
 /// License update request
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
 pub struct LicenseUpdateRequest {
+    #[builder(setter(into))]
     pub license: String,
 }
 

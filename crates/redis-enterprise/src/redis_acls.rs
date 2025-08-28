@@ -4,6 +4,7 @@ use crate::client::RestClient;
 use crate::error::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use typed_builder::TypedBuilder;
 
 /// Redis ACL information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -19,11 +20,14 @@ pub struct RedisAcl {
 }
 
 /// Create or update Redis ACL request
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, TypedBuilder)]
 pub struct CreateRedisAclRequest {
+    #[builder(setter(into))]
     pub name: String,
+    #[builder(setter(into))]
     pub acl: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub description: Option<String>,
 }
 

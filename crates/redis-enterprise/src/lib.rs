@@ -24,7 +24,7 @@
 //! ## Working with Databases
 //!
 //! ```no_run
-//! use redis_enterprise::{EnterpriseClient, BdbHandler, CreateDatabaseRequestBuilder};
+//! use redis_enterprise::{EnterpriseClient, BdbHandler, CreateDatabaseRequest};
 //!
 //! # async fn example(client: EnterpriseClient) -> Result<(), Box<dyn std::error::Error>> {
 //! // List all databases
@@ -35,13 +35,13 @@
 //! }
 //!
 //! // Create a new database
-//! let request = CreateDatabaseRequestBuilder::new()
+//! let request = CreateDatabaseRequest::builder()
 //!     .name("my-database")
 //!     .memory_size(1024 * 1024 * 1024) // 1GB
 //!     .port(12000)
 //!     .replication(false)
 //!     .persistence("aof")
-//!     .build()?;
+//!     .build();
 //!
 //! let new_db = handler.create(request).await?;
 //! println!("Created database: {}", new_db.uid);
