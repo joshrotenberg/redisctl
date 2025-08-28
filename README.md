@@ -144,35 +144,76 @@ docker compose down -v
 
 ### 1. Configure Authentication
 
-#### Redis Cloud
+#### Option 1: Interactive Setup Wizard (Recommended)
 ```bash
-# Using environment variables
+# Launch guided setup for any deployment type
+redisctl auth setup
+
+# Test your authentication
+redisctl auth test
+```
+
+The interactive setup wizard will:
+- Guide you through credential collection
+- Test authentication during setup
+- Create and save working profiles
+- Set up your first profile as default
+
+#### Option 2: Manual Profile Creation
+
+##### Redis Cloud
+```bash
+# Create a Cloud profile manually
+redisctl profile set prod-cloud cloud \
+  --api-key "your-api-key" \
+  --api-secret "your-api-secret"
+
+# Set as default profile
+redisctl profile default prod-cloud
+```
+
+##### Redis Enterprise
+```bash
+# Create an Enterprise profile manually
+redisctl profile set prod-enterprise enterprise \
+  --url https://cluster:9443 \
+  --username admin@example.com \
+  --password your-password
+```
+
+#### Option 3: Environment Variables
+```bash
+# Redis Cloud
 export REDIS_CLOUD_API_KEY="your-api-key"
 export REDIS_CLOUD_API_SECRET="your-api-secret"
 
-# Or using profiles
-redisctl profile set prod-cloud \
-  --deployment-type cloud \
-  --api-key YOUR_KEY \
-  --api-secret YOUR_SECRET
-```
-
-#### Redis Enterprise
-```bash
-# Using environment variables
+# Redis Enterprise
 export REDIS_ENTERPRISE_URL="https://cluster.example.com:9443"
-export REDIS_ENTERPRISE_USER="admin@example.com"
+export REDIS_ENTERPRISE_USER="admin@example.com"  
 export REDIS_ENTERPRISE_PASSWORD="your-password"
 
-# Or using profiles
-redisctl profile set prod-enterprise \
-  --deployment-type enterprise \
-  --url https://cluster:9443 \
-  --username admin \
-  --password secret
+# Test authentication works
+redisctl auth test
 ```
 
-### 2. Basic Usage
+### 2. Verify Your Setup
+
+```bash
+# Test authentication for any profile or environment vars
+redisctl auth test
+redisctl auth test --profile prod-cloud
+
+# View your configuration
+redisctl config show
+
+# Validate all profiles  
+redisctl config validate
+
+# Find your config file location
+redisctl config path
+```
+
+### 3. Basic Usage
 
 ```bash
 # List all profiles
@@ -194,7 +235,7 @@ redisctl database list -o json | jq '.[] | .name'
 redisctl database list -q "[?status=='active'].name" -o yaml
 ```
 
-### 3. Common Workflows
+### 4. Common Workflows
 
 ```bash
 # Initialize a new Enterprise cluster

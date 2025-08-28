@@ -13,6 +13,8 @@ Commands:
   cluster     Cluster operations (smart routing)
   user        User operations (smart routing)
   account     Account operations (smart routing to Cloud subscriptions)
+  auth        Authentication testing and management
+  config      Configuration management
   help        Print this message or the help of the given subcommand(s)
 
 Options:
