@@ -124,18 +124,24 @@ async fn test_cloud_auth(profile: &Profile, result: &mut serde_json::Value) -> R
         .build()
         .context("Failed to create Cloud client")?;
 
-    match client.get_raw("/account").await {
-        Ok(account_info) => {
+    // Use /subscriptions endpoint to test authentication
+    // This is a documented endpoint that should exist for all Cloud accounts
+    match client.get_raw("/subscriptions").await {
+        Ok(subscriptions_data) => {
             tests.insert("api_connectivity".to_string(), json!(true));
             tests.insert("authentication".to_string(), json!(true));
 
-            // Extract account details if available
-            if let Some(obj) = account_info.as_object() {
-                if let Some(id) = obj.get("id") {
-                    tests.insert("account_id".to_string(), id.clone());
-                }
-                if let Some(name) = obj.get("name") {
-                    tests.insert("account_name".to_string(), name.clone());
+            // Extract subscription count if available
+            if let Some(subscriptions) = subscriptions_data.get("subscriptions")
+                && let Some(arr) = subscriptions.as_array()
+            {
+                tests.insert("subscription_count".to_string(), json!(arr.len()));
+
+                // If there are subscriptions, show the first one's name
+                if let Some(first) = arr.first()
+                    && let Some(name) = first.get("name")
+                {
+                    tests.insert("first_subscription".to_string(), name.clone());
                 }
             }
 
