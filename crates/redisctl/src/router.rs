@@ -1,7 +1,6 @@
+use crate::config::{Config, DeploymentType, Profile, ProfileCredentials};
+use crate::error::{ProfileError, RoutingError};
 use anyhow::{Result, bail};
-use redis_common::{
-    Config, DeploymentType, Profile, ProfileCredentials, ProfileError, RoutingError,
-};
 use std::borrow::Cow;
 use tracing::{debug, info};
 
@@ -78,7 +77,7 @@ async fn route_database_command(
     profile_name: &Option<String>,
     deployment_type: Option<DeploymentType>,
     command: crate::cli::DatabaseCommands,
-    output_format: redis_common::OutputFormat,
+    output_format: crate::output::OutputFormat,
     query: Option<&str>,
 ) -> Result<()> {
     if let Some(dep_type) = deployment_type {
@@ -109,7 +108,7 @@ async fn route_cluster_command(
     profile_name: &Option<String>,
     deployment_type: Option<DeploymentType>,
     command: crate::cli::ClusterCommands,
-    output_format: redis_common::OutputFormat,
+    output_format: crate::output::OutputFormat,
     query: Option<&str>,
 ) -> Result<()> {
     if let Some(dep_type) = deployment_type {
@@ -144,7 +143,7 @@ async fn route_user_command(
     profile_name: &Option<String>,
     deployment_type: Option<DeploymentType>,
     command: crate::cli::UserCommands,
-    output_format: redis_common::OutputFormat,
+    output_format: crate::output::OutputFormat,
     query: Option<&str>,
 ) -> Result<()> {
     if let Some(dep_type) = deployment_type {
@@ -175,7 +174,7 @@ async fn route_account_command(
     profile_name: &Option<String>,
     deployment_type: Option<DeploymentType>,
     command: crate::cli::AccountCommands,
-    output_format: redis_common::OutputFormat,
+    output_format: crate::output::OutputFormat,
     query: Option<&str>,
 ) -> Result<()> {
     if let Some(dep_type) = deployment_type {

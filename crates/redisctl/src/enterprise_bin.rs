@@ -1,13 +1,16 @@
 // Redis Enterprise only binary
 // This binary only includes Enterprise functionality to reduce size for Enterprise-only deployments
 
+use crate::config::{Config, DeploymentType};
 use anyhow::Result;
 use clap::Parser;
-use redis_common::{Config, DeploymentType};
 use tracing::info;
 
 mod cli;
 mod commands;
+mod config;
+mod error;
+mod output;
 
 use cli::{Cli, Commands};
 use commands::{enterprise, profile};
@@ -62,7 +65,7 @@ async fn main() -> Result<()> {
 fn get_enterprise_profile<'a>(
     config: &'a Config,
     profile_name: &Option<String>,
-) -> Result<&'a redis_common::Profile> {
+) -> Result<&'a crate::config::Profile> {
     let env_profile = std::env::var("REDISCTL_PROFILE").ok();
     let profile_name = profile_name
         .as_deref()

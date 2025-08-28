@@ -1,6 +1,7 @@
+use crate::config::{Profile, ProfileCredentials};
+use crate::output::{OutputFormat, print_output};
 use anyhow::Result;
 use redis_cloud::CloudClient;
-use redis_common::{OutputFormat, Profile, ProfileCredentials, print_output};
 
 use crate::cli::{
     AccountCommands, AclCommands, ApiKeyCommands, BackupCommands, CloudAccountCommands,

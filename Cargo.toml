@@ -2,8 +2,7 @@
 resolver = "2"
 members = [
     "crates/redis-cloud",
-    "crates/redis-enterprise", 
-    "crates/redis-common",
+    "crates/redis-enterprise",
     "crates/redisctl",
 ]
 
@@ -59,7 +58,6 @@ pretty_assertions = "1.4"
 # Internal crates
 redis-cloud = { path = "crates/redis-cloud" }
 redis-enterprise = { path = "crates/redis-enterprise" }
-redis-common = { path = "crates/redis-common" }
 
 [profile.release]
 opt-level = 3

@@ -27,7 +27,6 @@ path = "src/enterprise_bin.rs"
 required-features = ["enterprise-only"]
 
 [dependencies]
-redis-common = { version = "0.1.0", path = "../redis-common" }
 redis-cloud = { version = "0.1.0", path = "../redis-cloud" }
 redis-enterprise = { version = "0.1.0", path = "../redis-enterprise" }
 
@@ -42,6 +41,15 @@ serde_json = { workspace = true }
 chrono = "0.4"
 rpassword = { workspace = true }
 urlencoding = "2.1"
+
+# Dependencies from redis-common
+thiserror = { workspace = true }
+serde_yaml = { workspace = true }
+comfy-table = { workspace = true }
+jmespath = { workspace = true }
+config = { workspace = true }
+toml = { workspace = true }
+directories = { workspace = true }
 
 # Conditional dependencies for feature-gated binaries
 [features]

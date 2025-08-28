@@ -1,5 +1,6 @@
+use crate::config::{Profile, ProfileCredentials};
+use crate::output::{OutputFormat, print_output};
 use anyhow::Result;
-use redis_common::{OutputFormat, Profile, ProfileCredentials, print_output};
 use redis_enterprise::EnterpriseClient;
 use std::io::Write;
 
