@@ -1,7 +1,7 @@
-# Redis Enterprise CLI Docker Image
+# Redis CLI Docker Image
 # Multi-stage build for optimal size
 
-FROM rust:1.82 AS builder
+FROM rust:1.89 AS builder
 
 WORKDIR /build
 
@@ -10,7 +10,7 @@ COPY Cargo.toml Cargo.lock ./
 COPY crates/ ./crates/
 
 # Build release binary
-RUN cargo build --release --bin redis-enterprise
+RUN cargo build --release --bin redisctl
 
 # Runtime stage - minimal debian image
 FROM debian:bookworm-slim
@@ -22,11 +22,11 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy binary from builder
-COPY --from=builder /build/target/release/redis-enterprise /usr/local/bin/redis-enterprise
+COPY --from=builder /build/target/release/redisctl /usr/local/bin/redisctl
 
 # Create non-root user
 RUN useradd -m -u 1000 redis && \
-    mkdir -p /home/redis/.config/redis-enterprise && \
+    mkdir -p /home/redis/.config/redisctl && \
     chown -R redis:redis /home/redis
 
 USER redis
@@ -36,6 +36,8 @@ WORKDIR /home/redis
 ENV REDIS_ENTERPRISE_URL=""
 ENV REDIS_ENTERPRISE_USER=""
 ENV REDIS_ENTERPRISE_PASSWORD=""
+ENV REDIS_CLOUD_API_KEY=""
+ENV REDIS_CLOUD_SECRET_KEY=""
 
-ENTRYPOINT ["redis-enterprise"]
+ENTRYPOINT ["redisctl"]
 CMD ["--help"]
