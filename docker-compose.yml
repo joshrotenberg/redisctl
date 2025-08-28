@@ -1,9 +1,11 @@
-# Redis Enterprise Test Environment
+# Redis Enterprise Test Environment with Full Validation
 # 
 # Usage:
-#   docker compose up -d        # Start enterprise and initialize cluster
-#   docker compose logs init    # Check initialization status
+#   docker compose up -d        # Start and run full test cascade
+#   docker compose logs -f      # Watch all service logs
 #   docker compose down -v      # Clean up everything
+#
+# For Mac users: Set REDIS_ENTERPRISE_IMAGE=kurtfm/rs-arm:latest
 
 services:
   # Redis Enterprise server
@@ -29,12 +31,12 @@ services:
     networks:
       - redis-net
 
-  # Initialize cluster and create database
-  init:
+  # Initialize cluster
+  init-cluster:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: redis-enterprise-init
+    container_name: init-cluster
     restart: "no"
     depends_on:
       enterprise:
@@ -47,10 +49,9 @@ services:
     command: |
       sh -c '
       echo "========================================" &&
-      echo "Initializing Redis Enterprise cluster..." &&
+      echo "Step 1: Initializing Redis Enterprise cluster..." &&
       echo "========================================" &&
       
-      # Initialize cluster
       redisctl enterprise workflow init-cluster \
         --insecure \
         --name "test-cluster" \
@@ -58,21 +59,115 @@ services:
         --password "Redis123!" \
         --accept-eula &&
       
-      echo "" &&
+      echo "✓ Cluster initialized successfully" &&
+      echo ""
+      '
+
+  # Create database
+  create-db:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: create-db
+    restart: "no"
+    depends_on:
+      init-cluster:
+        condition: service_completed_successfully
+    environment:
+      REDIS_ENTERPRISE_URL: "https://enterprise:9443"
+      REDIS_ENTERPRISE_USER: "admin@redis.local"
+      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
+      RUST_LOG: ${RUST_LOG:-info}
+    networks:
+      - redis-net
+    command: |
+      sh -c '
       echo "========================================" &&
-      echo "Creating test database..." &&
+      echo "Step 2: Creating test database..." &&
       echo "========================================" &&
       
-      # Create database using the workflow
       redisctl enterprise workflow create-database \
         --insecure \
         --name "test-db" \
         --memory 100MB \
         --port 12000 &&
       
+      echo "✓ Database created successfully" &&
+      echo ""
+      '
+
+  # Validate API
+  validate-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: validate-api
+    restart: "no"
+    depends_on:
+      create-db:
+        condition: service_completed_successfully
+    environment:
+      REDIS_ENTERPRISE_URL: "https://enterprise:9443"
+      REDIS_ENTERPRISE_USER: "admin@redis.local"
+      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
+      RUST_LOG: ${RUST_LOG:-info}
+    networks:
+      - redis-net
+    command: |
+      sh -c '
+      echo "========================================" &&
+      echo "Step 3: Validating API endpoints..." &&
+      echo "========================================" &&
+      
+      echo "→ Listing databases..." &&
+      redisctl enterprise database list --insecure --output table &&
+      
+      echo "" &&
+      echo "→ Getting database info..." &&
+      redisctl enterprise database get 1 --insecure --output json | head -20 &&
+      
+      echo "" &&
+      echo "→ Checking cluster info..." &&
+      redisctl enterprise cluster info --insecure --query "name" &&
+      
+      echo "✓ API validation successful" &&
+      echo ""
+      '
+
+  # Test Redis connection
+  test-redis:
+    image: redis:7-alpine
+    container_name: test-redis
+    restart: "no"
+    depends_on:
+      validate-api:
+        condition: service_completed_successfully
+    networks:
+      - redis-net
+    command: |
+      sh -c '
+      echo "========================================" &&
+      echo "Step 4: Testing Redis connection..." &&
+      echo "========================================" &&
+      
+      # Wait for database to be fully ready
+      sleep 5 &&
+      
+      echo "→ Setting test key..." &&
+      redis-cli -h enterprise -p 12000 SET test:key "Hello from Docker!" &&
+      
+      echo "→ Getting test key..." &&
+      redis-cli -h enterprise -p 12000 GET test:key &&
+      
+      echo "→ Running PING..." &&
+      redis-cli -h enterprise -p 12000 PING &&
+      
+      echo "→ Getting INFO..." &&
+      redis-cli -h enterprise -p 12000 INFO server | head -10 &&
+      
       echo "" &&
       echo "========================================" &&
-      echo "Setup complete!" &&
+      echo "✅ All tests passed successfully!" &&
       echo "" &&
       echo "Web UI: https://localhost:8443" &&
       echo "Username: admin@redis.local" &&
@@ -80,10 +175,7 @@ services:
       echo "" &&
       echo "API: https://localhost:9443" &&
       echo "Database: redis://localhost:12000" &&
-      echo "========================================" &&
-      
-      # List databases to confirm
-      redisctl enterprise database list --insecure --output table
+      echo "========================================" 
       '
 
 networks:

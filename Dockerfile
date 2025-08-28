@@ -12,7 +12,7 @@ COPY crates/ ./crates/
 # Build release binary
 RUN cargo build --release --bin redisctl
 
-# Runtime stage - minimal debian image
+# Runtime stage - Debian for compatibility
 FROM debian:bookworm-slim
 
 # Install runtime dependencies
