@@ -110,6 +110,35 @@ impl EnterpriseClient {
         EnterpriseClientBuilder::new()
     }
 
+    /// Create a client from environment variables
+    ///
+    /// Reads configuration from:
+    /// - `REDIS_ENTERPRISE_URL`: Base URL for the cluster (default: "https://localhost:9443")
+    /// - `REDIS_ENTERPRISE_USER`: Username for authentication (default: "admin@redis.local")
+    /// - `REDIS_ENTERPRISE_PASSWORD`: Password for authentication (required)
+    /// - `REDIS_ENTERPRISE_INSECURE`: Set to "true" to skip SSL verification (default: "false")
+    pub fn from_env() -> Result<Self> {
+        use std::env;
+
+        let base_url = env::var("REDIS_ENTERPRISE_URL")
+            .unwrap_or_else(|_| "https://localhost:9443".to_string());
+        let username =
+            env::var("REDIS_ENTERPRISE_USER").unwrap_or_else(|_| "admin@redis.local".to_string());
+        let password =
+            env::var("REDIS_ENTERPRISE_PASSWORD").map_err(|_| RestError::AuthenticationFailed)?;
+        let insecure = env::var("REDIS_ENTERPRISE_INSECURE")
+            .unwrap_or_else(|_| "false".to_string())
+            .parse::<bool>()
+            .unwrap_or(false);
+
+        Self::builder()
+            .base_url(base_url)
+            .username(username)
+            .password(password)
+            .insecure(insecure)
+            .build()
+    }
+
     /// Make a GET request
     pub async fn get<T: DeserializeOwned>(&self, path: &str) -> Result<T> {
         let url = format!("{}{}", self.base_url, path);
@@ -406,15 +435,19 @@ impl EnterpriseClient {
     async fn handle_response<T: DeserializeOwned>(&self, response: Response) -> Result<T> {
         if response.status().is_success() {
             response.json::<T>().await.map_err(Into::into)
-        } else if response.status() == 401 {
-            Err(RestError::AuthenticationFailed)
         } else {
             let status = response.status();
             let text = response.text().await.unwrap_or_default();
-            Err(RestError::ApiError {
-                code: status.as_u16(),
-                message: text,
-            })
+
+            match status.as_u16() {
+                401 => Err(RestError::Unauthorized),
+                404 => Err(RestError::NotFound),
+                500..=599 => Err(RestError::ServerError(text)),
+                _ => Err(RestError::ApiError {
+                    code: status.as_u16(),
+                    message: text,
+                }),
+            }
         }
     }
 }

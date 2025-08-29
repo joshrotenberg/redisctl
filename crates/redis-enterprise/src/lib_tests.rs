@@ -111,12 +111,12 @@ mod tests {
         let result: Result<serde_json::Value> = client.get("/error").await;
 
         assert!(result.is_err());
-        match result.unwrap_err() {
-            RestError::ApiError { code, .. } => {
-                assert_eq!(code, 404);
-            }
-            _ => panic!("Expected ApiError"),
-        }
+        let err = result.unwrap_err();
+        assert!(
+            err.is_not_found(),
+            "Expected not found error, got: {:?}",
+            err
+        );
     }
 
     #[tokio::test]
@@ -143,12 +143,12 @@ mod tests {
         let result: Result<serde_json::Value> = client.get("/auth-test").await;
 
         assert!(result.is_err());
-        match result.unwrap_err() {
-            RestError::AuthenticationFailed => {
-                // Expected error type
-            }
-            _ => panic!("Expected AuthenticationFailed"),
-        }
+        let err = result.unwrap_err();
+        assert!(
+            err.is_unauthorized(),
+            "Expected unauthorized error, got: {:?}",
+            err
+        );
     }
 
     #[test]

@@ -30,6 +30,36 @@ pub enum RestError {
 
     #[error("Validation error: {0}")]
     ValidationError(String),
+
+    #[error("Resource not found")]
+    NotFound,
+
+    #[error("Unauthorized")]
+    Unauthorized,
+
+    #[error("Server error: {0}")]
+    ServerError(String),
+}
+
+impl RestError {
+    /// Check if this is a not found error
+    pub fn is_not_found(&self) -> bool {
+        matches!(self, RestError::NotFound)
+            || matches!(self, RestError::ApiError { code, .. } if *code == 404)
+    }
+
+    /// Check if this is an authentication error
+    pub fn is_unauthorized(&self) -> bool {
+        matches!(self, RestError::Unauthorized)
+            || matches!(self, RestError::AuthenticationFailed)
+            || matches!(self, RestError::ApiError { code, .. } if *code == 401)
+    }
+
+    /// Check if this is a server error
+    pub fn is_server_error(&self) -> bool {
+        matches!(self, RestError::ServerError(_))
+            || matches!(self, RestError::ApiError { code, .. } if *code >= 500)
+    }
 }
 
 pub type Result<T> = std::result::Result<T, RestError>;
