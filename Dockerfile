@@ -1,36 +1,28 @@
 # Redis CLI Docker Image
-# Uses pre-built binaries from GitHub releases for faster multi-arch builds
+# Builds from source for reliability and multi-arch support
 
+# Build stage
+FROM rust:1.89-bookworm AS builder
+
+WORKDIR /usr/src/redisctl
+
+# Copy workspace files
+COPY Cargo.toml Cargo.lock ./
+COPY crates ./crates
+
+# Build the release binary
+RUN cargo build --release --bin redisctl
+
+# Runtime stage
 FROM ubuntu:24.04
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
     ca-certificates \
-    curl \
-    xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
-# Set the version to install
-ARG VERSION=0.2.0
-ARG TARGETPLATFORM
-
-# Download the appropriate binary based on platform
-RUN case "$TARGETPLATFORM" in \
-        "linux/amd64") \
-            ARCH="x86_64-unknown-linux-gnu" \
-            ;; \
-        "linux/arm64") \
-            ARCH="aarch64-unknown-linux-gnu" \
-            ;; \
-        *) \
-            echo "Unsupported platform: $TARGETPLATFORM" && exit 1 \
-            ;; \
-    esac && \
-    curl -L "https://github.com/joshrotenberg/redisctl/releases/download/redisctl-v${VERSION}/redisctl-${ARCH}.tar.xz" | \
-    tar -xJ --strip-components=1 -C /tmp && \
-    mv /tmp/redisctl /usr/local/bin/redisctl && \
-    chmod +x /usr/local/bin/redisctl && \
-    rm -rf /tmp/*
+# Copy the binary from builder
+COPY --from=builder /usr/src/redisctl/target/release/redisctl /usr/local/bin/redisctl
 
 # Create non-root user
 RUN useradd -m redis && \
