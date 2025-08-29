@@ -1,6 +1,6 @@
 [package]
 name = "redisctl"
-version = "0.1.1"
+version = "0.2.0"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -15,20 +15,9 @@ readme = "../../README.md"
 name = "redisctl"
 path = "src/main.rs"
 
-# Optional feature-gated binaries for deployment-specific builds
-[[bin]]
-name = "redis-cloud"
-path = "src/cloud_bin.rs"
-required-features = ["cloud-only"]
-
-[[bin]]
-name = "redis-enterprise"
-path = "src/enterprise_bin.rs"
-required-features = ["enterprise-only"]
-
 [dependencies]
-redis-cloud = { version = "0.1.1", path = "../redis-cloud" }
-redis-enterprise = { version = "0.1.1", path = "../redis-enterprise" }
+redis-cloud = { version = "0.1.2", path = "../redis-cloud" }
+redis-enterprise = { version = "0.1.2", path = "../redis-enterprise" }
 
 # CLI dependencies
 clap = { workspace = true }
