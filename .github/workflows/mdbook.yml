@@ -35,21 +35,6 @@ jobs:
         with:
           mdbook-version: 'latest'
 
-      - name: Cache mdbook-lint
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/bin/mdbook-lint
-          key: mdbook-lint-${{ runner.os }}
-
-      - name: Install mdbook-lint
-        run: |
-          command -v mdbook-lint || cargo install mdbook-lint
-
-      - name: Lint book (informational only)
-        run: |
-          cd docs
-          mdbook-lint lint src || echo "Linting completed with warnings"
-        continue-on-error: true
 
       - name: Build book
         run: |
