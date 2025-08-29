@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the version to install
-ARG VERSION=0.2.0
+ARG VERSION=0.1.1
 ARG TARGETPLATFORM
 
 # Download the appropriate binary based on platform
