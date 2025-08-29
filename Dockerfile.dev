@@ -1,0 +1,42 @@
+# Development Docker Image
+# Builds from source for main branch pushes
+
+FROM rust:1.89 AS builder
+
+WORKDIR /build
+
+# Copy workspace files
+COPY Cargo.toml ./
+COPY crates/ ./crates/
+
+# Build release binary
+RUN cargo build --release --bin redisctl
+
+# Runtime stage - Ubuntu for newer GLIBC
+FROM ubuntu:24.04
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy binary from builder
+COPY --from=builder /build/target/release/redisctl /usr/local/bin/redisctl
+
+# Create non-root user
+RUN useradd -m redis && \
+    mkdir -p /home/redis/.config/redisctl && \
+    chown -R redis:redis /home/redis
+
+USER redis
+WORKDIR /home/redis
+
+# Default environment variables
+ENV REDIS_ENTERPRISE_URL=""
+ENV REDIS_ENTERPRISE_USER=""
+ENV REDIS_ENTERPRISE_PASSWORD=""
+ENV REDIS_CLOUD_API_KEY=""
+ENV REDIS_CLOUD_API_SECRET=""
+
+ENTRYPOINT ["redisctl"]
+CMD ["--help"]
