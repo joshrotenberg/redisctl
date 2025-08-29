@@ -10,7 +10,7 @@ dependencies_update = true
 
 # Git configuration
 allow_dirty = false
-git_release_enable = true
+git_release_enable = false  # Let cargo-dist handle GitHub releases to avoid conflicts
 git_tag_enable = true
 
 # PR settings
@@ -22,12 +22,14 @@ publish_allow_dirty = false
 
 [[package]]
 name = "redis-cloud"
+changelog_update = true
 
 [[package]]
 name = "redis-enterprise"
+changelog_update = true
 
 [[package]]
 name = "redisctl"
 # Main CLI, depends on all others
-# This one gets the GitHub release
-release = true
+changelog_update = true
+release = true  # Creates tags for cargo-dist to handle
