@@ -1,0 +1,9 @@
+enabled-categories = []
+disabled-categories = []
+enabled-rules = []
+disabled-rules = []
+deprecated-warning = 'warn'
+markdownlint-compatible = false
+fail-on-warnings = false
+fail-on-errors = true
+malformed-markdown = 'warn'
