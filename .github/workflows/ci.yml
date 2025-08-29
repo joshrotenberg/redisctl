@@ -44,11 +44,8 @@ jobs:
       - name: Run tests
         run: cargo test --workspace --all-features
       
-      - name: Build all binaries
-        run: |
-          cargo build --release --bin redisctl
-          cargo build --release --features cloud-only --bin redis-cloud
-          cargo build --release --features enterprise-only --bin redis-enterprise
+      - name: Build binary
+        run: cargo build --release --bin redisctl
 
   coverage:
     name: Code Coverage

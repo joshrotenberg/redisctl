@@ -48,8 +48,6 @@ default = ["full"]
 full = ["cloud", "enterprise"]
 cloud = []
 enterprise = []
-cloud-only = ["cloud"]
-enterprise-only = ["enterprise"]
 
 [dev-dependencies]
 assert_cmd = "2.0"
