@@ -276,7 +276,9 @@ pub struct ModuleConfig {
 pub struct CreateDatabaseRequest {
     #[builder(setter(into))]
     pub name: String,
-    pub memory_size: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
+    pub memory_size: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(strip_option))]
     pub port: Option<u16>,
@@ -291,10 +293,25 @@ pub struct CreateDatabaseRequest {
     pub eviction_policy: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(strip_option))]
+    pub sharding: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
     pub shards_count: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none", alias = "shard_count")]
+    #[builder(default, setter(strip_option))]
+    pub shard_count: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
+    pub proxy_policy: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
+    pub rack_aware: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(strip_option))]
     pub module_list: Option<Vec<ModuleConfig>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
+    pub crdt: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(into, strip_option))]
     pub authentication_redis_pass: Option<String>,
@@ -318,6 +335,11 @@ impl DatabaseHandler {
     /// Get specific database info (BDB.INFO)
     pub async fn info(&self, uid: u32) -> Result<DatabaseInfo> {
         self.client.get(&format!("/v1/bdbs/{}", uid)).await
+    }
+
+    /// Get specific database info (alias for info)
+    pub async fn get(&self, uid: u32) -> Result<DatabaseInfo> {
+        self.info(uid).await
     }
 
     /// Create a new database (BDB.CREATE)

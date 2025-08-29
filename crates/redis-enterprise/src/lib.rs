@@ -39,6 +39,10 @@
 //! use redis_enterprise::EnterpriseClient;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! // From environment variables
+//! let client = EnterpriseClient::from_env()?;
+//!
+//! // Or using the builder
 //! let client = EnterpriseClient::builder()
 //!     .base_url("https://cluster.example.com:9443")
 //!     .username("admin@example.com")
@@ -214,7 +218,8 @@
 //!
 //! # Error Handling
 //!
-//! The library provides detailed error information for all API operations:
+//! The library provides detailed error information for all API operations with
+//! convenient error variants and helper methods:
 //!
 //! ```no_run
 //! use redis_enterprise::{EnterpriseClient, bdb::DatabaseHandler, RestError};
@@ -222,10 +227,12 @@
 //! # async fn example(client: EnterpriseClient) -> Result<(), Box<dyn std::error::Error>> {
 //! let handler = DatabaseHandler::new(client);
 //!
-//! match handler.info(999).await {
+//! match handler.get(999).await {
 //!     Ok(db) => println!("Found database: {}", db.name),
-//!     Err(RestError::AuthenticationFailed) => println!("Invalid credentials"),
-//!     Err(RestError::ApiError { code, message }) => println!("API error {}: {}", code, message),
+//!     Err(RestError::NotFound) => println!("Database not found"),
+//!     Err(RestError::Unauthorized) => println!("Invalid credentials"),
+//!     Err(RestError::ServerError(msg)) => println!("Server error: {}", msg),
+//!     Err(e) if e.is_not_found() => println!("Not found: {}", e),
 //!     Err(e) => println!("Unexpected error: {}", e),
 //! }
 //! # Ok(())

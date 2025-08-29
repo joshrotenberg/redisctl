@@ -94,7 +94,7 @@ pub async fn handle_database_command(
             let handler = redis_enterprise::BdbHandler::new(client.clone());
             let request = redis_enterprise::CreateDatabaseRequest {
                 name: name.clone(),
-                memory_size: memory_limit.unwrap_or(100) * 1024 * 1024, // Convert MB to bytes
+                memory_size: Some(memory_limit.unwrap_or(100) * 1024 * 1024), // Convert MB to bytes
                 module_list: if modules.is_empty() {
                     None
                 } else {
@@ -112,7 +112,12 @@ pub async fn handle_database_command(
                 replication: None,
                 persistence: None,
                 eviction_policy: None,
+                sharding: None,
                 shards_count: None,
+                shard_count: None,
+                proxy_policy: None,
+                rack_aware: None,
+                crdt: None,
                 authentication_redis_pass: None,
             };
             let database = handler.create(request).await?;
