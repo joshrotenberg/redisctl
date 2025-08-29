@@ -149,13 +149,13 @@
 //! }
 //!
 //! // Create a new user
-//! let request = CreateUserRequest {
-//!     username: "newuser".to_string(),
-//!     password: "secure_password".to_string(),
-//!     role: "db_member".to_string(),
-//!     email: Some("newuser@example.com".to_string()),
-//!     email_alerts: Some(true),
-//! };
+//! let request = CreateUserRequest::builder()
+//!     .email("newuser@example.com")
+//!     .password("secure_password")
+//!     .role("db_member")
+//!     .name("New User")
+//!     .email_alerts(true)
+//!     .build();
 //!
 //! let new_user = handler.create(request).await?;
 //! println!("Created user: {}", new_user.uid);

@@ -30,27 +30,44 @@ pub struct User {
 /// use redis_enterprise::CreateUserRequest;
 ///
 /// let request = CreateUserRequest::builder()
-///     .username("john.doe")
+///     .email("john.doe@example.com")
 ///     .password("secure-password-123")
 ///     .role("db_admin")
-///     .email("john.doe@example.com")
+///     .name("John Doe")
 ///     .email_alerts(true)
 ///     .build();
 /// ```
 #[derive(Debug, Serialize, TypedBuilder)]
 pub struct CreateUserRequest {
+    /// User's email address (required, used as login)
     #[builder(setter(into))]
-    pub username: String,
+    pub email: String,
+    /// User's password (required)
     #[builder(setter(into))]
     pub password: String,
+    /// User's role (required) - for RBAC-enabled clusters, use role_uids instead
     #[builder(setter(into))]
     pub role: String,
+    /// User's full name
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(into, strip_option))]
-    pub email: Option<String>,
+    pub name: Option<String>,
+    /// Whether user should receive email alerts
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(strip_option))]
     pub email_alerts: Option<bool>,
+    /// Database IDs for which the user should receive email alerts
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
+    pub bdbs_email_alerts: Option<Vec<String>>,
+    /// Role IDs for RBAC-enabled clusters
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
+    pub role_uids: Option<Vec<u32>>,
+    /// Authentication method (e.g., "regular")
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
+    pub auth_method: Option<String>,
 }
 
 /// Update user request
@@ -67,18 +84,38 @@ pub struct CreateUserRequest {
 /// ```
 #[derive(Debug, Serialize, TypedBuilder)]
 pub struct UpdateUserRequest {
+    /// New password for the user
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(into, strip_option))]
     pub password: Option<String>,
+    /// Update user's role
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(into, strip_option))]
     pub role: Option<String>,
+    /// Update user's email address
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(into, strip_option))]
     pub email: Option<String>,
+    /// Update user's full name
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
+    pub name: Option<String>,
+    /// Update email alerts preference
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(strip_option))]
     pub email_alerts: Option<bool>,
+    /// Update database IDs for email alerts
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
+    pub bdbs_email_alerts: Option<Vec<String>>,
+    /// Update role IDs for RBAC-enabled clusters
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
+    pub role_uids: Option<Vec<u32>>,
+    /// Update authentication method
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
+    pub auth_method: Option<String>,
 }
 
 /// Role information
@@ -97,6 +134,9 @@ pub struct Role {
 pub struct UserHandler {
     client: RestClient,
 }
+
+/// Alias for backwards compatibility and intuitive plural naming
+pub type UsersHandler = UserHandler;
 
 impl UserHandler {
     pub fn new(client: RestClient) -> Self {

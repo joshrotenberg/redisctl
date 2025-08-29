@@ -36,6 +36,9 @@ pub struct ModuleHandler {
     client: RestClient,
 }
 
+/// Alias for backwards compatibility and intuitive plural naming
+pub type ModulesHandler = ModuleHandler;
+
 impl ModuleHandler {
     pub fn new(client: RestClient) -> Self {
         ModuleHandler { client }

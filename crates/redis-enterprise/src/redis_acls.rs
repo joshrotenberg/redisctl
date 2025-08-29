@@ -36,6 +36,9 @@ pub struct RedisAclHandler {
     client: RestClient,
 }
 
+/// Alias for backwards compatibility and intuitive plural naming
+pub type RedisAclsHandler = RedisAclHandler;
+
 impl RedisAclHandler {
     pub fn new(client: RestClient) -> Self {
         RedisAclHandler { client }
