@@ -42,7 +42,7 @@ on:
   pull_request:
   push:
     tags:
-      - 'redisctl**[0-9]+.[0-9]+.[0-9]+*'
+      - 'redisctl-v*'
 
 jobs:
   # Run 'dist plan' (or host) to determine what tasks we need to do
