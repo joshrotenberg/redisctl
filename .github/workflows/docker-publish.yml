@@ -2,10 +2,10 @@ name: Docker Publish
 
 on:
   push:
-    tags:
-      - 'redisctl-v*'
     branches:
       - main
+  release:
+    types: [published]
   workflow_dispatch:
 
 env:
@@ -46,19 +46,34 @@ jobs:
             type=sha,prefix=sha-
             type=raw,value=latest,enable={{is_default_branch}}
 
+      - name: Set build parameters
+        id: build-params
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            VERSION="${{ github.event.release.tag_name }}"
+            VERSION="${VERSION#redisctl-v}"
+            echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+            echo "DOCKERFILE=./Dockerfile" >> $GITHUB_OUTPUT
+            echo "PLATFORMS=linux/amd64,linux/arm64" >> $GITHUB_OUTPUT
+          else
+            echo "VERSION=dev" >> $GITHUB_OUTPUT
+            echo "DOCKERFILE=./Dockerfile.dev" >> $GITHUB_OUTPUT
+            echo "PLATFORMS=linux/amd64" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.publish
-          platforms: linux/amd64,linux/arm64
+          file: ${{ steps.build-params.outputs.DOCKERFILE }}
+          platforms: ${{ steps.build-params.outputs.PLATFORMS }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            RUST_VERSION=1.89
+            VERSION=${{ steps.build-params.outputs.VERSION }}
 
       - name: Update Docker Hub Description
         uses: peter-evans/dockerhub-description@v4
