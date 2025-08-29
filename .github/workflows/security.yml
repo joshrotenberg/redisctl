@@ -34,7 +34,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a  # stable
         with:
-          toolchain: stable
+          toolchain: 1.89
       
       - name: Cache cargo registry
         uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab  # v2.7.5
@@ -44,40 +44,10 @@ jobs:
       - name: Install cargo-audit
         uses: taiki-e/install-action@v2
         with:
-          tool: cargo-audit@0.20.5
+          tool: cargo-audit@0.21.2
       
       - name: Run security audit
         run: cargo audit --deny warnings
-      
-      - name: Run audit and generate SARIF
-        run: cargo audit --json | python3 -c "
-import sys, json
-sarif = {
-  'version': '2.1.0',
-  'runs': [{
-    'tool': {'driver': {'name': 'cargo-audit', 'informationUri': 'https://rustsec.org/'}},
-    'results': []
-  }]
-}
-try:
-  data = json.load(sys.stdin)
-  for vuln in data.get('vulnerabilities', {}).get('list', []):
-    sarif['runs'][0]['results'].append({
-      'ruleId': vuln['advisory']['id'],
-      'level': 'error' if vuln['advisory'].get('cvss') and float(vuln['advisory']['cvss'].split('/')[0].split(':')[-1]) >= 7 else 'warning',
-      'message': {'text': vuln['advisory']['title']},
-      'locations': [{'physicalLocation': {'artifactLocation': {'uri': 'Cargo.lock'}}}]
-    })
-except: pass
-print(json.dumps(sarif))
-" > audit.sarif || echo '{"version":"2.1.0","runs":[{"tool":{"driver":{"name":"cargo-audit"}},"results":[]}]}' > audit.sarif
-      
-      - name: Upload audit results to GitHub Security
-        if: always()
-        uses: github/codeql-action/upload-sarif@ea9e4e37992a54ee68a9622e985e60c8e8f12d9f2  # v3.27.4
-        with:
-          sarif_file: audit.sarif
-          category: dependency-audit
 
   cargo-deny:
     name: Dependency Check
