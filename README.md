@@ -32,9 +32,20 @@ A unified command-line interface for managing Redis deployments across Cloud and
 ## Installation
 
 ### CLI Tool (Recommended for most users)
+
+#### Install from crates.io
 ```bash
-# Install the CLI tool
+# Install the latest stable release
 cargo install redisctl
+```
+
+#### Install from GitHub releases
+Pre-built binaries are available for multiple platforms on our [releases page](https://github.com/joshrotenberg/redisctl/releases).
+
+#### Docker
+```bash
+# Run using Docker
+docker run --rm joshrotenberg/redisctl:latest --help
 ```
 
 ### Rust Libraries (For developers building custom tools)
@@ -447,12 +458,41 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 - **Both typed and untyped** responses (use `.raw()` methods for `serde_json::Value`)
 - **Extensive documentation** on [docs.rs](https://docs.rs/redis-cloud) and [docs.rs](https://docs.rs/redis-enterprise)
 
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Development Setup
+```bash
+# Clone the repository
+git clone https://github.com/joshrotenberg/redisctl.git
+cd redisctl
+
+# Run tests
+cargo test --workspace
+
+# Run with local development
+cargo run -- --help
+
+# Start local Redis Enterprise for testing
+docker compose up -d
+```
+
+### Release Process
+This project uses automated releases via:
+- **release-plz** - Automated version management and changelog generation
+- **cargo-dist** - Cross-platform binary builds
+- **Conventional Commits** - Semantic versioning from commit messages
+
+For details, see our [Release Process Documentation](docs/RELEASE_PROCESS.md).
+
 ## Support
 
 - **Issues**: [GitHub Issues](https://github.com/joshrotenberg/redisctl/issues)
 - **Documentation**: [docs.rs/redisctl](https://docs.rs/redisctl/)
 - **Examples**: See the [examples/](examples/) directory
 - **Crates.io**: [crates.io/crates/redisctl](https://crates.io/crates/redisctl)
+- **Docker Hub**: [joshrotenberg/redisctl](https://hub.docker.com/r/joshrotenberg/redisctl)
 
 ## License
 
