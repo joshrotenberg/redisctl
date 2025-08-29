@@ -2,6 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use typed_builder::TypedBuilder;
 
 /// Backup information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -17,9 +18,10 @@ pub struct CloudBackup {
 }
 
 /// Create backup request
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, TypedBuilder)]
 pub struct CreateBackupRequest {
     pub database_id: u32,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub description: Option<String>,
 }

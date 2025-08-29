@@ -1,6 +1,7 @@
 use crate::commands::api::ApiCommands;
+use crate::config::DeploymentType;
+use crate::output::OutputFormat;
 use clap::{Parser, Subcommand};
-use redis_common::{DeploymentType, OutputFormat};
 
 #[derive(Parser)]
 #[command(name = "redisctl")]
@@ -67,6 +68,16 @@ pub enum Commands {
     Account {
         #[command(subcommand)]
         command: AccountCommands,
+    },
+    /// Authentication testing and management
+    Auth {
+        #[command(subcommand)]
+        command: AuthCommands,
+    },
+    /// Configuration management
+    Config {
+        #[command(subcommand)]
+        command: ConfigCommands,
     },
 }
 
@@ -1582,5 +1593,38 @@ pub enum BillingCommands {
         /// Alert settings JSON
         #[arg(long)]
         data: String,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum AuthCommands {
+    /// Test authentication credentials
+    Test {
+        /// Profile to test (defaults to current profile)
+        #[arg(long)]
+        profile: Option<String>,
+        /// Test a specific deployment type
+        #[arg(long, value_enum)]
+        deployment: Option<DeploymentType>,
+    },
+    /// Interactive setup wizard for new profiles
+    Setup,
+}
+
+#[derive(Subcommand)]
+pub enum ConfigCommands {
+    /// Show current configuration and active profile
+    Show {
+        /// Show sensitive values (passwords, API keys)
+        #[arg(long)]
+        show_secrets: bool,
+    },
+    /// Show configuration file path
+    Path,
+    /// Validate configuration
+    Validate {
+        /// Profile to validate (defaults to all profiles)
+        #[arg(long)]
+        profile: Option<String>,
     },
 }

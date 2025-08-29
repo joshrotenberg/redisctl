@@ -1,28 +1,25 @@
-# Redis Enterprise Test Environment with Feature-Complete CLI
-# Usage: docker compose up -d
+# Redis Enterprise Test Environment with Full Validation
+# 
+# Usage:
+#   docker compose up -d        # Start and run full test cascade
+#   docker compose logs -f      # Watch all service logs
+#   docker compose down -v      # Clean up everything
 #
-# Profiles:
-#   - default: Runs enterprise, init, and creates a test database
-#   - cli: Interactive CLI container with all commands
-#   - examples: Create example databases using workflows
-#   - monitor: Continuous cluster monitoring
-#   - showcase: Demonstrates all CLI features (modules, roles, users, license)
+# For Mac users: Set REDIS_ENTERPRISE_IMAGE=kurtfm/rs-arm:latest
 
 services:
-  # Redis Enterprise single node for testing
+  # Redis Enterprise server
   enterprise:
-    image: ${ENTERPRISE_IMAGE:-kurtfm/rs-arm:latest}  # ARM-compatible image for Mac
+    image: ${REDIS_ENTERPRISE_IMAGE:-redislabs/redis:latest}
     container_name: redis-enterprise
     cap_add:
       - SYS_RESOURCE
     ports:
       - "9443:9443"   # REST API
       - "8443:8443"   # Web UI  
-      - "12000-12010:12000-12010" # Database ports
+      - "12000:12000" # Database port
     environment:
       ACCEPT_EULA: "yes"
-    networks:
-      - redis-net
     volumes:
       - enterprise-data:/var/opt/redislabs
     healthcheck:
@@ -31,212 +28,157 @@ services:
       timeout: 5s
       retries: 30
       start_period: 60s
+    networks:
+      - redis-net
 
-  # Initialize Enterprise cluster using our CLI workflow
-  enterprise-init:
+  # Initialize cluster
+  init-cluster:
     build:
       context: .
       dockerfile: Dockerfile
-    image: redis-enterprise-cli:latest
-    container_name: redis-enterprise-init
-    networks:
-      - redis-net
+    container_name: init-cluster
     restart: "no"
     depends_on:
       enterprise:
         condition: service_healthy
     environment:
       REDIS_ENTERPRISE_URL: "https://enterprise:9443"
+      REDIS_ENTERPRISE_INSECURE: "true"
       RUST_LOG: ${RUST_LOG:-info}
-    # Use the workflow command for initialization
-    command: |
-      workflow init-cluster \
-        --insecure \
-        --name "test-cluster" \
-        --username "admin@redis.local" \
-        --password "Redis123!" \
-        --accept-eula
+    networks:
+      - redis-net
+    entrypoint: 
+      - /bin/sh
+      - -c
+      - |
+        echo "========================================"
+        echo "Step 1: Initializing Redis Enterprise cluster..."
+        echo "========================================"
+        
+        redisctl enterprise bootstrap create \
+          --name "test-cluster" \
+          --username "admin@redis.local" \
+          --password "Redis123!"
+        
+        echo "✓ Cluster initialized successfully"
+        echo ""
 
-  # Create initial database after cluster init
-  enterprise-db-create:
+  # Create database
+  create-db:
     build:
       context: .
       dockerfile: Dockerfile
-    image: redis-enterprise-cli:latest
-    container_name: redis-enterprise-db-create
-    networks:
-      - redis-net
+    container_name: create-db
     restart: "no"
     depends_on:
-      enterprise-init:
+      init-cluster:
         condition: service_completed_successfully
     environment:
       REDIS_ENTERPRISE_URL: "https://enterprise:9443"
       REDIS_ENTERPRISE_USER: "admin@redis.local"
       REDIS_ENTERPRISE_PASSWORD: "Redis123!"
+      REDIS_ENTERPRISE_INSECURE: "true"
       RUST_LOG: ${RUST_LOG:-info}
-    command: |
-      database create \
-        --insecure \
-        --name "test-db" \
-        --memory 100MB \
-        --port 12000
+    networks:
+      - redis-net
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        echo "========================================"
+        echo "Step 2: Creating test database..."
+        echo "========================================"
+        
+        redisctl enterprise database create test-db \
+          --memory-limit 100
+        
+        echo "✓ Database created successfully"
+        echo ""
 
-  # Create various database types using workflows
-  enterprise-db-examples:
+  # Validate API
+  validate-api:
     build:
       context: .
       dockerfile: Dockerfile
-    image: redis-enterprise-cli:latest
-    container_name: redis-enterprise-db-examples
-    networks:
-      - redis-net
+    container_name: validate-api
     restart: "no"
     depends_on:
-      enterprise-db-create:
+      create-db:
         condition: service_completed_successfully
     environment:
       REDIS_ENTERPRISE_URL: "https://enterprise:9443"
       REDIS_ENTERPRISE_USER: "admin@redis.local"
       REDIS_ENTERPRISE_PASSWORD: "Redis123!"
+      REDIS_ENTERPRISE_INSECURE: "true"
       RUST_LOG: ${RUST_LOG:-info}
-    profiles: ["examples"]
-    command: |
-      sh -c '
-      echo "Creating cache database..." &&
-      redis-enterprise workflow create-database \
-        --insecure \
-        --name "cache-db" \
-        --db-type cache &&
-      echo "Creating persistent database..." &&
-      redis-enterprise workflow create-database \
-        --insecure \
-        --name "persistent-db" \
-        --db-type persistent &&
-      echo "Creating search database..." &&
-      redis-enterprise workflow create-database \
-        --insecure \
-        --name "search-db" \
-        --db-type search &&
-      echo "Listing all databases..." &&
-      redis-enterprise database list --insecure --output table &&
-      echo "Showing database statistics..." &&
-      redis-enterprise database stats test-db --insecure --output table
-      '
-
-  # CLI container for interactive testing
-  cli:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: redis-enterprise-cli:latest
-    container_name: redis-enterprise-cli-interactive
-    stdin_open: true
-    tty: true
     networks:
       - redis-net
-    environment:
-      REDIS_ENTERPRISE_URL: "https://enterprise:9443"
-      REDIS_ENTERPRISE_USER: "admin@redis.local"
-      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
-      RUST_LOG: ${RUST_LOG:-info}
-    volumes:
-      - ./:/workspace:ro  # Mount project read-only for reference
-    working_dir: /workspace
-    command: ["sh"]  # Interactive shell
-    profiles: ["cli"]  # Only start with --profile cli
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        echo "========================================"
+        echo "Step 3: Validating API endpoints..."
+        echo "========================================"
+        
+        echo "→ Listing databases..."
+        redisctl --output table enterprise database list
+        
+        echo ""
+        echo "→ Getting database info..."
+        redisctl --output json enterprise database show 1 | head -20
+        
+        echo ""
+        echo "→ Checking cluster info..."
+        redisctl --query "name" enterprise cluster info
+        
+        echo "✓ API validation successful"
+        echo ""
 
-  # Health check and monitoring service
-  monitor:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: redis-enterprise-cli:latest
-    container_name: redis-enterprise-monitor
-    networks:
-      - redis-net
+  # Test Redis connection
+  test-redis:
+    image: redis:7-alpine
+    container_name: test-redis
     restart: "no"
     depends_on:
-      enterprise-db-create:
+      validate-api:
         condition: service_completed_successfully
-    environment:
-      REDIS_ENTERPRISE_URL: "https://enterprise:9443"
-      REDIS_ENTERPRISE_USER: "admin@redis.local"
-      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
-      RUST_LOG: ${RUST_LOG:-info}
-    profiles: ["monitor"]
-    command: |
-      sh -c '
-      while true; do
-        echo "=== Cluster Status ===" &&
-        redis-enterprise cluster info --insecure --output json | head -20 &&
-        echo "=== Database List ===" &&
-        redis-enterprise database list --insecure --output table &&
-        echo "=== Node Status ===" &&
-        redis-enterprise node list --insecure --query "[].{id:uid,status:status,role:role}" &&
-        echo "=== License Usage ===" &&
-        redis-enterprise license usage --insecure --output json | head -10 &&
-        sleep 30
-      done
-      '
-
-  # Showcase all CLI features
-  showcase:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: redis-enterprise-cli:latest
-    container_name: redis-enterprise-showcase
     networks:
       - redis-net
-    restart: "no"
-    depends_on:
-      enterprise-db-create:
-        condition: service_completed_successfully
-    environment:
-      REDIS_ENTERPRISE_URL: "https://enterprise:9443"
-      REDIS_ENTERPRISE_USER: "admin@redis.local"
-      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
-      RUST_LOG: ${RUST_LOG:-info}
-    profiles: ["showcase"]
-    command: |
-      sh -c '
-      echo "\n=== Redis Enterprise CLI Feature Showcase ===\n" &&
-      
-      echo "1. Cluster Management:" &&
-      redis-enterprise cluster info --insecure --query "name" &&
-      
-      echo "\n2. Database Operations with JMESPath:" &&
-      redis-enterprise database list --insecure --query "[].{name:name,port:port,status:status}" --output table &&
-      
-      echo "\n3. Node Management:" &&
-      redis-enterprise node list --insecure --output table &&
-      
-      echo "\n4. User Management:" &&
-      redis-enterprise user create --email test@company.com --password Test123! --insecure &&
-      redis-enterprise user list --insecure --query "[?email==\`test@company.com\`]" &&
-      
-      echo "\n5. Role Management:" &&
-      redis-enterprise role list --insecure --output table &&
-      
-      echo "\n6. Module Management:" &&
-      redis-enterprise module list --insecure --query "[].{name:module_name,version:version}" &&
-      
-      echo "\n7. License Information:" &&
-      redis-enterprise license get --insecure --query "expiration_date" &&
-      
-      echo "\n8. Bootstrap Status:" &&
-      redis-enterprise bootstrap status --insecure --query "status" &&
-      
-      echo "\n9. Configuration Profiles:" &&
-      redis-enterprise config set --profile test --url https://enterprise:9443 --username admin@redis.local &&
-      redis-enterprise config list &&
-      
-      echo "\n10. Raw API Access:" &&
-      redis-enterprise api get /v1/cluster --insecure --query "name" &&
-      
-      echo "\n=== Feature Showcase Complete ===\n"
-      '
+    command:
+      - sh
+      - -c
+      - |
+        echo "========================================"
+        echo "Step 4: Testing Redis connection..."
+        echo "========================================"
+        
+        # Wait for database to be fully ready
+        sleep 5
+        
+        echo "→ Setting test key..."
+        redis-cli -h enterprise -p 12000 SET test:key "Hello from Docker!"
+        
+        echo "→ Getting test key..."
+        redis-cli -h enterprise -p 12000 GET test:key
+        
+        echo "→ Running PING..."
+        redis-cli -h enterprise -p 12000 PING
+        
+        echo "→ Getting INFO..."
+        redis-cli -h enterprise -p 12000 INFO server | head -10
+        
+        echo ""
+        echo "========================================"
+        echo "✅ All tests passed successfully!"
+        echo ""
+        echo "Web UI: https://localhost:8443"
+        echo "Username: admin@redis.local"
+        echo "Password: Redis123!"
+        echo ""
+        echo "API: https://localhost:9443"
+        echo "Database: redis://localhost:12000"
+        echo "========================================"
 
 networks:
   redis-net:

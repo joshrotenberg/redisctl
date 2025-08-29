@@ -1,10 +1,13 @@
+use crate::config::Config;
 use anyhow::Result;
 use clap::Parser;
-use redis_common::Config;
 use tracing::info;
 
 mod cli;
 mod commands;
+mod config;
+mod error;
+mod output;
 mod router;
 
 use cli::Cli;

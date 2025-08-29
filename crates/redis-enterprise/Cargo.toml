@@ -1,6 +1,6 @@
 [package]
 name = "redis-enterprise"
-version = "0.1.0"
+version = "0.2.0"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -10,7 +10,7 @@ documentation.workspace = true
 description = "Redis Enterprise REST API client library"
 keywords = ["redis", "enterprise", "api", "rest", "client"]
 categories = ["api-bindings", "database"]
-readme = "README.md"
+readme = "../../README.md"
 
 [dependencies]
 async-trait = { workspace = true }
@@ -25,6 +25,7 @@ anyhow = { workspace = true }
 base64 = { workspace = true }
 chrono = { workspace = true }
 url = { workspace = true }
+typed-builder = "0.20"
 
 [dev-dependencies]
 wiremock = { workspace = true }

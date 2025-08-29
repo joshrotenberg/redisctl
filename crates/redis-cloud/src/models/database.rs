@@ -5,6 +5,7 @@
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use typed_builder::TypedBuilder;
 
 /// Represents a Redis Cloud database instance
 ///
@@ -92,46 +93,71 @@ pub struct ThroughputMeasurement {
 ///
 /// ```rust,no_run
 /// use redis_cloud::CreateDatabaseRequest;
-/// use serde_json::json;
 ///
-/// let request = json!({
-///     "name": "production-cache",
-///     "memory_limit_in_gb": 5.0,
-///     "data_persistence": "aof-every-1-sec",
-///     "replication": true,
-///     "password": "secure-password-123",
-///     "support_oss_cluster_api": false
-/// });
+/// let request = CreateDatabaseRequest::builder()
+///     .name("production-cache")
+///     .memory_limit_in_gb(5.0)
+///     .data_persistence("aof-every-1-sec")
+///     .replication(true)
+///     .password("secure-password-123")
+///     .support_oss_cluster_api(false)
+///     .build();
 /// ```
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, TypedBuilder)]
 pub struct CreateDatabaseRequest {
+    #[builder(setter(into))]
     pub name: String,
     pub memory_limit_in_gb: f64,
+    #[builder(setter(into))]
     pub data_persistence: String,
+    #[builder(default)]
     pub replication: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub data_eviction: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub password: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
     pub support_oss_cluster_api: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
     pub use_external_endpoint_for_oss_cluster_api: Option<bool>,
 }
 
 /// Update database request
-#[derive(Debug, Serialize)]
+///
+/// All fields are optional - only provide the fields you want to update.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use redis_cloud::UpdateDatabaseRequest;
+///
+/// let request = UpdateDatabaseRequest::builder()
+///     .memory_limit_in_gb(10.0)
+///     .replication(true)
+///     .build();
+/// ```
+#[derive(Debug, Serialize, TypedBuilder)]
 pub struct UpdateDatabaseRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
     pub memory_limit_in_gb: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub data_persistence: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
     pub replication: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub data_eviction: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub password: Option<String>,
 }

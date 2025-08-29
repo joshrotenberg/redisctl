@@ -7,7 +7,7 @@
 //!
 //! ## Creating a Client
 //!
-//! ```ignore
+//! ```no_run
 //! use redis_enterprise::EnterpriseClient;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -23,8 +23,8 @@
 //!
 //! ## Working with Databases
 //!
-//! ```ignore
-//! use redis_enterprise::{EnterpriseClient, BdbHandler, CreateDatabaseRequestBuilder};
+//! ```no_run
+//! use redis_enterprise::{EnterpriseClient, BdbHandler, CreateDatabaseRequest};
 //!
 //! # async fn example(client: EnterpriseClient) -> Result<(), Box<dyn std::error::Error>> {
 //! // List all databases
@@ -35,7 +35,8 @@
 //! }
 //!
 //! // Create a new database
-//! let request = CreateDatabaseRequestBuilder::new("my-database")
+//! let request = CreateDatabaseRequest::builder()
+//!     .name("my-database")
 //!     .memory_size(1024 * 1024 * 1024) // 1GB
 //!     .port(12000)
 //!     .replication(false)
@@ -46,7 +47,7 @@
 //! println!("Created database: {}", new_db.uid);
 //!
 //! // Get database stats
-//! let stats = handler.get_stats(new_db.uid).await?;
+//! let stats = handler.stats(new_db.uid).await?;
 //! println!("Ops/sec: {:?}", stats);
 //! # Ok(())
 //! # }
@@ -54,7 +55,7 @@
 //!
 //! ## Managing Nodes
 //!
-//! ```ignore
+//! ```no_run
 //! use redis_enterprise::{EnterpriseClient, NodeHandler};
 //!
 //! # async fn example(client: EnterpriseClient) -> Result<(), Box<dyn std::error::Error>> {
@@ -63,16 +64,15 @@
 //! // List all nodes in the cluster
 //! let nodes = handler.list().await?;
 //! for node in nodes {
-//!     println!("Node {}: {} ({})", node.uid, node.addr, node.status);
+//!     println!("Node {}: {:?} ({})", node.uid, node.addr, node.status);
 //! }
 //!
 //! // Get detailed node information
 //! let node_info = handler.get(1).await?;
-//! println!("Node memory: {} / {} bytes",
-//!     node_info.total_memory, node_info.free_memory);
+//! println!("Node memory: {:?} bytes", node_info.total_memory);
 //!
 //! // Check node stats
-//! let stats = handler.get_stats(1).await?;
+//! let stats = handler.stats(1).await?;
 //! println!("CPU usage: {:?}", stats);
 //! # Ok(())
 //! # }
@@ -80,23 +80,23 @@
 //!
 //! ## Cluster Operations
 //!
-//! ```ignore
+//! ```no_run
 //! use redis_enterprise::{EnterpriseClient, ClusterHandler};
 //!
 //! # async fn example(client: EnterpriseClient) -> Result<(), Box<dyn std::error::Error>> {
 //! let handler = ClusterHandler::new(client);
 //!
 //! // Get cluster information
-//! let cluster_info = handler.get().await?;
+//! let cluster_info = handler.info().await?;
 //! println!("Cluster name: {}", cluster_info.name);
-//! println!("Nodes: {}", cluster_info.nodes.len());
+//! println!("Nodes: {:?}", cluster_info.nodes);
 //!
 //! // Get cluster statistics
-//! let stats = handler.get_stats().await?;
+//! let stats = handler.stats().await?;
 //! println!("Total memory: {:?}", stats);
 //!
 //! // Check license status
-//! let license = handler.get_license().await?;
+//! let license = handler.license().await?;
 //! println!("License expires: {:?}", license);
 //! # Ok(())
 //! # }
@@ -104,7 +104,7 @@
 //!
 //! ## User Management
 //!
-//! ```ignore
+//! ```no_run
 //! use redis_enterprise::{EnterpriseClient, UserHandler, CreateUserRequest};
 //!
 //! # async fn example(client: EnterpriseClient) -> Result<(), Box<dyn std::error::Error>> {
@@ -133,7 +133,7 @@
 //!
 //! ## Monitoring and Alerts
 //!
-//! ```ignore
+//! ```no_run
 //! use redis_enterprise::{EnterpriseClient, AlertHandler, StatsHandler};
 //!
 //! # async fn example(client: EnterpriseClient) -> Result<(), Box<dyn std::error::Error>> {
@@ -141,12 +141,12 @@
 //! let alert_handler = AlertHandler::new(client.clone());
 //! let alerts = alert_handler.list().await?;
 //! for alert in alerts {
-//!     println!("Alert: {} - {}", alert.alert_type, alert.message);
+//!     println!("Alert: {} - {}", alert.name, alert.severity);
 //! }
 //!
 //! // Get cluster statistics
 //! let stats_handler = StatsHandler::new(client);
-//! let cluster_stats = stats_handler.cluster_stats(None).await?;
+//! let cluster_stats = stats_handler.cluster(None).await?;
 //! println!("Cluster stats: {:?}", cluster_stats);
 //! # Ok(())
 //! # }
@@ -154,7 +154,7 @@
 //!
 //! ## Active-Active Databases (CRDB)
 //!
-//! ```ignore
+//! ```no_run
 //! use redis_enterprise::{EnterpriseClient, CrdbHandler, CreateCrdbRequest};
 //!
 //! # async fn example(client: EnterpriseClient) -> Result<(), Box<dyn std::error::Error>> {
@@ -173,6 +173,9 @@
 //!     instances: vec![
 //!         // Define instances for each participating cluster
 //!     ],
+//!     encryption: Some(false),
+//!     data_persistence: Some("aof".to_string()),
+//!     eviction_policy: Some("allkeys-lru".to_string()),
 //! };
 //!
 //! let new_crdb = handler.create(request).await?;

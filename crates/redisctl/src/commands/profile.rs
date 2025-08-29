@@ -1,7 +1,6 @@
+use crate::config::{Config, DeploymentType, Profile, ProfileCredentials};
+use crate::output::{OutputFormat, print_output};
 use anyhow::Result;
-use redis_common::{
-    Config, DeploymentType, OutputFormat, Profile, ProfileCredentials, print_output,
-};
 
 use crate::cli::ProfileCommands;
 
@@ -21,7 +20,7 @@ pub async fn handle_profile_command(
                     serde_json::json!({
                         "name": name,
                         "deployment_type": profile.deployment_type,
-                        "is_default": config.default.as_ref() == Some(name)
+                        "is_default": config.default_profile.as_ref() == Some(name)
                     })
                 })
                 .collect();
@@ -31,7 +30,7 @@ pub async fn handle_profile_command(
             let env_profile = std::env::var("REDISCTL_PROFILE").ok();
             let profile_name = name
                 .as_deref()
-                .or(config.default.as_deref())
+                .or(config.default_profile.as_deref())
                 .or(env_profile.as_deref())
                 .ok_or_else(|| {
                     anyhow::anyhow!("No profile specified and no default profile set")
@@ -63,7 +62,7 @@ pub async fn handle_profile_command(
                         })
                     }
                 },
-                "is_default": config.default.as_deref() == Some(profile_name)
+                "is_default": config.default_profile.as_deref() == Some(profile_name)
             });
 
             print_output(profile_info, output_format, None)?;
@@ -122,8 +121,8 @@ pub async fn handle_profile_command(
         ProfileCommands::Remove { name } => {
             if config.remove_profile(&name).is_some() {
                 // If we're removing the default profile, clear the default
-                if config.default.as_ref() == Some(&name) {
-                    config.default = None;
+                if config.default_profile.as_ref() == Some(&name) {
+                    config.default_profile = None;
                 }
                 config.save()?;
                 println!("Profile '{}' removed successfully", name);
@@ -133,7 +132,7 @@ pub async fn handle_profile_command(
         }
         ProfileCommands::Default { name } => {
             if config.profiles.contains_key(&name) {
-                config.default = Some(name.clone());
+                config.default_profile = Some(name.clone());
                 config.save()?;
                 println!("Default profile set to '{}'", name);
             } else {

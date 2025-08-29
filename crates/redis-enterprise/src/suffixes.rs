@@ -4,6 +4,7 @@ use crate::client::RestClient;
 use crate::error::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use typed_builder::TypedBuilder;
 
 /// DNS suffix configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -21,13 +22,17 @@ pub struct Suffix {
 }
 
 /// Create suffix request
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
 pub struct CreateSuffixRequest {
+    #[builder(setter(into))]
     pub name: String,
+    #[builder(setter(into))]
     pub dns_suffix: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
     pub use_internal_addr: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
     pub use_external_addr: Option<bool>,
 }
 

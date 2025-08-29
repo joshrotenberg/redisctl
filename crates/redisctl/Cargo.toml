@@ -1,6 +1,6 @@
 [package]
 name = "redisctl"
-version = "0.1.0"
+version = "0.2.0"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -9,26 +9,15 @@ homepage.workspace = true
 description = "Unified CLI for Redis Cloud and Enterprise"
 keywords = ["redis", "cli", "cloud", "enterprise", "database"]
 categories = ["command-line-utilities", "api-bindings"]
+readme = "../../README.md"
 
 [[bin]]
 name = "redisctl"
 path = "src/main.rs"
 
-# Optional feature-gated binaries for deployment-specific builds
-[[bin]]
-name = "redis-cloud"
-path = "src/cloud_bin.rs"
-required-features = ["cloud-only"]
-
-[[bin]]
-name = "redis-enterprise"
-path = "src/enterprise_bin.rs"
-required-features = ["enterprise-only"]
-
 [dependencies]
-redis-common = { version = "0.1.0", path = "../redis-common" }
-redis-cloud = { version = "0.1.0", path = "../redis-cloud" }
-redis-enterprise = { version = "0.1.0", path = "../redis-enterprise" }
+redis-cloud = { version = "0.1.2", path = "../redis-cloud" }
+redis-enterprise = { version = "0.2.0", path = "../redis-enterprise" }
 
 # CLI dependencies
 clap = { workspace = true }
@@ -41,6 +30,17 @@ serde_json = { workspace = true }
 chrono = "0.4"
 rpassword = { workspace = true }
 urlencoding = "2.1"
+dialoguer = "0.11"
+colored = "2.1"
+
+# Shared utility dependencies
+thiserror = { workspace = true }
+serde_yaml = { workspace = true }
+comfy-table = { workspace = true }
+jmespath = { workspace = true }
+config = { workspace = true }
+toml = { workspace = true }
+directories = { workspace = true }
 
 # Conditional dependencies for feature-gated binaries
 [features]
@@ -48,8 +48,6 @@ default = ["full"]
 full = ["cloud", "enterprise"]
 cloud = []
 enterprise = []
-cloud-only = ["cloud"]
-enterprise-only = ["enterprise"]
 
 [dev-dependencies]
 assert_cmd = "2.0"
@@ -57,3 +55,8 @@ predicates = "3.0"
 tempfile = "3.8"
 docker-wrapper = { version = "0.8.1", features = ["template-redis-enterprise", "templates"] }
 wiremock = { workspace = true }
+criterion = "0.5"
+
+[[bench]]
+name = "api_performance"
+harness = false

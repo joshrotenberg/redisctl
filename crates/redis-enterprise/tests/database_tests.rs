@@ -1,5 +1,6 @@
 //! Database (BDB) endpoint tests for Redis Enterprise
 
+use redis_enterprise::bdb::CreateDatabaseRequest;
 use redis_enterprise::{BdbHandler, EnterpriseClient};
 use serde_json::json;
 use wiremock::matchers::{basic_auth, method, path};
@@ -111,9 +112,12 @@ async fn test_database_create() {
         .unwrap();
 
     let handler = BdbHandler::new(client);
-    let request = handler
-        .create_with_builder(|b| b.name("test-db").memory_size(1073741824).port(12000))
-        .await;
+    let request_data = CreateDatabaseRequest::builder()
+        .name("test-db")
+        .memory_size(1073741824)
+        .port(12000)
+        .build();
+    let request = handler.create(request_data).await;
 
     assert!(request.is_ok());
     let db = request.unwrap();

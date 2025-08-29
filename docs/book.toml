@@ -2,15 +2,19 @@
 authors = ["Josh Rotenberg"]
 language = "en"
 src = "src"
-title = "Redis Enterprise API Documentation"
+title = "redisctl Documentation"
 
 [output.html]
 default-theme = "light"
 preferred-dark-theme = "ayu"
-git-repository-url = "https://github.com/joshrotenberg/redis-enterprise-rs"
+git-repository-url = "https://github.com/joshrotenberg/redisctl"
 git-repository-icon = "fa-github"
-edit-url-template = "https://github.com/joshrotenberg/redis-enterprise-rs/edit/main/docs/{path}"
+edit-url-template = "https://github.com/joshrotenberg/redisctl/edit/main/docs/{path}"
 
 [output.html.fold]
 enable = true
 level = 1
+
+[preprocessor.lint]
+command = "mdbook-lint"
+renderer = ["html"]

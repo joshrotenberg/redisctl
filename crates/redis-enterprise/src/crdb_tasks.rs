@@ -4,6 +4,7 @@ use crate::client::RestClient;
 use crate::error::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use typed_builder::TypedBuilder;
 
 /// CRDB task information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -26,11 +27,14 @@ pub struct CrdbTask {
 }
 
 /// CRDB task creation request
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
 pub struct CreateCrdbTaskRequest {
+    #[builder(setter(into))]
     pub crdb_guid: String,
+    #[builder(setter(into))]
     pub task_type: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
     pub params: Option<Value>,
 }
 

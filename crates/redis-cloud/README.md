@@ -23,31 +23,50 @@ A comprehensive Rust client library for the Redis Cloud REST API.
 redis-cloud = "0.1.0"
 ```
 
-## Usage
+## Quick Start
 
 ```rust
-use redis_cloud::{CloudClient, CloudClientConfig};
+use redis_cloud::CloudClient;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let config = CloudClientConfig {
-        api_key: "your-api-key".to_string(),
-        secret_key: "your-secret-key".to_string(),
-        base_url: None, // Uses default https://api.redislabs.com/v1
-    };
-
-    let client = CloudClient::new(config)?;
-    
-    // List all subscriptions
-    let subscriptions = client.list_subscriptions(None).await?;
-    println!("Subscriptions: {:?}", subscriptions);
+    // Create client using builder pattern
+    let client = CloudClient::builder()
+        .api_key("your-api-key")
+        .api_secret("your-api-secret")
+        .build()?;
     
     // Get account information
-    let account = client.get_account().await?;
+    let account = client.account().get().await?;
     println!("Account: {:?}", account);
+    
+    // List all subscriptions
+    let subscriptions = client.subscription().list().await?;
+    println!("Subscriptions: {:?}", subscriptions);
+    
+    // List databases in a subscription
+    let databases = client.database().list("subscription-id").await?;
+    println!("Databases: {:?}", databases);
     
     Ok(())
 }
+```
+
+## Examples
+
+The `examples/` directory contains runnable examples demonstrating common use cases:
+
+- [`basic.rs`](examples/basic.rs) - Getting started with the API client
+- [`database_management.rs`](examples/database_management.rs) - Managing databases
+
+Run examples with:
+```bash
+# Set your API credentials
+export REDIS_CLOUD_API_KEY="your-api-key"
+export REDIS_CLOUD_API_SECRET="your-api-secret"
+
+# Run an example
+cargo run --example basic
 ```
 
 ## API Coverage

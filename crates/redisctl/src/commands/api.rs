@@ -2,10 +2,10 @@
 
 #![allow(dead_code)]
 
+use crate::output::{OutputFormat, print_output};
 use anyhow::{Context, Result};
 use clap::Subcommand;
 use redis_cloud::CloudClient;
-use redis_common::{OutputFormat, print_output};
 use redis_enterprise::EnterpriseClient;
 use serde_json::Value;
 use std::fs;

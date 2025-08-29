@@ -4,6 +4,7 @@ use crate::client::RestClient;
 use crate::error::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use typed_builder::TypedBuilder;
 
 /// CRDB (Active-Active Database) information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -36,28 +37,63 @@ pub struct CrdbInstance {
 }
 
 /// Create CRDB request
-#[derive(Debug, Serialize)]
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use redis_enterprise::{CreateCrdbRequest, CreateCrdbInstance};
+///
+/// let request = CreateCrdbRequest::builder()
+///     .name("global-cache")
+///     .memory_size(1024 * 1024 * 1024) // 1GB
+///     .instances(vec![
+///         CreateCrdbInstance::builder()
+///             .cluster("cluster1.example.com")
+///             .cluster_url("https://cluster1.example.com:9443")
+///             .username("admin")
+///             .password("password")
+///             .build(),
+///         CreateCrdbInstance::builder()
+///             .cluster("cluster2.example.com")
+///             .cluster_url("https://cluster2.example.com:9443")
+///             .username("admin")
+///             .password("password")
+///             .build()
+///     ])
+///     .encryption(true)
+///     .data_persistence("aof")
+///     .build();
+/// ```
+#[derive(Debug, Serialize, TypedBuilder)]
 pub struct CreateCrdbRequest {
+    #[builder(setter(into))]
     pub name: String,
     pub memory_size: u64,
     pub instances: Vec<CreateCrdbInstance>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
     pub encryption: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub data_persistence: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub eviction_policy: Option<String>,
 }
 
 /// Create CRDB instance
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, TypedBuilder)]
 pub struct CreateCrdbInstance {
+    #[builder(setter(into))]
     pub cluster: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub cluster_url: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub username: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub password: Option<String>,
 }
 

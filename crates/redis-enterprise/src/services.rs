@@ -4,6 +4,7 @@ use crate::client::RestClient;
 use crate::error::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use typed_builder::TypedBuilder;
 
 /// Service configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -24,12 +25,14 @@ pub struct Service {
 }
 
 /// Service configuration request
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
 pub struct ServiceConfigRequest {
     pub enabled: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
     pub config: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
     pub node_uids: Option<Vec<u32>>,
 }
 

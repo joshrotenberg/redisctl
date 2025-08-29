@@ -4,6 +4,7 @@ use crate::client::RestClient;
 use crate::error::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use typed_builder::TypedBuilder;
 
 /// LDAP mapping information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -22,14 +23,19 @@ pub struct LdapMapping {
 }
 
 /// Create or update LDAP mapping request
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, TypedBuilder)]
 pub struct CreateLdapMappingRequest {
+    #[builder(setter(into))]
     pub name: String,
+    #[builder(setter(into))]
     pub dn: String,
+    #[builder(setter(into))]
     pub role: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub email: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
     pub role_uids: Option<Vec<u32>>,
 }
 
