@@ -113,6 +113,9 @@ pub struct NodeHandler {
     client: RestClient,
 }
 
+/// Alias for backwards compatibility and intuitive plural naming
+pub type NodesHandler = NodeHandler;
+
 impl NodeHandler {
     pub fn new(client: RestClient) -> Self {
         NodeHandler { client }

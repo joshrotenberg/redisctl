@@ -192,6 +192,9 @@ pub struct AlertHandler {
     client: RestClient,
 }
 
+/// Alias for backwards compatibility and intuitive plural naming
+pub type AlertsHandler = AlertHandler;
+
 impl AlertHandler {
     pub fn new(client: RestClient) -> Self {
         AlertHandler { client }

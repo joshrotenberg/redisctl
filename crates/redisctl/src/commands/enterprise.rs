@@ -339,13 +339,12 @@ pub async fn handle_user_command(
             roles,
         } => {
             let handler = redis_enterprise::UserHandler::new(client.clone());
-            let request = redis_enterprise::CreateUserRequest {
-                username: name.clone(),
-                password: password.unwrap_or_else(|| "default_password".to_string()),
-                role: roles.first().unwrap_or(&"db_viewer".to_string()).clone(),
-                email,
-                email_alerts: None,
-            };
+            let request = redis_enterprise::CreateUserRequest::builder()
+                .email(email.unwrap_or_else(|| format!("{}@redis.local", name)))
+                .password(password.unwrap_or_else(|| "default_password".to_string()))
+                .role(roles.first().unwrap_or(&"db_viewer".to_string()).clone())
+                .name(name.clone())
+                .build();
             let user = handler.create(request).await?;
             let value = serde_json::to_value(user)?;
             print_output(value, output_format, query)?;
@@ -359,8 +358,12 @@ pub async fn handle_user_command(
             let request = redis_enterprise::UpdateUserRequest {
                 email,
                 password,
+                name: None,
                 role: None,
                 email_alerts: None,
+                bdbs_email_alerts: None,
+                role_uids: None,
+                auth_method: None,
             };
             let user = handler.update(id.parse()?, request).await?;
             let value = serde_json::to_value(user)?;

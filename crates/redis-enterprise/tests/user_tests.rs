@@ -109,13 +109,11 @@ async fn test_user_create() {
         .unwrap();
 
     let handler = UserHandler::new(client);
-    let user_data = CreateUserRequest {
-        username: "test-user".to_string(),
-        email: Some("test@example.com".to_string()),
-        password: "secret123".to_string(),
-        role: "admin".to_string(),
-        email_alerts: None,
-    };
+    let user_data = CreateUserRequest::builder()
+        .email("test@example.com")
+        .password("secret123")
+        .role("admin")
+        .build();
     let result = handler.create(user_data).await;
 
     assert!(result.is_ok());
@@ -143,12 +141,9 @@ async fn test_user_update() {
         .unwrap();
 
     let handler = UserHandler::new(client);
-    let user_data = UpdateUserRequest {
-        password: None,
-        role: None,
-        email: Some("updated@example.com".to_string()),
-        email_alerts: None,
-    };
+    let user_data = UpdateUserRequest::builder()
+        .email("updated@example.com")
+        .build();
     let result = handler.update(1, user_data).await;
 
     assert!(result.is_ok());
