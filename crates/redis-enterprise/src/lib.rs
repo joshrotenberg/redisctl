@@ -1,7 +1,35 @@
 //! Redis Enterprise REST API client
 //!
-//! This module provides a client for interacting with Redis Enterprise's REST API,
-//! enabling cluster management, database operations, and monitoring.
+//! A comprehensive Rust client library for the Redis Enterprise REST API, providing
+//! full cluster management, database operations, security configuration, and monitoring
+//! capabilities. This crate offers both typed and untyped API access with comprehensive
+//! coverage of all Enterprise REST endpoints.
+//!
+//! # Features
+//!
+//! - **Complete API Coverage**: All 29 Enterprise REST API endpoint categories
+//! - **Type-Safe Operations**: Strongly typed request/response models
+//! - **Flexible Authentication**: Basic auth with optional SSL verification
+//! - **Async/Await Support**: Built on Tokio for high-performance async operations
+//! - **Error Handling**: Comprehensive error types with context
+//! - **Builder Patterns**: Ergonomic API for complex request construction
+//!
+//! # Quick Start
+//!
+//! Add to your `Cargo.toml`:
+//! ```toml
+//! [dependencies]
+//! redis-enterprise = "0.2.0"
+//! tokio = { version = "1", features = ["full"] }
+//! ```
+//!
+//! # Environment Variables
+//!
+//! The client supports configuration via environment variables:
+//! - `REDIS_ENTERPRISE_URL`: Base URL for the cluster (e.g., `https://cluster:9443`)
+//! - `REDIS_ENTERPRISE_USER`: Username for authentication
+//! - `REDIS_ENTERPRISE_PASSWORD`: Password for authentication
+//! - `REDIS_ENTERPRISE_INSECURE`: Set to `true` to skip SSL verification (dev only)
 //!
 //! # Examples
 //!
@@ -183,6 +211,46 @@
 //! # Ok(())
 //! # }
 //! ```
+//!
+//! # Error Handling
+//!
+//! The library provides detailed error information for all API operations:
+//!
+//! ```no_run
+//! use redis_enterprise::{EnterpriseClient, bdb::DatabaseHandler, RestError};
+//!
+//! # async fn example(client: EnterpriseClient) -> Result<(), Box<dyn std::error::Error>> {
+//! let handler = DatabaseHandler::new(client);
+//!
+//! match handler.info(999).await {
+//!     Ok(db) => println!("Found database: {}", db.name),
+//!     Err(RestError::AuthenticationFailed) => println!("Invalid credentials"),
+//!     Err(RestError::ApiError { code, message }) => println!("API error {}: {}", code, message),
+//!     Err(e) => println!("Unexpected error: {}", e),
+//! }
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! # Production Best Practices
+//!
+//! - **Connection Pooling**: The client reuses HTTP connections automatically
+//! - **Timeout Configuration**: Set appropriate timeouts for your environment
+//! - **SSL Verification**: Always enable in production (disable only for development)
+//! - **Error Handling**: Implement retry logic for transient failures
+//! - **Monitoring**: Log all API operations and track response times
+//!
+//! # API Coverage
+//!
+//! This crate provides complete coverage of the Redis Enterprise REST API:
+//!
+//! - **Cluster Management**: Bootstrap, configuration, licenses
+//! - **Database Operations**: CRUD, backup/restore, configuration
+//! - **Security**: Users, roles, ACLs, LDAP integration
+//! - **Monitoring**: Stats, alerts, logs, diagnostics
+//! - **High Availability**: Active-Active (CRDB), replication
+//! - **Modules**: Redis module management
+//! - **Maintenance**: Upgrades, migrations, debug info
 
 pub mod actions;
 pub mod alerts;
