@@ -35,7 +35,7 @@ services:
   init-cluster:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.test
     container_name: init-cluster
     restart: "no"
     depends_on:
@@ -67,7 +67,7 @@ services:
   create-db:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.test
     container_name: create-db
     restart: "no"
     depends_on:
@@ -99,7 +99,7 @@ services:
   validate-api:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.test
     container_name: validate-api
     restart: "no"
     depends_on:
