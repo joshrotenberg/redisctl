@@ -35,6 +35,27 @@ jobs:
         with:
           mdbook-version: 'latest'
 
+      - name: Setup Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Cache mdbook-lint
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/mdbook-lint
+          key: mdbook-lint-0.11.5-${{ runner.os }}
+
+      - name: Install mdbook-lint 0.11.5
+        run: |
+          if ! command -v mdbook-lint || [ "$(mdbook-lint --version | cut -d' ' -f2)" != "0.11.5" ]; then
+            cargo install mdbook-lint --version 0.11.5 --locked
+          fi
+
+      - name: Lint book
+        run: |
+          cd docs
+          mdbook-lint lint src || true
 
       - name: Build book
         run: |
