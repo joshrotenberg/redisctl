@@ -1,28 +1,36 @@
 # Redis CLI Docker Image
-# Multi-stage build for optimal size
+# Uses pre-built binaries from GitHub releases for faster multi-arch builds
 
-FROM rust:1.89 AS builder
-
-WORKDIR /build
-
-# Copy workspace files
-COPY Cargo.toml ./
-COPY crates/ ./crates/
-
-# Build release binary
-RUN cargo build --release --bin redisctl
-
-# Runtime stage - Ubuntu for newer GLIBC
 FROM ubuntu:24.04
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     curl \
+    xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy binary from builder
-COPY --from=builder /build/target/release/redisctl /usr/local/bin/redisctl
+# Set the version to install
+ARG VERSION=0.2.0
+ARG TARGETPLATFORM
+
+# Download the appropriate binary based on platform
+RUN case "$TARGETPLATFORM" in \
+        "linux/amd64") \
+            ARCH="x86_64-unknown-linux-gnu" \
+            ;; \
+        "linux/arm64") \
+            ARCH="aarch64-unknown-linux-gnu" \
+            ;; \
+        *) \
+            echo "Unsupported platform: $TARGETPLATFORM" && exit 1 \
+            ;; \
+    esac && \
+    curl -L "https://github.com/joshrotenberg/redisctl/releases/download/redisctl-v${VERSION}/redisctl-${ARCH}.tar.xz" | \
+    tar -xJ --strip-components=1 -C /tmp && \
+    mv /tmp/redisctl /usr/local/bin/redisctl && \
+    chmod +x /usr/local/bin/redisctl && \
+    rm -rf /tmp/*
 
 # Create non-root user
 RUN useradd -m redis && \
@@ -37,7 +45,7 @@ ENV REDIS_ENTERPRISE_URL=""
 ENV REDIS_ENTERPRISE_USER=""
 ENV REDIS_ENTERPRISE_PASSWORD=""
 ENV REDIS_CLOUD_API_KEY=""
-ENV REDIS_CLOUD_SECRET_KEY=""
+ENV REDIS_CLOUD_API_SECRET=""
 
 ENTRYPOINT ["redisctl"]
 CMD ["--help"]
