@@ -312,7 +312,7 @@ pub async fn handle_account_command(
         }
         AccountCommands::Info => {
             let handler = redis_cloud::CloudAccountHandler::new(client.clone());
-            let account_info = handler.info().await?;
+            let account_info = handler.get().await?;
             let value = serde_json::to_value(account_info)?;
             print_output(value, output_format, query)?;
         }
