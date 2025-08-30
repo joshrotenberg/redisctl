@@ -55,6 +55,9 @@ jobs:
       - name: Lint book
         run: |
           cd docs
+          # Using || true due to false positives with internal link validation
+          # MDBOOK002 is disabled but still reports errors in some cases
+          # We still get value from other lint checks without failing CI
           mdbook-lint lint src || true
 
       - name: Build book
