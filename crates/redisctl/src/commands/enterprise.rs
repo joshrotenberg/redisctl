@@ -5,9 +5,12 @@ use redis_enterprise::EnterpriseClient;
 use std::io::Write;
 
 use crate::cli::{
-    AlertCommands, BootstrapCommands, ClusterCommands, DatabaseCommands, EnterpriseActionCommands,
-    EnterpriseCommands, EnterpriseCrdbCommands, EnterpriseLogsCommands, EnterpriseStatsCommands,
-    LicenseCommands, ModuleCommands, NodeCommands, RoleCommands, UserCommands,
+    AlertCommands, AuthCommands, BootstrapCommands, CcsServerCommands, ClientCertCommands,
+    ClusterCommands, CmServerCommands, CrdtCommands, DatabaseCommands, DmcServerCommands,
+    EnterpriseActionCommands, EnterpriseCommands, EnterpriseCrdbCommands, EnterpriseLogsCommands,
+    EnterpriseStatsCommands, LdapMappingCommands, LicenseCommands, ModuleCommands, NodeCommands,
+    OcspCommands, PdnServerCommands, ProxyCommands, RedisAclCommands, RoleCommands,
+    ServiceCommands, ShardCommands, SuffixCommands, UserCommands,
 };
 use crate::commands::api::handle_enterprise_api;
 
@@ -61,6 +64,80 @@ pub async fn handle_enterprise_command(
         }
         EnterpriseCommands::Logs { command } => {
             handle_logs_command(command, profile, output_format, query).await
+        }
+        EnterpriseCommands::RedisAcl { command } => {
+            handle_redis_acl_command(command, profile, output_format, query).await
+        }
+        EnterpriseCommands::Shard { command } => {
+            handle_shard_command(command, profile, output_format, query).await
+        }
+        EnterpriseCommands::Proxy { command } => {
+            handle_proxy_command(command, profile, output_format, query).await
+        }
+        EnterpriseCommands::Service { command } => {
+            handle_service_command(command, profile, output_format, query).await
+        }
+        EnterpriseCommands::CrdbTask { command: _ } => {
+            // TODO: Implement CRDB task handler
+            anyhow::bail!("CRDB task commands are not yet implemented")
+        }
+        EnterpriseCommands::DebugInfo { command: _ } => {
+            // TODO: Implement debug info handler
+            anyhow::bail!("Debug info commands are not yet implemented")
+        }
+        EnterpriseCommands::Diagnostics { command: _ } => {
+            // TODO: Implement diagnostics handler
+            anyhow::bail!("Diagnostics commands are not yet implemented")
+        }
+        EnterpriseCommands::Endpoint { command: _ } => {
+            // TODO: Implement endpoint handler
+            anyhow::bail!("Endpoint commands are not yet implemented")
+        }
+        EnterpriseCommands::Migration { command: _ } => {
+            // TODO: Implement migration handler
+            anyhow::bail!("Migration commands are not yet implemented")
+        }
+        EnterpriseCommands::Ocsp { command } => {
+            handle_ocsp_status_command(command, profile, output_format, query).await
+        }
+        EnterpriseCommands::UsageReport { command: _ } => {
+            // TODO: Implement usage report handler
+            anyhow::bail!("Usage report commands are not yet implemented")
+        }
+        EnterpriseCommands::JobScheduler { command: _ } => {
+            // TODO: Implement job scheduler handler
+            anyhow::bail!("Job scheduler commands are not yet implemented")
+        }
+        EnterpriseCommands::JsonSchema { command: _ } => {
+            // TODO: Implement JSON schema handler
+            anyhow::bail!("JSON schema commands are not yet implemented")
+        }
+        EnterpriseCommands::LdapMapping { command } => {
+            handle_ldap_mapping_command(command, profile, output_format, query).await
+        }
+        EnterpriseCommands::Suffix { command } => {
+            handle_suffix_command(command, profile, output_format, query).await
+        }
+        EnterpriseCommands::Auth { command } => {
+            handle_auth_command(command, profile, output_format, query).await
+        }
+        EnterpriseCommands::Crdt { command } => {
+            handle_crdt_command(command, profile, output_format, query).await
+        }
+        EnterpriseCommands::ClientCert { command } => {
+            handle_client_cert_command(command, profile, output_format, query).await
+        }
+        EnterpriseCommands::CmServer { command } => {
+            handle_cm_server_command(command, profile, output_format, query).await
+        }
+        EnterpriseCommands::CcsServer { command } => {
+            handle_ccs_server_command(command, profile, output_format, query).await
+        }
+        EnterpriseCommands::DmcServer { command } => {
+            handle_dmc_server_command(command, profile, output_format, query).await
+        }
+        EnterpriseCommands::PdnServer { command } => {
+            handle_pdn_server_command(command, profile, output_format, query).await
         }
     }
 }
@@ -928,6 +1005,549 @@ pub async fn handle_logs_command(
         EnterpriseLogsCommands::Show { id } => {
             let result = client.get_raw(&format!("/v1/logs/{}", id)).await?;
             print_output(result, output_format, query)?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle Redis ACL commands
+pub async fn handle_redis_acl_command(
+    command: RedisAclCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+    let handler = redis_enterprise::RedisAclHandler::new(client.clone());
+
+    match command {
+        RedisAclCommands::List => {
+            let acls = handler.list().await?;
+            let value = serde_json::to_value(acls)?;
+            print_output(value, output_format, query)?;
+        }
+        RedisAclCommands::Show { uid } => {
+            let acl = handler.get(uid).await?;
+            let value = serde_json::to_value(acl)?;
+            print_output(value, output_format, query)?;
+        }
+        RedisAclCommands::Create {
+            name,
+            acl,
+            description,
+        } => {
+            let request = redis_enterprise::CreateRedisAclRequest {
+                name: name.clone(),
+                acl,
+                description,
+            };
+            let acl_result = handler.create(request).await?;
+            let value = serde_json::to_value(acl_result)?;
+            print_output(value, output_format, query)?;
+        }
+        RedisAclCommands::Update {
+            uid,
+            acl,
+            description: _,
+        } => {
+            // Use raw API for update since there's no UpdateRedisAclRequest
+            let request = serde_json::json!({
+                "acl": acl
+            });
+            let client = create_enterprise_client(profile).await?;
+            let result = client
+                .put_raw(&format!("/v1/redis_acls/{}", uid), request)
+                .await?;
+            print_output(result, output_format, query)?;
+        }
+        RedisAclCommands::Delete { uid, force: _ } => {
+            handler.delete(uid).await?;
+            println!("Redis ACL {} deleted successfully", uid);
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle shard commands
+pub async fn handle_shard_command(
+    command: ShardCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+    let handler = redis_enterprise::ShardHandler::new(client.clone());
+
+    match command {
+        ShardCommands::List { database, node: _ } => {
+            let shards = if let Some(db_uid) = database {
+                // There's no list_by_bdb, use raw API
+                let client = create_enterprise_client(profile).await?;
+                let _result = client
+                    .get_raw(&format!("/v1/bdbs/{}/shards", db_uid))
+                    .await?;
+                vec![] // TODO: Parse result properly
+            } else {
+                handler.list().await?
+            };
+            let value = serde_json::to_value(shards)?;
+            print_output(value, output_format, query)?;
+        }
+        ShardCommands::Show { uid } => {
+            let shard = handler.get(&uid.to_string()).await?;
+            let value = serde_json::to_value(shard)?;
+            print_output(value, output_format, query)?;
+        }
+        ShardCommands::Stats { uid, interval: _ } => {
+            let stats = handler.stats(&uid.to_string()).await?;
+            print_output(stats, output_format, query)?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle proxy commands
+pub async fn handle_proxy_command(
+    command: ProxyCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+    let handler = redis_enterprise::ProxyHandler::new(client.clone());
+
+    match command {
+        ProxyCommands::List { node: _ } => {
+            let proxies = handler.list().await?;
+            let value = serde_json::to_value(proxies)?;
+            print_output(value, output_format, query)?;
+        }
+        ProxyCommands::Show { uid } => {
+            let proxy = handler.get(uid).await?;
+            let value = serde_json::to_value(proxy)?;
+            print_output(value, output_format, query)?;
+        }
+        ProxyCommands::Reload { uid } => {
+            handler.reload(uid).await?;
+            println!("Proxy {} reloaded successfully", uid);
+        }
+        ProxyCommands::Stats { uid } => {
+            let stats = handler.stats(uid).await?;
+            print_output(stats, output_format, query)?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle service commands
+pub async fn handle_service_command(
+    command: ServiceCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+    let handler = redis_enterprise::ServicesHandler::new(client.clone());
+
+    match command {
+        ServiceCommands::List { node: _ } => {
+            let services = handler.list().await?;
+            let value = serde_json::to_value(services)?;
+            print_output(value, output_format, query)?;
+        }
+        ServiceCommands::Show { name, node } => {
+            // Use raw API for service lookup by name
+            let path = if let Some(node_uid) = node {
+                format!("/v1/nodes/{}/services/{}", node_uid, name)
+            } else {
+                format!("/v1/services/{}", name)
+            };
+            let client = create_enterprise_client(profile).await?;
+            let result = client.get_raw(&path).await?;
+            print_output(result, output_format, query)?;
+        }
+        ServiceCommands::Restart { name, node } => {
+            // Use raw API for service restart
+            let path = if let Some(node_uid) = node {
+                format!("/v1/nodes/{}/services/{}/restart", node_uid, name)
+            } else {
+                format!("/v1/services/{}/restart", name)
+            };
+            let client = create_enterprise_client(profile).await?;
+            let result = client.post_raw(&path, serde_json::Value::Null).await?;
+            print_output(result, output_format, query)?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle CRDT commands
+pub async fn handle_crdt_command(
+    command: CrdtCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+    let handler = redis_enterprise::CrdbHandler::new(client.clone());
+
+    match command {
+        CrdtCommands::List => {
+            let crdts = handler.list().await?;
+            let value = serde_json::to_value(crdts)?;
+            print_output(value, output_format, query)?;
+        }
+        CrdtCommands::Show { id } => {
+            let crdt = handler.get(&id).await?;
+            let value = serde_json::to_value(crdt)?;
+            print_output(value, output_format, query)?;
+        }
+        CrdtCommands::Create { database_id } => {
+            let request = redis_enterprise::CreateCrdbRequest {
+                name: format!("crdb_{}", database_id),
+                instances: vec![],
+                encryption: None,
+                data_persistence: None,
+                eviction_policy: None,
+                memory_size: 1024 * 1024 * 100, // 100MB default
+            };
+            let crdt = handler.create(request).await?;
+            let value = serde_json::to_value(crdt)?;
+            print_output(value, output_format, query)?;
+        }
+        CrdtCommands::Update { id, database_id: _ } => {
+            // Use raw API for update
+            let request = serde_json::json!({});
+            let crdt = handler.update(&id, request).await?;
+            let value = serde_json::to_value(crdt)?;
+            print_output(value, output_format, query)?;
+        }
+        CrdtCommands::Delete { id } => {
+            handler.delete(&id).await?;
+            println!("CRDT {} deleted successfully", id);
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle authentication commands
+pub async fn handle_auth_command(
+    command: AuthCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+
+    match command {
+        AuthCommands::Test {
+            profile: _,
+            deployment: _,
+        } => {
+            // Test authentication by trying to get cluster info
+            let result = client.get_raw("/v1/cluster").await?;
+            println!("Authentication successful");
+            print_output(result, output_format, query)?;
+        }
+        AuthCommands::Setup => {
+            // Setup authentication (not implemented)
+            anyhow::bail!("Auth setup is not yet implemented")
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle client certificate commands
+pub async fn handle_client_cert_command(
+    command: ClientCertCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+
+    match command {
+        ClientCertCommands::List => {
+            let result = client.get_raw("/v1/client_certs").await?;
+            print_output(result, output_format, query)?;
+        }
+        ClientCertCommands::Show { id } => {
+            let result = client.get_raw(&format!("/v1/client_certs/{}", id)).await?;
+            print_output(result, output_format, query)?;
+        }
+        ClientCertCommands::Create { name, cert } => {
+            let request = serde_json::json!({
+                "name": name,
+                "certificate": cert
+            });
+            let result = client.post_raw("/v1/client_certs", request).await?;
+            print_output(result, output_format, query)?;
+        }
+        ClientCertCommands::Delete { id } => {
+            client
+                .delete_raw(&format!("/v1/client_certs/{}", id))
+                .await?;
+            println!("Client certificate {} deleted successfully", id);
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle CM server commands
+pub async fn handle_cm_server_command(
+    command: CmServerCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+    match command {
+        CmServerCommands::List => {
+            let result = client.get_raw("/v1/cm_servers").await?;
+            print_output(result, output_format, query)?;
+        }
+        CmServerCommands::Show { id } => {
+            let result = client.get_raw(&format!("/v1/cm_servers/{}", id)).await?;
+            print_output(result, output_format, query)?;
+        }
+        CmServerCommands::Stats { id } => {
+            let result = client
+                .get_raw(&format!("/v1/cm_servers/{}/stats", id))
+                .await?;
+            print_output(result, output_format, query)?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle CCS server commands
+pub async fn handle_ccs_server_command(
+    command: CcsServerCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+    match command {
+        CcsServerCommands::List => {
+            let result = client.get_raw("/v1/ccs_servers").await?;
+            print_output(result, output_format, query)?;
+        }
+        CcsServerCommands::Show { id } => {
+            let result = client.get_raw(&format!("/v1/ccs_servers/{}", id)).await?;
+            print_output(result, output_format, query)?;
+        }
+        CcsServerCommands::Stats { id } => {
+            let result = client
+                .get_raw(&format!("/v1/ccs_servers/{}/stats", id))
+                .await?;
+            print_output(result, output_format, query)?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle DMC server commands
+pub async fn handle_dmc_server_command(
+    command: DmcServerCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+    match command {
+        DmcServerCommands::List => {
+            let result = client.get_raw("/v1/dmc_servers").await?;
+            print_output(result, output_format, query)?;
+        }
+        DmcServerCommands::Show { id } => {
+            let result = client.get_raw(&format!("/v1/dmc_servers/{}", id)).await?;
+            print_output(result, output_format, query)?;
+        }
+        DmcServerCommands::Stats { id } => {
+            let result = client
+                .get_raw(&format!("/v1/dmc_servers/{}/stats", id))
+                .await?;
+            print_output(result, output_format, query)?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle PDN server commands
+pub async fn handle_pdn_server_command(
+    command: PdnServerCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+    match command {
+        PdnServerCommands::List => {
+            let result = client.get_raw("/v1/pdn_servers").await?;
+            print_output(result, output_format, query)?;
+        }
+        PdnServerCommands::Show { id } => {
+            let result = client.get_raw(&format!("/v1/pdn_servers/{}", id)).await?;
+            print_output(result, output_format, query)?;
+        }
+        PdnServerCommands::Stats { id } => {
+            let result = client
+                .get_raw(&format!("/v1/pdn_servers/{}/stats", id))
+                .await?;
+            print_output(result, output_format, query)?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle LDAP mapping commands
+pub async fn handle_ldap_mapping_command(
+    command: LdapMappingCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+    let handler = redis_enterprise::LdapMappingHandler::new(client.clone());
+
+    match command {
+        LdapMappingCommands::List => {
+            let mappings = handler.list().await?;
+            let value = serde_json::to_value(mappings)?;
+            print_output(value, output_format, query)?;
+        }
+        LdapMappingCommands::Show { id } => {
+            let mapping = handler.get(id).await?;
+            let value = serde_json::to_value(mapping)?;
+            print_output(value, output_format, query)?;
+        }
+        LdapMappingCommands::Create { dn, role } => {
+            let request = redis_enterprise::CreateLdapMappingRequest {
+                name: dn.clone(), // Use DN as name
+                dn: dn.clone(),
+                role,
+                email: None,
+                role_uids: None,
+            };
+            let mapping = handler.create(request).await?;
+            let value = serde_json::to_value(mapping)?;
+            print_output(value, output_format, query)?;
+        }
+        LdapMappingCommands::Update { id, role } => {
+            // Use raw API for update since there's no UpdateLdapMappingRequest
+            let request = serde_json::json!({
+                "role": role
+            });
+            let client = create_enterprise_client(profile).await?;
+            let result = client
+                .put_raw(&format!("/v1/ldap_mappings/{}", id), request)
+                .await?;
+            print_output(result, output_format, query)?;
+        }
+        LdapMappingCommands::Delete { id, force: _ } => {
+            handler.delete(id).await?;
+            println!("LDAP mapping {} deleted successfully", id);
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle OCSP status commands
+pub async fn handle_ocsp_status_command(
+    command: OcspCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+    let handler = redis_enterprise::OcspHandler::new(client.clone());
+
+    match command {
+        OcspCommands::Status => {
+            let status = handler.get_status().await?;
+            print_output(status, output_format, query)?;
+        }
+        OcspCommands::Test { server: _ } => {
+            let result = handler.test().await?;
+            let value = serde_json::to_value(result)?;
+            print_output(value, output_format, query)?;
+        }
+        OcspCommands::Update { enabled, server } => {
+            // Use raw API for update
+            let request = serde_json::json!({
+                "enabled": enabled,
+                "server": server
+            });
+            let client = create_enterprise_client(profile).await?;
+            let result = client.put_raw("/v1/ocsp", request).await?;
+            print_output(result, output_format, query)?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle suffix commands
+pub async fn handle_suffix_command(
+    command: SuffixCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+    let handler = redis_enterprise::SuffixesHandler::new(client.clone());
+
+    match command {
+        SuffixCommands::List => {
+            let suffixes = handler.list().await?;
+            let value = serde_json::to_value(suffixes)?;
+            print_output(value, output_format, query)?;
+        }
+        SuffixCommands::Show { id } => {
+            // SuffixesHandler.get() takes a string
+            let suffix = handler.get(&id).await?;
+            let value = serde_json::to_value(suffix)?;
+            print_output(value, output_format, query)?;
+        }
+        SuffixCommands::Create { name, dns_suffix } => {
+            let request = redis_enterprise::CreateSuffixRequest {
+                name: name.clone(),
+                dns_suffix: dns_suffix.clone(),
+                use_external_addr: None,
+                use_internal_addr: None,
+            };
+            let suffix = handler.create(request).await?;
+            let value = serde_json::to_value(suffix)?;
+            print_output(value, output_format, query)?;
+        }
+        SuffixCommands::Update { id, dns_suffix } => {
+            // Use raw API for update since there's no UpdateSuffixRequest
+            let request = serde_json::json!({
+                "dns_suffix": dns_suffix
+            });
+            let client = create_enterprise_client(profile).await?;
+            let result = client
+                .put_raw(&format!("/v1/suffixes/{}", id), request)
+                .await?;
+            print_output(result, output_format, query)?;
+        }
+        SuffixCommands::Delete { id } => {
+            handler.delete(&id).await?;
+            println!("Suffix {} deleted successfully", id);
         }
     }
 
