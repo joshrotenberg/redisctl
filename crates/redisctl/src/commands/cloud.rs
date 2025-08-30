@@ -346,13 +346,13 @@ pub async fn handle_user_command(
 
     match command {
         UserCommands::List => {
-            let handler = redis_cloud::CloudUsersHandler::new(client.clone());
+            let handler = redis_cloud::CloudUserHandler::new(client.clone());
             let users = handler.list().await?;
             let value = serde_json::to_value(users)?;
             print_output(value, output_format, query)?;
         }
         UserCommands::Show { id } => {
-            let handler = redis_cloud::CloudUsersHandler::new(client.clone());
+            let handler = redis_cloud::CloudUserHandler::new(client.clone());
             let user = handler.get(id.parse()?).await?;
             let value = serde_json::to_value(user)?;
             print_output(value, output_format, query)?;
@@ -363,7 +363,7 @@ pub async fn handle_user_command(
             password,
             roles,
         } => {
-            let handler = redis_cloud::CloudUsersHandler::new(client.clone());
+            let handler = redis_cloud::CloudUserHandler::new(client.clone());
             let mut create_data = serde_json::json!({
                 "name": name
             });
@@ -388,7 +388,7 @@ pub async fn handle_user_command(
             email,
             password,
         } => {
-            let handler = redis_cloud::CloudUsersHandler::new(client.clone());
+            let handler = redis_cloud::CloudUserHandler::new(client.clone());
             let mut update_data = serde_json::Map::new();
             if let Some(email) = email {
                 update_data.insert("email".to_string(), serde_json::Value::String(email));
@@ -412,7 +412,7 @@ pub async fn handle_user_command(
                 );
                 return Ok(());
             }
-            let handler = redis_cloud::CloudUsersHandler::new(client.clone());
+            let handler = redis_cloud::CloudUserHandler::new(client.clone());
             handler.delete(id.parse()?).await?;
             println!("User {} deleted successfully", id);
         }
@@ -451,13 +451,13 @@ pub async fn handle_task_command(
 
     match command {
         TaskCommands::List => {
-            let handler = redis_cloud::CloudTasksHandler::new(client.clone());
+            let handler = redis_cloud::CloudTaskHandler::new(client.clone());
             let tasks = handler.list().await?;
             let value = serde_json::to_value(tasks)?;
             print_output(value, output_format, query)?;
         }
         TaskCommands::Show { id } => {
-            let handler = redis_cloud::CloudTasksHandler::new(client.clone());
+            let handler = redis_cloud::CloudTaskHandler::new(client.clone());
             let task = handler.get(&id).await?;
             let value = serde_json::to_value(task)?;
             print_output(value, output_format, query)?;
@@ -470,7 +470,7 @@ pub async fn handle_task_command(
             let timeout_duration = Duration::from_secs(timeout);
 
             loop {
-                let handler = redis_cloud::CloudTasksHandler::new(client.clone());
+                let handler = redis_cloud::CloudTaskHandler::new(client.clone());
                 let task = handler.get(&id).await?;
                 let task = serde_json::to_value(task)?;
 
@@ -915,17 +915,17 @@ pub async fn handle_api_key_command(
 
     match command {
         ApiKeyCommands::List => {
-            let handler = redis_cloud::CloudApiKeysHandler::new(client.clone());
+            let handler = redis_cloud::CloudApiKeyHandler::new(client.clone());
             let keys = handler.list().await?;
             print_output(keys, output_format, query)?;
         }
         ApiKeyCommands::Show { key_id } => {
-            let handler = redis_cloud::CloudApiKeysHandler::new(client.clone());
+            let handler = redis_cloud::CloudApiKeyHandler::new(client.clone());
             let key = handler.get(key_id).await?;
             print_output(key, output_format, query)?;
         }
         ApiKeyCommands::Create { name, role } => {
-            let handler = redis_cloud::CloudApiKeysHandler::new(client.clone());
+            let handler = redis_cloud::CloudApiKeyHandler::new(client.clone());
             let create_data = serde_json::json!({
                 "name": name,
                 "role": role
@@ -941,7 +941,7 @@ pub async fn handle_api_key_command(
             if let Some(role) = role {
                 update_data.insert("role".to_string(), serde_json::Value::String(role));
             }
-            let handler = redis_cloud::CloudApiKeysHandler::new(client.clone());
+            let handler = redis_cloud::CloudApiKeyHandler::new(client.clone());
             let key = handler
                 .update(key_id, serde_json::Value::Object(update_data))
                 .await?;
@@ -955,22 +955,22 @@ pub async fn handle_api_key_command(
                 );
                 return Ok(());
             }
-            let handler = redis_cloud::CloudApiKeysHandler::new(client.clone());
+            let handler = redis_cloud::CloudApiKeyHandler::new(client.clone());
             handler.delete(key_id).await?;
             println!("API key {} deleted successfully", key_id);
         }
         ApiKeyCommands::Regenerate { key_id } => {
-            let handler = redis_cloud::CloudApiKeysHandler::new(client.clone());
+            let handler = redis_cloud::CloudApiKeyHandler::new(client.clone());
             let result = handler.regenerate(key_id).await?;
             print_output(result, output_format, query)?;
         }
         ApiKeyCommands::Enable { key_id } => {
-            let handler = redis_cloud::CloudApiKeysHandler::new(client.clone());
+            let handler = redis_cloud::CloudApiKeyHandler::new(client.clone());
             let result = handler.enable(key_id).await?;
             print_output(result, output_format, query)?;
         }
         ApiKeyCommands::Disable { key_id } => {
-            let handler = redis_cloud::CloudApiKeysHandler::new(client.clone());
+            let handler = redis_cloud::CloudApiKeyHandler::new(client.clone());
             let result = handler.disable(key_id).await?;
             print_output(result, output_format, query)?;
         }

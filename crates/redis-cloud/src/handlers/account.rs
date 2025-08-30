@@ -23,6 +23,11 @@ impl CloudAccountHandler {
         Ok(response.account)
     }
 
+    /// Get current account information (alias for info())
+    pub async fn get(&self) -> Result<CloudAccount> {
+        self.info().await
+    }
+
     /// Get account owner information
     pub async fn owner(&self) -> Result<Value> {
         self.client.get("/users/owners").await

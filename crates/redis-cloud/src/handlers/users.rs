@@ -4,13 +4,13 @@ use crate::{Result, client::CloudClient};
 use serde_json::Value;
 
 /// Handler for Cloud user operations
-pub struct CloudUsersHandler {
+pub struct CloudUserHandler {
     client: CloudClient,
 }
 
-impl CloudUsersHandler {
+impl CloudUserHandler {
     pub fn new(client: CloudClient) -> Self {
-        CloudUsersHandler { client }
+        CloudUserHandler { client }
     }
 
     /// List all users

@@ -1,6 +1,6 @@
 //! Users endpoint tests for Redis Cloud
 
-use redis_cloud::{CloudClient, CloudUsersHandler};
+use redis_cloud::{CloudClient, CloudUserHandler};
 use serde_json::json;
 use wiremock::matchers::{body_json, header, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -75,7 +75,7 @@ async fn test_users_list() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudUsersHandler::new(client);
+    let handler = CloudUserHandler::new(client);
     let result = handler.list().await;
 
     assert!(result.is_ok());
@@ -113,7 +113,7 @@ async fn test_users_list_empty() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudUsersHandler::new(client);
+    let handler = CloudUserHandler::new(client);
     let result = handler.list().await;
 
     assert!(result.is_ok());
@@ -147,7 +147,7 @@ async fn test_user_get() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudUsersHandler::new(client);
+    let handler = CloudUserHandler::new(client);
     let result = handler.get(1).await;
 
     assert!(result.is_ok());
@@ -196,7 +196,7 @@ async fn test_user_create_invite() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudUsersHandler::new(client);
+    let handler = CloudUserHandler::new(client);
     let result = handler.create(request_body).await;
 
     assert!(result.is_ok());
@@ -238,7 +238,7 @@ async fn test_user_create_admin() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudUsersHandler::new(client);
+    let handler = CloudUserHandler::new(client);
     let result = handler.create(request_body).await;
 
     assert!(result.is_ok());
@@ -276,7 +276,7 @@ async fn test_user_update() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudUsersHandler::new(client);
+    let handler = CloudUserHandler::new(client);
     let result = handler.update(1, request_body).await;
 
     assert!(result.is_ok());
@@ -302,7 +302,7 @@ async fn test_user_delete() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudUsersHandler::new(client);
+    let handler = CloudUserHandler::new(client);
     let result = handler.delete(2).await;
 
     assert!(result.is_ok());
@@ -338,7 +338,7 @@ async fn test_users_list_unauthorized() {
         .base_url(mock_server.uri())
         .build()
         .unwrap();
-    let handler = CloudUsersHandler::new(client);
+    let handler = CloudUserHandler::new(client);
     let result = handler.list().await;
 
     assert!(result.is_err());
@@ -366,7 +366,7 @@ async fn test_user_get_not_found() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudUsersHandler::new(client);
+    let handler = CloudUserHandler::new(client);
     let result = handler.get(999).await;
 
     assert!(result.is_err());
@@ -403,7 +403,7 @@ async fn test_user_create_invalid_email() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudUsersHandler::new(client);
+    let handler = CloudUserHandler::new(client);
     let result = handler.create(request_body).await;
 
     assert!(result.is_err());
@@ -437,7 +437,7 @@ async fn test_user_create_duplicate_email() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudUsersHandler::new(client);
+    let handler = CloudUserHandler::new(client);
     let result = handler.create(request_body).await;
 
     assert!(result.is_err());
@@ -469,7 +469,7 @@ async fn test_user_update_insufficient_permissions() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudUsersHandler::new(client);
+    let handler = CloudUserHandler::new(client);
     let result = handler.update(1, request_body).await;
 
     assert!(result.is_err());
@@ -497,7 +497,7 @@ async fn test_user_delete_last_owner() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudUsersHandler::new(client);
+    let handler = CloudUserHandler::new(client);
     let result = handler.delete(1).await;
 
     assert!(result.is_err());

@@ -3,14 +3,14 @@
 use crate::{Result, client::CloudClient};
 use serde_json::Value;
 
-/// Handler for Cloud API keys management
-pub struct CloudApiKeysHandler {
+/// Handler for Cloud API key management
+pub struct CloudApiKeyHandler {
     client: CloudClient,
 }
 
-impl CloudApiKeysHandler {
+impl CloudApiKeyHandler {
     pub fn new(client: CloudClient) -> Self {
-        CloudApiKeysHandler { client }
+        CloudApiKeyHandler { client }
     }
 
     /// List all API keys

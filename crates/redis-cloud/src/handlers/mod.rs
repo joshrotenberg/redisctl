@@ -23,7 +23,7 @@ pub mod users;
 // Re-export all handlers
 pub use account::CloudAccountHandler;
 pub use acl::CloudAclHandler;
-pub use api_keys::CloudApiKeysHandler;
+pub use api_keys::CloudApiKeyHandler;
 pub use backup::CloudBackupHandler;
 pub use billing::CloudBillingHandler;
 pub use cloud_accounts::CloudAccountsHandler;
@@ -37,6 +37,6 @@ pub use private_service_connect::CloudPrivateServiceConnectHandler;
 pub use region::CloudRegionHandler;
 pub use sso::CloudSsoHandler;
 pub use subscription::CloudSubscriptionHandler;
-pub use tasks::CloudTasksHandler;
+pub use tasks::CloudTaskHandler;
 pub use transit_gateway::CloudTransitGatewayHandler;
-pub use users::CloudUsersHandler;
+pub use users::CloudUserHandler;
