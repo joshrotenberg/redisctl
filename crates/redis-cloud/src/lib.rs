@@ -211,7 +211,7 @@
 //! | [`CloudSubscriptionHandler`] | Subscription management | create, list, update, delete, pricing |
 //! | [`CloudDatabaseHandler`] | Database operations | create, backup, import, metrics, resize |
 //! | [`CloudAccountHandler`] | Account information | info, users, payment methods |
-//! | [`CloudUsersHandler`] | User management | create, update, delete, invite |
+//! | [`CloudUserHandler`] | User management | create, update, delete, invite |
 //! | [`CloudBillingHandler`] | Billing & payments | invoices, payment methods, usage reports |
 //! | [`CloudBackupHandler`] | Database backups | create, restore, list, delete |
 //! | [`CloudAclHandler`] | Access control | users, roles, Redis rules |
@@ -219,7 +219,7 @@
 //! | [`CloudSsoHandler`] | SSO/SAML | configure, test, user/group mappings |
 //! | [`CloudMetricsHandler`] | Monitoring | database and subscription metrics |
 //! | [`CloudLogsHandler`] | Audit trails | system, database, and session logs |
-//! | [`CloudTasksHandler`] | Async operations | track long-running operations |
+//! | [`CloudTaskHandler`] | Async operations | track long-running operations |
 //!
 //! ## Authentication
 //!
@@ -241,11 +241,11 @@ pub use client::{CloudClient, CloudClientBuilder};
 
 // Re-export handlers explicitly
 pub use handlers::{
-    CloudAccountHandler, CloudAccountsHandler, CloudAclHandler, CloudApiKeysHandler,
+    CloudAccountHandler, CloudAccountsHandler, CloudAclHandler, CloudApiKeyHandler,
     CloudBackupHandler, CloudBillingHandler, CloudCrdbHandler, CloudDatabaseHandler,
     CloudFixedHandler, CloudLogsHandler, CloudMetricsHandler, CloudPeeringHandler,
     CloudPrivateServiceConnectHandler, CloudRegionHandler, CloudSsoHandler,
-    CloudSubscriptionHandler, CloudTasksHandler, CloudTransitGatewayHandler, CloudUsersHandler,
+    CloudSubscriptionHandler, CloudTaskHandler, CloudTransitGatewayHandler, CloudUserHandler,
 };
 
 // Re-export models explicitly

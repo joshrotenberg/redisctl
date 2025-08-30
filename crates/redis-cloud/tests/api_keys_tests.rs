@@ -1,6 +1,6 @@
 //! API keys endpoint tests for Redis Cloud
 
-use redis_cloud::{CloudApiKeysHandler, CloudClient};
+use redis_cloud::{CloudApiKeyHandler, CloudClient};
 use serde_json::json;
 use wiremock::matchers::{header, method, path, query_param};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -61,7 +61,7 @@ async fn test_list_api_keys() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudApiKeysHandler::new(client);
+    let handler = CloudApiKeyHandler::new(client);
     let result = handler.list().await;
 
     assert!(result.is_ok());
@@ -94,7 +94,7 @@ async fn test_list_api_keys_error() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudApiKeysHandler::new(client);
+    let handler = CloudApiKeyHandler::new(client);
     let result = handler.list().await;
 
     assert!(result.is_err());
@@ -124,7 +124,7 @@ async fn test_get_api_key() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudApiKeysHandler::new(client);
+    let handler = CloudApiKeyHandler::new(client);
     let result = handler.get(1001).await;
 
     assert!(result.is_ok());
@@ -157,7 +157,7 @@ async fn test_get_api_key_not_found() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudApiKeysHandler::new(client);
+    let handler = CloudApiKeyHandler::new(client);
     let result = handler.get(9999).await;
 
     assert!(result.is_err());
@@ -186,7 +186,7 @@ async fn test_create_api_key() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudApiKeysHandler::new(client);
+    let handler = CloudApiKeyHandler::new(client);
     let request = json!({
         "name": "Test API Key",
         "permissions": ["read"],
@@ -226,7 +226,7 @@ async fn test_update_api_key() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudApiKeysHandler::new(client);
+    let handler = CloudApiKeyHandler::new(client);
     let request = json!({
         "name": "Updated Production API Key",
         "description": "Updated description"
@@ -253,7 +253,7 @@ async fn test_delete_api_key() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudApiKeysHandler::new(client);
+    let handler = CloudApiKeyHandler::new(client);
     let result = handler.delete(1001).await;
 
     assert!(result.is_ok());
@@ -282,7 +282,7 @@ async fn test_regenerate_api_key() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudApiKeysHandler::new(client);
+    let handler = CloudApiKeyHandler::new(client);
     let result = handler.regenerate(1001).await;
 
     assert!(result.is_ok());
@@ -322,7 +322,7 @@ async fn test_get_permissions() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudApiKeysHandler::new(client);
+    let handler = CloudApiKeyHandler::new(client);
     let result = handler.get_permissions(1001).await;
 
     assert!(result.is_ok());
@@ -358,7 +358,7 @@ async fn test_update_permissions() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudApiKeysHandler::new(client);
+    let handler = CloudApiKeyHandler::new(client);
     let request = json!({
         "resources": [
             {
@@ -397,7 +397,7 @@ async fn test_enable_api_key() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudApiKeysHandler::new(client);
+    let handler = CloudApiKeyHandler::new(client);
     let result = handler.enable(1001).await;
 
     assert!(result.is_ok());
@@ -426,7 +426,7 @@ async fn test_disable_api_key() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudApiKeysHandler::new(client);
+    let handler = CloudApiKeyHandler::new(client);
     let result = handler.disable(1001).await;
 
     assert!(result.is_ok());
@@ -473,7 +473,7 @@ async fn test_get_usage() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudApiKeysHandler::new(client);
+    let handler = CloudApiKeyHandler::new(client);
     let result = handler.get_usage(1001, "30d").await;
 
     assert!(result.is_ok());
@@ -522,7 +522,7 @@ async fn test_get_audit_logs() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudApiKeysHandler::new(client);
+    let handler = CloudApiKeyHandler::new(client);
     let result = handler.get_audit_logs(1001).await;
 
     assert!(result.is_ok());
@@ -555,7 +555,7 @@ async fn test_get_audit_logs_error() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudApiKeysHandler::new(client);
+    let handler = CloudApiKeyHandler::new(client);
     let result = handler.get_audit_logs(1001).await;
 
     assert!(result.is_err());

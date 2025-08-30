@@ -1,6 +1,6 @@
 //! Tasks endpoint tests for Redis Cloud
 
-use redis_cloud::{CloudClient, CloudTasksHandler};
+use redis_cloud::{CloudClient, CloudTaskHandler};
 use serde_json::json;
 use wiremock::matchers::{header, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -181,7 +181,7 @@ async fn test_list_tasks() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudTasksHandler::new(client);
+    let handler = CloudTaskHandler::new(client);
 
     let result = handler.list().await;
 
@@ -236,7 +236,7 @@ async fn test_list_tasks_empty() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudTasksHandler::new(client);
+    let handler = CloudTaskHandler::new(client);
 
     let result = handler.list().await;
 
@@ -274,7 +274,7 @@ async fn test_list_tasks_unauthorized() {
         .base_url(mock_server.uri())
         .build()
         .unwrap();
-    let handler = CloudTasksHandler::new(client);
+    let handler = CloudTaskHandler::new(client);
 
     let result = handler.list().await;
 
@@ -294,7 +294,7 @@ async fn test_get_task_processing() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudTasksHandler::new(client);
+    let handler = CloudTaskHandler::new(client);
 
     let result = handler.get("task_12345").await;
 
@@ -338,7 +338,7 @@ async fn test_get_task_completed() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudTasksHandler::new(client);
+    let handler = CloudTaskHandler::new(client);
 
     let result = handler.get("task_completed").await;
 
@@ -372,7 +372,7 @@ async fn test_get_task_failed() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudTasksHandler::new(client);
+    let handler = CloudTaskHandler::new(client);
 
     let result = handler.get("task_failed").await;
 
@@ -418,7 +418,7 @@ async fn test_get_task_not_found() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudTasksHandler::new(client);
+    let handler = CloudTaskHandler::new(client);
 
     let result = handler.get("nonexistent_task").await;
 
@@ -447,7 +447,7 @@ async fn test_get_task_invalid_id_format() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudTasksHandler::new(client);
+    let handler = CloudTaskHandler::new(client);
 
     let result = handler.get("invalid-task-id").await;
 
@@ -467,7 +467,7 @@ async fn test_get_task_with_special_characters() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudTasksHandler::new(client);
+    let handler = CloudTaskHandler::new(client);
 
     let result = handler.get("task_abc-123_xyz").await;
 
@@ -496,7 +496,7 @@ async fn test_get_task_forbidden() {
         .await;
 
     let client = create_test_client(mock_server.uri());
-    let handler = CloudTasksHandler::new(client);
+    let handler = CloudTaskHandler::new(client);
 
     let result = handler.get("task_restricted").await;
 
