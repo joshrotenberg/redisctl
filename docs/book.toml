@@ -14,7 +14,3 @@ edit-url-template = "https://github.com/joshrotenberg/redisctl/edit/main/docs/{p
 [output.html.fold]
 enable = true
 level = 1
-
-[preprocessor.lint]
-command = "mdbook-lint"
-renderer = ["html"]
