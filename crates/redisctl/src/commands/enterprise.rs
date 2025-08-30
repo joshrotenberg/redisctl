@@ -6,11 +6,13 @@ use std::io::Write;
 
 use crate::cli::{
     AlertCommands, AuthCommands, BootstrapCommands, CcsServerCommands, ClientCertCommands,
-    ClusterCommands, CmServerCommands, CrdtCommands, DatabaseCommands, DmcServerCommands,
+    ClusterCommands, CmServerCommands, CrdbTaskCommands, CrdtCommands, DatabaseCommands,
+    DebugInfoCommands, DiagnosticsCommands, DmcServerCommands, EndpointCommands,
     EnterpriseActionCommands, EnterpriseCommands, EnterpriseCrdbCommands, EnterpriseLogsCommands,
-    EnterpriseStatsCommands, LdapMappingCommands, LicenseCommands, ModuleCommands, NodeCommands,
-    OcspCommands, PdnServerCommands, ProxyCommands, RedisAclCommands, RoleCommands,
-    ServiceCommands, ShardCommands, SuffixCommands, UserCommands,
+    EnterpriseStatsCommands, JobSchedulerCommands, JsonSchemaCommands, LdapMappingCommands,
+    LicenseCommands, MigrationCommands, ModuleCommands, NodeCommands, OcspCommands,
+    PdnServerCommands, ProxyCommands, RedisAclCommands, RoleCommands, ServiceCommands,
+    ShardCommands, SuffixCommands, UsageReportCommands, UserCommands,
 };
 use crate::commands::api::handle_enterprise_api;
 
@@ -77,40 +79,32 @@ pub async fn handle_enterprise_command(
         EnterpriseCommands::Service { command } => {
             handle_service_command(command, profile, output_format, query).await
         }
-        EnterpriseCommands::CrdbTask { command: _ } => {
-            // TODO: Implement CRDB task handler
-            anyhow::bail!("CRDB task commands are not yet implemented")
+        EnterpriseCommands::CrdbTask { command } => {
+            handle_crdb_task_command(command, profile, output_format, query).await
         }
-        EnterpriseCommands::DebugInfo { command: _ } => {
-            // TODO: Implement debug info handler
-            anyhow::bail!("Debug info commands are not yet implemented")
+        EnterpriseCommands::DebugInfo { command } => {
+            handle_debug_info_command(command, profile, output_format, query).await
         }
-        EnterpriseCommands::Diagnostics { command: _ } => {
-            // TODO: Implement diagnostics handler
-            anyhow::bail!("Diagnostics commands are not yet implemented")
+        EnterpriseCommands::Diagnostics { command } => {
+            handle_diagnostics_command(command, profile, output_format, query).await
         }
-        EnterpriseCommands::Endpoint { command: _ } => {
-            // TODO: Implement endpoint handler
-            anyhow::bail!("Endpoint commands are not yet implemented")
+        EnterpriseCommands::Endpoint { command } => {
+            handle_endpoint_command(command, profile, output_format, query).await
         }
-        EnterpriseCommands::Migration { command: _ } => {
-            // TODO: Implement migration handler
-            anyhow::bail!("Migration commands are not yet implemented")
+        EnterpriseCommands::Migration { command } => {
+            handle_migration_command(command, profile, output_format, query).await
         }
         EnterpriseCommands::Ocsp { command } => {
             handle_ocsp_status_command(command, profile, output_format, query).await
         }
-        EnterpriseCommands::UsageReport { command: _ } => {
-            // TODO: Implement usage report handler
-            anyhow::bail!("Usage report commands are not yet implemented")
+        EnterpriseCommands::UsageReport { command } => {
+            handle_usage_report_command(command, profile, output_format, query).await
         }
-        EnterpriseCommands::JobScheduler { command: _ } => {
-            // TODO: Implement job scheduler handler
-            anyhow::bail!("Job scheduler commands are not yet implemented")
+        EnterpriseCommands::JobScheduler { command } => {
+            handle_job_scheduler_command(command, profile, output_format, query).await
         }
-        EnterpriseCommands::JsonSchema { command: _ } => {
-            // TODO: Implement JSON schema handler
-            anyhow::bail!("JSON schema commands are not yet implemented")
+        EnterpriseCommands::JsonSchema { command } => {
+            handle_json_schema_command(command, profile, output_format, query).await
         }
         EnterpriseCommands::LdapMapping { command } => {
             handle_ldap_mapping_command(command, profile, output_format, query).await
@@ -1083,12 +1077,13 @@ pub async fn handle_shard_command(
     match command {
         ShardCommands::List { database, node: _ } => {
             let shards = if let Some(db_uid) = database {
-                // There's no list_by_bdb, use raw API
+                // There's no list_by_bdb, use raw API and return as Value
                 let client = create_enterprise_client(profile).await?;
-                let _result = client
+                let result = client
                     .get_raw(&format!("/v1/bdbs/{}/shards", db_uid))
                     .await?;
-                vec![] // TODO: Parse result properly
+                print_output(result, output_format, query)?;
+                return Ok(());
             } else {
                 handler.list().await?
             };
@@ -1548,6 +1543,281 @@ pub async fn handle_suffix_command(
         SuffixCommands::Delete { id } => {
             handler.delete(&id).await?;
             println!("Suffix {} deleted successfully", id);
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle CRDB task commands
+pub async fn handle_crdb_task_command(
+    command: CrdbTaskCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+
+    match command {
+        CrdbTaskCommands::List { crdb } => {
+            let path = if let Some(crdb_guid) = crdb {
+                format!("/v1/crdbs/{}/tasks", crdb_guid)
+            } else {
+                "/v1/crdb_tasks".to_string()
+            };
+            let result = client.get_raw(&path).await?;
+            print_output(result, output_format, query)?;
+        }
+        CrdbTaskCommands::Show { uid } => {
+            let result = client.get_raw(&format!("/v1/crdb_tasks/{}", uid)).await?;
+            print_output(result, output_format, query)?;
+        }
+        CrdbTaskCommands::Create { task_type, crdb } => {
+            let request = serde_json::json!({
+                "task_type": task_type,
+                "crdb_guid": crdb
+            });
+            let result = client.post_raw("/v1/crdb_tasks", request).await?;
+            print_output(result, output_format, query)?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle debug info commands
+pub async fn handle_debug_info_command(
+    command: DebugInfoCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+
+    match command {
+        DebugInfoCommands::Collect { from, to } => {
+            let mut request = serde_json::json!({});
+            if let Some(from_time) = from {
+                request["from"] = serde_json::Value::String(from_time);
+            }
+            if let Some(to_time) = to {
+                request["to"] = serde_json::Value::String(to_time);
+            }
+            let result = client.post_raw("/v1/debuginfo", request).await?;
+            print_output(result, output_format, query)?;
+        }
+        DebugInfoCommands::Status { id } => {
+            let result = client.get_raw(&format!("/v1/debuginfo/{}", id)).await?;
+            print_output(result, output_format, query)?;
+        }
+        DebugInfoCommands::Download { id, output: _ } => {
+            let result = client
+                .get_raw(&format!("/v1/debuginfo/{}/download", id))
+                .await?;
+            print_output(result, output_format, query)?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle diagnostics commands
+pub async fn handle_diagnostics_command(
+    command: DiagnosticsCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+
+    match command {
+        DiagnosticsCommands::Run { diagnostic_type } => {
+            let request = if let Some(diag_type) = diagnostic_type {
+                serde_json::json!({
+                    "type": diag_type
+                })
+            } else {
+                serde_json::json!({})
+            };
+            let result = client.post_raw("/v1/diagnostics", request).await?;
+            print_output(result, output_format, query)?;
+        }
+        DiagnosticsCommands::Status => {
+            let result = client.get_raw("/v1/diagnostics/status").await?;
+            print_output(result, output_format, query)?;
+        }
+        DiagnosticsCommands::Download { output: _ } => {
+            let result = client.get_raw("/v1/diagnostics/download").await?;
+            print_output(result, output_format, query)?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle endpoint commands
+pub async fn handle_endpoint_command(
+    command: EndpointCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+
+    match command {
+        EndpointCommands::List { database } => {
+            let mut params = Vec::new();
+            if let Some(db_uid) = database {
+                params.push(format!("bdb={}", db_uid));
+            }
+
+            let path = if params.is_empty() {
+                "/v1/endpoints".to_string()
+            } else {
+                format!("/v1/endpoints?{}", params.join("&"))
+            };
+
+            let result = client.get_raw(&path).await?;
+            print_output(result, output_format, query)?;
+        }
+        EndpointCommands::Show { uid } => {
+            let result = client.get_raw(&format!("/v1/endpoints/{}", uid)).await?;
+            print_output(result, output_format, query)?;
+        }
+        EndpointCommands::Stats { uid } => {
+            let result = client
+                .get_raw(&format!("/v1/endpoints/{}/stats", uid))
+                .await?;
+            print_output(result, output_format, query)?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle migration commands
+pub async fn handle_migration_command(
+    command: MigrationCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+
+    match command {
+        MigrationCommands::List => {
+            let result = client.get_raw("/v1/migrations").await?;
+            print_output(result, output_format, query)?;
+        }
+        MigrationCommands::Show { uid } => {
+            let result = client.get_raw(&format!("/v1/migrations/{}", uid)).await?;
+            print_output(result, output_format, query)?;
+        }
+        MigrationCommands::Create { source, target } => {
+            let request = serde_json::json!({
+                "source": source,
+                "target": target
+            });
+            let result = client.post_raw("/v1/migrations", request).await?;
+            print_output(result, output_format, query)?;
+        }
+        MigrationCommands::Status { uid } => {
+            let result = client
+                .get_raw(&format!("/v1/migrations/{}/status", uid))
+                .await?;
+            print_output(result, output_format, query)?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle usage report commands
+pub async fn handle_usage_report_command(
+    command: UsageReportCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+
+    match command {
+        UsageReportCommands::Get { period } => {
+            let path = if let Some(period_str) = period {
+                format!("/v1/usage_reports?period={}", period_str)
+            } else {
+                "/v1/usage_reports".to_string()
+            };
+            let result = client.get_raw(&path).await?;
+            print_output(result, output_format, query)?;
+        }
+        UsageReportCommands::Download { period, output: _ } => {
+            let path = if let Some(p) = period {
+                format!("/v1/usage_reports/download?period={}", p)
+            } else {
+                "/v1/usage_reports/download".to_string()
+            };
+            let result = client.get_raw(&path).await?;
+            print_output(result, output_format, query)?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle job scheduler commands
+pub async fn handle_job_scheduler_command(
+    command: JobSchedulerCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+
+    match command {
+        JobSchedulerCommands::List => {
+            let result = client.get_raw("/v1/jobs").await?;
+            print_output(result, output_format, query)?;
+        }
+        JobSchedulerCommands::Show { id } => {
+            let result = client.get_raw(&format!("/v1/jobs/{}", id)).await?;
+            print_output(result, output_format, query)?;
+        }
+        JobSchedulerCommands::Create {
+            name,
+            cron,
+            command: job_command,
+        } => {
+            let request = serde_json::json!({
+                "name": name,
+                "cron": cron,
+                "command": job_command
+            });
+            let result = client.post_raw("/v1/jobs", request).await?;
+            print_output(result, output_format, query)?;
+        }
+        JobSchedulerCommands::Delete { id, force: _ } => {
+            client.delete_raw(&format!("/v1/jobs/{}", id)).await?;
+            println!("Scheduled job {} deleted successfully", id);
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle JSON schema commands
+pub async fn handle_json_schema_command(
+    command: JsonSchemaCommands,
+    profile: &Profile,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> Result<()> {
+    let client = create_enterprise_client(profile).await?;
+
+    match command {
+        JsonSchemaCommands::Get { path } => {
+            let result = client.get_raw(&format!("/v1/jsonschema{}", path)).await?;
+            print_output(result, output_format, query)?;
         }
     }
 
