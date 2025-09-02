@@ -258,35 +258,55 @@
 //! These credentials can be obtained from the Redis Cloud console under Account Settings > API Keys.
 
 pub mod client;
-mod handlers;
 pub mod models;
 
 #[cfg(test)]
 mod lib_tests;
 
-// Re-export from the new structure
+// Re-export client types
 pub use client::{CloudClient, CloudClientBuilder};
 
-// Re-export handlers from handlers::* directly
-pub use handlers::account::CloudAccountHandler;
-pub use handlers::acl::CloudAclHandler;
-pub use handlers::api_keys::CloudApiKeyHandler;
-pub use handlers::backup::CloudBackupHandler;
-pub use handlers::billing::CloudBillingHandler;
-pub use handlers::cloud_accounts::CloudAccountsHandler;
-pub use handlers::crdb::CloudCrdbHandler;
-pub use handlers::database::CloudDatabaseHandler;
-pub use handlers::fixed::CloudFixedHandler;
-pub use handlers::logs::CloudLogsHandler;
-pub use handlers::metrics::CloudMetricsHandler;
-pub use handlers::peering::CloudPeeringHandler;
-pub use handlers::private_service_connect::CloudPrivateServiceConnectHandler;
-pub use handlers::region::CloudRegionHandler;
-pub use handlers::sso::CloudSsoHandler;
-pub use handlers::subscription::CloudSubscriptionHandler;
-pub use handlers::tasks::CloudTaskHandler;
-pub use handlers::transit_gateway::CloudTransitGatewayHandler;
-pub use handlers::users::CloudUserHandler;
+// Flat modules
+pub mod account;
+pub mod acl;
+pub mod api_keys;
+pub mod backup;
+pub mod billing;
+pub mod cloud_accounts;
+pub mod crdb;
+pub mod database;
+pub mod fixed;
+pub mod logs;
+pub mod metrics;
+pub mod peering;
+pub mod private_service_connect;
+pub mod region;
+pub mod sso;
+pub mod subscription;
+pub mod tasks;
+pub mod transit_gateway;
+pub mod users;
+
+// Root-level re-exports
+pub use account::CloudAccountHandler;
+pub use acl::CloudAclHandler;
+pub use api_keys::CloudApiKeyHandler;
+pub use backup::CloudBackupHandler;
+pub use billing::CloudBillingHandler;
+pub use cloud_accounts::CloudAccountsHandler;
+pub use crdb::CloudCrdbHandler;
+pub use database::CloudDatabaseHandler;
+pub use fixed::CloudFixedHandler;
+pub use logs::CloudLogsHandler;
+pub use metrics::CloudMetricsHandler;
+pub use peering::CloudPeeringHandler;
+pub use private_service_connect::CloudPrivateServiceConnectHandler;
+pub use region::CloudRegionHandler;
+pub use sso::CloudSsoHandler;
+pub use subscription::CloudSubscriptionHandler;
+pub use tasks::CloudTaskHandler;
+pub use transit_gateway::CloudTransitGatewayHandler;
+pub use users::CloudUserHandler;
 
 // Re-export models explicitly
 pub use models::{
@@ -349,28 +369,7 @@ pub enum CloudError {
 }
 
 pub type Result<T> = std::result::Result<T, CloudError>;
-// Module shims to mirror redis-enterprise flat module style
-// This allows imports like `redis_cloud::database::CloudDatabaseHandler` similar to
-// `redis_enterprise::bdb::...`, while keeping internal organization under `handlers/`.
-pub mod account { pub use crate::handlers::account::*; }
-pub mod acl { pub use crate::handlers::acl::*; }
-pub mod api_keys { pub use crate::handlers::api_keys::*; }
-pub mod backup { pub use crate::handlers::backup::*; }
-pub mod billing { pub use crate::handlers::billing::*; }
-pub mod cloud_accounts { pub use crate::handlers::cloud_accounts::*; }
-pub mod crdb { pub use crate::handlers::crdb::*; }
-pub mod database { pub use crate::handlers::database::*; }
-pub mod fixed { pub use crate::handlers::fixed::*; }
-pub mod logs { pub use crate::handlers::logs::*; }
-pub mod metrics { pub use crate::handlers::metrics::*; }
-pub mod peering { pub use crate::handlers::peering::*; }
-pub mod private_service_connect { pub use crate::handlers::private_service_connect::*; }
-pub mod region { pub use crate::handlers::region::*; }
-pub mod sso { pub use crate::handlers::sso::*; }
-pub mod subscription { pub use crate::handlers::subscription::*; }
-pub mod tasks { pub use crate::handlers::tasks::*; }
-pub mod transit_gateway { pub use crate::handlers::transit_gateway::*; }
-pub mod users { pub use crate::handlers::users::*; }
+// Expose a `types` module that re-exports models, to mirror `redis-enterprise::types`.
 
 // Expose a `types` module that re-exports models, to mirror `redis-enterprise::types`.
 pub mod types;

@@ -4,8 +4,9 @@ use crate::{
     Result,
     client::CloudClient,
     models::{
-        CreateTransitGatewayAttachmentRequest, TransitGatewayAttachment, TransitGatewayInvitation,
+        TransitGatewayAttachment,
         TransitGatewayAttachmentCreateRequest,
+        TransitGatewayInvitation,
     },
 };
 use serde_json::Value;
