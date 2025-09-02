@@ -14,7 +14,7 @@ pub struct BillingInfo {
     pub next_billing_date: Option<String>,
     pub payment_method_id: Option<u32>,
     pub status: Option<String>,
-    
+
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -33,7 +33,7 @@ pub struct Invoice {
     pub period_start: Option<String>,
     pub period_end: Option<String>,
     pub items: Option<Vec<InvoiceItem>>,
-    
+
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -47,7 +47,7 @@ pub struct InvoiceItem {
     pub amount: f64,
     pub resource_type: Option<String>,
     pub resource_id: Option<String>,
-    
+
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -65,7 +65,7 @@ pub struct PaymentMethod {
     pub expiry_year: Option<u16>,
     pub card_brand: Option<String>,
     pub billing_address: Option<BillingAddress>,
-    
+
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -79,7 +79,7 @@ pub struct BillingAddress {
     pub state: Option<String>,
     pub postal_code: Option<String>,
     pub country: Option<String>,
-    
+
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -120,7 +120,7 @@ pub struct BillingAlerts {
     pub threshold_amount: Option<f64>,
     pub notification_emails: Option<Vec<String>>,
     pub alert_frequency: Option<String>,
-    
+
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -145,7 +145,7 @@ pub struct CostBreakdown {
     pub total_cost: f64,
     pub currency: String,
     pub categories: Option<Vec<CostCategory>>,
-    
+
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -157,7 +157,7 @@ pub struct CostCategory {
     pub amount: f64,
     pub percentage: Option<f64>,
     pub items: Option<Vec<CostItem>>,
-    
+
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -171,7 +171,7 @@ pub struct CostItem {
     pub amount: f64,
     pub usage: Option<f64>,
     pub unit: Option<String>,
-    
+
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -185,7 +185,7 @@ pub struct UsageReport {
     pub total_cost: Option<f64>,
     pub currency: Option<String>,
     pub resources: Option<Vec<ResourceUsage>>,
-    
+
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -200,7 +200,7 @@ pub struct ResourceUsage {
     pub unit: String,
     pub cost: Option<f64>,
     pub daily_breakdown: Option<Vec<DailyUsage>>,
-    
+
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -211,7 +211,7 @@ pub struct DailyUsage {
     pub date: String,
     pub usage: f64,
     pub cost: Option<f64>,
-    
+
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -224,7 +224,7 @@ pub struct CreditsBalance {
     pub available_credits: f64,
     pub currency: String,
     pub expiry_date: Option<String>,
-    
+
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -236,7 +236,7 @@ pub struct PromoCodeResponse {
     pub message: String,
     pub credits_added: Option<f64>,
     pub new_balance: Option<f64>,
-    
+
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -250,7 +250,7 @@ pub struct BillingHistoryEntry {
     pub balance: Option<f64>,
     pub transaction_type: String,
     pub reference_id: Option<String>,
-    
+
     #[serde(flatten)]
     pub extra: Value,
 }

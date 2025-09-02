@@ -7,11 +7,14 @@
 //! # Module Organization
 //!
 //! - [`account`] - Account information, users, and payment method models
-//! - [`backup`] - Database backup and restore operation models  
+//! - [`acl`] - ACL users, roles, and Redis rules models
+//! - [`backup`] - Database backup and restore operation models
+//! - [`billing`] - Billing information, invoices, and payment models  
 //! - [`database`] - Database configuration, status, and operational models
 //! - [`metrics`] - Performance metrics, measurements, and monitoring models
 //! - [`peering`] - VPC peering connection and networking models
 //! - [`subscription`] - Subscription management and cloud provider models
+//! - [`users`] - User management models
 //!
 //! # Common Patterns
 //!
@@ -24,16 +27,24 @@
 //! include `Debug`, `Clone`, and other useful derives.
 
 pub mod account;
+pub mod acl;
 pub mod backup;
+pub mod billing;
 pub mod database;
+pub mod logs;
 pub mod metrics;
 pub mod peering;
 pub mod subscription;
+pub mod users;
 
 // Re-export all models
 pub use account::*;
+pub use acl::*;
 pub use backup::*;
+pub use billing::*;
 pub use database::*;
+pub use logs::*;
 pub use metrics::*;
 pub use peering::*;
 pub use subscription::*;
+pub use users::*;

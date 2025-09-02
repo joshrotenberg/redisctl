@@ -10,7 +10,7 @@ pub struct LogsResponse {
     pub total: Option<u32>,
     pub offset: Option<u32>,
     pub limit: Option<u32>,
-    
+
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -27,7 +27,7 @@ pub struct LogEntry {
     pub user_id: Option<u32>,
     pub request_id: Option<String>,
     pub metadata: Option<Value>,
-    
+
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -39,7 +39,7 @@ pub struct SystemLogsResponse {
     pub total: Option<u32>,
     pub offset: Option<u32>,
     pub limit: Option<u32>,
-    
+
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -55,7 +55,7 @@ pub struct SystemLogEntry {
     pub user: Option<String>,
     pub ip_address: Option<String>,
     pub metadata: Option<Value>,
-    
+
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -67,7 +67,7 @@ pub struct SessionLogsResponse {
     pub total: Option<u32>,
     pub offset: Option<u32>,
     pub limit: Option<u32>,
-    
+
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -84,7 +84,7 @@ pub struct SessionLogEntry {
     pub success: Option<bool>,
     pub error_message: Option<String>,
     pub metadata: Option<Value>,
-    
+
     #[serde(flatten)]
     pub extra: Value,
 }

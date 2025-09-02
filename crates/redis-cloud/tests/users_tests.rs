@@ -76,7 +76,7 @@ async fn test_users_list() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudUserHandler::new(client);
-    let result = handler.list().await;
+    let result = handler.list_raw().await;
 
     assert!(result.is_ok());
     let response = result.unwrap();
@@ -114,7 +114,7 @@ async fn test_users_list_empty() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudUserHandler::new(client);
-    let result = handler.list().await;
+    let result = handler.list_raw().await;
 
     assert!(result.is_ok());
     let response = result.unwrap();
@@ -148,7 +148,7 @@ async fn test_user_get() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudUserHandler::new(client);
-    let result = handler.get(1).await;
+    let result = handler.get_raw(1).await;
 
     assert!(result.is_ok());
     let user = result.unwrap();
@@ -197,7 +197,7 @@ async fn test_user_create_invite() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudUserHandler::new(client);
-    let result = handler.create(request_body).await;
+    let result = handler.create_raw(request_body).await;
 
     assert!(result.is_ok());
     let user = result.unwrap();
@@ -239,7 +239,7 @@ async fn test_user_create_admin() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudUserHandler::new(client);
-    let result = handler.create(request_body).await;
+    let result = handler.create_raw(request_body).await;
 
     assert!(result.is_ok());
     let user = result.unwrap();
@@ -277,7 +277,7 @@ async fn test_user_update() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudUserHandler::new(client);
-    let result = handler.update(1, request_body).await;
+    let result = handler.update_raw(1, request_body).await;
 
     assert!(result.is_ok());
     let user = result.unwrap();
@@ -339,7 +339,7 @@ async fn test_users_list_unauthorized() {
         .build()
         .unwrap();
     let handler = CloudUserHandler::new(client);
-    let result = handler.list().await;
+    let result = handler.list_raw().await;
 
     assert!(result.is_err());
 }
@@ -367,7 +367,7 @@ async fn test_user_get_not_found() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudUserHandler::new(client);
-    let result = handler.get(999).await;
+    let result = handler.get_raw(999).await;
 
     assert!(result.is_err());
 }
@@ -404,7 +404,7 @@ async fn test_user_create_invalid_email() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudUserHandler::new(client);
-    let result = handler.create(request_body).await;
+    let result = handler.create_raw(request_body).await;
 
     assert!(result.is_err());
 }
@@ -438,7 +438,7 @@ async fn test_user_create_duplicate_email() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudUserHandler::new(client);
-    let result = handler.create(request_body).await;
+    let result = handler.create_raw(request_body).await;
 
     assert!(result.is_err());
 }
@@ -470,7 +470,7 @@ async fn test_user_update_insufficient_permissions() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudUserHandler::new(client);
-    let result = handler.update(1, request_body).await;
+    let result = handler.update_raw(1, request_body).await;
 
     assert!(result.is_err());
 }

@@ -13,12 +13,12 @@ pub async fn handle_billing_command(
     let billing_handler = CloudBillingHandler::new(client.clone());
 
     let result = match command {
-        BillingCommands::Info => billing_handler.get_info().await,
+        BillingCommands::Info => billing_handler.get_info_raw().await,
         BillingCommands::InvoiceList { .. } => {
             // The API doesn't support filtering, so we ignore these parameters for now
-            billing_handler.list_invoices().await
+            billing_handler.list_invoices_raw().await
         }
-        BillingCommands::InvoiceGet { id } => billing_handler.get_invoice(&id).await,
+        BillingCommands::InvoiceGet { id } => billing_handler.get_invoice_raw(&id).await,
         BillingCommands::InvoiceDownload { id, output } => {
             // Note: The API returns JSON, not actual PDF data.
             // This would need to be handled differently in production
@@ -29,21 +29,21 @@ pub async fn handle_billing_command(
             println!("Invoice data saved to {}", filename);
             return Ok(());
         }
-        BillingCommands::InvoiceCurrent => billing_handler.get_current_invoice().await,
-        BillingCommands::PaymentMethodList => billing_handler.list_payment_methods().await,
+        BillingCommands::InvoiceCurrent => billing_handler.get_current_invoice_raw().await,
+        BillingCommands::PaymentMethodList => billing_handler.list_payment_methods_raw().await,
         BillingCommands::PaymentMethodGet { id } => {
             let method_id: u32 = id.parse()?;
-            billing_handler.get_payment_method(method_id).await
+            billing_handler.get_payment_method_raw(method_id).await
         }
         BillingCommands::PaymentMethodAdd { data } => {
             let payment_method: serde_json::Value = serde_json::from_str(&data)?;
-            billing_handler.add_payment_method(payment_method).await
+            billing_handler.add_payment_method_raw(payment_method).await
         }
         BillingCommands::PaymentMethodUpdate { id, data } => {
             let method_id: u32 = id.parse()?;
             let payment_method: serde_json::Value = serde_json::from_str(&data)?;
             billing_handler
-                .update_payment_method(method_id, payment_method)
+                .update_payment_method_raw(method_id, payment_method)
                 .await
         }
         BillingCommands::PaymentMethodDelete { id, force } => {
@@ -67,13 +67,13 @@ pub async fn handle_billing_command(
             let period = subscription
                 .map(|s| s.to_string())
                 .unwrap_or_else(|| "current".to_string());
-            billing_handler.get_cost_breakdown(&period).await
+            billing_handler.get_cost_breakdown_raw(&period).await
         }
         BillingCommands::Usage { from, to } => {
             // Both dates are required for the usage API
             let start = from.as_deref().unwrap_or("2024-01-01");
             let end = to.as_deref().unwrap_or("2024-12-31");
-            billing_handler.get_usage(start, end).await
+            billing_handler.get_usage_raw(start, end).await
         }
         BillingCommands::History { months } => {
             // The API takes start_date and end_date, not months
@@ -94,15 +94,15 @@ pub async fn handle_billing_command(
                     .to_string()
             };
             billing_handler
-                .get_history(Some(&start_date), Some(&end_date))
+                .get_history_raw(Some(&start_date), Some(&end_date))
                 .await
         }
-        BillingCommands::Credits => billing_handler.get_credits().await,
-        BillingCommands::PromoApply { code } => billing_handler.apply_promo_code(&code).await,
-        BillingCommands::AlertList => billing_handler.get_alerts().await,
+        BillingCommands::Credits => billing_handler.get_credits_raw().await,
+        BillingCommands::PromoApply { code } => billing_handler.apply_promo_code_raw(&code).await,
+        BillingCommands::AlertList => billing_handler.get_alerts_raw().await,
         BillingCommands::AlertUpdate { data } => {
             let alerts: serde_json::Value = serde_json::from_str(&data)?;
-            billing_handler.update_alerts(alerts).await
+            billing_handler.update_alerts_raw(alerts).await
         }
     };
 
