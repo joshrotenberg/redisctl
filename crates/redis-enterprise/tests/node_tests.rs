@@ -450,7 +450,7 @@ async fn test_node_execute_action_maintenance_on() {
         .unwrap();
 
     let handler = NodeHandler::new(client);
-    let result = handler.execute_action(1, "maintenance_on").await;
+    let result = handler.execute_action_raw(1, "maintenance_on").await;
 
     assert!(result.is_ok());
     let response = result.unwrap();
@@ -487,7 +487,7 @@ async fn test_node_execute_action_maintenance_off() {
         .unwrap();
 
     let handler = NodeHandler::new(client);
-    let result = handler.execute_action(1, "maintenance_off").await;
+    let result = handler.execute_action_raw(1, "maintenance_off").await;
 
     assert!(result.is_ok());
     let response = result.unwrap();
@@ -520,7 +520,7 @@ async fn test_node_execute_action_invalid() {
         .unwrap();
 
     let handler = NodeHandler::new(client);
-    let result = handler.execute_action(1, "invalid_action").await;
+    let result = handler.execute_action_raw(1, "invalid_action").await;
 
     assert!(result.is_err());
 }
@@ -550,7 +550,7 @@ async fn test_node_execute_action_nonexistent_node() {
         .unwrap();
 
     let handler = NodeHandler::new(client);
-    let result = handler.execute_action(999, "restart").await;
+    let result = handler.execute_action_raw(999, "restart").await;
 
     assert!(result.is_err());
 }

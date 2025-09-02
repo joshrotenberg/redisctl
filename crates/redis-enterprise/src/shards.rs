@@ -5,6 +5,19 @@ use crate::error::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+/// Response for a single metric query
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MetricResponse {
+    /// Metric name
+    pub metric: String,
+    /// Metric value
+    pub value: Value,
+    /// Timestamp if available
+    pub timestamp: Option<String>,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
 /// Shard information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Shard {
@@ -68,8 +81,15 @@ impl ShardHandler {
         self.client.get(&format!("/v1/shards/{}/stats", uid)).await
     }
 
-    /// Get shard statistics for a specific metric
-    pub async fn stats_metric(&self, uid: &str, metric: &str) -> Result<Value> {
+    /// Get shard statistics for a specific metric - typed version
+    pub async fn stats_metric(&self, uid: &str, metric: &str) -> Result<MetricResponse> {
+        self.client
+            .get(&format!("/v1/shards/{}/stats/{}", uid, metric))
+            .await
+    }
+
+    /// Get shard statistics for a specific metric - raw version
+    pub async fn stats_metric_raw(&self, uid: &str, metric: &str) -> Result<Value> {
         self.client
             .get(&format!("/v1/shards/{}/stats/{}", uid, metric))
             .await

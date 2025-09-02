@@ -285,7 +285,7 @@ async fn test_proxy_stats_metric() {
         .unwrap();
 
     let handler = ProxyHandler::new(client);
-    let result = handler.stats_metric(1, "connections").await;
+    let result = handler.stats_metric_raw(1, "connections").await;
 
     assert!(result.is_ok());
     let metric_stats = result.unwrap();
@@ -320,7 +320,7 @@ async fn test_proxy_stats_metric_ops() {
         .unwrap();
 
     let handler = ProxyHandler::new(client);
-    let result = handler.stats_metric(2, "ops_per_sec").await;
+    let result = handler.stats_metric_raw(2, "ops_per_sec").await;
 
     assert!(result.is_ok());
     let metric_stats = result.unwrap();
@@ -548,7 +548,7 @@ async fn test_proxy_stats_metric_invalid() {
         .unwrap();
 
     let handler = ProxyHandler::new(client);
-    let result = handler.stats_metric(1, "invalid_metric").await;
+    let result = handler.stats_metric_raw(1, "invalid_metric").await;
 
     assert!(result.is_err());
 }

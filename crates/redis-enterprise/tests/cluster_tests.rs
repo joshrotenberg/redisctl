@@ -114,7 +114,7 @@ async fn test_cluster_reset() {
         .unwrap();
 
     let handler = ClusterHandler::new(client);
-    let result = handler.reset().await;
+    let result = handler.reset_raw().await;
 
     assert!(result.is_ok());
     assert_eq!(result.unwrap()["status"], "cluster_reset");
@@ -139,7 +139,7 @@ async fn test_cluster_recover() {
         .unwrap();
 
     let handler = ClusterHandler::new(client);
-    let result = handler.recover().await;
+    let result = handler.recover_raw().await;
 
     assert!(result.is_ok());
     assert_eq!(result.unwrap()["status"], "cluster_recovered");
