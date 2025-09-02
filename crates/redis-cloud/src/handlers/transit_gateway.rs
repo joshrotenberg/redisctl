@@ -5,6 +5,7 @@ use crate::{
     client::CloudClient,
     models::{
         CreateTransitGatewayAttachmentRequest, TransitGatewayAttachment, TransitGatewayInvitation,
+        TransitGatewayAttachmentCreateRequest,
     },
 };
 use serde_json::Value;
@@ -56,8 +57,8 @@ impl CloudTransitGatewayHandler {
         &self,
         subscription_id: u32,
         tgw_id: &str,
-        attachment: serde_json::Value,
-    ) -> Result<TransitGatewayAttachment> {
+        attachment: TransitGatewayAttachmentCreateRequest,
+    ) -> Result<serde_json::Value> {
         let v: serde_json::Value = self
             .client
             .post(
@@ -68,11 +69,7 @@ impl CloudTransitGatewayHandler {
                 &attachment,
             )
             .await?;
-        if let Some(obj) = v.get("attachment") {
-            serde_json::from_value(obj.clone()).map_err(Into::into)
-        } else {
-            serde_json::from_value(v).map_err(Into::into)
-        }
+        Ok(v)
     }
 
     /// Delete transit gateway attachment
@@ -111,7 +108,7 @@ impl CloudTransitGatewayHandler {
         &self,
         subscription_id: u32,
         invitation_id: &str,
-    ) -> Result<TransitGatewayInvitation> {
+    ) -> Result<serde_json::Value> {
         self.client
             .post(
                 &format!(
@@ -128,7 +125,7 @@ impl CloudTransitGatewayHandler {
         &self,
         subscription_id: u32,
         invitation_id: &str,
-    ) -> Result<TransitGatewayInvitation> {
+    ) -> Result<serde_json::Value> {
         self.client
             .post(
                 &format!(
@@ -183,8 +180,8 @@ impl CloudTransitGatewayHandler {
         subscription_id: u32,
         region_id: &str,
         tgw_id: &str,
-        attachment: serde_json::Value,
-    ) -> Result<TransitGatewayAttachment> {
+        attachment: TransitGatewayAttachmentCreateRequest,
+    ) -> Result<serde_json::Value> {
         let v: serde_json::Value = self
             .client
             .post(
@@ -195,11 +192,7 @@ impl CloudTransitGatewayHandler {
                 &attachment,
             )
             .await?;
-        if let Some(obj) = v.get("attachment") {
-            serde_json::from_value(obj.clone()).map_err(Into::into)
-        } else {
-            serde_json::from_value(v).map_err(Into::into)
-        }
+        Ok(v)
     }
 
     /// Delete regional transit gateway attachment
@@ -245,7 +238,7 @@ impl CloudTransitGatewayHandler {
         subscription_id: u32,
         region_id: &str,
         invitation_id: &str,
-    ) -> Result<TransitGatewayInvitation> {
+    ) -> Result<serde_json::Value> {
         self.client
             .post(
                 &format!(
@@ -263,7 +256,7 @@ impl CloudTransitGatewayHandler {
         subscription_id: u32,
         region_id: &str,
         invitation_id: &str,
-    ) -> Result<TransitGatewayInvitation> {
+    ) -> Result<serde_json::Value> {
         self.client
             .post(
                 &format!(

@@ -56,11 +56,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let db_details = db_handler.get(subscription_id, db_id).await?;
 
             println!("Database details:");
-            println!("  Protocol: {}", db_details["protocol"]);
-            println!("  Endpoint: {}", db_details["publicEndpoint"]);
+            println!("  Protocol: {}", db_details.protocol);
+            if let Some(ep) = db_details.public_endpoint.as_ref() {
+                println!("  Endpoint: {}", ep);
+            }
             println!(
                 "  Security: {}",
-                db_details["security"]["sslClientAuthentication"]
+                serde_json::json!(db_details.extra)
+                    .get("security")
+                    .and_then(|s| s.get("sslClientAuthentication"))
+                    .cloned()
+                    .unwrap_or(serde_json::json!(false))
             );
         }
     } else {

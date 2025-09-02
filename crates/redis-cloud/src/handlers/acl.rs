@@ -14,6 +14,7 @@ impl CloudAclHandler {
         CloudAclHandler { client }
     }
 
+
     // Database ACL methods
     pub async fn list(&self, subscription_id: u32, database_id: u32) -> Result<Vec<DatabaseAcl>> {
         self.client
@@ -93,15 +94,18 @@ impl CloudAclHandler {
         self.client.get("/acl/users").await
     }
 
+
     /// Get ACL user by ID
     pub async fn get_user(&self, user_id: u32) -> Result<AclUser> {
         self.client.get(&format!("/acl/users/{}", user_id)).await
     }
 
+
     /// Create ACL user
     pub async fn create_user(&self, request: CreateAclUserRequest) -> Result<AclUser> {
         self.client.post("/acl/users", &request).await
     }
+
 
     /// Update ACL user
     pub async fn update_user(
@@ -124,6 +128,7 @@ impl CloudAclHandler {
         self.client.get("/acl/roles").await
     }
 
+
     /// Get ACL role by ID
     pub async fn get_role(&self, role_id: u32) -> Result<AclRole> {
         self.client.get(&format!("/acl/roles/{}", role_id)).await
@@ -133,6 +138,7 @@ impl CloudAclHandler {
     pub async fn create_role(&self, request: CreateAclRoleRequest) -> Result<AclRole> {
         self.client.post("/acl/roles", &request).await
     }
+
 
     /// Update ACL role
     pub async fn update_role(
@@ -155,6 +161,7 @@ impl CloudAclHandler {
         self.client.get("/acl/redisRules").await
     }
 
+
     /// Get Redis rule by ID
     pub async fn get_redis_rule(&self, rule_id: u32) -> Result<RedisRule> {
         self.client
@@ -166,6 +173,7 @@ impl CloudAclHandler {
     pub async fn create_redis_rule(&self, request: CreateRedisRuleRequest) -> Result<RedisRule> {
         self.client.post("/acl/redisRules", &request).await
     }
+
 
     /// Update Redis rule
     pub async fn update_redis_rule(

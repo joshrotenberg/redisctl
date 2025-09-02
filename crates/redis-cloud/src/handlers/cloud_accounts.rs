@@ -48,9 +48,10 @@ impl CloudAccountsHandler {
     }
 
     /// Delete cloud account
-    pub async fn delete(&self, account_id: u32) -> Result<()> {
+    pub async fn delete(&self, account_id: u32) -> Result<serde_json::Value> {
         self.client
             .delete(&format!("/cloud-accounts/{}", account_id))
-            .await
+            .await?;
+        Ok(serde_json::json!({"message": format!("Cloud account {} deleted", account_id)}))
     }
 }

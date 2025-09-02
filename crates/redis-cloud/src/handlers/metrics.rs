@@ -1,6 +1,6 @@
 //! Metrics operations handler
 
-use crate::{Result, client::CloudClient, models::CloudMetrics};
+use crate::{Result, client::CloudClient, models::{CloudMetrics, SubscriptionMetrics}};
 use serde_json::Value;
 
 /// Handler for Cloud metrics operations
@@ -56,7 +56,7 @@ impl CloudMetricsHandler {
         subscription_id: u32,
         from: Option<String>,
         to: Option<String>,
-    ) -> Result<Value> {
+    ) -> Result<SubscriptionMetrics> {
         let mut query_params = vec![];
 
         if let Some(from_time) = from {
@@ -73,11 +73,17 @@ impl CloudMetricsHandler {
             format!("?{}", query_params.join("&"))
         };
 
-        self.client
+        let v: Value = self
+            .client
             .get(&format!(
                 "/subscriptions/{}/metrics{}",
                 subscription_id, query_string
             ))
-            .await
+            .await?;
+        if let Some(obj) = v.get("subscriptionMetrics") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 }

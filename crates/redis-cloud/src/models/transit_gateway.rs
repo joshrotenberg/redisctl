@@ -2,6 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::HashMap;
 use typed_builder::TypedBuilder;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -32,6 +33,23 @@ pub struct CreateTransitGatewayAttachmentRequest {
     #[builder(default, setter(into, strip_option))]
     pub aws_account_id: Option<String>,
     pub cidrs: Vec<String>,
+}
+
+/// Request payload for creating a TGW attachment via Redis Cloud API
+#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
+pub struct TransitGatewayAttachmentCreateRequest {
+    #[serde(rename = "vpcId")]
+    #[builder(setter(into))]
+    pub vpc_id: String,
+    #[serde(rename = "subnets")]
+    pub subnets: Vec<String>,
+    #[serde(rename = "cidrBlocks")]
+    pub cidr_blocks: Vec<String>,
+    #[serde(rename = "availabilityZones")]
+    #[builder(default, setter(strip_option))]
+    pub availability_zones: Option<Vec<String>>,
+    #[builder(default, setter(strip_option))]
+    pub tags: Option<HashMap<String, String>>,
 }
 
 #[cfg(test)]

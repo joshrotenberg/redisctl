@@ -383,7 +383,7 @@ async fn test_upload_saml_cert() {
     let result = handler.upload_saml_cert(request).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let response = serde_json::to_value(result.unwrap()).unwrap();
     let cert = &response["certificate"];
     assert_eq!(cert["subject"], "CN=idp.example.com");
     assert_eq!(cert["issuer"], "CN=CA Certificate Authority");

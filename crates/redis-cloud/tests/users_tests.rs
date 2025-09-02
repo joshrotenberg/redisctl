@@ -115,10 +115,11 @@ async fn test_users_list_empty() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudUserHandler::new(client);
-    let result = handler.list_raw().await;
+    let result = handler.list().await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let users_vec = result.unwrap();
+    let response = json!({"users": users_vec, "totalCount": 0});
     let users = response["users"].as_array().unwrap();
     assert_eq!(users.len(), 0);
     assert_eq!(response["totalCount"], 0);
@@ -149,10 +150,10 @@ async fn test_user_get() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudUserHandler::new(client);
-    let result = handler.get_raw(1).await;
+    let result = handler.get(1).await;
 
     assert!(result.is_ok());
-    let user = result.unwrap();
+    let user = serde_json::to_value(result.unwrap()).unwrap();
     assert_eq!(user["id"], 1);
     assert_eq!(user["name"], "John Doe");
     assert_eq!(user["email"], "john.doe@example.com");
@@ -198,10 +199,10 @@ async fn test_user_create_invite() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudUserHandler::new(client);
-    let result = handler.create_raw(request_body).await;
+    let result = handler.create(request_body).await;
 
     assert!(result.is_ok());
-    let user = result.unwrap();
+    let user = serde_json::to_value(result.unwrap()).unwrap();
     assert_eq!(user["id"], 4);
     assert_eq!(user["name"], "New User");
     assert_eq!(user["email"], "newuser@example.com");
@@ -240,10 +241,10 @@ async fn test_user_create_admin() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudUserHandler::new(client);
-    let result = handler.create_raw(request_body).await;
+    let result = handler.create(request_body).await;
 
     assert!(result.is_ok());
-    let user = result.unwrap();
+    let user = serde_json::to_value(result.unwrap()).unwrap();
     assert_eq!(user["role"], "admin");
     let permissions = user["permissions"].as_array().unwrap();
     assert!(permissions.contains(&json!("admin")));
@@ -278,10 +279,10 @@ async fn test_user_update() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudUserHandler::new(client);
-    let result = handler.update_raw(1, request_body).await;
+    let result = handler.update(1, request_body).await;
 
     assert!(result.is_ok());
-    let user = result.unwrap();
+    let user = serde_json::to_value(result.unwrap()).unwrap();
     assert_eq!(user["id"], 1);
     assert_eq!(user["name"], "John Doe Updated");
     assert_eq!(user["role"], "admin");
@@ -340,7 +341,7 @@ async fn test_users_list_unauthorized() {
         .build()
         .unwrap();
     let handler = CloudUserHandler::new(client);
-    let result = handler.list_raw().await;
+    let result = handler.list().await;
 
     assert!(result.is_err());
 }
@@ -368,7 +369,7 @@ async fn test_user_get_not_found() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudUserHandler::new(client);
-    let result = handler.get_raw(999).await;
+    let result = handler.get(999).await;
 
     assert!(result.is_err());
 }
@@ -405,7 +406,7 @@ async fn test_user_create_invalid_email() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudUserHandler::new(client);
-    let result = handler.create_raw(request_body).await;
+    let result = handler.create(request_body).await;
 
     assert!(result.is_err());
 }
@@ -439,7 +440,7 @@ async fn test_user_create_duplicate_email() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudUserHandler::new(client);
-    let result = handler.create_raw(request_body).await;
+    let result = handler.create(request_body).await;
 
     assert!(result.is_err());
 }
@@ -471,7 +472,7 @@ async fn test_user_update_insufficient_permissions() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudUserHandler::new(client);
-    let result = handler.update_raw(1, request_body).await;
+    let result = handler.update(1, request_body).await;
 
     assert!(result.is_err());
 }

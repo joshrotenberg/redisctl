@@ -2,6 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use typed_builder::TypedBuilder;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PscService {
@@ -29,6 +30,40 @@ pub struct PscEndpoint {
 pub struct PscScripts {
     #[serde(flatten)]
     pub scripts: Value,
+}
+
+/// Request to create a Private Service Connect service
+#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
+pub struct PscCreateRequest {
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
+    pub description: Option<String>,
+    #[serde(rename = "availabilityZones")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
+    pub availability_zones: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
+    pub configuration: Option<Value>,
+}
+
+/// Request to update a Private Service Connect service
+#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
+pub struct PscUpdateRequest {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
+    pub name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
+    pub description: Option<String>,
+    #[serde(rename = "availabilityZones")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
+    pub availability_zones: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(strip_option))]
+    pub configuration: Option<Value>,
 }
 
 #[cfg(test)]

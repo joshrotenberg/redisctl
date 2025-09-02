@@ -132,7 +132,6 @@ pub async fn handle_database_command(
             memory_limit,
         } => {
             let (subscription_id, database_id) = parse_database_id(&id)?;
-            let handler = redis_cloud::CloudDatabaseHandler::new(client.clone());
             let mut update_data = serde_json::Map::new();
 
             if let Some(name) = name {

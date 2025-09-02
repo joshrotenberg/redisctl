@@ -3,7 +3,7 @@
 use crate::{
     Result,
     client::CloudClient,
-    models::{PscEndpoint, PscScripts, PscService},
+    models::{PscCreateRequest, PscEndpoint, PscScripts, PscService, PscUpdateRequest},
 };
 
 /// Handler for Cloud Private Service Connect operations
@@ -57,7 +57,7 @@ impl CloudPrivateServiceConnectHandler {
     pub async fn create(
         &self,
         subscription_id: u32,
-        service: serde_json::Value,
+        service: PscCreateRequest,
     ) -> Result<PscService> {
         let v: serde_json::Value = self
             .client
@@ -78,7 +78,7 @@ impl CloudPrivateServiceConnectHandler {
         &self,
         subscription_id: u32,
         psc_service_id: &str,
-        service: serde_json::Value,
+        service: PscUpdateRequest,
     ) -> Result<PscService> {
         let v: serde_json::Value = self
             .client
@@ -221,7 +221,7 @@ impl CloudPrivateServiceConnectHandler {
         &self,
         subscription_id: u32,
         region_id: &str,
-        service: serde_json::Value,
+        service: PscCreateRequest,
     ) -> Result<PscService> {
         let v: serde_json::Value = self
             .client
@@ -246,7 +246,7 @@ impl CloudPrivateServiceConnectHandler {
         subscription_id: u32,
         region_id: &str,
         psc_service_id: &str,
-        service: serde_json::Value,
+        service: PscUpdateRequest,
     ) -> Result<PscService> {
         let v: serde_json::Value = self
             .client

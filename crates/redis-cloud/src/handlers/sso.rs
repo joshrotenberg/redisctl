@@ -109,7 +109,7 @@ impl CloudSsoHandler {
     }
 
     /// Map SSO group to role
-    pub async fn map_group(&self, mapping: SsoGroupMapping) -> Result<SsoGroupMapping> {
+    pub async fn map_group(&self, mapping: serde_json::Value) -> Result<SsoGroupMapping> {
         self.client.post("/sso/groups", &mapping).await
     }
 
@@ -117,7 +117,7 @@ impl CloudSsoHandler {
     pub async fn update_group_mapping(
         &self,
         group_id: u32,
-        mapping: SsoGroupMapping,
+        mapping: serde_json::Value,
     ) -> Result<SsoGroupMapping> {
         self.client
             .put(&format!("/sso/groups/{}", group_id), &mapping)
@@ -125,9 +125,10 @@ impl CloudSsoHandler {
     }
 
     /// Delete SSO group mapping
-    pub async fn delete_group_mapping(&self, group_id: u32) -> Result<()> {
+    pub async fn delete_group_mapping(&self, group_id: u32) -> Result<serde_json::Value> {
         self.client
             .delete(&format!("/sso/groups/{}", group_id))
-            .await
+            .await?;
+        Ok(serde_json::json!({"message": format!("SSO group mapping {} deleted", group_id)}))
     }
 }

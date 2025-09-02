@@ -25,12 +25,12 @@ impl CloudUserHandler {
     }
 
     /// Create a new user (invite)
-    pub async fn create(&self, request: CreateUserRequest) -> Result<CloudUser> {
+    pub async fn create(&self, request: serde_json::Value) -> Result<CloudUser> {
         self.client.post("/users", &request).await
     }
 
     /// Update user
-    pub async fn update(&self, user_id: u32, request: UpdateUserRequest) -> Result<CloudUser> {
+    pub async fn update(&self, user_id: u32, request: serde_json::Value) -> Result<CloudUser> {
         self.client
             .put(&format!("/users/{}", user_id), &request)
             .await

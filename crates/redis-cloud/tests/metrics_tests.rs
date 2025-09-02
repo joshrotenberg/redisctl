@@ -263,16 +263,12 @@ async fn test_subscription_metrics_basic() {
 
     assert!(result.is_ok());
     let metrics = result.unwrap();
+    let metrics = json!({"subscriptionMetrics": metrics});
     assert_eq!(metrics["subscriptionMetrics"]["subscriptionId"], 12345);
-    assert_eq!(
-        metrics["subscriptionMetrics"]["totalMemoryUsage"],
-        2097152.0
-    );
+    assert_eq!(metrics["subscriptionMetrics"]["totalMemoryUsage"], 2097152.0);
     assert_eq!(metrics["subscriptionMetrics"]["totalRequests"], 5000.0);
 
-    let databases = metrics["subscriptionMetrics"]["databases"]
-        .as_array()
-        .unwrap();
+    let databases = metrics["subscriptionMetrics"]["databases"].as_array().unwrap();
     assert_eq!(databases.len(), 2);
     assert_eq!(databases[0]["databaseId"], 123);
     assert_eq!(databases[1]["databaseId"], 124);
@@ -305,6 +301,7 @@ async fn test_subscription_metrics_with_time_range() {
 
     assert!(result.is_ok());
     let metrics = result.unwrap();
+    let metrics = json!({"subscriptionMetrics": metrics});
     assert_eq!(metrics["subscriptionMetrics"]["subscriptionId"], 12345);
 }
 

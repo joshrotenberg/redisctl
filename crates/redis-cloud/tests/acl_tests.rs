@@ -40,31 +40,34 @@ async fn test_database_acl_list() {
         .and(path("/subscriptions/12345/databases/67890/acl"))
         .and(header("x-api-key", "test-api-key"))
         .and(header("x-api-secret-key", "test-secret-key"))
-        .respond_with(success_response(json!({
-            "acls": [
-                {
-                    "id": 1,
-                    "rule": "~* +@all",
-                    "name": "full-access",
-                    "description": "Full access rule"
-                },
-                {
-                    "id": 2,
-                    "rule": "~key:* +@read",
-                    "name": "read-only",
-                    "description": "Read only access"
-                }
-            ]
-        })))
+        .respond_with(success_response(json!([
+            {
+                "id": 1,
+                "subscription_id": 12345,
+                "database_id": 67890,
+                "name": "full-access",
+                "redis_rule_id": 100,
+                "is_active": true
+            },
+            {
+                "id": 2,
+                "subscription_id": 12345,
+                "database_id": 67890,
+                "name": "read-only",
+                "redis_rule_id": 101,
+                "is_active": true
+            }
+        ])))
         .mount(&mock_server)
         .await;
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.list_raw(12345, 67890).await;
+    let result = handler.list(12345, 67890).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let acls_vec = result.unwrap();
+    let response = json!({"acls": acls_vec});
     let acls = response["acls"].as_array().unwrap();
     assert_eq!(acls.len(), 2);
     assert_eq!(acls[0]["name"], "full-access");
@@ -81,32 +84,34 @@ async fn test_database_acl_get() {
         .and(header("x-api-secret-key", "test-secret-key"))
         .respond_with(success_response(json!({
             "id": 1,
-            "rule": "~* +@all",
+            "subscription_id": 12345,
+            "database_id": 67890,
             "name": "full-access",
-            "description": "Full access rule",
-            "createdAt": "2023-01-01T00:00:00Z"
+            "redis_rule_id": 100,
+            "is_active": true,
+            "created_at": "2023-01-01T00:00:00Z"
         })))
         .mount(&mock_server)
         .await;
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.get_raw(12345, 67890, 1).await;
+    let result = handler.get(12345, 67890, 1).await;
 
     assert!(result.is_ok());
-    let acl = result.unwrap();
+    let acl = serde_json::to_value(result.unwrap()).unwrap();
     assert_eq!(acl["id"], 1);
     assert_eq!(acl["name"], "full-access");
-    assert_eq!(acl["rule"], "~* +@all");
+    assert_eq!(acl["redis_rule_id"], 100);
 }
 
 #[tokio::test]
 async fn test_database_acl_create() {
     let mock_server = MockServer::start().await;
     let request_body = json!({
-        "rule": "~key:* +@read",
         "name": "test-rule",
-        "description": "Test ACL rule"
+        "redis_rule_id": 101,
+        "is_active": true
     });
 
     Mock::given(method("POST"))
@@ -116,20 +121,23 @@ async fn test_database_acl_create() {
         .and(body_json(&request_body))
         .respond_with(created_response(json!({
             "id": 3,
-            "rule": "~key:* +@read",
+            "subscription_id": 12345,
+            "database_id": 67890,
             "name": "test-rule",
-            "description": "Test ACL rule",
-            "createdAt": "2023-01-01T00:00:00Z"
+            "redis_rule_id": 101,
+            "is_active": true,
+            "created_at": "2023-01-01T00:00:00Z"
         })))
         .mount(&mock_server)
         .await;
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.create_raw(12345, 67890, request_body).await;
+    let req: redis_cloud::models::acl::CreateDatabaseAclRequest = serde_json::from_value(request_body).unwrap();
+    let result = handler.create(12345, 67890, req).await;
 
     assert!(result.is_ok());
-    let acl = result.unwrap();
+    let acl = serde_json::to_value(result.unwrap()).unwrap();
     assert_eq!(acl["id"], 3);
     assert_eq!(acl["name"], "test-rule");
 }
@@ -138,9 +146,9 @@ async fn test_database_acl_create() {
 async fn test_database_acl_update() {
     let mock_server = MockServer::start().await;
     let request_body = json!({
-        "rule": "~key:* +@read +@write",
         "name": "updated-rule",
-        "description": "Updated ACL rule"
+        "redis_rule_id": 102,
+        "is_active": true
     });
 
     Mock::given(method("PUT"))
@@ -150,20 +158,23 @@ async fn test_database_acl_update() {
         .and(body_json(&request_body))
         .respond_with(success_response(json!({
             "id": 1,
-            "rule": "~key:* +@read +@write",
+            "subscription_id": 12345,
+            "database_id": 67890,
             "name": "updated-rule",
-            "description": "Updated ACL rule",
-            "updatedAt": "2023-01-02T00:00:00Z"
+            "redis_rule_id": 102,
+            "is_active": true,
+            "updated_at": "2023-01-02T00:00:00Z"
         })))
         .mount(&mock_server)
         .await;
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.update_raw(12345, 67890, 1, request_body).await;
+    let req: redis_cloud::models::acl::UpdateDatabaseAclRequest = serde_json::from_value(request_body).unwrap();
+    let result = handler.update(12345, 67890, 1, req).await;
 
     assert!(result.is_ok());
-    let acl = result.unwrap();
+    let acl = serde_json::to_value(result.unwrap()).unwrap();
     assert_eq!(acl["name"], "updated-rule");
 }
 
@@ -197,26 +208,24 @@ async fn test_acl_users_list() {
         .and(path("/acl/users"))
         .and(header("x-api-key", "test-api-key"))
         .and(header("x-api-secret-key", "test-secret-key"))
-        .respond_with(success_response(json!({
-            "users": [
-                {
-                    "id": 1,
-                    "name": "test-user",
-                    "password": "***",
-                    "role": "admin",
-                    "rules": ["~* +@all"]
-                }
-            ]
-        })))
+        .respond_with(success_response(json!([
+            {
+                "id": 1,
+                "name": "test-user",
+                "email": "user@example.com",
+                "status": "active"
+            }
+        ])))
         .mount(&mock_server)
         .await;
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.list_users_raw().await;
+    let result = handler.list_users().await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let users_vec = result.unwrap();
+    let response = json!({"users": users_vec});
     let users = response["users"].as_array().unwrap();
     assert_eq!(users.len(), 1);
     assert_eq!(users[0]["name"], "test-user");
@@ -233,20 +242,19 @@ async fn test_acl_user_get() {
         .respond_with(success_response(json!({
             "id": 1,
             "name": "test-user",
-            "password": "***",
-            "role": "admin",
-            "rules": ["~* +@all"],
-            "createdAt": "2023-01-01T00:00:00Z"
+            "email": "user@example.com",
+            "status": "active",
+            "created_at": "2023-01-01T00:00:00Z"
         })))
         .mount(&mock_server)
         .await;
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.get_user_raw(1).await;
+    let result = handler.get_user(1).await;
 
     assert!(result.is_ok());
-    let user = result.unwrap();
+    let user = serde_json::to_value(result.unwrap()).unwrap();
     assert_eq!(user["id"], 1);
     assert_eq!(user["name"], "test-user");
 }
@@ -256,9 +264,7 @@ async fn test_acl_user_create() {
     let mock_server = MockServer::start().await;
     let request_body = json!({
         "name": "new-user",
-        "password": "secure-password",
-        "role": "user",
-        "rules": ["~key:* +@read"]
+        "email": "new@example.com",
     });
 
     Mock::given(method("POST"))
@@ -269,20 +275,20 @@ async fn test_acl_user_create() {
         .respond_with(created_response(json!({
             "id": 2,
             "name": "new-user",
-            "password": "***",
-            "role": "user",
-            "rules": ["~key:* +@read"],
-            "createdAt": "2023-01-01T00:00:00Z"
+            "email": "new@example.com",
+            "status": "pending",
+            "created_at": "2023-01-01T00:00:00Z"
         })))
         .mount(&mock_server)
         .await;
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.create_user_raw(request_body).await;
+    let req: redis_cloud::models::acl::CreateAclUserRequest = serde_json::from_value(request_body).unwrap();
+    let result = handler.create_user(req).await;
 
     assert!(result.is_ok());
-    let user = result.unwrap();
+    let user = serde_json::to_value(result.unwrap()).unwrap();
     assert_eq!(user["id"], 2);
     assert_eq!(user["name"], "new-user");
 }
@@ -315,25 +321,23 @@ async fn test_acl_roles_list() {
         .and(path("/acl/roles"))
         .and(header("x-api-key", "test-api-key"))
         .and(header("x-api-secret-key", "test-secret-key"))
-        .respond_with(success_response(json!({
-            "roles": [
-                {
-                    "id": 1,
-                    "name": "admin",
-                    "description": "Administrator role",
-                    "permissions": ["read", "write", "admin"]
-                }
-            ]
-        })))
+        .respond_with(success_response(json!([
+            {
+                "id": 1,
+                "name": "admin",
+                "description": "Administrator role"
+            }
+        ])))
         .mount(&mock_server)
         .await;
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.list_roles_raw().await;
+    let result = handler.list_roles().await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let roles_vec = result.unwrap();
+    let response = json!({"roles": roles_vec});
     let roles = response["roles"].as_array().unwrap();
     assert_eq!(roles.len(), 1);
     assert_eq!(roles[0]["name"], "admin");
@@ -344,8 +348,7 @@ async fn test_acl_role_create() {
     let mock_server = MockServer::start().await;
     let request_body = json!({
         "name": "custom-role",
-        "description": "Custom role for testing",
-        "permissions": ["read", "write"]
+        "description": "Custom role for testing"
     });
 
     Mock::given(method("POST"))
@@ -357,18 +360,18 @@ async fn test_acl_role_create() {
             "id": 2,
             "name": "custom-role",
             "description": "Custom role for testing",
-            "permissions": ["read", "write"],
-            "createdAt": "2023-01-01T00:00:00Z"
+            "created_at": "2023-01-01T00:00:00Z"
         })))
         .mount(&mock_server)
         .await;
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.create_role_raw(request_body).await;
+    let req: redis_cloud::models::acl::CreateAclRoleRequest = serde_json::from_value(request_body).unwrap();
+    let result = handler.create_role(req).await;
 
     assert!(result.is_ok());
-    let role = result.unwrap();
+    let role = serde_json::to_value(result.unwrap()).unwrap();
     assert_eq!(role["id"], 2);
     assert_eq!(role["name"], "custom-role");
 }
@@ -387,7 +390,7 @@ async fn test_redis_rules_list() {
                 {
                     "id": 1,
                     "name": "read-only-rule",
-                    "rule": "~key:* +@read",
+                    "acl_syntax": "~key:* +@read",
                     "description": "Read only access to keys"
                 }
             ]
@@ -397,10 +400,11 @@ async fn test_redis_rules_list() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.list_redis_rules_raw().await;
+    let result = handler.list_redis_rules().await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let rules_vec = result.unwrap();
+    let response = json!({"rules": rules_vec});
     let rules = response["rules"].as_array().unwrap();
     assert_eq!(rules.len(), 1);
     assert_eq!(rules[0]["name"], "read-only-rule");
@@ -411,7 +415,7 @@ async fn test_redis_rule_create() {
     let mock_server = MockServer::start().await;
     let request_body = json!({
         "name": "write-rule",
-        "rule": "~key:* +@write",
+        "acl_syntax": "~key:* +@write",
         "description": "Write access to keys"
     });
 
@@ -423,19 +427,20 @@ async fn test_redis_rule_create() {
         .respond_with(created_response(json!({
             "id": 2,
             "name": "write-rule",
-            "rule": "~key:* +@write",
+            "acl_syntax": "~key:* +@write",
             "description": "Write access to keys",
-            "createdAt": "2023-01-01T00:00:00Z"
+            "created_at": "2023-01-01T00:00:00Z"
         })))
         .mount(&mock_server)
         .await;
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.create_redis_rule_raw(request_body).await;
+    let req: redis_cloud::models::acl::CreateRedisRuleRequest = serde_json::from_value(request_body).unwrap();
+    let result = handler.create_redis_rule(req).await;
 
     assert!(result.is_ok());
-    let rule = result.unwrap();
+    let rule = serde_json::to_value(result.unwrap()).unwrap();
     assert_eq!(rule["id"], 2);
     assert_eq!(rule["name"], "write-rule");
 }
@@ -464,7 +469,7 @@ async fn test_acl_list_error() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.list_raw(12345, 67890).await;
+    let result = handler.list(12345, 67890).await;
 
     assert!(result.is_err());
 }
@@ -497,7 +502,8 @@ async fn test_acl_create_validation_error() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.create_raw(12345, 67890, request_body).await;
+    let req: redis_cloud::models::acl::CreateDatabaseAclRequest = serde_json::from_value(request_body).unwrap();
+    let result = handler.create(12345, 67890, req).await;
 
     assert!(result.is_err());
 }

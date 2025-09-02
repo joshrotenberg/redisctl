@@ -194,7 +194,7 @@ async fn test_create_api_key() {
         "permissions": ["read"],
         "description": "Test key for development"
     });
-    let result = handler.create(request).await;
+    let result = handler.create(&request).await;
 
     assert!(result.is_ok());
     let api_key_obj = result.unwrap();
@@ -234,7 +234,7 @@ async fn test_update_api_key() {
         "name": "Updated Production API Key",
         "description": "Updated description"
     });
-    let result = handler.update(1001, request).await;
+    let result = handler.update(1001, &request).await;
 
     assert!(result.is_ok());
     let api_key_obj = result.unwrap();
@@ -375,7 +375,7 @@ async fn test_update_permissions() {
         ],
         "globalPermissions": ["account:read", "billing:read"]
     });
-    let result = handler.update_permissions(1001, request).await;
+    let result = handler.update_permissions(1001, &request).await;
 
     assert!(result.is_ok());
     let perms_obj = result.unwrap();

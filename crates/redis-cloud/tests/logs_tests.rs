@@ -140,10 +140,10 @@ async fn test_database_logs_basic() {
     let client = create_test_client(mock_server.uri());
     let handler = CloudLogsHandler::new(client);
 
-    let result = handler.database_raw(12345, 123, None, None).await;
+    let result = handler.database(12345, 123, None, None).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let response = serde_json::to_value(result.unwrap()).unwrap();
     let logs = response["logs"].as_array().unwrap();
     assert_eq!(logs.len(), 3);
 
@@ -175,10 +175,10 @@ async fn test_database_logs_with_limit() {
     let client = create_test_client(mock_server.uri());
     let handler = CloudLogsHandler::new(client);
 
-    let result = handler.database_raw(12345, 123, Some(10), None).await;
+    let result = handler.database(12345, 123, Some(10), None).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let response = serde_json::to_value(result.unwrap()).unwrap();
     assert!(response["logs"].is_array());
 }
 
@@ -199,7 +199,7 @@ async fn test_database_logs_with_limit_and_offset() {
     let client = create_test_client(mock_server.uri());
     let handler = CloudLogsHandler::new(client);
 
-    let result = handler.database_raw(12345, 123, Some(10), Some(20)).await;
+    let result = handler.database(12345, 123, Some(10), Some(20)).await;
 
     assert!(result.is_ok());
 }
@@ -220,7 +220,7 @@ async fn test_database_logs_with_offset_only() {
     let client = create_test_client(mock_server.uri());
     let handler = CloudLogsHandler::new(client);
 
-    let result = handler.database_raw(12345, 123, None, Some(5)).await;
+    let result = handler.database(12345, 123, None, Some(5)).await;
 
     assert!(result.is_ok());
 }
@@ -249,7 +249,7 @@ async fn test_database_logs_not_found() {
     let client = create_test_client(mock_server.uri());
     let handler = CloudLogsHandler::new(client);
 
-    let result = handler.database_raw(12345, 999, None, None).await;
+    let result = handler.database(12345, 999, None, None).await;
 
     assert!(result.is_err());
 }
@@ -269,10 +269,14 @@ async fn test_system_logs_basic() {
     let client = create_test_client(mock_server.uri());
     let handler = CloudLogsHandler::new(client);
 
-    let result = handler.system_raw(None, None).await;
+    let result = handler.system(None, None).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let resp = result.unwrap();
+    let response = json!({
+        "logs": resp.logs,
+        "pagination": {"total": resp.total, "limit": resp.limit, "offset": resp.offset}
+    });
     let logs = response["logs"].as_array().unwrap();
     assert_eq!(logs.len(), 2);
 
@@ -304,7 +308,7 @@ async fn test_system_logs_with_pagination() {
     let client = create_test_client(mock_server.uri());
     let handler = CloudLogsHandler::new(client);
 
-    let result = handler.system_raw(Some(50), Some(10)).await;
+    let result = handler.system(Some(50), Some(10)).await;
 
     assert!(result.is_ok());
 }
@@ -338,7 +342,7 @@ async fn test_system_logs_unauthorized() {
         .unwrap();
     let handler = CloudLogsHandler::new(client);
 
-    let result = handler.system_raw(None, None).await;
+    let result = handler.system(None, None).await;
 
     assert!(result.is_err());
 }
@@ -358,10 +362,11 @@ async fn test_session_logs_basic() {
     let client = create_test_client(mock_server.uri());
     let handler = CloudLogsHandler::new(client);
 
-    let result = handler.session_raw(None, None).await;
+    let result = handler.session(None, None).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let resp = result.unwrap();
+    let response = json!({"sessionLogs": resp.logs});
     let session_logs = response["sessionLogs"].as_array().unwrap();
     assert_eq!(session_logs.len(), 3);
 
@@ -395,10 +400,10 @@ async fn test_session_logs_with_pagination() {
     let client = create_test_client(mock_server.uri());
     let handler = CloudLogsHandler::new(client);
 
-    let result = handler.session_raw(Some(25), Some(5)).await;
+    let result = handler.session(Some(25), Some(5)).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let response = serde_json::to_value(result.unwrap()).unwrap();
     assert!(response["sessionLogs"].is_array());
 }
 
@@ -426,7 +431,7 @@ async fn test_session_logs_forbidden() {
     let client = create_test_client(mock_server.uri());
     let handler = CloudLogsHandler::new(client);
 
-    let result = handler.session_raw(None, None).await;
+    let result = handler.session(None, None).await;
 
     assert!(result.is_err());
 }
@@ -454,10 +459,11 @@ async fn test_session_logs_empty_response() {
     let client = create_test_client(mock_server.uri());
     let handler = CloudLogsHandler::new(client);
 
-    let result = handler.session_raw(None, None).await;
+    let result = handler.session(None, None).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let resp = result.unwrap();
+    let response = json!({"sessionLogs": resp.logs});
     let session_logs = response["sessionLogs"].as_array().unwrap();
     assert_eq!(session_logs.len(), 0);
     assert_eq!(response["pagination"]["total"], 0);

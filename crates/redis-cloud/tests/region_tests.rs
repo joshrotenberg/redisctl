@@ -246,7 +246,7 @@ async fn test_region_get_aws_details() {
     let result = handler.get("AWS", "us-east-1").await;
 
     assert!(result.is_ok());
-    let region = result.unwrap();
+    let region = serde_json::to_value(result.unwrap()).unwrap();
     assert_eq!(region["id"], "us-east-1");
     assert_eq!(region["name"], "US East (N. Virginia)");
     assert_eq!(region["provider"], "AWS");
@@ -319,7 +319,7 @@ async fn test_region_get_gcp_details() {
     let result = handler.get("GCP", "us-central1").await;
 
     assert!(result.is_ok());
-    let region = result.unwrap();
+    let region = serde_json::to_value(result.unwrap()).unwrap();
     assert_eq!(region["id"], "us-central1");
     assert_eq!(region["provider"], "GCP");
     assert_eq!(region["networking"]["privateServiceConnect"], true);
@@ -480,7 +480,7 @@ async fn test_region_get_unavailable() {
     let result = handler.get("AWS", "us-gov-east-1").await;
 
     assert!(result.is_ok());
-    let region = result.unwrap();
+    let region = serde_json::to_value(result.unwrap()).unwrap();
     assert_eq!(region["id"], "us-gov-east-1");
     assert_eq!(region["available"], false);
     assert!(region["reason"].is_string());

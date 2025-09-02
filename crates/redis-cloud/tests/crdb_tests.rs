@@ -380,7 +380,8 @@ async fn test_get_regions() {
     let result = handler.get_regions(1001).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let regions_vec = result.unwrap();
+    let response = json!({"regions": regions_vec});
     let regions = response["regions"].as_array().unwrap();
     assert_eq!(regions.len(), 2);
     assert_eq!(regions[0]["regionName"], "us-east-1");
@@ -483,7 +484,8 @@ async fn test_get_tasks() {
     let result = handler.get_tasks(1001).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let tasks_vec = result.unwrap();
+    let response = json!({"tasks": tasks_vec});
     let tasks = response["tasks"].as_array().unwrap();
     assert_eq!(tasks.len(), 2);
     assert_eq!(tasks[0]["status"], "received");
@@ -524,7 +526,8 @@ async fn test_get_task() {
     let result = handler.get_task(1001, "task_123456").await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let task_obj = result.unwrap();
+    let response = json!({"task": task_obj});
     let task = &response["task"];
     assert_eq!(task["taskId"], "task_123456");
     assert_eq!(task["status"], "processing-completed");
@@ -593,7 +596,8 @@ async fn test_get_metrics() {
     let result = handler.get_metrics(1001, "memory,ops", "1h").await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let metrics_obj = result.unwrap();
+    let response = json!({"metrics": metrics_obj});
     let metrics = &response["metrics"];
     assert_eq!(metrics["crdbId"], 1001);
     assert_eq!(metrics["period"], "1h");
