@@ -220,7 +220,7 @@ async fn test_database_export() {
         .unwrap();
 
     let handler = BdbHandler::new(client);
-    let result = handler.export(1, "ftp://backup/db1.rdb").await;
+    let result = handler.export_raw(1, "ftp://backup/db1.rdb").await;
 
     assert!(result.is_ok());
     assert_eq!(result.unwrap()["task_id"], "export-123");
@@ -245,7 +245,7 @@ async fn test_database_import() {
         .unwrap();
 
     let handler = BdbHandler::new(client);
-    let result = handler.import(1, "ftp://backup/db1.rdb", true).await;
+    let result = handler.import_raw(1, "ftp://backup/db1.rdb", true).await;
 
     assert!(result.is_ok());
     assert_eq!(result.unwrap()["task_id"], "import-456");
@@ -270,7 +270,7 @@ async fn test_database_backup() {
         .unwrap();
 
     let handler = BdbHandler::new(client);
-    let result = handler.backup(1).await;
+    let result = handler.backup_raw(1).await;
 
     assert!(result.is_ok());
     assert_eq!(result.unwrap()["backup_id"], "backup-789");
@@ -295,7 +295,7 @@ async fn test_database_restore() {
         .unwrap();
 
     let handler = BdbHandler::new(client);
-    let result = handler.restore(1, Some("backup-789")).await;
+    let result = handler.restore_raw(1, Some("backup-789")).await;
 
     assert!(result.is_ok());
     assert_eq!(result.unwrap()["status"], "restored");
@@ -349,7 +349,7 @@ async fn test_database_upgrade() {
         .unwrap();
 
     let handler = BdbHandler::new(client);
-    let result = handler.upgrade(1, "search", "2.0").await;
+    let result = handler.upgrade_raw(1, "search", "2.0").await;
 
     assert!(result.is_ok());
     assert_eq!(result.unwrap()["status"], "upgraded");

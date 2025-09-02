@@ -214,7 +214,7 @@ async fn test_stats_cluster_last() {
         .unwrap();
 
     let handler = StatsHandler::new(client);
-    let result = handler.cluster_last().await;
+    let result = handler.cluster_last_raw().await;
 
     assert!(result.is_ok());
     let stats = result.unwrap();
@@ -329,7 +329,7 @@ async fn test_stats_node_last() {
         .unwrap();
 
     let handler = StatsHandler::new(client);
-    let result = handler.node_last(1).await;
+    let result = handler.node_last_raw(1).await;
 
     assert!(result.is_ok());
     let stats = result.unwrap();
@@ -356,7 +356,7 @@ async fn test_stats_node_last_nonexistent() {
         .unwrap();
 
     let handler = StatsHandler::new(client);
-    let result = handler.node_last(999).await;
+    let result = handler.node_last_raw(999).await;
 
     assert!(result.is_err());
 }
@@ -395,7 +395,7 @@ async fn test_stats_nodes() {
         .unwrap();
 
     let handler = StatsHandler::new(client);
-    let result = handler.nodes(None).await;
+    let result = handler.nodes_raw(None).await;
 
     assert!(result.is_ok());
     let stats = result.unwrap();
@@ -432,7 +432,7 @@ async fn test_stats_nodes_with_query() {
         etime: None,
         metrics: None,
     };
-    let result = handler.nodes(Some(query)).await;
+    let result = handler.nodes_raw(Some(query)).await;
 
     assert!(result.is_ok());
     let stats = result.unwrap();
@@ -510,7 +510,7 @@ async fn test_stats_database_last() {
         .unwrap();
 
     let handler = StatsHandler::new(client);
-    let result = handler.database_last(1).await;
+    let result = handler.database_last_raw(1).await;
 
     assert!(result.is_ok());
     let stats = result.unwrap();
@@ -550,7 +550,7 @@ async fn test_stats_databases() {
         .unwrap();
 
     let handler = StatsHandler::new(client);
-    let result = handler.databases(None).await;
+    let result = handler.databases_raw(None).await;
 
     assert!(result.is_ok());
     let stats = result.unwrap();
@@ -645,7 +645,7 @@ async fn test_stats_shards() {
         .unwrap();
 
     let handler = StatsHandler::new(client);
-    let result = handler.shards(None).await;
+    let result = handler.shards_raw(None).await;
 
     assert!(result.is_ok());
     let stats = result.unwrap();

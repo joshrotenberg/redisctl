@@ -6,6 +6,18 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use typed_builder::TypedBuilder;
 
+/// Response from cluster action operations
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ClusterActionResponse {
+    /// The action UID for tracking async operations
+    pub action_uid: String,
+    /// Description of the action
+    pub description: Option<String>,
+    /// Additional fields from the response
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
 /// Node information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClusterNode {
@@ -216,15 +228,29 @@ impl ClusterHandler {
         Ok(serde_json::json!({"message": format!("Node {} removed", node_uid)}))
     }
 
-    /// Reset cluster to factory defaults (CLUSTER.RESET) - DANGEROUS
-    pub async fn reset(&self) -> Result<Value> {
+    /// Reset cluster to factory defaults (CLUSTER.RESET) - DANGEROUS - typed version
+    pub async fn reset(&self) -> Result<ClusterActionResponse> {
         self.client
             .post("/v1/cluster/actions/reset", &serde_json::json!({}))
             .await
     }
 
-    /// Recover cluster from failure (CLUSTER.RECOVER)
-    pub async fn recover(&self) -> Result<Value> {
+    /// Reset cluster to factory defaults (CLUSTER.RESET) - DANGEROUS - raw version
+    pub async fn reset_raw(&self) -> Result<Value> {
+        self.client
+            .post("/v1/cluster/actions/reset", &serde_json::json!({}))
+            .await
+    }
+
+    /// Recover cluster from failure (CLUSTER.RECOVER) - typed version
+    pub async fn recover(&self) -> Result<ClusterActionResponse> {
+        self.client
+            .post("/v1/cluster/actions/recover", &serde_json::json!({}))
+            .await
+    }
+
+    /// Recover cluster from failure (CLUSTER.RECOVER) - raw version
+    pub async fn recover_raw(&self) -> Result<Value> {
         self.client
             .post("/v1/cluster/actions/recover", &serde_json::json!({}))
             .await
