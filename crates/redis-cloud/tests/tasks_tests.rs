@@ -186,7 +186,11 @@ async fn test_list_tasks() {
     let result = handler.list().await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let list = result.unwrap();
+    let response = serde_json::json!({
+        "tasks": list.tasks,
+        "pagination": list.extra.get("pagination").cloned().unwrap_or(serde_json::json!({}))
+    });
     let tasks = response["tasks"].as_array().unwrap();
     assert_eq!(tasks.len(), 3);
 
@@ -241,7 +245,11 @@ async fn test_list_tasks_empty() {
     let result = handler.list().await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let list = result.unwrap();
+    let response = serde_json::json!({
+        "tasks": list.tasks,
+        "pagination": list.extra.get("pagination").cloned().unwrap_or(serde_json::json!({}))
+    });
     let tasks = response["tasks"].as_array().unwrap();
     assert_eq!(tasks.len(), 0);
     assert_eq!(response["pagination"]["total"], 0);
@@ -299,7 +307,8 @@ async fn test_get_task_processing() {
     let result = handler.get("task_12345").await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let task_obj = result.unwrap();
+    let response = serde_json::json!({"task": task_obj});
     let task = &response["task"];
 
     assert_eq!(task["taskId"], "task_12345");
@@ -343,7 +352,8 @@ async fn test_get_task_completed() {
     let result = handler.get("task_completed").await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let task_obj = result.unwrap();
+    let response = serde_json::json!({"task": task_obj});
     let task = &response["task"];
 
     assert_eq!(task["taskId"], "task_completed");
@@ -377,7 +387,8 @@ async fn test_get_task_failed() {
     let result = handler.get("task_failed").await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let task_obj = result.unwrap();
+    let response = serde_json::json!({"task": task_obj});
     let task = &response["task"];
 
     assert_eq!(task["taskId"], "task_failed");

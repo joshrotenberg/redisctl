@@ -80,7 +80,8 @@ async fn test_list_private_service_connect() {
     let result = handler.list(100001).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let pscs_vec = result.unwrap();
+    let response = serde_json::json!({"privateServiceConnects": pscs_vec});
     let pscs = response["privateServiceConnects"].as_array().unwrap();
     assert_eq!(pscs.len(), 2);
     assert_eq!(pscs[0]["id"], "psc-123456");
@@ -111,7 +112,8 @@ async fn test_list_private_service_connect_empty() {
     let result = handler.list(100001).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let pscs_vec = result.unwrap();
+    let response = serde_json::json!({"privateServiceConnects": pscs_vec});
     let pscs = response["privateServiceConnects"].as_array().unwrap();
     assert_eq!(pscs.len(), 0);
 }
@@ -173,7 +175,8 @@ async fn test_get_private_service_connect() {
     let result = handler.get(100001, "psc-123456").await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let psc_obj = result.unwrap();
+    let response = serde_json::json!({"privateServiceConnect": psc_obj});
     let psc = &response["privateServiceConnect"];
     assert_eq!(psc["id"], "psc-123456");
     assert_eq!(psc["name"], "Production PSC");
@@ -258,8 +261,8 @@ async fn test_create_private_service_connect() {
     let result = handler.create(100001, service_request).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    assert!(response["taskId"].is_string());
+    let psc_obj = result.unwrap();
+    let response = serde_json::json!({"privateServiceConnect": psc_obj});
     let psc = &response["privateServiceConnect"];
     assert_eq!(psc["name"], "Staging PSC");
     assert_eq!(psc["status"], "pending");
@@ -301,8 +304,8 @@ async fn test_update_private_service_connect() {
     let result = handler.update(100001, "psc-123456", update_request).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    assert!(response["taskId"].is_string());
+    let psc_obj = result.unwrap();
+    let response = serde_json::json!({"privateServiceConnect": psc_obj});
     let psc = &response["privateServiceConnect"];
     assert_eq!(psc["name"], "Updated Production PSC");
     assert_eq!(psc["status"], "updating");
@@ -375,8 +378,8 @@ async fn test_get_endpoint() {
         .await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    let endpoint = &response["endpoint"];
+    let endpoint_obj = result.unwrap();
+    let endpoint = serde_json::to_value(endpoint_obj).unwrap();
     assert_eq!(endpoint["id"], "endpoint-001");
     assert_eq!(endpoint["name"], "prod-endpoint-1");
     assert_eq!(endpoint["status"], "connected");
@@ -426,8 +429,8 @@ async fn test_get_creation_scripts() {
         .await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    let scripts = &response["scripts"];
+    let scripts_obj = result.unwrap();
+    let scripts = &scripts_obj.scripts;
     assert!(scripts["terraform"].is_object());
     assert!(scripts["gcloud"].is_object());
     assert!(
@@ -486,8 +489,8 @@ async fn test_get_deletion_scripts() {
         .await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    let scripts = &response["scripts"];
+    let scripts_obj = result.unwrap();
+    let scripts = &scripts_obj.scripts;
     assert!(
         scripts["terraform"]["warning"]
             .as_str()
@@ -752,8 +755,8 @@ async fn test_get_regional_endpoint() {
         .await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    let endpoint = &response["endpoint"];
+    let endpoint_obj = result.unwrap();
+    let endpoint = serde_json::to_value(endpoint_obj).unwrap();
     assert_eq!(endpoint["id"], "endpoint-regional-001");
     assert_eq!(endpoint["availabilityZone"], "us-central1-a");
     assert_eq!(endpoint["status"], "connected");
@@ -796,8 +799,8 @@ async fn test_get_regional_creation_scripts() {
         .await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    let scripts = &response["scripts"];
+    let scripts_obj = result.unwrap();
+    let scripts = &scripts_obj.scripts;
     assert!(
         scripts["terraform"]["main"]
             .as_str()
@@ -843,8 +846,8 @@ async fn test_get_regional_deletion_scripts() {
         .await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    let scripts = &response["scripts"];
+    let scripts_obj = result.unwrap();
+    let scripts = &scripts_obj.scripts;
     assert!(
         scripts["terraform"]["main"]
             .as_str()

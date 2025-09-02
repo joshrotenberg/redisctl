@@ -49,7 +49,7 @@ impl CloudPrivateServiceConnectHandler {
     }
 
     /// Create private service connect service
-    pub async fn create(&self, subscription_id: u32, service: PscService) -> Result<PscService> {
+    pub async fn create(&self, subscription_id: u32, service: serde_json::Value) -> Result<PscService> {
         let v: serde_json::Value = self.client
             .post(
                 &format!("/subscriptions/{}/private-service-connect", subscription_id),
@@ -68,7 +68,7 @@ impl CloudPrivateServiceConnectHandler {
         &self,
         subscription_id: u32,
         psc_service_id: &str,
-        service: PscService,
+        service: serde_json::Value,
     ) -> Result<PscService> {
         let v: serde_json::Value = self.client
             .put(
@@ -195,7 +195,7 @@ impl CloudPrivateServiceConnectHandler {
         &self,
         subscription_id: u32,
         region_id: &str,
-        service: PscService,
+        service: serde_json::Value,
     ) -> Result<PscService> {
         let v: serde_json::Value = self.client
             .post(
@@ -219,7 +219,7 @@ impl CloudPrivateServiceConnectHandler {
         subscription_id: u32,
         region_id: &str,
         psc_service_id: &str,
-        service: PscService,
+        service: serde_json::Value,
     ) -> Result<PscService> {
         let v: serde_json::Value = self.client
             .put(
