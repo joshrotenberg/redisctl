@@ -183,17 +183,17 @@ impl UserHandler {
     }
 
     /// Authorize user (login) - POST /v1/users/authorize (raw)
-    pub async fn authorize_raw(&self, body: Value) -> Result<Value> {
+    pub async fn authorize(&self, body: AuthRequest) -> Result<AuthResponse> {
         self.client.post("/v1/users/authorize", &body).await
     }
 
     /// Set password - POST /v1/users/password (raw)
-    pub async fn password_set_raw(&self, body: Value) -> Result<Value> {
-        self.client.post("/v1/users/password", &body).await
+    pub async fn password_set(&self, body: PasswordSet) -> Result<()> {
+        self.client.post_action("/v1/users/password", &body).await
     }
 
     /// Update password - PUT /v1/users/password (raw)
-    pub async fn password_update_raw(&self, body: Value) -> Result<Value> {
+    pub async fn password_update(&self, body: PasswordUpdate) -> Result<()> {
         self.client.put("/v1/users/password", &body).await
     }
 
@@ -203,9 +203,49 @@ impl UserHandler {
     }
 
     /// Refresh JWT - POST /v1/users/refresh_jwt (raw)
-    pub async fn refresh_jwt_raw(&self, body: Value) -> Result<Value> {
+    pub async fn refresh_jwt(&self, body: JwtRefreshRequest) -> Result<JwtRefreshResponse> {
         self.client.post("/v1/users/refresh_jwt", &body).await
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AuthRequest {
+    pub email: String,
+    pub password: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AuthResponse {
+    pub jwt: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expires_at: Option<String>,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PasswordSet {
+    pub email: String,
+    pub password: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PasswordUpdate {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub current_password: Option<String>,
+    pub new_password: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct JwtRefreshRequest {
+    pub jwt: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct JwtRefreshResponse {
+    pub jwt: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expires_at: Option<String>,
 }
 
 /// Role handler for managing roles

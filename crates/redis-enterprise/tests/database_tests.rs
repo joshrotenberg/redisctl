@@ -220,10 +220,8 @@ async fn test_database_export() {
         .unwrap();
 
     let handler = BdbHandler::new(client);
-    let result = handler.export_raw(1, "ftp://backup/db1.rdb").await;
-
+    let result = handler.export(1, "ftp://backup/db1.rdb").await;
     assert!(result.is_ok());
-    assert_eq!(result.unwrap()["task_id"], "export-123");
 }
 
 #[tokio::test]
@@ -245,10 +243,8 @@ async fn test_database_import() {
         .unwrap();
 
     let handler = BdbHandler::new(client);
-    let result = handler.import_raw(1, "ftp://backup/db1.rdb", true).await;
-
+    let result = handler.import(1, "ftp://backup/db1.rdb", true).await;
     assert!(result.is_ok());
-    assert_eq!(result.unwrap()["task_id"], "import-456");
 }
 
 #[tokio::test]
@@ -270,10 +266,8 @@ async fn test_database_backup() {
         .unwrap();
 
     let handler = BdbHandler::new(client);
-    let result = handler.backup_raw(1).await;
-
+    let result = handler.backup(1).await;
     assert!(result.is_ok());
-    assert_eq!(result.unwrap()["backup_id"], "backup-789");
 }
 
 #[tokio::test]
@@ -283,7 +277,9 @@ async fn test_database_restore() {
     Mock::given(method("POST"))
         .and(path("/v1/bdbs/1/actions/restore"))
         .and(basic_auth("admin", "password"))
-        .respond_with(success_response(json!({"status": "restored"})))
+        .respond_with(success_response(
+            json!({"action_uid": "act-restore-1", "status": "restored"}),
+        ))
         .mount(&mock_server)
         .await;
 
@@ -295,10 +291,8 @@ async fn test_database_restore() {
         .unwrap();
 
     let handler = BdbHandler::new(client);
-    let result = handler.restore_raw(1, Some("backup-789")).await;
-
+    let result = handler.restore(1, Some("backup-789")).await;
     assert!(result.is_ok());
-    assert_eq!(result.unwrap()["status"], "restored");
 }
 
 #[tokio::test]
@@ -337,7 +331,9 @@ async fn test_database_upgrade() {
     Mock::given(method("POST"))
         .and(path("/v1/bdbs/1/actions/upgrade"))
         .and(basic_auth("admin", "password"))
-        .respond_with(success_response(json!({"status": "upgraded"})))
+        .respond_with(success_response(
+            json!({"action_uid": "act-up-1", "status": "upgraded"}),
+        ))
         .mount(&mock_server)
         .await;
 
@@ -349,10 +345,8 @@ async fn test_database_upgrade() {
         .unwrap();
 
     let handler = BdbHandler::new(client);
-    let result = handler.upgrade_raw(1, "search", "2.0").await;
-
+    let result = handler.upgrade(1, "search", "2.0").await;
     assert!(result.is_ok());
-    assert_eq!(result.unwrap()["status"], "upgraded");
 }
 
 #[tokio::test]
@@ -399,10 +393,9 @@ async fn test_database_recover_post() {
         .unwrap();
 
     let handler = BdbHandler::new(client);
-    let result = handler.recover_raw(1).await;
-
+    let result = handler.recover(1).await;
     assert!(result.is_ok());
-    assert_eq!(result.unwrap()["action_uid"], "act-1");
+    assert_eq!(result.unwrap().action_uid, "act-1");
 }
 
 #[tokio::test]

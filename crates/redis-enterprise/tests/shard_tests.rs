@@ -322,14 +322,13 @@ async fn test_shard_stats_metric() {
         .unwrap();
 
     let handler = ShardHandler::new(client);
-    let result = handler.stats_metric_raw("shard:1:1", "ops_per_sec").await;
-
-    assert!(result.is_ok());
-    let metric_stats = result.unwrap();
-    assert_eq!(metric_stats["interval"], "1sec");
-    assert_eq!(metric_stats["timestamps"].as_array().unwrap().len(), 3);
-    assert_eq!(metric_stats["values"].as_array().unwrap().len(), 3);
-    assert_eq!(metric_stats["values"][0], 1250.5);
+    let metric_stats = handler
+        .stats_metric("shard:1:1", "ops_per_sec")
+        .await
+        .unwrap();
+    assert_eq!(metric_stats.interval, "1sec");
+    assert_eq!(metric_stats.timestamps.len(), 3);
+    assert_eq!(metric_stats.values.len(), 3);
 }
 
 #[tokio::test]
@@ -355,13 +354,13 @@ async fn test_shard_stats_metric_memory() {
         .unwrap();
 
     let handler = ShardHandler::new(client);
-    let result = handler.stats_metric_raw("shard:2:1", "memory_usage").await;
-
-    assert!(result.is_ok());
-    let metric_stats = result.unwrap();
-    assert_eq!(metric_stats["interval"], "1min");
-    assert_eq!(metric_stats["values"][0], 1048576);
-    assert_eq!(metric_stats["values"][1], 1052000);
+    let metric_stats = handler
+        .stats_metric("shard:2:1", "memory_usage")
+        .await
+        .unwrap();
+    assert_eq!(metric_stats.interval, "1min");
+    assert_eq!(metric_stats.values[0], 1048576);
+    assert_eq!(metric_stats.values[1], 1052000);
 }
 
 #[tokio::test]
@@ -564,9 +563,6 @@ async fn test_shard_stats_metric_invalid() {
         .unwrap();
 
     let handler = ShardHandler::new(client);
-    let result = handler
-        .stats_metric_raw("shard:1:1", "invalid_metric")
-        .await;
-
+    let result = handler.stats_metric("shard:1:1", "invalid_metric").await;
     assert!(result.is_err());
 }

@@ -50,20 +50,20 @@ impl ActionHandler {
             .await
     }
 
-    /// List actions via v2 API - GET /v2/actions (raw)
-    pub async fn list_v2_raw(&self) -> Result<Value> {
+    /// List actions via v2 API - GET /v2/actions
+    pub async fn list_v2(&self) -> Result<Vec<Action>> {
         self.client.get("/v2/actions").await
     }
 
-    /// Get action via v2 API - GET /v2/actions/{uid} (raw)
-    pub async fn get_v2_raw(&self, action_uid: &str) -> Result<Value> {
+    /// Get action via v2 API - GET /v2/actions/{uid}
+    pub async fn get_v2(&self, action_uid: &str) -> Result<Action> {
         self.client
             .get(&format!("/v2/actions/{}", action_uid))
             .await
     }
 
-    /// List actions for a database - GET /v1/actions/bdb/{uid} (raw)
-    pub async fn list_for_bdb_raw(&self, bdb_uid: u32) -> Result<Value> {
+    /// List actions for a database - GET /v1/actions/bdb/{uid}
+    pub async fn list_for_bdb(&self, bdb_uid: u32) -> Result<Vec<Action>> {
         self.client
             .get(&format!("/v1/actions/bdb/{}", bdb_uid))
             .await

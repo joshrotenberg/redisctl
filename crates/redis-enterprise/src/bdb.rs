@@ -26,7 +26,8 @@ pub struct DatabaseActionResponse {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BackupResponse {
     /// The action UID for tracking the backup operation
-    pub action_uid: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub action_uid: Option<String>,
     /// Backup UID if available
     pub backup_uid: Option<String>,
     /// Additional fields from the response
@@ -38,7 +39,8 @@ pub struct BackupResponse {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ImportResponse {
     /// The action UID for tracking the import operation
-    pub action_uid: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub action_uid: Option<String>,
     /// Import status
     pub status: Option<String>,
     /// Additional fields from the response
@@ -50,7 +52,8 @@ pub struct ImportResponse {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExportResponse {
     /// The action UID for tracking the export operation
-    pub action_uid: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub action_uid: Option<String>,
     /// Export status
     pub status: Option<String>,
     /// Additional fields from the response

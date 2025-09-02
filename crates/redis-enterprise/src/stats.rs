@@ -87,10 +87,7 @@ impl StatsHandler {
         self.client.get("/v1/cluster/stats/last").await
     }
 
-    /// Get cluster stats for last interval - raw version
-    pub async fn cluster_last_raw(&self) -> Result<Value> {
-        self.client.get("/v1/cluster/stats/last").await
-    }
+    // raw variant removed: use cluster_last()
 
     /// Get node stats
     pub async fn node(&self, uid: u32, query: Option<StatsQuery>) -> Result<StatsResponse> {
@@ -111,12 +108,7 @@ impl StatsHandler {
             .await
     }
 
-    /// Get node stats for last interval - raw version
-    pub async fn node_last_raw(&self, uid: u32) -> Result<Value> {
-        self.client
-            .get(&format!("/v1/nodes/{}/stats/last", uid))
-            .await
-    }
+    // raw variant removed: use node_last()
 
     /// Get all nodes stats - typed version
     pub async fn nodes(&self, query: Option<StatsQuery>) -> Result<AggregatedStatsResponse> {
@@ -130,27 +122,14 @@ impl StatsHandler {
         }
     }
 
-    /// Get all nodes stats - raw version
-    pub async fn nodes_raw(&self, query: Option<StatsQuery>) -> Result<Value> {
-        if let Some(q) = query {
-            let query_str = serde_urlencoded::to_string(&q).unwrap_or_default();
-            self.client
-                .get(&format!("/v1/nodes/stats?{}", query_str))
-                .await
-        } else {
-            self.client.get("/v1/nodes/stats").await
-        }
-    }
+    // raw variant removed: use nodes()
 
     /// Get all nodes last stats - typed version
     pub async fn nodes_last(&self) -> Result<AggregatedStatsResponse> {
         self.client.get("/v1/nodes/stats/last").await
     }
 
-    /// Get all nodes last stats - raw version
-    pub async fn nodes_last_raw(&self) -> Result<Value> {
-        self.client.get("/v1/nodes/stats/last").await
-    }
+    // raw variant removed: use nodes_last()
 
     /// Get node stats via alternate path form - typed version
     pub async fn node_alt(&self, uid: u32) -> Result<StatsResponse> {
@@ -183,12 +162,7 @@ impl StatsHandler {
             .await
     }
 
-    /// Get database stats for last interval - raw version
-    pub async fn database_last_raw(&self, uid: u32) -> Result<Value> {
-        self.client
-            .get(&format!("/v1/bdbs/{}/stats/last", uid))
-            .await
-    }
+    // raw variant removed: use database_last()
 
     /// Get all databases stats - typed version
     pub async fn databases(&self, query: Option<StatsQuery>) -> Result<AggregatedStatsResponse> {
@@ -202,27 +176,14 @@ impl StatsHandler {
         }
     }
 
-    /// Get all databases stats - raw version
-    pub async fn databases_raw(&self, query: Option<StatsQuery>) -> Result<Value> {
-        if let Some(q) = query {
-            let query_str = serde_urlencoded::to_string(&q).unwrap_or_default();
-            self.client
-                .get(&format!("/v1/bdbs/stats?{}", query_str))
-                .await
-        } else {
-            self.client.get("/v1/bdbs/stats").await
-        }
-    }
+    // raw variant removed: use databases()
 
     /// Get all databases last stats (aggregate) - typed version
     pub async fn databases_last(&self) -> Result<AggregatedStatsResponse> {
         self.client.get("/v1/bdbs/stats/last").await
     }
 
-    /// Get all databases last stats (aggregate) - raw version
-    pub async fn databases_last_raw(&self) -> Result<Value> {
-        self.client.get("/v1/bdbs/stats/last").await
-    }
+    // raw variant removed: use databases_last()
 
     /// Get database stats via alternate path form - typed version
     pub async fn database_alt(&self, uid: u32) -> Result<StatsResponse> {
@@ -260,15 +221,5 @@ impl StatsHandler {
         }
     }
 
-    /// Get all shards stats - raw version
-    pub async fn shards_raw(&self, query: Option<StatsQuery>) -> Result<Value> {
-        if let Some(q) = query {
-            let query_str = serde_urlencoded::to_string(&q).unwrap_or_default();
-            self.client
-                .get(&format!("/v1/shards/stats?{}", query_str))
-                .await
-        } else {
-            self.client.get("/v1/shards/stats").await
-        }
-    }
+    // raw variant removed: use shards()
 }

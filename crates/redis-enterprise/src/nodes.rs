@@ -176,16 +176,7 @@ impl NodeHandler {
             .await
     }
 
-    /// Execute node action (e.g., "maintenance_on", "maintenance_off") - raw version
-    pub async fn execute_action_raw(&self, uid: u32, action: &str) -> Result<Value> {
-        let request = NodeActionRequest {
-            action: action.to_string(),
-            node_uid: Some(uid),
-        };
-        self.client
-            .post(&format!("/v1/nodes/{}/actions", uid), &request)
-            .await
-    }
+    // raw variant removed in favor of typed execute_action
 
     /// List all available node actions (global) - GET /v1/nodes/actions
     pub async fn list_actions(&self) -> Result<Value> {

@@ -71,8 +71,17 @@ impl RedisAclHandler {
         self.client.delete(&format!("/v1/redis_acls/{}", uid)).await
     }
 
-    /// Validate an ACL payload - POST /v1/redis_acls/validate (raw)
-    pub async fn validate_raw(&self, body: Value) -> Result<Value> {
+    /// Validate an ACL payload - POST /v1/redis_acls/validate
+    pub async fn validate(&self, body: CreateRedisAclRequest) -> Result<AclValidation> {
         self.client.post("/v1/redis_acls/validate", &body).await
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AclValidation {
+    pub valid: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub message: Option<String>,
+    #[serde(flatten)]
+    pub extra: Value,
 }

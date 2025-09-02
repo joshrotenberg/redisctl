@@ -101,35 +101,41 @@ fn test_shard_stats() -> serde_json::Value {
 
 fn test_cluster_last_stats() -> serde_json::Value {
     json!({
-        "cpu_usage": 28.3,
-        "memory_usage": 77.5,
-        "network_in": 1150000,
-        "network_out": 2300000,
-        "total_req": 158000,
-        "timestamp": "2023-01-01T12:02:00Z"
+        "time": "2023-01-01T12:02:00Z",
+        "metrics": {
+            "cpu_usage": 28.3,
+            "memory_usage": 77.5,
+            "network_in": 1150000,
+            "network_out": 2300000,
+            "total_req": 158000
+        }
     })
 }
 
 fn test_node_last_stats() -> serde_json::Value {
     json!({
-        "cpu_user": 16.2,
-        "cpu_system": 5.8,
-        "cpu_idle": 78.0,
-        "free_memory": 4194304000u64,
-        "network_bytes_in": 520000,
-        "network_bytes_out": 1040000,
-        "timestamp": "2023-01-01T12:02:00Z"
+        "time": "2023-01-01T12:02:00Z",
+        "metrics": {
+            "cpu_user": 16.2,
+            "cpu_system": 5.8,
+            "cpu_idle": 78.0,
+            "free_memory": 4194304000u64,
+            "network_bytes_in": 520000,
+            "network_bytes_out": 1040000
+        }
     })
 }
 
 fn test_database_last_stats() -> serde_json::Value {
     json!({
-        "used_memory": 1100000,
-        "total_req": 5200,
-        "ops_per_sec": 105.2,
-        "hits": 4680,
-        "misses": 520,
-        "timestamp": "2023-01-01T12:02:00Z"
+        "time": "2023-01-01T12:02:00Z",
+        "metrics": {
+            "used_memory": 1100000,
+            "total_req": 5200,
+            "ops_per_sec": 105.2,
+            "hits": 4680,
+            "misses": 520
+        }
     })
 }
 
@@ -214,13 +220,9 @@ async fn test_stats_cluster_last() {
         .unwrap();
 
     let handler = StatsHandler::new(client);
-    let result = handler.cluster_last_raw().await;
-
-    assert!(result.is_ok());
-    let stats = result.unwrap();
-    assert_eq!(stats["cpu_usage"], 28.3);
-    assert_eq!(stats["memory_usage"], 77.5);
-    assert_eq!(stats["total_req"], 158000);
+    let stats = handler.cluster_last().await.unwrap();
+    assert_eq!(stats.metrics["cpu_usage"], 28.3);
+    assert_eq!(stats.metrics["memory_usage"], 77.5);
 }
 
 #[tokio::test]
@@ -329,12 +331,9 @@ async fn test_stats_node_last() {
         .unwrap();
 
     let handler = StatsHandler::new(client);
-    let result = handler.node_last_raw(1).await;
-
-    assert!(result.is_ok());
-    let stats = result.unwrap();
-    assert_eq!(stats["cpu_user"], 16.2);
-    assert_eq!(stats["free_memory"], 4194304000u64);
+    let stats = handler.node_last(1).await.unwrap();
+    assert_eq!(stats.metrics["cpu_user"], 16.2);
+    assert_eq!(stats.metrics["free_memory"], 4194304000u64);
 }
 
 #[tokio::test]
@@ -356,7 +355,7 @@ async fn test_stats_node_last_nonexistent() {
         .unwrap();
 
     let handler = StatsHandler::new(client);
-    let result = handler.node_last_raw(999).await;
+    let result = handler.node_last(999).await;
 
     assert!(result.is_err());
 }
@@ -368,22 +367,12 @@ async fn test_stats_nodes() {
     Mock::given(method("GET"))
         .and(path("/v1/nodes/stats"))
         .and(basic_auth("admin", "password"))
-        .respond_with(success_response(json!([
-            {
-                "node_uid": 1,
-                "cpu_usage": 20.0,
-                "memory_usage": 60.0,
-                "network_in": 500000,
-                "network_out": 750000
-            },
-            {
-                "node_uid": 2,
-                "cpu_usage": 30.0,
-                "memory_usage": 80.0,
-                "network_in": 600000,
-                "network_out": 900000
-            }
-        ])))
+        .respond_with(success_response(json!({
+            "stats": [
+                {"uid": 1, "intervals": []},
+                {"uid": 2, "intervals": []}
+            ]
+        })))
         .mount(&mock_server)
         .await;
 
@@ -395,15 +384,10 @@ async fn test_stats_nodes() {
         .unwrap();
 
     let handler = StatsHandler::new(client);
-    let result = handler.nodes_raw(None).await;
-
-    assert!(result.is_ok());
-    let stats = result.unwrap();
-    assert!(stats.is_array());
-    let nodes_array = stats.as_array().unwrap();
-    assert_eq!(nodes_array.len(), 2);
-    assert_eq!(nodes_array[0]["node_uid"], 1);
-    assert_eq!(nodes_array[1]["node_uid"], 2);
+    let stats = handler.nodes(None).await.unwrap();
+    assert_eq!(stats.stats.len(), 2);
+    assert_eq!(stats.stats[0].uid, 1);
+    assert_eq!(stats.stats[1].uid, 2);
 }
 
 #[tokio::test]
@@ -414,7 +398,7 @@ async fn test_stats_nodes_with_query() {
         .and(path("/v1/nodes/stats"))
         .and(query_param("interval", "1min"))
         .and(basic_auth("admin", "password"))
-        .respond_with(success_response(json!([])))
+        .respond_with(success_response(json!({"stats": []})))
         .mount(&mock_server)
         .await;
 
@@ -432,11 +416,8 @@ async fn test_stats_nodes_with_query() {
         etime: None,
         metrics: None,
     };
-    let result = handler.nodes_raw(Some(query)).await;
-
-    assert!(result.is_ok());
-    let stats = result.unwrap();
-    assert!(stats.is_array());
+    let stats = handler.nodes(Some(query)).await.unwrap();
+    assert!(stats.stats.is_empty());
 }
 
 #[tokio::test]
@@ -510,12 +491,9 @@ async fn test_stats_database_last() {
         .unwrap();
 
     let handler = StatsHandler::new(client);
-    let result = handler.database_last_raw(1).await;
-
-    assert!(result.is_ok());
-    let stats = result.unwrap();
-    assert_eq!(stats["used_memory"], 1100000);
-    assert_eq!(stats["ops_per_sec"], 105.2);
+    let stats = handler.database_last(1).await.unwrap();
+    assert_eq!(stats.metrics["used_memory"], 1100000);
+    assert_eq!(stats.metrics["ops_per_sec"], 105.2);
 }
 
 #[tokio::test]
@@ -525,20 +503,12 @@ async fn test_stats_databases() {
     Mock::given(method("GET"))
         .and(path("/v1/bdbs/stats"))
         .and(basic_auth("admin", "password"))
-        .respond_with(success_response(json!([
-            {
-                "bdb_uid": 1,
-                "used_memory": 1048576,
-                "total_req": 5000,
-                "ops_per_sec": 100.5
-            },
-            {
-                "bdb_uid": 2,
-                "used_memory": 2097152,
-                "total_req": 8000,
-                "ops_per_sec": 150.0
-            }
-        ])))
+        .respond_with(success_response(json!({
+            "stats": [
+                {"uid": 1, "intervals": []},
+                {"uid": 2, "intervals": []}
+            ]
+        })))
         .mount(&mock_server)
         .await;
 
@@ -550,15 +520,10 @@ async fn test_stats_databases() {
         .unwrap();
 
     let handler = StatsHandler::new(client);
-    let result = handler.databases_raw(None).await;
-
-    assert!(result.is_ok());
-    let stats = result.unwrap();
-    assert!(stats.is_array());
-    let databases_array = stats.as_array().unwrap();
-    assert_eq!(databases_array.len(), 2);
-    assert_eq!(databases_array[0]["bdb_uid"], 1);
-    assert_eq!(databases_array[1]["bdb_uid"], 2);
+    let stats = handler.databases(None).await.unwrap();
+    assert_eq!(stats.stats.len(), 2);
+    assert_eq!(stats.stats[0].uid, 1);
+    assert_eq!(stats.stats[1].uid, 2);
 }
 
 #[tokio::test]
@@ -620,20 +585,12 @@ async fn test_stats_shards() {
     Mock::given(method("GET"))
         .and(path("/v1/shards/stats"))
         .and(basic_auth("admin", "password"))
-        .respond_with(success_response(json!([
-            {
-                "shard_uid": 1,
-                "used_memory": 524288,
-                "total_req": 2500,
-                "ops_per_sec": 50.0
-            },
-            {
-                "shard_uid": 2,
-                "used_memory": 1048576,
-                "total_req": 3500,
-                "ops_per_sec": 70.0
-            }
-        ])))
+        .respond_with(success_response(json!({
+            "stats": [
+                {"uid": 1, "intervals": []},
+                {"uid": 2, "intervals": []}
+            ]
+        })))
         .mount(&mock_server)
         .await;
 
@@ -645,13 +602,11 @@ async fn test_stats_shards() {
         .unwrap();
 
     let handler = StatsHandler::new(client);
-    let result = handler.shards_raw(None).await;
+    let result = handler.shards(None).await;
 
     assert!(result.is_ok());
     let stats = result.unwrap();
-    assert!(stats.is_array());
-    let shards_array = stats.as_array().unwrap();
-    assert_eq!(shards_array.len(), 2);
-    assert_eq!(shards_array[0]["shard_uid"], 1);
-    assert_eq!(shards_array[1]["shard_uid"], 2);
+    assert_eq!(stats.stats.len(), 2);
+    assert_eq!(stats.stats[0].uid, 1);
+    assert_eq!(stats.stats[1].uid, 2);
 }

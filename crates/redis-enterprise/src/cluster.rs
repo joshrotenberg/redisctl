@@ -235,12 +235,7 @@ impl ClusterHandler {
             .await
     }
 
-    /// Reset cluster to factory defaults (CLUSTER.RESET) - DANGEROUS - raw version
-    pub async fn reset_raw(&self) -> Result<Value> {
-        self.client
-            .post("/v1/cluster/actions/reset", &serde_json::json!({}))
-            .await
-    }
+    // raw variant removed: use reset()
 
     /// Recover cluster from failure (CLUSTER.RECOVER) - typed version
     pub async fn recover(&self) -> Result<ClusterActionResponse> {
@@ -249,12 +244,7 @@ impl ClusterHandler {
             .await
     }
 
-    /// Recover cluster from failure (CLUSTER.RECOVER) - raw version
-    pub async fn recover_raw(&self) -> Result<Value> {
-        self.client
-            .post("/v1/cluster/actions/recover", &serde_json::json!({}))
-            .await
-    }
+    // raw variant removed: use recover()
 
     /// Get cluster settings (CLUSTER.SETTINGS)
     pub async fn settings(&self) -> Result<Value> {

@@ -30,11 +30,11 @@ impl BdbGroupsHandler {
         self.client.get(&format!("/v1/bdb_groups/{}", uid)).await
     }
 
-    pub async fn create_raw(&self, body: Value) -> Result<BdbGroup> {
+    pub async fn create(&self, body: CreateBdbGroupRequest) -> Result<BdbGroup> {
         self.client.post("/v1/bdb_groups", &body).await
     }
 
-    pub async fn update_raw(&self, uid: u32, body: Value) -> Result<BdbGroup> {
+    pub async fn update(&self, uid: u32, body: UpdateBdbGroupRequest) -> Result<BdbGroup> {
         self.client
             .put(&format!("/v1/bdb_groups/{}", uid), &body)
             .await
@@ -43,4 +43,15 @@ impl BdbGroupsHandler {
     pub async fn delete(&self, uid: u32) -> Result<()> {
         self.client.delete(&format!("/v1/bdb_groups/{}", uid)).await
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreateBdbGroupRequest {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UpdateBdbGroupRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
 }

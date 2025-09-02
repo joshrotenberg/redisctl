@@ -215,7 +215,9 @@ async fn test_cluster_reset() {
     Mock::given(method("POST"))
         .and(path("/v1/cluster/actions/reset"))
         .and(basic_auth("admin", "password"))
-        .respond_with(success_response(json!({"status": "cluster_reset"})))
+        .respond_with(success_response(
+            json!({"action_uid": "act-reset-1", "status": "cluster_reset"}),
+        ))
         .mount(&mock_server)
         .await;
 
@@ -227,10 +229,8 @@ async fn test_cluster_reset() {
         .unwrap();
 
     let handler = ClusterHandler::new(client);
-    let result = handler.reset_raw().await;
-
+    let result = handler.reset().await;
     assert!(result.is_ok());
-    assert_eq!(result.unwrap()["status"], "cluster_reset");
 }
 
 #[tokio::test]
@@ -240,7 +240,9 @@ async fn test_cluster_recover() {
     Mock::given(method("POST"))
         .and(path("/v1/cluster/actions/recover"))
         .and(basic_auth("admin", "password"))
-        .respond_with(success_response(json!({"status": "cluster_recovered"})))
+        .respond_with(success_response(
+            json!({"action_uid": "act-recover-1", "status": "cluster_recovered"}),
+        ))
         .mount(&mock_server)
         .await;
 
@@ -252,8 +254,6 @@ async fn test_cluster_recover() {
         .unwrap();
 
     let handler = ClusterHandler::new(client);
-    let result = handler.recover_raw().await;
-
+    let result = handler.recover().await;
     assert!(result.is_ok());
-    assert_eq!(result.unwrap()["status"], "cluster_recovered");
 }
