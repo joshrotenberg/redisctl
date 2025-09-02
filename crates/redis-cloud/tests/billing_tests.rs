@@ -69,10 +69,9 @@ async fn test_get_billing_info() {
 
     assert!(result.is_ok());
     let response = result.unwrap();
-    let billing = &response["billing"];
-    assert_eq!(billing["accountId"], 12345);
-    assert_eq!(billing["currentPeriod"]["totalAmount"], 1250.75);
-    assert_eq!(billing["currentPeriod"]["currency"], "USD");
+    assert_eq!(response["billing"]["accountId"], 12345);
+    assert_eq!(response["billing"]["currentPeriod"]["totalAmount"], 1250.75);
+    assert_eq!(response["billing"]["currentPeriod"]["currency"], "USD");
 }
 
 #[tokio::test]
@@ -184,10 +183,9 @@ async fn test_get_current_invoice() {
 
     assert!(result.is_ok());
     let response = result.unwrap();
-    let invoice = &response["invoice"];
-    assert_eq!(invoice["status"], "open");
-    assert_eq!(invoice["amount"], 1250.75);
-    let line_items = invoice["lineItems"].as_array().unwrap();
+    assert_eq!(response["invoice"]["status"], "open");
+    assert_eq!(response["invoice"]["amount"], 1250.75);
+    let line_items = response["invoice"]["lineItems"].as_array().unwrap();
     assert_eq!(line_items.len(), 2);
 }
 
@@ -219,9 +217,8 @@ async fn test_get_invoice() {
 
     assert!(result.is_ok());
     let response = result.unwrap();
-    let invoice = &response["invoice"];
-    assert_eq!(invoice["id"], "inv_123");
-    assert_eq!(invoice["status"], "paid");
+    assert_eq!(response["invoice"]["id"], "inv_123");
+    assert_eq!(response["invoice"]["status"], "paid");
 }
 
 #[tokio::test]
@@ -368,9 +365,8 @@ async fn test_get_payment_method() {
 
     assert!(result.is_ok());
     let response = result.unwrap();
-    let method = &response["paymentMethod"];
-    assert_eq!(method["last4"], "4242");
-    assert_eq!(method["isDefault"], true);
+    assert_eq!(response["paymentMethod"]["last4"], "4242");
+    assert_eq!(response["paymentMethod"]["isDefault"], true);
 }
 
 #[tokio::test]
@@ -413,9 +409,8 @@ async fn test_add_payment_method() {
 
     assert!(result.is_ok());
     let response = result.unwrap();
-    let method = &response["paymentMethod"];
-    assert_eq!(method["cardType"], "amex");
-    assert_eq!(method["last4"], "1234");
+    assert_eq!(response["paymentMethod"]["cardType"], "amex");
+    assert_eq!(response["paymentMethod"]["last4"], "1234");
 }
 
 #[tokio::test]
@@ -455,9 +450,11 @@ async fn test_update_payment_method() {
 
     assert!(result.is_ok());
     let response = result.unwrap();
-    let method = &response["paymentMethod"];
-    assert_eq!(method["expiryYear"], 2026);
-    assert_eq!(method["billingAddress"]["postalCode"], "10001");
+    assert_eq!(response["paymentMethod"]["expiryYear"], 2026);
+    assert_eq!(
+        response["paymentMethod"]["billingAddress"]["postalCode"],
+        "10001"
+    );
 }
 
 #[tokio::test]
@@ -505,8 +502,7 @@ async fn test_set_default_payment_method() {
 
     assert!(result.is_ok());
     let response = result.unwrap();
-    let method = &response["paymentMethod"];
-    assert_eq!(method["isDefault"], true);
+    assert_eq!(response["paymentMethod"]["isDefault"], true);
 }
 
 #[tokio::test]
@@ -544,9 +540,8 @@ async fn test_get_alerts() {
 
     assert!(result.is_ok());
     let response = result.unwrap();
-    let alerts = &response["alerts"];
-    assert_eq!(alerts["emailNotifications"], true);
-    let thresholds = alerts["thresholds"].as_array().unwrap();
+    assert_eq!(response["alerts"]["emailNotifications"], true);
+    let thresholds = response["alerts"]["thresholds"].as_array().unwrap();
     assert_eq!(thresholds.len(), 2);
 }
 
@@ -591,9 +586,8 @@ async fn test_update_alerts() {
 
     assert!(result.is_ok());
     let response = result.unwrap();
-    let alerts = &response["alerts"];
-    assert_eq!(alerts["emailNotifications"], false);
-    let recipients = alerts["recipients"].as_array().unwrap();
+    assert_eq!(response["alerts"]["emailNotifications"], false);
+    let recipients = response["alerts"]["recipients"].as_array().unwrap();
     assert_eq!(recipients.len(), 1);
 }
 
@@ -642,9 +636,8 @@ async fn test_get_cost_breakdown() {
 
     assert!(result.is_ok());
     let response = result.unwrap();
-    let costs = &response["costs"];
-    assert_eq!(costs["total"], 1250.75);
-    let breakdown = costs["breakdown"].as_array().unwrap();
+    assert_eq!(response["costs"]["total"], 1250.75);
+    let breakdown = response["costs"]["breakdown"].as_array().unwrap();
     assert_eq!(breakdown.len(), 3);
     assert_eq!(breakdown[0]["service"], "Redis Cloud Pro");
 }
@@ -693,8 +686,7 @@ async fn test_get_usage() {
 
     assert!(result.is_ok());
     let response = result.unwrap();
-    let usage = &response["usage"];
-    let subscriptions = usage["subscriptions"].as_array().unwrap();
+    let subscriptions = response["usage"]["subscriptions"].as_array().unwrap();
     assert_eq!(subscriptions.len(), 1);
     assert_eq!(subscriptions[0]["totalCost"], 980.50);
 }
@@ -739,9 +731,8 @@ async fn test_get_credits() {
 
     assert!(result.is_ok());
     let response = result.unwrap();
-    let credits = &response["credits"];
-    assert_eq!(credits["balance"], 250.0);
-    let transactions = credits["transactions"].as_array().unwrap();
+    assert_eq!(response["credits"]["balance"], 250.0);
+    let transactions = response["credits"]["transactions"].as_array().unwrap();
     assert_eq!(transactions.len(), 2);
     assert_eq!(transactions[0]["type"], "promotional");
 }
@@ -772,9 +763,8 @@ async fn test_apply_promo_code() {
 
     assert!(result.is_ok());
     let response = result.unwrap();
-    let promo = &response["promo"];
-    assert_eq!(promo["code"], "WELCOME2024");
-    assert_eq!(promo["creditAmount"], 100.0);
+    assert_eq!(response["promo"]["code"], "WELCOME2024");
+    assert_eq!(response["promo"]["creditAmount"], 100.0);
 }
 
 #[tokio::test]
