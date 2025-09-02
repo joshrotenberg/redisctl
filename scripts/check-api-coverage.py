@@ -61,11 +61,12 @@ def find_api_calls(handler_path: Path) -> Dict[str, Set[Tuple[str, str]]]:
         
         # Find all client.get/post/put/delete/patch calls
         patterns = [
-            r'\.get\(&format!\("([^"]+)"',
-            r'\.post\(&format!\("([^"]+)"',
-            r'\.put\(&format!\("([^"]+)"',
-            r'\.delete\(&format!\("([^"]+)"',
-            r'\.patch\(&format!\("([^"]+)"',
+            # Allow whitespace/newlines between '(' and &format!
+            r'\.get\(\s*&format!\(\s*"([^"]+)"',
+            r'\.post\(\s*&format!\(\s*"([^"]+)"',
+            r'\.put\(\s*&format!\(\s*"([^"]+)"',
+            r'\.delete\(\s*&format!\(\s*"([^"]+)"',
+            r'\.patch\(\s*&format!\(\s*"([^"]+)"',
             r'\.get\("([^"]+)"\)',
             r'\.post\("([^"]+)"',
             r'\.put\("([^"]+)"',

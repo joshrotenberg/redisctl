@@ -192,6 +192,28 @@ impl StatsHandler {
         }
     }
 
+    /// Get all databases last stats (aggregate) - typed version
+    pub async fn databases_last(&self) -> Result<AggregatedStatsResponse> {
+        self.client.get("/v1/bdbs/stats/last").await
+    }
+
+    /// Get all databases last stats (aggregate) - raw version
+    pub async fn databases_last_raw(&self) -> Result<Value> {
+        self.client.get("/v1/bdbs/stats/last").await
+    }
+
+    /// Get database stats via alternate path form - typed version
+    pub async fn database_alt(&self, uid: u32) -> Result<StatsResponse> {
+        self.client.get(&format!("/v1/bdbs/stats/{}", uid)).await
+    }
+
+    /// Get database last stats via alternate path form - typed version
+    pub async fn database_last_alt(&self, uid: u32) -> Result<LastStatsResponse> {
+        self.client
+            .get(&format!("/v1/bdbs/stats/last/{}", uid))
+            .await
+    }
+
     /// Get shard stats
     pub async fn shard(&self, uid: u32, query: Option<StatsQuery>) -> Result<StatsResponse> {
         if let Some(q) = query {

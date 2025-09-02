@@ -354,3 +354,153 @@ async fn test_database_upgrade() {
     assert!(result.is_ok());
     assert_eq!(result.unwrap()["status"], "upgraded");
 }
+
+#[tokio::test]
+async fn test_database_optimize_shards_placement_status() {
+    let mock_server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/v1/bdbs/1/actions/optimize_shards_placement"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(success_response(json!({"status": "ok"})))
+        .mount(&mock_server)
+        .await;
+
+    let client = EnterpriseClient::builder()
+        .base_url(mock_server.uri())
+        .username("admin")
+        .password("password")
+        .build()
+        .unwrap();
+
+    let handler = BdbHandler::new(client);
+    let result = handler.optimize_shards_placement(1).await;
+
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap()["status"], "ok");
+}
+
+#[tokio::test]
+async fn test_database_recover_post() {
+    let mock_server = MockServer::start().await;
+
+    Mock::given(method("POST"))
+        .and(path("/v1/bdbs/1/actions/recover"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(success_response(json!({"action_uid": "act-1"})))
+        .mount(&mock_server)
+        .await;
+
+    let client = EnterpriseClient::builder()
+        .base_url(mock_server.uri())
+        .username("admin")
+        .password("password")
+        .build()
+        .unwrap();
+
+    let handler = BdbHandler::new(client);
+    let result = handler.recover_raw(1).await;
+
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap()["action_uid"], "act-1");
+}
+
+#[tokio::test]
+async fn test_database_peer_and_sync_stats() {
+    let mock_server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/v1/bdbs/1/peer_stats"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(success_response(json!({"peers": []})))
+        .mount(&mock_server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/v1/bdbs/1/syncer_state"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(success_response(json!({"state": "ok"})))
+        .mount(&mock_server)
+        .await;
+
+    let client = EnterpriseClient::builder()
+        .base_url(mock_server.uri())
+        .username("admin")
+        .password("password")
+        .build()
+        .unwrap();
+
+    let handler = BdbHandler::new(client);
+    let peers = handler.peer_stats(1).await.unwrap();
+    assert!(peers["peers"].is_array());
+
+    let state = handler.syncer_state(1).await.unwrap();
+    assert_eq!(state["state"], "ok");
+}
+
+#[tokio::test]
+async fn test_bdbs_alerts_and_crdt_detail() {
+    let mock_server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/v1/bdbs/alerts"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(success_response(json!([])))
+        .mount(&mock_server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/v1/bdbs/crdt_sources/alerts/1/2/high_cpu"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(success_response(json!({"severity": "critical"})))
+        .mount(&mock_server)
+        .await;
+
+    let client = EnterpriseClient::builder()
+        .base_url(mock_server.uri())
+        .username("admin")
+        .password("password")
+        .build()
+        .unwrap();
+
+    let handler = BdbHandler::new(client);
+    let all = handler.alerts_all().await.unwrap();
+    assert!(all.is_array());
+
+    let detail = handler
+        .crdt_source_alert_detail(1, 2, "high_cpu")
+        .await
+        .unwrap();
+    assert_eq!(detail["severity"], "critical");
+}
+
+#[tokio::test]
+async fn test_passwords_delete_and_reset_status() {
+    let mock_server = MockServer::start().await;
+
+    Mock::given(method("DELETE"))
+        .and(path("/v1/bdbs/1/passwords"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(no_content_response())
+        .mount(&mock_server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/v1/bdbs/1/actions/backup_reset_status"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(success_response(json!({"status": "reset"})))
+        .mount(&mock_server)
+        .await;
+
+    let client = EnterpriseClient::builder()
+        .base_url(mock_server.uri())
+        .username("admin")
+        .password("password")
+        .build()
+        .unwrap();
+
+    let handler = BdbHandler::new(client);
+    handler.passwords_delete(1).await.unwrap();
+    let reset = handler.backup_reset_status(1).await.unwrap();
+    assert_eq!(reset["status"], "reset");
+}
