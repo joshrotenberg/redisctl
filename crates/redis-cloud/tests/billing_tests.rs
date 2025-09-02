@@ -65,7 +65,7 @@ async fn test_get_billing_info() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudBillingHandler::new(client);
-    let result = handler.get_info().await;
+    let result = handler.get_info_raw().await;
 
     assert!(result.is_ok());
     let response = result.unwrap();
@@ -113,7 +113,7 @@ async fn test_get_billing_history() {
     let client = create_test_client(mock_server.uri());
     let handler = CloudBillingHandler::new(client);
     let result = handler
-        .get_history(Some("2023-01-01"), Some("2023-12-31"))
+        .get_history_raw(Some("2023-01-01"), Some("2023-12-31"))
         .await;
 
     assert!(result.is_ok());
@@ -140,7 +140,7 @@ async fn test_get_billing_history_no_params() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudBillingHandler::new(client);
-    let result = handler.get_history(None, None).await;
+    let result = handler.get_history_raw(None, None).await;
 
     assert!(result.is_ok());
 }
@@ -180,7 +180,7 @@ async fn test_get_current_invoice() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudBillingHandler::new(client);
-    let result = handler.get_current_invoice().await;
+    let result = handler.get_current_invoice_raw().await;
 
     assert!(result.is_ok());
     let response = result.unwrap();
@@ -215,7 +215,7 @@ async fn test_get_invoice() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudBillingHandler::new(client);
-    let result = handler.get_invoice("inv_123").await;
+    let result = handler.get_invoice_raw("inv_123").await;
 
     assert!(result.is_ok());
     let response = result.unwrap();
@@ -255,7 +255,7 @@ async fn test_list_invoices() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudBillingHandler::new(client);
-    let result = handler.list_invoices().await;
+    let result = handler.list_invoices_raw().await;
 
     assert!(result.is_ok());
     let response = result.unwrap();
@@ -282,7 +282,7 @@ async fn test_download_invoice() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudBillingHandler::new(client);
-    let result = handler.download_invoice("inv_123").await;
+    let result = handler.download_invoice_raw("inv_123").await;
 
     assert!(result.is_ok());
     let response = result.unwrap();
@@ -329,7 +329,7 @@ async fn test_list_payment_methods() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudBillingHandler::new(client);
-    let result = handler.list_payment_methods().await;
+    let result = handler.list_payment_methods_raw().await;
 
     assert!(result.is_ok());
     let response = result.unwrap();
@@ -364,7 +364,7 @@ async fn test_get_payment_method() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudBillingHandler::new(client);
-    let result = handler.get_payment_method(123).await;
+    let result = handler.get_payment_method_raw(123).await;
 
     assert!(result.is_ok());
     let response = result.unwrap();
@@ -540,7 +540,7 @@ async fn test_get_alerts() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudBillingHandler::new(client);
-    let result = handler.get_alerts().await;
+    let result = handler.get_alerts_raw().await;
 
     assert!(result.is_ok());
     let response = result.unwrap();
@@ -638,7 +638,7 @@ async fn test_get_cost_breakdown() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudBillingHandler::new(client);
-    let result = handler.get_cost_breakdown("30d").await;
+    let result = handler.get_cost_breakdown_raw("30d").await;
 
     assert!(result.is_ok());
     let response = result.unwrap();
@@ -689,7 +689,7 @@ async fn test_get_usage() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudBillingHandler::new(client);
-    let result = handler.get_usage("2023-11-01", "2023-11-30").await;
+    let result = handler.get_usage_raw("2023-11-01", "2023-11-30").await;
 
     assert!(result.is_ok());
     let response = result.unwrap();
@@ -735,7 +735,7 @@ async fn test_get_credits() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudBillingHandler::new(client);
-    let result = handler.get_credits().await;
+    let result = handler.get_credits_raw().await;
 
     assert!(result.is_ok());
     let response = result.unwrap();
@@ -768,7 +768,7 @@ async fn test_apply_promo_code() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudBillingHandler::new(client);
-    let result = handler.apply_promo_code("WELCOME2024").await;
+    let result = handler.apply_promo_code_raw("WELCOME2024").await;
 
     assert!(result.is_ok());
     let response = result.unwrap();
@@ -800,7 +800,7 @@ async fn test_apply_promo_code_invalid() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudBillingHandler::new(client);
-    let result = handler.apply_promo_code("INVALID_CODE").await;
+    let result = handler.apply_promo_code_raw("INVALID_CODE").await;
 
     assert!(result.is_err());
 }
