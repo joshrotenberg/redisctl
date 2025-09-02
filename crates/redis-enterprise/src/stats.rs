@@ -34,6 +34,32 @@ pub struct StatsInterval {
     pub metrics: Value,
 }
 
+/// Last stats response for single resource
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LastStatsResponse {
+    pub time: String,
+    pub metrics: Value,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+/// Aggregated stats response for multiple resources
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AggregatedStatsResponse {
+    pub stats: Vec<ResourceStats>,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+/// Stats for a single resource
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ResourceStats {
+    pub uid: u32,
+    pub intervals: Vec<StatsInterval>,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
 /// Stats handler for retrieving metrics
 pub struct StatsHandler {
     client: RestClient,
@@ -56,8 +82,13 @@ impl StatsHandler {
         }
     }
 
-    /// Get cluster stats for last interval
-    pub async fn cluster_last(&self) -> Result<Value> {
+    /// Get cluster stats for last interval - typed version
+    pub async fn cluster_last(&self) -> Result<LastStatsResponse> {
+        self.client.get("/v1/cluster/stats/last").await
+    }
+
+    /// Get cluster stats for last interval - raw version
+    pub async fn cluster_last_raw(&self) -> Result<Value> {
         self.client.get("/v1/cluster/stats/last").await
     }
 
@@ -73,15 +104,34 @@ impl StatsHandler {
         }
     }
 
-    /// Get node stats for last interval
-    pub async fn node_last(&self, uid: u32) -> Result<Value> {
+    /// Get node stats for last interval - typed version
+    pub async fn node_last(&self, uid: u32) -> Result<LastStatsResponse> {
         self.client
             .get(&format!("/v1/nodes/{}/stats/last", uid))
             .await
     }
 
-    /// Get all nodes stats
-    pub async fn nodes(&self, query: Option<StatsQuery>) -> Result<Value> {
+    /// Get node stats for last interval - raw version
+    pub async fn node_last_raw(&self, uid: u32) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/nodes/{}/stats/last", uid))
+            .await
+    }
+
+    /// Get all nodes stats - typed version
+    pub async fn nodes(&self, query: Option<StatsQuery>) -> Result<AggregatedStatsResponse> {
+        if let Some(q) = query {
+            let query_str = serde_urlencoded::to_string(&q).unwrap_or_default();
+            self.client
+                .get(&format!("/v1/nodes/stats?{}", query_str))
+                .await
+        } else {
+            self.client.get("/v1/nodes/stats").await
+        }
+    }
+
+    /// Get all nodes stats - raw version
+    pub async fn nodes_raw(&self, query: Option<StatsQuery>) -> Result<Value> {
         if let Some(q) = query {
             let query_str = serde_urlencoded::to_string(&q).unwrap_or_default();
             self.client
@@ -104,15 +154,34 @@ impl StatsHandler {
         }
     }
 
-    /// Get database stats for last interval
-    pub async fn database_last(&self, uid: u32) -> Result<Value> {
+    /// Get database stats for last interval - typed version
+    pub async fn database_last(&self, uid: u32) -> Result<LastStatsResponse> {
         self.client
             .get(&format!("/v1/bdbs/{}/stats/last", uid))
             .await
     }
 
-    /// Get all databases stats
-    pub async fn databases(&self, query: Option<StatsQuery>) -> Result<Value> {
+    /// Get database stats for last interval - raw version
+    pub async fn database_last_raw(&self, uid: u32) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/bdbs/{}/stats/last", uid))
+            .await
+    }
+
+    /// Get all databases stats - typed version
+    pub async fn databases(&self, query: Option<StatsQuery>) -> Result<AggregatedStatsResponse> {
+        if let Some(q) = query {
+            let query_str = serde_urlencoded::to_string(&q).unwrap_or_default();
+            self.client
+                .get(&format!("/v1/bdbs/stats?{}", query_str))
+                .await
+        } else {
+            self.client.get("/v1/bdbs/stats").await
+        }
+    }
+
+    /// Get all databases stats - raw version
+    pub async fn databases_raw(&self, query: Option<StatsQuery>) -> Result<Value> {
         if let Some(q) = query {
             let query_str = serde_urlencoded::to_string(&q).unwrap_or_default();
             self.client
@@ -135,8 +204,20 @@ impl StatsHandler {
         }
     }
 
-    /// Get all shards stats
-    pub async fn shards(&self, query: Option<StatsQuery>) -> Result<Value> {
+    /// Get all shards stats - typed version
+    pub async fn shards(&self, query: Option<StatsQuery>) -> Result<AggregatedStatsResponse> {
+        if let Some(q) = query {
+            let query_str = serde_urlencoded::to_string(&q).unwrap_or_default();
+            self.client
+                .get(&format!("/v1/shards/stats?{}", query_str))
+                .await
+        } else {
+            self.client.get("/v1/shards/stats").await
+        }
+    }
+
+    /// Get all shards stats - raw version
+    pub async fn shards_raw(&self, query: Option<StatsQuery>) -> Result<Value> {
         if let Some(q) = query {
             let query_str = serde_urlencoded::to_string(&q).unwrap_or_default();
             self.client

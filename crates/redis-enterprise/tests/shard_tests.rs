@@ -322,7 +322,7 @@ async fn test_shard_stats_metric() {
         .unwrap();
 
     let handler = ShardHandler::new(client);
-    let result = handler.stats_metric("shard:1:1", "ops_per_sec").await;
+    let result = handler.stats_metric_raw("shard:1:1", "ops_per_sec").await;
 
     assert!(result.is_ok());
     let metric_stats = result.unwrap();
@@ -355,7 +355,7 @@ async fn test_shard_stats_metric_memory() {
         .unwrap();
 
     let handler = ShardHandler::new(client);
-    let result = handler.stats_metric("shard:2:1", "memory_usage").await;
+    let result = handler.stats_metric_raw("shard:2:1", "memory_usage").await;
 
     assert!(result.is_ok());
     let metric_stats = result.unwrap();
@@ -564,7 +564,9 @@ async fn test_shard_stats_metric_invalid() {
         .unwrap();
 
     let handler = ShardHandler::new(client);
-    let result = handler.stats_metric("shard:1:1", "invalid_metric").await;
+    let result = handler
+        .stats_metric_raw("shard:1:1", "invalid_metric")
+        .await;
 
     assert!(result.is_err());
 }

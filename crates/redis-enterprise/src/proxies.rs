@@ -5,6 +5,19 @@ use crate::error::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+/// Response for a single metric query
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MetricResponse {
+    /// Metric name
+    pub metric: String,
+    /// Metric value
+    pub value: Value,
+    /// Timestamp if available
+    pub timestamp: Option<String>,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
 /// Proxy information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Proxy {
@@ -67,8 +80,15 @@ impl ProxyHandler {
         self.client.get(&format!("/v1/proxies/{}/stats", uid)).await
     }
 
-    /// Get proxy statistics for a specific metric
-    pub async fn stats_metric(&self, uid: u32, metric: &str) -> Result<Value> {
+    /// Get proxy statistics for a specific metric - typed version
+    pub async fn stats_metric(&self, uid: u32, metric: &str) -> Result<MetricResponse> {
+        self.client
+            .get(&format!("/v1/proxies/{}/stats/{}", uid, metric))
+            .await
+    }
+
+    /// Get proxy statistics for a specific metric - raw version
+    pub async fn stats_metric_raw(&self, uid: u32, metric: &str) -> Result<Value> {
         self.client
             .get(&format!("/v1/proxies/{}/stats/{}", uid, metric))
             .await

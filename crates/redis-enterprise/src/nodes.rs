@@ -6,6 +6,18 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use typed_builder::TypedBuilder;
 
+/// Response from node action operations
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NodeActionResponse {
+    /// The action UID for tracking async operations
+    pub action_uid: String,
+    /// Description of the action
+    pub description: Option<String>,
+    /// Additional fields from the response
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
 /// Node information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Node {
@@ -153,8 +165,19 @@ impl NodeHandler {
         self.client.get(&format!("/v1/nodes/{}/actions", uid)).await
     }
 
-    /// Execute node action (e.g., "maintenance_on", "maintenance_off")
-    pub async fn execute_action(&self, uid: u32, action: &str) -> Result<Value> {
+    /// Execute node action (e.g., "maintenance_on", "maintenance_off") - typed version
+    pub async fn execute_action(&self, uid: u32, action: &str) -> Result<NodeActionResponse> {
+        let request = NodeActionRequest {
+            action: action.to_string(),
+            node_uid: Some(uid),
+        };
+        self.client
+            .post(&format!("/v1/nodes/{}/actions", uid), &request)
+            .await
+    }
+
+    /// Execute node action (e.g., "maintenance_on", "maintenance_off") - raw version
+    pub async fn execute_action_raw(&self, uid: u32, action: &str) -> Result<Value> {
         let request = NodeActionRequest {
             action: action.to_string(),
             node_uid: Some(uid),

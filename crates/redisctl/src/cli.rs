@@ -262,6 +262,116 @@ pub enum EnterpriseCommands {
         #[command(subcommand)]
         command: EnterpriseLogsCommands,
     },
+    /// Redis ACL management
+    RedisAcl {
+        #[command(subcommand)]
+        command: RedisAclCommands,
+    },
+    /// Shard management
+    Shard {
+        #[command(subcommand)]
+        command: ShardCommands,
+    },
+    /// Proxy management
+    Proxy {
+        #[command(subcommand)]
+        command: ProxyCommands,
+    },
+    /// Service management
+    Service {
+        #[command(subcommand)]
+        command: ServiceCommands,
+    },
+    /// CRDB task management
+    CrdbTask {
+        #[command(subcommand)]
+        command: CrdbTaskCommands,
+    },
+    /// Debug info collection
+    DebugInfo {
+        #[command(subcommand)]
+        command: DebugInfoCommands,
+    },
+    /// Diagnostics operations
+    Diagnostics {
+        #[command(subcommand)]
+        command: DiagnosticsCommands,
+    },
+    /// Endpoint management
+    Endpoint {
+        #[command(subcommand)]
+        command: EndpointCommands,
+    },
+    /// Migration management
+    Migration {
+        #[command(subcommand)]
+        command: MigrationCommands,
+    },
+    /// OCSP certificate management
+    Ocsp {
+        #[command(subcommand)]
+        command: OcspCommands,
+    },
+    /// Usage report management
+    UsageReport {
+        #[command(subcommand)]
+        command: UsageReportCommands,
+    },
+    /// Job scheduler management
+    JobScheduler {
+        #[command(subcommand)]
+        command: JobSchedulerCommands,
+    },
+    /// JSON schema operations
+    JsonSchema {
+        #[command(subcommand)]
+        command: JsonSchemaCommands,
+    },
+    /// LDAP mapping management
+    LdapMapping {
+        #[command(subcommand)]
+        command: LdapMappingCommands,
+    },
+    /// DNS suffix management
+    Suffix {
+        #[command(subcommand)]
+        command: SuffixCommands,
+    },
+    /// Authentication configuration
+    Auth {
+        #[command(subcommand)]
+        command: AuthCommands,
+    },
+    /// CRDT configuration
+    Crdt {
+        #[command(subcommand)]
+        command: CrdtCommands,
+    },
+    /// Client certificate management
+    ClientCert {
+        #[command(subcommand)]
+        command: ClientCertCommands,
+    },
+    /// Cluster Manager server management
+    CmServer {
+        #[command(subcommand)]
+        command: CmServerCommands,
+    },
+    /// CCS server management
+    CcsServer {
+        #[command(subcommand)]
+        command: CcsServerCommands,
+    },
+    /// DMC server management
+    DmcServer {
+        #[command(subcommand)]
+        command: DmcServerCommands,
+    },
+    /// PDN server management
+    PdnServer {
+        #[command(subcommand)]
+        command: PdnServerCommands,
+    },
 }
 
 #[derive(Subcommand)]
@@ -1094,6 +1204,380 @@ pub enum EnterpriseCrdbCommands {
 }
 
 #[derive(Subcommand)]
+pub enum RedisAclCommands {
+    /// List all Redis ACLs
+    List,
+    /// Show Redis ACL details
+    Show {
+        /// ACL UID
+        uid: u32,
+    },
+    /// Create new Redis ACL
+    Create {
+        /// ACL name
+        name: String,
+        /// ACL rules
+        #[arg(long)]
+        acl: String,
+        /// ACL description
+        #[arg(long)]
+        description: Option<String>,
+    },
+    /// Update Redis ACL
+    Update {
+        /// ACL UID
+        uid: u32,
+        /// New ACL rules
+        #[arg(long)]
+        acl: Option<String>,
+        /// New description
+        #[arg(long)]
+        description: Option<String>,
+    },
+    /// Delete Redis ACL
+    Delete {
+        /// ACL UID
+        uid: u32,
+        /// Force deletion without confirmation
+        #[arg(long)]
+        force: bool,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum ShardCommands {
+    /// List all shards
+    List {
+        /// Filter by database UID
+        #[arg(long)]
+        database: Option<u32>,
+        /// Filter by node UID
+        #[arg(long)]
+        node: Option<u32>,
+    },
+    /// Show shard details
+    Show {
+        /// Shard UID
+        uid: u32,
+    },
+    /// Get shard statistics
+    Stats {
+        /// Shard UID
+        uid: u32,
+        /// Time interval
+        #[arg(long)]
+        interval: Option<String>,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum ProxyCommands {
+    /// List all proxies
+    List {
+        /// Filter by node UID
+        #[arg(long)]
+        node: Option<u32>,
+    },
+    /// Show proxy details
+    Show {
+        /// Proxy UID
+        uid: u32,
+    },
+    /// Get proxy statistics
+    Stats {
+        /// Proxy UID
+        uid: u32,
+    },
+    /// Reload proxy configuration
+    Reload {
+        /// Proxy UID
+        uid: u32,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum ServiceCommands {
+    /// List all services
+    List {
+        /// Filter by node UID
+        #[arg(long)]
+        node: Option<u32>,
+    },
+    /// Show service details
+    Show {
+        /// Service name
+        name: String,
+        /// Node UID
+        #[arg(long)]
+        node: Option<u32>,
+    },
+    /// Restart service
+    Restart {
+        /// Service name
+        name: String,
+        /// Node UID
+        #[arg(long)]
+        node: Option<u32>,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum CrdbTaskCommands {
+    /// List all CRDB tasks
+    List {
+        /// Filter by CRDB GUID
+        #[arg(long)]
+        crdb: Option<String>,
+    },
+    /// Show CRDB task details
+    Show {
+        /// Task UID
+        uid: String,
+    },
+    /// Create CRDB task
+    Create {
+        /// Task type
+        task_type: String,
+        /// CRDB GUID
+        #[arg(long)]
+        crdb: String,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum DebugInfoCommands {
+    /// Collect debug information
+    Collect {
+        /// Time range start
+        #[arg(long)]
+        from: Option<String>,
+        /// Time range end
+        #[arg(long)]
+        to: Option<String>,
+    },
+    /// Get debug info status
+    Status {
+        /// Request ID
+        id: String,
+    },
+    /// Download debug info
+    Download {
+        /// Request ID
+        id: String,
+        /// Output path
+        #[arg(long)]
+        output: Option<String>,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum DiagnosticsCommands {
+    /// Run diagnostics
+    Run {
+        /// Diagnostic type
+        #[arg(long)]
+        diagnostic_type: Option<String>,
+    },
+    /// Get diagnostics status
+    Status,
+    /// Download diagnostics report
+    Download {
+        /// Output path
+        #[arg(long)]
+        output: Option<String>,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum EndpointCommands {
+    /// List all endpoints
+    List {
+        /// Filter by database UID
+        #[arg(long)]
+        database: Option<u32>,
+    },
+    /// Show endpoint details
+    Show {
+        /// Endpoint UID
+        uid: u32,
+    },
+    /// Get endpoint statistics
+    Stats {
+        /// Endpoint UID
+        uid: u32,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum MigrationCommands {
+    /// List all migrations
+    List,
+    /// Show migration details
+    Show {
+        /// Migration UID
+        uid: String,
+    },
+    /// Create migration
+    Create {
+        /// Source endpoint
+        #[arg(long)]
+        source: String,
+        /// Target database UID
+        #[arg(long)]
+        target: u32,
+    },
+    /// Get migration status
+    Status {
+        /// Migration UID
+        uid: String,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum OcspCommands {
+    /// Get OCSP status
+    Status,
+    /// Test OCSP configuration
+    Test {
+        /// Server URL
+        #[arg(long)]
+        server: Option<String>,
+    },
+    /// Update OCSP configuration
+    Update {
+        /// Enable/disable OCSP
+        #[arg(long)]
+        enabled: bool,
+        /// OCSP server URL
+        #[arg(long)]
+        server: Option<String>,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum UsageReportCommands {
+    /// Get usage report
+    Get {
+        /// Time period (e.g., "2024-01")
+        #[arg(long)]
+        period: Option<String>,
+    },
+    /// Download usage report
+    Download {
+        /// Time period
+        #[arg(long)]
+        period: Option<String>,
+        /// Output path
+        #[arg(long)]
+        output: Option<String>,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum JobSchedulerCommands {
+    /// List scheduled jobs
+    List,
+    /// Show job details
+    Show {
+        /// Job ID
+        id: String,
+    },
+    /// Create scheduled job
+    Create {
+        /// Job name
+        name: String,
+        /// Cron expression
+        #[arg(long)]
+        cron: String,
+        /// Job command
+        #[arg(long)]
+        command: String,
+    },
+    /// Delete scheduled job
+    Delete {
+        /// Job ID
+        id: String,
+        /// Force deletion
+        #[arg(long)]
+        force: bool,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum JsonSchemaCommands {
+    /// Get JSON schema for an endpoint
+    Get {
+        /// Endpoint path (e.g., "/v1/bdbs")
+        path: String,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum LdapMappingCommands {
+    /// List LDAP mappings
+    List,
+    /// Show LDAP mapping details
+    Show {
+        /// Mapping ID
+        id: u32,
+    },
+    /// Create LDAP mapping
+    Create {
+        /// LDAP DN
+        dn: String,
+        /// Redis Enterprise role
+        #[arg(long)]
+        role: String,
+    },
+    /// Update LDAP mapping
+    Update {
+        /// Mapping ID
+        id: u32,
+        /// New role
+        #[arg(long)]
+        role: Option<String>,
+    },
+    /// Delete LDAP mapping
+    Delete {
+        /// Mapping ID
+        id: u32,
+        /// Force deletion
+        #[arg(long)]
+        force: bool,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum SuffixCommands {
+    /// List DNS suffixes
+    List,
+    /// Show suffix details
+    Show {
+        /// Suffix ID
+        id: String,
+    },
+    /// Create DNS suffix
+    Create {
+        /// Suffix name
+        name: String,
+        /// DNS suffix value
+        dns_suffix: String,
+    },
+    /// Update DNS suffix
+    Update {
+        /// Suffix ID
+        id: String,
+        /// New DNS suffix value
+        dns_suffix: String,
+    },
+    /// Delete DNS suffix
+    Delete {
+        /// Suffix ID
+        id: String,
+    },
+}
+
+#[derive(Subcommand)]
 pub enum ApiKeyCommands {
     /// List API keys
     List,
@@ -1626,5 +2110,121 @@ pub enum ConfigCommands {
         /// Profile to validate (defaults to all profiles)
         #[arg(long)]
         profile: Option<String>,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum CrdtCommands {
+    /// List CRDTs
+    List,
+    /// Show CRDT details
+    Show {
+        /// CRDT ID
+        id: String,
+    },
+    /// Create CRDT
+    Create {
+        /// Database ID
+        database_id: String,
+    },
+    /// Update CRDT
+    Update {
+        /// CRDT ID
+        id: String,
+        /// Database ID
+        #[arg(long)]
+        database_id: Option<String>,
+    },
+    /// Delete CRDT
+    Delete {
+        /// CRDT ID
+        id: String,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum ClientCertCommands {
+    /// List client certificates
+    List,
+    /// Show certificate details
+    Show {
+        /// Certificate ID
+        id: String,
+    },
+    /// Create client certificate
+    Create {
+        /// Certificate name
+        name: String,
+        /// Certificate content
+        cert: String,
+    },
+    /// Delete client certificate
+    Delete {
+        /// Certificate ID
+        id: String,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum CmServerCommands {
+    /// List CM servers
+    List,
+    /// Show CM server details
+    Show {
+        /// Server ID
+        id: String,
+    },
+    /// Get CM server statistics
+    Stats {
+        /// Server ID
+        id: String,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum CcsServerCommands {
+    /// List CCS servers
+    List,
+    /// Show CCS server details
+    Show {
+        /// Server ID
+        id: String,
+    },
+    /// Get CCS server statistics
+    Stats {
+        /// Server ID
+        id: String,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum DmcServerCommands {
+    /// List DMC servers
+    List,
+    /// Show DMC server details
+    Show {
+        /// Server ID
+        id: String,
+    },
+    /// Get DMC server statistics
+    Stats {
+        /// Server ID
+        id: String,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum PdnServerCommands {
+    /// List PDN servers
+    List,
+    /// Show PDN server details
+    Show {
+        /// Server ID
+        id: String,
+    },
+    /// Get PDN server statistics
+    Stats {
+        /// Server ID
+        id: String,
     },
 }

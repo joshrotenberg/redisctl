@@ -10,6 +10,54 @@ use typed_builder::TypedBuilder;
 pub type Database = DatabaseInfo;
 pub type BdbHandler = DatabaseHandler;
 
+/// Response from database action operations
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DatabaseActionResponse {
+    /// The action UID for tracking async operations
+    pub action_uid: String,
+    /// Description of the action
+    pub description: Option<String>,
+    /// Additional fields from the response
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+/// Response from backup operation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BackupResponse {
+    /// The action UID for tracking the backup operation
+    pub action_uid: String,
+    /// Backup UID if available
+    pub backup_uid: Option<String>,
+    /// Additional fields from the response
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+/// Response from import operation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ImportResponse {
+    /// The action UID for tracking the import operation
+    pub action_uid: String,
+    /// Import status
+    pub status: Option<String>,
+    /// Additional fields from the response
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+/// Response from export operation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExportResponse {
+    /// The action UID for tracking the export operation
+    pub action_uid: String,
+    /// Export status
+    pub status: Option<String>,
+    /// Additional fields from the response
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
 /// Database information from the REST API - 100% field coverage (152/152 fields)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatabaseInfo {
@@ -389,8 +437,8 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Restart database (BDB.RESTART)
-    pub async fn restart(&self, uid: u32) -> Result<Value> {
+    /// Restart database (BDB.RESTART) - typed version
+    pub async fn restart(&self, uid: u32) -> Result<DatabaseActionResponse> {
         self.client
             .post(
                 &format!("/v1/bdbs/{}/actions/restart", uid),
@@ -399,8 +447,18 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Export database (BDB.EXPORT)
-    pub async fn export(&self, uid: u32, export_location: &str) -> Result<Value> {
+    /// Restart database (BDB.RESTART) - raw version
+    pub async fn restart_raw(&self, uid: u32) -> Result<Value> {
+        self.client
+            .post(
+                &format!("/v1/bdbs/{}/actions/restart", uid),
+                &serde_json::json!({}),
+            )
+            .await
+    }
+
+    /// Export database (BDB.EXPORT) - typed version
+    pub async fn export(&self, uid: u32, export_location: &str) -> Result<ExportResponse> {
         let body = serde_json::json!({
             "export_location": export_location
         });
@@ -409,8 +467,23 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Import database (BDB.IMPORT)
-    pub async fn import(&self, uid: u32, import_location: &str, flush: bool) -> Result<Value> {
+    /// Export database (BDB.EXPORT) - raw version
+    pub async fn export_raw(&self, uid: u32, export_location: &str) -> Result<Value> {
+        let body = serde_json::json!({
+            "export_location": export_location
+        });
+        self.client
+            .post(&format!("/v1/bdbs/{}/actions/export", uid), &body)
+            .await
+    }
+
+    /// Import database (BDB.IMPORT) - typed version
+    pub async fn import(
+        &self,
+        uid: u32,
+        import_location: &str,
+        flush: bool,
+    ) -> Result<ImportResponse> {
         let body = serde_json::json!({
             "import_location": import_location,
             "flush": flush
@@ -420,8 +493,19 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Flush database (BDB.FLUSH)
-    pub async fn flush(&self, uid: u32) -> Result<Value> {
+    /// Import database (BDB.IMPORT) - raw version
+    pub async fn import_raw(&self, uid: u32, import_location: &str, flush: bool) -> Result<Value> {
+        let body = serde_json::json!({
+            "import_location": import_location,
+            "flush": flush
+        });
+        self.client
+            .post(&format!("/v1/bdbs/{}/actions/import", uid), &body)
+            .await
+    }
+
+    /// Flush database (BDB.FLUSH) - typed version
+    pub async fn flush(&self, uid: u32) -> Result<DatabaseActionResponse> {
         self.client
             .post(
                 &format!("/v1/bdbs/{}/actions/flush", uid),
@@ -430,8 +514,18 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Backup database (BDB.BACKUP)
-    pub async fn backup(&self, uid: u32) -> Result<Value> {
+    /// Flush database (BDB.FLUSH) - raw version
+    pub async fn flush_raw(&self, uid: u32) -> Result<Value> {
+        self.client
+            .post(
+                &format!("/v1/bdbs/{}/actions/flush", uid),
+                &serde_json::json!({}),
+            )
+            .await
+    }
+
+    /// Backup database (BDB.BACKUP) - typed version
+    pub async fn backup(&self, uid: u32) -> Result<BackupResponse> {
         self.client
             .post(
                 &format!("/v1/bdbs/{}/actions/backup", uid),
@@ -440,8 +534,34 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Restore database from backup (BDB.RESTORE)
-    pub async fn restore(&self, uid: u32, backup_uid: Option<&str>) -> Result<Value> {
+    /// Backup database (BDB.BACKUP) - raw version
+    pub async fn backup_raw(&self, uid: u32) -> Result<Value> {
+        self.client
+            .post(
+                &format!("/v1/bdbs/{}/actions/backup", uid),
+                &serde_json::json!({}),
+            )
+            .await
+    }
+
+    /// Restore database from backup (BDB.RESTORE) - typed version
+    pub async fn restore(
+        &self,
+        uid: u32,
+        backup_uid: Option<&str>,
+    ) -> Result<DatabaseActionResponse> {
+        let body = if let Some(backup_id) = backup_uid {
+            serde_json::json!({ "backup_uid": backup_id })
+        } else {
+            serde_json::json!({})
+        };
+        self.client
+            .post(&format!("/v1/bdbs/{}/actions/restore", uid), &body)
+            .await
+    }
+
+    /// Restore database from backup (BDB.RESTORE) - raw version
+    pub async fn restore_raw(&self, uid: u32, backup_uid: Option<&str>) -> Result<Value> {
         let body = if let Some(backup_id) = backup_uid {
             serde_json::json!({ "backup_uid": backup_id })
         } else {
@@ -464,8 +584,13 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Upgrade database with new module version (BDB.UPGRADE)
-    pub async fn upgrade(&self, uid: u32, module_name: &str, new_version: &str) -> Result<Value> {
+    /// Upgrade database with new module version (BDB.UPGRADE) - typed version
+    pub async fn upgrade(
+        &self,
+        uid: u32,
+        module_name: &str,
+        new_version: &str,
+    ) -> Result<DatabaseActionResponse> {
         let body = serde_json::json!({
             "module_name": module_name,
             "new_version": new_version
@@ -475,13 +600,67 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Reset database password (BDB.RESET_PASSWORD)
-    pub async fn reset_password(&self, uid: u32, new_password: &str) -> Result<Value> {
+    /// Upgrade database with new module version (BDB.UPGRADE) - raw version
+    pub async fn upgrade_raw(
+        &self,
+        uid: u32,
+        module_name: &str,
+        new_version: &str,
+    ) -> Result<Value> {
+        let body = serde_json::json!({
+            "module_name": module_name,
+            "new_version": new_version
+        });
+        self.client
+            .post(&format!("/v1/bdbs/{}/actions/upgrade", uid), &body)
+            .await
+    }
+
+    /// Reset database password (BDB.RESET_PASSWORD) - typed version
+    pub async fn reset_password(
+        &self,
+        uid: u32,
+        new_password: &str,
+    ) -> Result<DatabaseActionResponse> {
         let body = serde_json::json!({
             "authentication_redis_pass": new_password
         });
         self.client
             .post(&format!("/v1/bdbs/{}/actions/reset_password", uid), &body)
             .await
+    }
+
+    /// Reset database password (BDB.RESET_PASSWORD) - raw version
+    pub async fn reset_password_raw(&self, uid: u32, new_password: &str) -> Result<Value> {
+        let body = serde_json::json!({
+            "authentication_redis_pass": new_password
+        });
+        self.client
+            .post(&format!("/v1/bdbs/{}/actions/reset_password", uid), &body)
+            .await
+    }
+
+    /// Check database availability
+    pub async fn availability(&self, uid: u32) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/bdbs/{}/availability", uid))
+            .await
+    }
+
+    /// Check local database endpoint availability
+    pub async fn endpoint_availability(&self, uid: u32) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/local/bdbs/{}/endpoint/availability", uid))
+            .await
+    }
+
+    /// Create database using v2 API (supports recovery plan)
+    pub async fn create_v2(&self, request: Value) -> Result<DatabaseInfo> {
+        self.client.post("/v2/bdbs", &request).await
+    }
+
+    /// Create database using v2 API - raw version
+    pub async fn create_v2_raw(&self, request: Value) -> Result<Value> {
+        self.client.post("/v2/bdbs", &request).await
     }
 }
