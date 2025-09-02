@@ -12,19 +12,18 @@ impl CloudTaskHandler {
         CloudTaskHandler { client }
     }
 
-    /// List all tasks (typed). Accepts either {"tasks": [...]} or a bare array.
-    pub async fn list(&self) -> Result<Vec<Task>> {
-        // Try as wrapper
+    /// List all tasks (typed wrapper). Accepts either {"tasks": [...]} or a bare array.
+    pub async fn list(&self) -> Result<TaskList> {
         if let Ok(wrapper) = self.client.get::<TaskList>("/tasks").await {
-            return Ok(wrapper.tasks);
+            return Ok(wrapper);
         }
-        // Fallback: bare array
         let v: serde_json::Value = self.client.get("/tasks").await?;
-        if v.as_array().is_some() {
-            let tasks: Vec<Task> = serde_json::from_value(v)?;
-            Ok(tasks)
+        if v.is_array() {
+            let tasks: Vec<Task> = serde_json::from_value(v.clone())?;
+            Ok(TaskList { tasks, extra: serde_json::json!({}) })
         } else {
-            Ok(vec![])
+            // Coerce unknown shapes to wrapper for forward-compat
+            Ok(TaskList { tasks: vec![], extra: v })
         }
     }
 

@@ -27,7 +27,7 @@ impl CloudPrivateServiceConnectHandler {
             .await?;
         if v.is_array() {
             serde_json::from_value(v).map_err(Into::into)
-        } else if let Some(arr) = v.get("services") {
+        } else if let Some(arr) = v.get("services").or_else(|| v.get("privateServiceConnects")) {
             serde_json::from_value(arr.clone()).map_err(Into::into)
         } else {
             Ok(vec![])
@@ -36,22 +36,31 @@ impl CloudPrivateServiceConnectHandler {
 
     /// Get private service connect service details
     pub async fn get(&self, subscription_id: u32, psc_service_id: &str) -> Result<PscService> {
-        self.client
-            .get(&format!(
+        let v: serde_json::Value = self.client.get(&format!(
                 "/subscriptions/{}/private-service-connect/{}",
                 subscription_id, psc_service_id
             ))
-            .await
+            .await?;
+        if let Some(obj) = v.get("privateServiceConnect") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Create private service connect service
     pub async fn create(&self, subscription_id: u32, service: PscService) -> Result<PscService> {
-        self.client
+        let v: serde_json::Value = self.client
             .post(
                 &format!("/subscriptions/{}/private-service-connect", subscription_id),
                 &service,
             )
-            .await
+            .await?;
+        if let Some(obj) = v.get("privateServiceConnect") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Update private service connect service
@@ -61,7 +70,7 @@ impl CloudPrivateServiceConnectHandler {
         psc_service_id: &str,
         service: PscService,
     ) -> Result<PscService> {
-        self.client
+        let v: serde_json::Value = self.client
             .put(
                 &format!(
                     "/subscriptions/{}/private-service-connect/{}",
@@ -69,7 +78,12 @@ impl CloudPrivateServiceConnectHandler {
                 ),
                 &service,
             )
-            .await
+            .await?;
+        if let Some(obj) = v.get("privateServiceConnect") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Delete private service connect service
@@ -89,12 +103,16 @@ impl CloudPrivateServiceConnectHandler {
         psc_service_id: &str,
         endpoint_id: &str,
     ) -> Result<PscEndpoint> {
-        self.client
-            .get(&format!(
+        let v: serde_json::Value = self.client.get(&format!(
                 "/subscriptions/{}/private-service-connect/{}/endpoints/{}",
                 subscription_id, psc_service_id, endpoint_id
             ))
-            .await
+            .await?;
+        if let Some(obj) = v.get("endpoint") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Get endpoint creation scripts
@@ -104,12 +122,16 @@ impl CloudPrivateServiceConnectHandler {
         psc_service_id: &str,
         endpoint_id: &str,
     ) -> Result<PscScripts> {
-        self.client
-            .get(&format!(
+        let v: serde_json::Value = self.client.get(&format!(
                 "/subscriptions/{}/private-service-connect/{}/endpoints/{}/creationScripts",
                 subscription_id, psc_service_id, endpoint_id
             ))
-            .await
+            .await?;
+        if let Some(obj) = v.get("scripts") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Get endpoint deletion scripts
@@ -119,12 +141,16 @@ impl CloudPrivateServiceConnectHandler {
         psc_service_id: &str,
         endpoint_id: &str,
     ) -> Result<PscScripts> {
-        self.client
-            .get(&format!(
+        let v: serde_json::Value = self.client.get(&format!(
                 "/subscriptions/{}/private-service-connect/{}/endpoints/{}/deletionScripts",
                 subscription_id, psc_service_id, endpoint_id
             ))
-            .await
+            .await?;
+        if let Some(obj) = v.get("scripts") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// List regional private service connect services
@@ -138,7 +164,7 @@ impl CloudPrivateServiceConnectHandler {
             .await?;
         if v.is_array() {
             serde_json::from_value(v).map_err(Into::into)
-        } else if let Some(arr) = v.get("services") {
+        } else if let Some(arr) = v.get("services").or_else(|| v.get("privateServiceConnects")) {
             serde_json::from_value(arr.clone()).map_err(Into::into)
         } else {
             Ok(vec![])
@@ -152,12 +178,16 @@ impl CloudPrivateServiceConnectHandler {
         region_id: &str,
         psc_service_id: &str,
     ) -> Result<PscService> {
-        self.client
-            .get(&format!(
+        let v: serde_json::Value = self.client.get(&format!(
                 "/subscriptions/{}/regions/{}/private-service-connect/{}",
                 subscription_id, region_id, psc_service_id
             ))
-            .await
+            .await?;
+        if let Some(obj) = v.get("privateServiceConnect") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Create regional private service connect service
@@ -167,7 +197,7 @@ impl CloudPrivateServiceConnectHandler {
         region_id: &str,
         service: PscService,
     ) -> Result<PscService> {
-        self.client
+        let v: serde_json::Value = self.client
             .post(
                 &format!(
                     "/subscriptions/{}/regions/{}/private-service-connect",
@@ -175,7 +205,12 @@ impl CloudPrivateServiceConnectHandler {
                 ),
                 &service,
             )
-            .await
+            .await?;
+        if let Some(obj) = v.get("privateServiceConnect") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Update regional private service connect service
@@ -186,7 +221,7 @@ impl CloudPrivateServiceConnectHandler {
         psc_service_id: &str,
         service: PscService,
     ) -> Result<PscService> {
-        self.client
+        let v: serde_json::Value = self.client
             .put(
                 &format!(
                     "/subscriptions/{}/regions/{}/private-service-connect/{}",
@@ -194,7 +229,12 @@ impl CloudPrivateServiceConnectHandler {
                 ),
                 &service,
             )
-            .await
+            .await?;
+        if let Some(obj) = v.get("privateServiceConnect") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Delete regional private service connect service
@@ -220,12 +260,16 @@ impl CloudPrivateServiceConnectHandler {
         psc_service_id: &str,
         endpoint_id: &str,
     ) -> Result<PscEndpoint> {
-        self.client
-            .get(&format!(
+        let v: serde_json::Value = self.client.get(&format!(
                 "/subscriptions/{}/regions/{}/private-service-connect/{}/endpoints/{}",
                 subscription_id, region_id, psc_service_id, endpoint_id
             ))
-            .await
+            .await?;
+        if let Some(obj) = v.get("endpoint") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Get regional endpoint creation scripts
@@ -236,12 +280,16 @@ impl CloudPrivateServiceConnectHandler {
         psc_service_id: &str,
         endpoint_id: &str,
     ) -> Result<PscScripts> {
-        self.client
-            .get(&format!(
+        let v: serde_json::Value = self.client.get(&format!(
                 "/subscriptions/{}/regions/{}/private-service-connect/{}/endpoints/{}/creationScripts",
                 subscription_id, region_id, psc_service_id, endpoint_id
             ))
-            .await
+            .await?;
+        if let Some(obj) = v.get("scripts") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Get regional endpoint deletion scripts
@@ -252,11 +300,15 @@ impl CloudPrivateServiceConnectHandler {
         psc_service_id: &str,
         endpoint_id: &str,
     ) -> Result<PscScripts> {
-        self.client
-            .get(&format!(
+        let v: serde_json::Value = self.client.get(&format!(
                 "/subscriptions/{}/regions/{}/private-service-connect/{}/endpoints/{}/deletionScripts",
                 subscription_id, region_id, psc_service_id, endpoint_id
             ))
-            .await
+            .await?;
+        if let Some(obj) = v.get("scripts") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 }
