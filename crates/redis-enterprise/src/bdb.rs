@@ -484,4 +484,28 @@ impl DatabaseHandler {
             .post(&format!("/v1/bdbs/{}/actions/reset_password", uid), &body)
             .await
     }
+
+    /// Check database availability
+    pub async fn availability(&self, uid: u32) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/bdbs/{}/availability", uid))
+            .await
+    }
+
+    /// Check local database endpoint availability
+    pub async fn endpoint_availability(&self, uid: u32) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/local/bdbs/{}/endpoint/availability", uid))
+            .await
+    }
+
+    /// Create database using v2 API (supports recovery plan)
+    pub async fn create_v2(&self, request: Value) -> Result<DatabaseInfo> {
+        self.client.post("/v2/bdbs", &request).await
+    }
+
+    /// Create database using v2 API - raw version
+    pub async fn create_v2_raw(&self, request: Value) -> Result<Value> {
+        self.client.post("/v2/bdbs", &request).await
+    }
 }
