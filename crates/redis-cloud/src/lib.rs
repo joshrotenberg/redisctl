@@ -349,3 +349,28 @@ pub enum CloudError {
 }
 
 pub type Result<T> = std::result::Result<T, CloudError>;
+// Module shims to mirror redis-enterprise flat module style
+// This allows imports like `redis_cloud::database::CloudDatabaseHandler` similar to
+// `redis_enterprise::bdb::...`, while keeping internal organization under `handlers/`.
+pub mod account { pub use crate::handlers::account::*; }
+pub mod acl { pub use crate::handlers::acl::*; }
+pub mod api_keys { pub use crate::handlers::api_keys::*; }
+pub mod backup { pub use crate::handlers::backup::*; }
+pub mod billing { pub use crate::handlers::billing::*; }
+pub mod cloud_accounts { pub use crate::handlers::cloud_accounts::*; }
+pub mod crdb { pub use crate::handlers::crdb::*; }
+pub mod database { pub use crate::handlers::database::*; }
+pub mod fixed { pub use crate::handlers::fixed::*; }
+pub mod logs { pub use crate::handlers::logs::*; }
+pub mod metrics { pub use crate::handlers::metrics::*; }
+pub mod peering { pub use crate::handlers::peering::*; }
+pub mod private_service_connect { pub use crate::handlers::private_service_connect::*; }
+pub mod region { pub use crate::handlers::region::*; }
+pub mod sso { pub use crate::handlers::sso::*; }
+pub mod subscription { pub use crate::handlers::subscription::*; }
+pub mod tasks { pub use crate::handlers::tasks::*; }
+pub mod transit_gateway { pub use crate::handlers::transit_gateway::*; }
+pub mod users { pub use crate::handlers::users::*; }
+
+// Expose a `types` module that re-exports models, to mirror `redis-enterprise::types`.
+pub mod types;
