@@ -114,4 +114,16 @@ impl ProxyHandler {
             .post_action(&format!("/v1/proxies/{}/actions/reload", uid), &Value::Null)
             .await
     }
+
+    /// Update proxies (bulk) - PUT /v1/proxies
+    pub async fn update_all_raw(&self, body: Value) -> Result<Value> {
+        self.client.put("/v1/proxies", &body).await
+    }
+
+    /// Update specific proxy - PUT /v1/proxies/{uid}
+    pub async fn update_raw(&self, uid: u32, body: Value) -> Result<Value> {
+        self.client
+            .put(&format!("/v1/proxies/{}", uid), &body)
+            .await
+    }
 }

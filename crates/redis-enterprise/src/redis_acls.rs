@@ -70,4 +70,9 @@ impl RedisAclHandler {
     pub async fn delete(&self, uid: u32) -> Result<()> {
         self.client.delete(&format!("/v1/redis_acls/{}", uid)).await
     }
+
+    /// Validate an ACL payload - POST /v1/redis_acls/validate (raw)
+    pub async fn validate_raw(&self, body: Value) -> Result<Value> {
+        self.client.post("/v1/redis_acls/validate", &body).await
+    }
 }

@@ -75,4 +75,28 @@ impl ModuleHandler {
             .put(&format!("/v1/modules/{}", uid), &updates)
             .await
     }
+
+    /// Configure modules for a specific database - POST /v1/modules/config/bdb/{uid} (raw)
+    pub async fn config_bdb_raw(&self, bdb_uid: u32, body: Value) -> Result<Value> {
+        self.client
+            .post(&format!("/v1/modules/config/bdb/{}", bdb_uid), &body)
+            .await
+    }
+
+    /// Upgrade modules for a specific database - POST /v1/modules/upgrade/bdb/{uid} (raw)
+    pub async fn upgrade_bdb_raw(&self, bdb_uid: u32, body: Value) -> Result<Value> {
+        self.client
+            .post(&format!("/v1/modules/upgrade/bdb/{}", bdb_uid), &body)
+            .await
+    }
+
+    /// Upload module via v2 API - POST /v2/modules (raw)
+    pub async fn upload_v2_raw(&self, body: Value) -> Result<Value> {
+        self.client.post("/v2/modules", &body).await
+    }
+
+    /// Delete module via v2 API - DELETE /v2/modules/{uid}
+    pub async fn delete_v2(&self, uid: &str) -> Result<()> {
+        self.client.delete(&format!("/v2/modules/{}", uid)).await
+    }
 }

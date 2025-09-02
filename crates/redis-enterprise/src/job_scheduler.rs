@@ -120,4 +120,9 @@ impl JobSchedulerHandler {
             .get(&format!("/v1/job_scheduler/{}/history", job_id))
             .await
     }
+
+    /// Update job scheduler globally - PUT /v1/job_scheduler (raw)
+    pub async fn update_all_raw(&self, body: Value) -> Result<Value> {
+        self.client.put("/v1/job_scheduler", &body).await
+    }
 }

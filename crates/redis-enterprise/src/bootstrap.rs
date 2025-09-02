@@ -95,4 +95,18 @@ impl BootstrapHandler {
     pub async fn reset(&self) -> Result<()> {
         self.client.delete("/v1/bootstrap").await
     }
+
+    /// Validate bootstrap for a specific UID - POST /v1/bootstrap/validate/{uid}
+    pub async fn validate_for(&self, uid: u32, body: Value) -> Result<Value> {
+        self.client
+            .post(&format!("/v1/bootstrap/validate/{}", uid), &body)
+            .await
+    }
+
+    /// Post a specific bootstrap action - POST /v1/bootstrap/{action}
+    pub async fn post_action(&self, action: &str, body: Value) -> Result<Value> {
+        self.client
+            .post(&format!("/v1/bootstrap/{}", action), &body)
+            .await
+    }
 }

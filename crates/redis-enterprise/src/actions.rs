@@ -49,4 +49,23 @@ impl ActionHandler {
             .delete(&format!("/v1/actions/{}", action_uid))
             .await
     }
+
+    /// List actions via v2 API - GET /v2/actions (raw)
+    pub async fn list_v2_raw(&self) -> Result<Value> {
+        self.client.get("/v2/actions").await
+    }
+
+    /// Get action via v2 API - GET /v2/actions/{uid} (raw)
+    pub async fn get_v2_raw(&self, action_uid: &str) -> Result<Value> {
+        self.client
+            .get(&format!("/v2/actions/{}", action_uid))
+            .await
+    }
+
+    /// List actions for a database - GET /v1/actions/bdb/{uid} (raw)
+    pub async fn list_for_bdb_raw(&self, bdb_uid: u32) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/actions/bdb/{}", bdb_uid))
+            .await
+    }
 }

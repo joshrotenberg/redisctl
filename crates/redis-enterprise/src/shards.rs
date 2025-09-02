@@ -108,4 +108,50 @@ impl ShardHandler {
             .get(&format!("/v1/nodes/{}/shards", node_uid))
             .await
     }
+
+    /// Aggregate shard stats - GET /v1/shards/stats
+    pub async fn stats_all_raw(&self) -> Result<Value> {
+        self.client.get("/v1/shards/stats").await
+    }
+
+    /// Aggregate shard stats (last) - GET /v1/shards/stats/last
+    pub async fn stats_all_last_raw(&self) -> Result<Value> {
+        self.client.get("/v1/shards/stats/last").await
+    }
+
+    /// Aggregate shard last stats for specific shard - GET /v1/shards/stats/last/{uid}
+    pub async fn stats_all_last_for_raw(&self, uid: &str) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/shards/stats/last/{}", uid))
+            .await
+    }
+
+    /// Aggregate shard stats for specific shard via alt path - GET /v1/shards/stats/{uid}
+    pub async fn stats_alt_raw(&self, uid: &str) -> Result<Value> {
+        self.client.get(&format!("/v1/shards/stats/{}", uid)).await
+    }
+
+    /// Global failover - POST /v1/shards/actions/failover
+    pub async fn failover_all_raw(&self, body: Value) -> Result<Value> {
+        self.client.post("/v1/shards/actions/failover", &body).await
+    }
+
+    /// Global migrate - POST /v1/shards/actions/migrate
+    pub async fn migrate_all_raw(&self, body: Value) -> Result<Value> {
+        self.client.post("/v1/shards/actions/migrate", &body).await
+    }
+
+    /// Per-shard failover - POST /v1/shards/{uid}/actions/failover
+    pub async fn failover_raw(&self, uid: &str, body: Value) -> Result<Value> {
+        self.client
+            .post(&format!("/v1/shards/{}/actions/failover", uid), &body)
+            .await
+    }
+
+    /// Per-shard migrate - POST /v1/shards/{uid}/actions/migrate
+    pub async fn migrate_raw(&self, uid: &str, body: Value) -> Result<Value> {
+        self.client
+            .post(&format!("/v1/shards/{}/actions/migrate", uid), &body)
+            .await
+    }
 }

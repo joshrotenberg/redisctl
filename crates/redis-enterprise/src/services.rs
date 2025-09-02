@@ -118,4 +118,9 @@ impl ServicesHandler {
             .post(&format!("/v1/services/{}/start", service_id), &Value::Null)
             .await
     }
+
+    /// Create a service - POST /v1/services (raw)
+    pub async fn create_raw(&self, body: Value) -> Result<Service> {
+        self.client.post("/v1/services", &body).await
+    }
 }

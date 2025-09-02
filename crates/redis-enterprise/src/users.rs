@@ -169,6 +169,43 @@ impl UserHandler {
     pub async fn delete(&self, uid: u32) -> Result<()> {
         self.client.delete(&format!("/v1/users/{}", uid)).await
     }
+
+    /// Get permissions - GET /v1/users/permissions (raw)
+    pub async fn permissions(&self) -> Result<Value> {
+        self.client.get("/v1/users/permissions").await
+    }
+
+    /// Get permission detail - GET /v1/users/permissions/{perm} (raw)
+    pub async fn permission_detail(&self, perm: &str) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/users/permissions/{}", perm))
+            .await
+    }
+
+    /// Authorize user (login) - POST /v1/users/authorize (raw)
+    pub async fn authorize_raw(&self, body: Value) -> Result<Value> {
+        self.client.post("/v1/users/authorize", &body).await
+    }
+
+    /// Set password - POST /v1/users/password (raw)
+    pub async fn password_set_raw(&self, body: Value) -> Result<Value> {
+        self.client.post("/v1/users/password", &body).await
+    }
+
+    /// Update password - PUT /v1/users/password (raw)
+    pub async fn password_update_raw(&self, body: Value) -> Result<Value> {
+        self.client.put("/v1/users/password", &body).await
+    }
+
+    /// Delete password - DELETE /v1/users/password
+    pub async fn password_delete(&self) -> Result<()> {
+        self.client.delete("/v1/users/password").await
+    }
+
+    /// Refresh JWT - POST /v1/users/refresh_jwt (raw)
+    pub async fn refresh_jwt_raw(&self, body: Value) -> Result<Value> {
+        self.client.post("/v1/users/refresh_jwt", &body).await
+    }
 }
 
 /// Role handler for managing roles

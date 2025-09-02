@@ -86,6 +86,13 @@ impl OcspHandler {
         self.client.get("/v1/ocsp/test").await
     }
 
+    /// Test OCSP via POST
+    pub async fn test_post(&self) -> Result<OcspTestResult> {
+        self.client
+            .post("/v1/ocsp/test", &serde_json::Value::Null)
+            .await
+    }
+
     /// Trigger OCSP query
     pub async fn query(&self) -> Result<()> {
         self.client

@@ -157,6 +157,13 @@ impl StatsHandler {
         self.client.get(&format!("/v1/nodes/stats/{}", uid)).await
     }
 
+    /// Get node last stats via alternate path form - typed version
+    pub async fn node_last_alt(&self, uid: u32) -> Result<LastStatsResponse> {
+        self.client
+            .get(&format!("/v1/nodes/stats/last/{}", uid))
+            .await
+    }
+
     /// Get database stats
     pub async fn database(&self, uid: u32, query: Option<StatsQuery>) -> Result<StatsResponse> {
         if let Some(q) = query {

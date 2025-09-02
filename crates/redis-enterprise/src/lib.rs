@@ -262,6 +262,7 @@
 pub mod actions;
 pub mod alerts;
 pub mod bdb;
+pub mod bdb_groups;
 pub mod bootstrap;
 pub mod client;
 pub mod cluster;
@@ -276,6 +277,7 @@ pub mod job_scheduler;
 pub mod jsonschema;
 pub mod ldap_mappings;
 pub mod license;
+pub mod local;
 pub mod logs;
 pub mod migrations;
 pub mod modules;
@@ -303,6 +305,9 @@ pub use error::{RestError, Result};
 pub use bdb::{
     BdbHandler, CreateDatabaseRequest, CreateDatabaseRequestBuilder, Database, ModuleConfig,
 };
+
+// Database groups
+pub use bdb_groups::{BdbGroup, BdbGroupsHandler};
 
 // Cluster management
 pub use cluster::{
@@ -349,6 +354,9 @@ pub use ldap_mappings::{
 
 // OCSP
 pub use ocsp::{OcspConfig, OcspHandler, OcspStatus, OcspTestResult};
+
+// Local endpoints
+pub use local::LocalHandler;
 
 // Bootstrap
 pub use bootstrap::{

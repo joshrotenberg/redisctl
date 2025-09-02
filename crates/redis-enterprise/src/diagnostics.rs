@@ -94,4 +94,14 @@ impl DiagnosticsHandler {
     pub async fn list_reports(&self) -> Result<Vec<DiagnosticReport>> {
         self.client.get("/v1/diagnostics/reports").await
     }
+
+    /// Get diagnostics configuration/state - GET /v1/diagnostics
+    pub async fn get_config(&self) -> Result<Value> {
+        self.client.get("/v1/diagnostics").await
+    }
+
+    /// Update diagnostics configuration/state - PUT /v1/diagnostics
+    pub async fn update_config(&self, body: Value) -> Result<Value> {
+        self.client.put("/v1/diagnostics", &body).await
+    }
 }
