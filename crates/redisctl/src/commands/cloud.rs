@@ -380,7 +380,7 @@ pub async fn handle_user_command(
                 );
             }
 
-            let user = handler.create(create_data).await?;
+            let user = handler.create_raw(create_data).await?;
             print_output(user, output_format, query)?;
         }
         UserCommands::Update {
@@ -400,7 +400,7 @@ pub async fn handle_user_command(
                 anyhow::bail!("No update fields provided");
             }
             let user = handler
-                .update(id.parse()?, serde_json::Value::Object(update_data))
+                .update_raw(id.parse()?, serde_json::Value::Object(update_data))
                 .await?;
             print_output(user, output_format, query)?;
         }
@@ -551,7 +551,7 @@ pub async fn handle_acl_command(
                 "aclRule": rule
             });
             let acl = handler
-                .create(subscription_id, database_id, create_data)
+                .create_raw(subscription_id, database_id, create_data)
                 .await?;
             print_output(acl, output_format, query)?;
         }
@@ -566,7 +566,7 @@ pub async fn handle_acl_command(
                 "aclRule": rule
             });
             let acl = handler
-                .update(subscription_id, database_id, acl_id, update_data)
+                .update_raw(subscription_id, database_id, acl_id, update_data)
                 .await?;
             print_output(acl, output_format, query)?;
         }

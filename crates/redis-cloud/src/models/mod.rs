@@ -7,6 +7,7 @@
 //! # Module Organization
 //!
 //! - [`account`] - Account information, users, and payment method models
+//! - [`acl`] - ACL users, roles, and Redis rules models
 //! - [`backup`] - Database backup and restore operation models  
 //! - [`database`] - Database configuration, status, and operational models
 //! - [`metrics`] - Performance metrics, measurements, and monitoring models
@@ -24,16 +25,20 @@
 //! include `Debug`, `Clone`, and other useful derives.
 
 pub mod account;
+pub mod acl;
 pub mod backup;
 pub mod database;
 pub mod metrics;
 pub mod peering;
 pub mod subscription;
+pub mod users;
 
 // Re-export all models
 pub use account::*;
+pub use acl::*;
 pub use backup::*;
 pub use database::*;
 pub use metrics::*;
 pub use peering::*;
 pub use subscription::*;
+pub use users::*;
