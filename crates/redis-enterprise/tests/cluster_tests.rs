@@ -20,6 +20,119 @@ fn test_cluster() -> serde_json::Value {
 }
 
 #[tokio::test]
+async fn test_cluster_actions_and_auditing() {
+    let mock_server = MockServer::start().await;
+
+    // List actions
+    Mock::given(method("GET"))
+        .and(path("/v1/cluster/actions"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(success_response(json!(["reset", "recover"])))
+        .mount(&mock_server)
+        .await;
+
+    // Update auditing db conns
+    Mock::given(method("PUT"))
+        .and(path("/v1/cluster/auditing/db_conns"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(success_response(json!({"enabled": true})))
+        .mount(&mock_server)
+        .await;
+
+    let client = EnterpriseClient::builder()
+        .base_url(mock_server.uri())
+        .username("admin")
+        .password("password")
+        .build()
+        .unwrap();
+
+    let handler = ClusterHandler::new(client);
+    let acts = handler.actions().await.unwrap();
+    assert!(acts.is_array());
+
+    let updated = handler
+        .auditing_db_conns_update(json!({"enabled": true}))
+        .await
+        .unwrap();
+    assert_eq!(updated["enabled"], true);
+}
+
+#[tokio::test]
+async fn test_cluster_certs_policy_and_witness() {
+    let mock_server = MockServer::start().await;
+
+    Mock::given(method("POST"))
+        .and(path("/v1/cluster/certificates/rotate"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(success_response(json!({"rotated": true})))
+        .mount(&mock_server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/v1/cluster/policy/restore_default"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(success_response(json!({"restored": true})))
+        .mount(&mock_server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/v1/cluster/witness_disk"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(success_response(json!({"ok": true})))
+        .mount(&mock_server)
+        .await;
+
+    let client = EnterpriseClient::builder()
+        .base_url(mock_server.uri())
+        .username("admin")
+        .password("password")
+        .build()
+        .unwrap();
+
+    let handler = ClusterHandler::new(client);
+    let r = handler.certificates_rotate().await.unwrap();
+    assert_eq!(r["rotated"], true);
+
+    let p = handler.policy_restore_default().await.unwrap();
+    assert_eq!(p["restored"], true);
+
+    let w = handler.witness_disk().await.unwrap();
+    assert_eq!(w["ok"], true);
+}
+
+#[tokio::test]
+async fn test_cluster_alert_detail_and_ldap_delete() {
+    let mock_server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/v1/cluster/alerts/high_cpu"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(success_response(json!({"severity": "critical"})))
+        .mount(&mock_server)
+        .await;
+
+    Mock::given(method("DELETE"))
+        .and(path("/v1/cluster/ldap"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(success_response(json!({})))
+        .mount(&mock_server)
+        .await;
+
+    let client = EnterpriseClient::builder()
+        .base_url(mock_server.uri())
+        .username("admin")
+        .password("password")
+        .build()
+        .unwrap();
+
+    let handler = ClusterHandler::new(client);
+    let detail = handler.alert_detail("high_cpu").await.unwrap();
+    assert_eq!(detail["severity"], "critical");
+
+    handler.ldap_delete().await.unwrap();
+}
+
+#[tokio::test]
 async fn test_cluster_get() {
     let mock_server = MockServer::start().await;
 

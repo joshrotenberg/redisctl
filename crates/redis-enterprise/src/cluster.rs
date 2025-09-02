@@ -265,6 +265,122 @@ impl ClusterHandler {
     pub async fn topology(&self) -> Result<Value> {
         self.client.get("/v1/cluster/topology").await
     }
+
+    /// List available cluster actions - GET /v1/cluster/actions
+    pub async fn actions(&self) -> Result<Value> {
+        self.client.get("/v1/cluster/actions").await
+    }
+
+    /// Get a specific cluster action details - GET /v1/cluster/actions/{action}
+    pub async fn action_detail(&self, action: &str) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/cluster/actions/{}", action))
+            .await
+    }
+
+    /// Execute a specific cluster action - POST /v1/cluster/actions/{action}
+    pub async fn action_execute(&self, action: &str, body: Value) -> Result<Value> {
+        self.client
+            .post(&format!("/v1/cluster/actions/{}", action), &body)
+            .await
+    }
+
+    /// Delete a specific cluster action - DELETE /v1/cluster/actions/{action}
+    pub async fn action_delete(&self, action: &str) -> Result<()> {
+        self.client
+            .delete(&format!("/v1/cluster/actions/{}", action))
+            .await
+    }
+
+    /// Get auditing DB connections - GET /v1/cluster/auditing/db_conns
+    pub async fn auditing_db_conns(&self) -> Result<Value> {
+        self.client.get("/v1/cluster/auditing/db_conns").await
+    }
+
+    /// Update auditing DB connections - PUT /v1/cluster/auditing/db_conns
+    pub async fn auditing_db_conns_update(&self, cfg: Value) -> Result<Value> {
+        self.client.put("/v1/cluster/auditing/db_conns", &cfg).await
+    }
+
+    /// Delete auditing DB connections - DELETE /v1/cluster/auditing/db_conns
+    pub async fn auditing_db_conns_delete(&self) -> Result<()> {
+        self.client.delete("/v1/cluster/auditing/db_conns").await
+    }
+
+    /// List cluster certificates - GET /v1/cluster/certificates
+    pub async fn certificates(&self) -> Result<Value> {
+        self.client.get("/v1/cluster/certificates").await
+    }
+
+    /// Delete a certificate - DELETE /v1/cluster/certificates/{uid}
+    pub async fn certificate_delete(&self, uid: u32) -> Result<()> {
+        self.client
+            .delete(&format!("/v1/cluster/certificates/{}", uid))
+            .await
+    }
+
+    /// Rotate certificates - POST /v1/cluster/certificates/rotate
+    pub async fn certificates_rotate(&self) -> Result<Value> {
+        self.client
+            .post("/v1/cluster/certificates/rotate", &serde_json::json!({}))
+            .await
+    }
+
+    /// Update certificate bundle - PUT /v1/cluster/update_cert
+    pub async fn update_cert(&self, body: Value) -> Result<Value> {
+        self.client.put("/v1/cluster/update_cert", &body).await
+    }
+
+    /// Delete LDAP configuration - DELETE /v1/cluster/ldap
+    pub async fn ldap_delete(&self) -> Result<()> {
+        self.client.delete("/v1/cluster/ldap").await
+    }
+
+    /// Get cluster module capabilities - GET /v1/cluster/module-capabilities
+    pub async fn module_capabilities(&self) -> Result<Value> {
+        self.client.get("/v1/cluster/module-capabilities").await
+    }
+
+    /// Get cluster policy - GET /v1/cluster/policy
+    pub async fn policy(&self) -> Result<Value> {
+        self.client.get("/v1/cluster/policy").await
+    }
+
+    /// Update cluster policy - PUT /v1/cluster/policy
+    pub async fn policy_update(&self, policy: Value) -> Result<Value> {
+        self.client.put("/v1/cluster/policy", &policy).await
+    }
+
+    /// Restore default cluster policy - PUT /v1/cluster/policy/restore_default
+    pub async fn policy_restore_default(&self) -> Result<Value> {
+        self.client
+            .put("/v1/cluster/policy/restore_default", &serde_json::json!({}))
+            .await
+    }
+
+    /// Get services configuration - GET /v1/cluster/services_configuration
+    pub async fn services_configuration(&self) -> Result<Value> {
+        self.client.get("/v1/cluster/services_configuration").await
+    }
+
+    /// Update services configuration - PUT /v1/cluster/services_configuration
+    pub async fn services_configuration_update(&self, cfg: Value) -> Result<Value> {
+        self.client
+            .put("/v1/cluster/services_configuration", &cfg)
+            .await
+    }
+
+    /// Get witness disk info - GET /v1/cluster/witness_disk
+    pub async fn witness_disk(&self) -> Result<Value> {
+        self.client.get("/v1/cluster/witness_disk").await
+    }
+
+    /// Get specific cluster alert detail - GET /v1/cluster/alerts/{alert}
+    pub async fn alert_detail(&self, alert: &str) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/cluster/alerts/{}", alert))
+            .await
+    }
 }
 
 /// Node information

@@ -186,4 +186,93 @@ impl NodeHandler {
             .post(&format!("/v1/nodes/{}/actions", uid), &request)
             .await
     }
+
+    /// List all available node actions (global) - GET /v1/nodes/actions
+    pub async fn list_actions(&self) -> Result<Value> {
+        self.client.get("/v1/nodes/actions").await
+    }
+
+    /// Get node action detail - GET /v1/nodes/{uid}/actions/{action}
+    pub async fn action_detail(&self, uid: u32, action: &str) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/nodes/{}/actions/{}", uid, action))
+            .await
+    }
+
+    /// Execute named node action - POST /v1/nodes/{uid}/actions/{action}
+    pub async fn action_execute(&self, uid: u32, action: &str, body: Value) -> Result<Value> {
+        self.client
+            .post(&format!("/v1/nodes/{}/actions/{}", uid, action), &body)
+            .await
+    }
+
+    /// Delete node action - DELETE /v1/nodes/{uid}/actions/{action}
+    pub async fn action_delete(&self, uid: u32, action: &str) -> Result<()> {
+        self.client
+            .delete(&format!("/v1/nodes/{}/actions/{}", uid, action))
+            .await
+    }
+
+    /// List snapshots for a node - GET /v1/nodes/{uid}/snapshots
+    pub async fn snapshots(&self, uid: u32) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/nodes/{}/snapshots", uid))
+            .await
+    }
+
+    /// Create a snapshot - POST /v1/nodes/{uid}/snapshots/{name}
+    pub async fn snapshot_create(&self, uid: u32, name: &str) -> Result<Value> {
+        self.client
+            .post(
+                &format!("/v1/nodes/{}/snapshots/{}", uid, name),
+                &serde_json::json!({}),
+            )
+            .await
+    }
+
+    /// Delete a snapshot - DELETE /v1/nodes/{uid}/snapshots/{name}
+    pub async fn snapshot_delete(&self, uid: u32, name: &str) -> Result<()> {
+        self.client
+            .delete(&format!("/v1/nodes/{}/snapshots/{}", uid, name))
+            .await
+    }
+
+    /// All nodes status - GET /v1/nodes/status
+    pub async fn status_all(&self) -> Result<Value> {
+        self.client.get("/v1/nodes/status").await
+    }
+
+    /// Watchdog status for all nodes - GET /v1/nodes/wd_status
+    pub async fn wd_status_all(&self) -> Result<Value> {
+        self.client.get("/v1/nodes/wd_status").await
+    }
+
+    /// Node status - GET /v1/nodes/{uid}/status
+    pub async fn status(&self, uid: u32) -> Result<Value> {
+        self.client.get(&format!("/v1/nodes/{}/status", uid)).await
+    }
+
+    /// Node watchdog status - GET /v1/nodes/{uid}/wd_status
+    pub async fn wd_status(&self, uid: u32) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/nodes/{}/wd_status", uid))
+            .await
+    }
+
+    /// All node alerts - GET /v1/nodes/alerts
+    pub async fn alerts_all(&self) -> Result<Value> {
+        self.client.get("/v1/nodes/alerts").await
+    }
+
+    /// Alerts for node - GET /v1/nodes/alerts/{uid}
+    pub async fn alerts_for(&self, uid: u32) -> Result<Value> {
+        self.client.get(&format!("/v1/nodes/alerts/{}", uid)).await
+    }
+
+    /// Alert detail - GET /v1/nodes/alerts/{uid}/{alert}
+    pub async fn alert_detail(&self, uid: u32, alert: &str) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/nodes/alerts/{}/{}", uid, alert))
+            .await
+    }
 }

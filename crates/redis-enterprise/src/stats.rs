@@ -142,6 +142,21 @@ impl StatsHandler {
         }
     }
 
+    /// Get all nodes last stats - typed version
+    pub async fn nodes_last(&self) -> Result<AggregatedStatsResponse> {
+        self.client.get("/v1/nodes/stats/last").await
+    }
+
+    /// Get all nodes last stats - raw version
+    pub async fn nodes_last_raw(&self) -> Result<Value> {
+        self.client.get("/v1/nodes/stats/last").await
+    }
+
+    /// Get node stats via alternate path form - typed version
+    pub async fn node_alt(&self, uid: u32) -> Result<StatsResponse> {
+        self.client.get(&format!("/v1/nodes/stats/{}", uid)).await
+    }
+
     /// Get database stats
     pub async fn database(&self, uid: u32, query: Option<StatsQuery>) -> Result<StatsResponse> {
         if let Some(q) = query {
