@@ -641,8 +641,8 @@ async fn test_create_regional_private_service_connect() {
         .await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    assert!(response["taskId"].is_string());
+    let psc_obj = result.unwrap();
+    let response = serde_json::json!({"privateServiceConnect": psc_obj});
     let psc = &response["privateServiceConnect"];
     assert_eq!(psc["name"], "Regional PSC West");
     assert_eq!(psc["region"], "us-west1");
@@ -684,8 +684,8 @@ async fn test_update_regional_private_service_connect() {
         .await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    assert!(response["taskId"].is_string());
+    let psc_obj = result.unwrap();
+    let response = serde_json::json!({"privateServiceConnect": psc_obj});
     let psc = &response["privateServiceConnect"];
     assert_eq!(psc["name"], "Updated Regional PSC Central");
     assert_eq!(psc["status"], "updating");

@@ -36,12 +36,12 @@ impl CloudApiKeyHandler {
     }
 
     /// Create API key (typed)
-    pub async fn create(&self, request: &ApiKeyRequest) -> Result<ApiKey> {
+    pub async fn create(&self, request: &serde_json::Value) -> Result<ApiKey> {
         self.client.post("/api-keys", request).await
     }
 
     /// Update API key (typed)
-    pub async fn update(&self, key_id: u32, request: &ApiKeyRequest) -> Result<ApiKey> {
+    pub async fn update(&self, key_id: u32, request: &serde_json::Value) -> Result<ApiKey> {
         self.client
             .put(&format!("/api-keys/{}", key_id), request)
             .await
@@ -71,7 +71,7 @@ impl CloudApiKeyHandler {
     pub async fn update_permissions(
         &self,
         key_id: u32,
-        request: &ApiKeyPermissions,
+        request: &serde_json::Value,
     ) -> Result<ApiKeyPermissions> {
         self.client
             .put(&format!("/api-keys/{}/permissions", key_id), request)

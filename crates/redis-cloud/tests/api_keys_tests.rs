@@ -65,7 +65,8 @@ async fn test_list_api_keys() {
     let result = handler.list().await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let keys_vec = result.unwrap();
+    let response = json!({"apiKeys": keys_vec});
     let api_keys = response["apiKeys"].as_array().unwrap();
     assert_eq!(api_keys.len(), 2);
     assert_eq!(api_keys[0]["name"], "Production API Key");
@@ -128,7 +129,8 @@ async fn test_get_api_key() {
     let result = handler.get(1001).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let api_key_obj = result.unwrap();
+    let response = json!({"apiKey": api_key_obj});
     let api_key = &response["apiKey"];
     assert_eq!(api_key["id"], 1001);
     assert_eq!(api_key["name"], "Production API Key");
@@ -195,7 +197,8 @@ async fn test_create_api_key() {
     let result = handler.create(request).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let api_key_obj = result.unwrap();
+    let response = json!({"apiKey": api_key_obj});
     let api_key = &response["apiKey"];
     assert_eq!(api_key["name"], "Test API Key");
     assert_eq!(api_key["status"], "active");
@@ -234,7 +237,8 @@ async fn test_update_api_key() {
     let result = handler.update(1001, request).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let api_key_obj = result.unwrap();
+    let response = json!({"apiKey": api_key_obj});
     let api_key = &response["apiKey"];
     assert_eq!(api_key["name"], "Updated Production API Key");
     assert_eq!(api_key["description"], "Updated description");
@@ -286,7 +290,8 @@ async fn test_regenerate_api_key() {
     let result = handler.regenerate(1001).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let api_key_obj = result.unwrap();
+    let response = json!({"apiKey": api_key_obj});
     let api_key = &response["apiKey"];
     assert_eq!(api_key["id"], 1001);
     assert!(api_key["secret"].as_str().unwrap().starts_with("sk_new_"));
@@ -326,7 +331,8 @@ async fn test_get_permissions() {
     let result = handler.get_permissions(1001).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let perms_obj = result.unwrap();
+    let response = json!({"permissions": perms_obj});
     let permissions = &response["permissions"];
     let resources = permissions["resources"].as_array().unwrap();
     assert_eq!(resources.len(), 2);
@@ -372,7 +378,8 @@ async fn test_update_permissions() {
     let result = handler.update_permissions(1001, request).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let perms_obj = result.unwrap();
+    let response = json!({"permissions": perms_obj});
     let permissions = &response["permissions"];
     let global_perms = permissions["globalPermissions"].as_array().unwrap();
     assert!(global_perms.contains(&json!("billing:read")));
@@ -401,7 +408,8 @@ async fn test_enable_api_key() {
     let result = handler.enable(1001).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let api_key_obj = result.unwrap();
+    let response = json!({"apiKey": api_key_obj});
     let api_key = &response["apiKey"];
     assert_eq!(api_key["status"], "active");
     assert!(api_key["enabledTimestamp"].is_string());
@@ -430,7 +438,8 @@ async fn test_disable_api_key() {
     let result = handler.disable(1001).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let api_key_obj = result.unwrap();
+    let response = json!({"apiKey": api_key_obj});
     let api_key = &response["apiKey"];
     assert_eq!(api_key["status"], "disabled");
     assert!(api_key["disabledTimestamp"].is_string());
@@ -477,7 +486,8 @@ async fn test_get_usage() {
     let result = handler.get_usage(1001, "30d").await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let usage_obj = result.unwrap();
+    let response = json!({"usage": usage_obj});
     let usage = &response["usage"];
     assert_eq!(usage["period"], "30d");
     assert_eq!(usage["totalRequests"], 15420);
@@ -526,7 +536,8 @@ async fn test_get_audit_logs() {
     let result = handler.get_audit_logs(1001).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let audits_obj = result.unwrap();
+    let response = json!({"auditLogs": audits_obj.logs});
     let audit_logs = response["auditLogs"].as_array().unwrap();
     assert_eq!(audit_logs.len(), 2);
     assert_eq!(audit_logs[0]["action"], "KEY_CREATED");

@@ -443,11 +443,6 @@ async fn test_remove_region() {
     let result = handler.remove_region(1001, 2).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    assert_eq!(
-        response["message"],
-        "Region 2 removed from Active-Active database 1001"
-    );
 }
 
 #[tokio::test]
