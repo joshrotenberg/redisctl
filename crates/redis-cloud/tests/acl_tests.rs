@@ -61,7 +61,7 @@ async fn test_database_acl_list() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.list(12345, 67890).await;
+    let result = handler.list_raw(12345, 67890).await;
 
     assert!(result.is_ok());
     let response = result.unwrap();
@@ -91,7 +91,7 @@ async fn test_database_acl_get() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.get(12345, 67890, 1).await;
+    let result = handler.get_raw(12345, 67890, 1).await;
 
     assert!(result.is_ok());
     let acl = result.unwrap();
@@ -126,7 +126,7 @@ async fn test_database_acl_create() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.create(12345, 67890, request_body).await;
+    let result = handler.create_raw(12345, 67890, request_body).await;
 
     assert!(result.is_ok());
     let acl = result.unwrap();
@@ -160,7 +160,7 @@ async fn test_database_acl_update() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.update(12345, 67890, 1, request_body).await;
+    let result = handler.update_raw(12345, 67890, 1, request_body).await;
 
     assert!(result.is_ok());
     let acl = result.unwrap();
@@ -213,7 +213,7 @@ async fn test_acl_users_list() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.list_users().await;
+    let result = handler.list_users_raw().await;
 
     assert!(result.is_ok());
     let response = result.unwrap();
@@ -243,7 +243,7 @@ async fn test_acl_user_get() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.get_user(1).await;
+    let result = handler.get_user_raw(1).await;
 
     assert!(result.is_ok());
     let user = result.unwrap();
@@ -279,7 +279,7 @@ async fn test_acl_user_create() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.create_user(request_body).await;
+    let result = handler.create_user_raw(request_body).await;
 
     assert!(result.is_ok());
     let user = result.unwrap();
@@ -330,7 +330,7 @@ async fn test_acl_roles_list() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.list_roles().await;
+    let result = handler.list_roles_raw().await;
 
     assert!(result.is_ok());
     let response = result.unwrap();
@@ -365,7 +365,7 @@ async fn test_acl_role_create() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.create_role(request_body).await;
+    let result = handler.create_role_raw(request_body).await;
 
     assert!(result.is_ok());
     let role = result.unwrap();
@@ -397,7 +397,7 @@ async fn test_redis_rules_list() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.list_redis_rules().await;
+    let result = handler.list_redis_rules_raw().await;
 
     assert!(result.is_ok());
     let response = result.unwrap();
@@ -432,7 +432,7 @@ async fn test_redis_rule_create() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.create_redis_rule(request_body).await;
+    let result = handler.create_redis_rule_raw(request_body).await;
 
     assert!(result.is_ok());
     let rule = result.unwrap();
@@ -464,7 +464,7 @@ async fn test_acl_list_error() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.list(12345, 67890).await;
+    let result = handler.list_raw(12345, 67890).await;
 
     assert!(result.is_err());
 }
@@ -497,7 +497,7 @@ async fn test_acl_create_validation_error() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let result = handler.create(12345, 67890, request_body).await;
+    let result = handler.create_raw(12345, 67890, request_body).await;
 
     assert!(result.is_err());
 }

@@ -409,7 +409,7 @@ async fn test_add_payment_method() {
             "postalCode": "94105"
         }
     });
-    let result = handler.add_payment_method(request).await;
+    let result = handler.add_payment_method_raw(request).await;
 
     assert!(result.is_ok());
     let response = result.unwrap();
@@ -451,7 +451,7 @@ async fn test_update_payment_method() {
             "postalCode": "10001"
         }
     });
-    let result = handler.update_payment_method(123, request).await;
+    let result = handler.update_payment_method_raw(123, request).await;
 
     assert!(result.is_ok());
     let response = result.unwrap();
@@ -587,7 +587,7 @@ async fn test_update_alerts() {
         ],
         "recipients": ["admin@example.com"]
     });
-    let result = handler.update_alerts(request).await;
+    let result = handler.update_alerts_raw(request).await;
 
     assert!(result.is_ok());
     let response = result.unwrap();

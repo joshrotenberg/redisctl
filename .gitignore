@@ -33,3 +33,6 @@ dump.rdb
 # Claude
 .claude/
 CLAUDE.md
+
+# Temporoary stuff
+tmp/
