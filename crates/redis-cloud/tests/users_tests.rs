@@ -76,10 +76,11 @@ async fn test_users_list() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudUserHandler::new(client);
-    let result = handler.list_raw().await;
+    let result = handler.list().await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let users_vec = result.unwrap();
+    let response = json!({"users": users_vec});
     let users = response["users"].as_array().unwrap();
     assert_eq!(users.len(), 3);
 

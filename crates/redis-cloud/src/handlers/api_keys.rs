@@ -5,12 +5,11 @@
 //! power-user scenarios where arbitrary JSON shape is desirable.
 
 use crate::{
+    Result,
     client::CloudClient,
     models::{
-        ApiKey, ApiKeyAuditLogsResponse, ApiKeyPermissions, ApiKeyRequest, ApiKeyUsageResponse,
-        ApiKeysResponse,
+        ApiKey, ApiKeyAuditLogsResponse, ApiKeyPermissions, ApiKeyUsageResponse, ApiKeysResponse,
     },
-    Result,
 };
 use serde_json::Value;
 

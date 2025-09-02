@@ -244,7 +244,10 @@ pub async fn handle_subscription_command(
                 anyhow::bail!("No update fields provided");
             }
             let subscription = client
-                .put_raw(&format!("/subscriptions/{}", id), serde_json::Value::Object(update_data))
+                .put_raw(
+                    &format!("/subscriptions/{}", id),
+                    serde_json::Value::Object(update_data),
+                )
                 .await?;
             print_output(subscription, output_format, query)?;
         }
@@ -398,7 +401,10 @@ pub async fn handle_user_command(
                 anyhow::bail!("No update fields provided");
             }
             let user = client
-                .put_raw(&format!("/users/{}", id), serde_json::Value::Object(update_data))
+                .put_raw(
+                    &format!("/users/{}", id),
+                    serde_json::Value::Object(update_data),
+                )
                 .await?;
             print_output(user, output_format, query)?;
         }

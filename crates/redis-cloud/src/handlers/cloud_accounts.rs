@@ -1,12 +1,6 @@
 //! Cloud account operations handler
 
-use crate::{
-    Result,
-    client::CloudClient,
-    models::{
-        CloudProviderAccount, CreateCloudProviderAccountRequest, UpdateCloudProviderAccountRequest,
-    },
-};
+use crate::{Result, client::CloudClient, models::CloudProviderAccount};
 
 /// Handler for Cloud account operations
 pub struct CloudAccountsHandler {
@@ -32,7 +26,9 @@ impl CloudAccountsHandler {
 
     /// Get cloud account by ID
     pub async fn get(&self, account_id: u32) -> Result<CloudProviderAccount> {
-        self.client.get(&format!("/cloud-accounts/{}", account_id)).await
+        self.client
+            .get(&format!("/cloud-accounts/{}", account_id))
+            .await
     }
 
     /// Create a new cloud account

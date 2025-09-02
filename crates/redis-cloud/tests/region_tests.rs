@@ -80,7 +80,8 @@ async fn test_regions_list_aws() {
     let result = handler.list("AWS").await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let regions_vec = result.unwrap();
+    let response = json!({"regions": regions_vec});
     let regions = response["regions"].as_array().unwrap();
     assert_eq!(regions.len(), 3);
 
@@ -101,7 +102,7 @@ async fn test_regions_list_aws() {
     assert_eq!(networking["privateServiceConnect"], false);
     assert_eq!(networking["transitGateway"], true);
 
-    assert_eq!(response["totalCount"], 3);
+    // totalCount omitted for typed results
 }
 
 #[tokio::test]
@@ -149,7 +150,8 @@ async fn test_regions_list_gcp() {
     let result = handler.list("GCP").await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let regions_vec = result.unwrap();
+    let response = json!({"regions": regions_vec});
     let regions = response["regions"].as_array().unwrap();
     assert_eq!(regions.len(), 2);
 
@@ -159,7 +161,7 @@ async fn test_regions_list_gcp() {
     assert_eq!(regions[0]["networking"]["transitGateway"], false);
 
     assert_eq!(regions[1]["id"], "europe-west1");
-    assert_eq!(response["totalCount"], 2);
+    // totalCount omitted
 }
 
 #[tokio::test]
@@ -195,13 +197,14 @@ async fn test_regions_list_azure() {
     let result = handler.list("Azure").await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let regions_vec = result.unwrap();
+    let response = json!({"regions": regions_vec});
     let regions = response["regions"].as_array().unwrap();
     assert_eq!(regions.len(), 1);
 
     assert_eq!(regions[0]["id"], "East US");
     assert_eq!(regions[0]["provider"], "Azure");
-    assert_eq!(response["totalCount"], 1);
+    // totalCount omitted
 }
 
 #[tokio::test]
@@ -351,7 +354,8 @@ async fn test_region_list_empty() {
     let result = handler.list("Custom").await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let regions_vec = result.unwrap();
+    let response = json!({"regions": regions_vec});
     let regions = response["regions"].as_array().unwrap();
     assert_eq!(regions.len(), 0);
     assert_eq!(response["totalCount"], 0);

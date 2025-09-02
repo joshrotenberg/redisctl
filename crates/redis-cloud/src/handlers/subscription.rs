@@ -92,7 +92,6 @@ impl CloudSubscriptionHandler {
         }
     }
 
-
     /// Create a new subscription
     pub async fn create(&self, request: CreateSubscriptionRequest) -> Result<CloudSubscription> {
         self.client.post("/subscriptions", &request).await
@@ -133,7 +132,6 @@ impl CloudSubscriptionHandler {
     pub async fn cloud_accounts(&self) -> Result<Value> {
         self.client.get("/cloud-accounts").await
     }
-
 
     /// Get pricing
     pub async fn get_pricing(&self, subscription_id: u32) -> Result<Value> {

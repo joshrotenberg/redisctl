@@ -51,4 +51,3 @@ mod tests {
         assert_eq!(s.endpoints.as_ref().unwrap()[0].id, "ep-1");
     }
 }
-

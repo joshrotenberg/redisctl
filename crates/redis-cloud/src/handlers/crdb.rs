@@ -3,9 +3,7 @@
 use crate::{
     Result,
     client::CloudClient,
-    models::{
-        CloudCrdb, CloudCrdbRegion, CrdbMetrics, CrdbTask, CreateCrdbRequest, UpdateCrdbRequest,
-    },
+    models::{CloudCrdb, CloudCrdbRegion, CrdbMetrics, CrdbTask},
 };
 
 /// Handler for Cloud Active-Active database operations
@@ -54,7 +52,10 @@ impl CloudCrdbHandler {
 
     /// Get Active-Active database regions
     pub async fn get_regions(&self, crdb_id: u32) -> Result<Vec<CloudCrdbRegion>> {
-        let v: serde_json::Value = self.client.get(&format!("/crdb/{}/regions", crdb_id)).await?;
+        let v: serde_json::Value = self
+            .client
+            .get(&format!("/crdb/{}/regions", crdb_id))
+            .await?;
         if v.is_array() {
             serde_json::from_value(v).map_err(Into::into)
         } else if let Some(arr) = v.get("regions") {
@@ -98,7 +99,12 @@ impl CloudCrdbHandler {
     }
 
     /// Get Active-Active database metrics
-    pub async fn get_metrics(&self, crdb_id: u32, metrics: &str, period: &str) -> Result<CrdbMetrics> {
+    pub async fn get_metrics(
+        &self,
+        crdb_id: u32,
+        metrics: &str,
+        period: &str,
+    ) -> Result<CrdbMetrics> {
         self.client
             .get(&format!(
                 "/crdb/{}/metrics?metrics={}&period={}",
@@ -111,12 +117,19 @@ impl CloudCrdbHandler {
     pub async fn backup(&self, crdb_id: u32) -> Result<serde_json::Value> {
         // Some CRDB backup APIs return task or status; keep as raw JSON result but via typed handler signature
         self.client
-            .post(&format!("/crdb/{}/backup", crdb_id), &serde_json::Value::Null)
+            .post(
+                &format!("/crdb/{}/backup", crdb_id),
+                &serde_json::Value::Null,
+            )
             .await
     }
 
     /// Import data to Active-Active database
-    pub async fn import(&self, crdb_id: u32, request: serde_json::Value) -> Result<serde_json::Value> {
+    pub async fn import(
+        &self,
+        crdb_id: u32,
+        request: serde_json::Value,
+    ) -> Result<serde_json::Value> {
         self.client
             .post(&format!("/crdb/{}/import", crdb_id), &request)
             .await

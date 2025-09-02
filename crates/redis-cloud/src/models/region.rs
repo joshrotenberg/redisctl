@@ -15,4 +15,3 @@ pub struct RegionInfo {
     #[serde(flatten)]
     pub extra: Value,
 }
-

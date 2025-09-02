@@ -56,7 +56,6 @@ impl CloudBillingHandler {
         self.client.get("/billing").await
     }
 
-
     /// Get billing history
     pub async fn get_history(
         &self,
@@ -70,12 +69,10 @@ impl CloudBillingHandler {
         self.client.get(&path).await
     }
 
-
     /// Get current invoice
     pub async fn get_current_invoice(&self) -> Result<Invoice> {
         self.client.get("/billing/invoice/current").await
     }
-
 
     /// Get invoice by ID
     pub async fn get_invoice(&self, invoice_id: &str) -> Result<Invoice> {
@@ -84,12 +81,10 @@ impl CloudBillingHandler {
             .await
     }
 
-
     /// List all invoices
     pub async fn list_invoices(&self) -> Result<Vec<Invoice>> {
         self.client.get("/billing/invoices").await
     }
-
 
     /// Download invoice PDF
     pub async fn download_invoice(&self, invoice_id: &str) -> Result<Value> {
@@ -98,12 +93,10 @@ impl CloudBillingHandler {
             .await
     }
 
-
     /// Get payment methods
     pub async fn list_payment_methods(&self) -> Result<Vec<PaymentMethod>> {
         self.client.get("/payment-methods").await
     }
-
 
     /// Get payment method by ID
     pub async fn get_payment_method(&self, method_id: u32) -> Result<PaymentMethod> {
@@ -112,7 +105,6 @@ impl CloudBillingHandler {
             .await
     }
 
-
     /// Add payment method
     pub async fn add_payment_method(
         &self,
@@ -120,7 +112,6 @@ impl CloudBillingHandler {
     ) -> Result<PaymentMethod> {
         self.client.post("/payment-methods", &request).await
     }
-
 
     /// Update payment method
     pub async fn update_payment_method(
@@ -132,7 +123,6 @@ impl CloudBillingHandler {
             .put(&format!("/payment-methods/{}", method_id), &request)
             .await
     }
-
 
     /// Delete payment method
     pub async fn delete_payment_method(&self, method_id: u32) -> Result<Value> {
@@ -157,7 +147,6 @@ impl CloudBillingHandler {
         self.client.get("/billing/alerts").await
     }
 
-
     /// Update billing alerts configuration
     pub async fn update_alerts(
         &self,
@@ -166,14 +155,12 @@ impl CloudBillingHandler {
         self.client.put("/billing/alerts", &request).await
     }
 
-
     /// Get cost breakdown
     pub async fn get_cost_breakdown(&self, period: &str) -> Result<CostBreakdown> {
         self.client
             .get(&format!("/billing/costs?period={}", period))
             .await
     }
-
 
     /// Get usage report
     pub async fn get_usage(&self, start_date: &str, end_date: &str) -> Result<UsageReport> {
@@ -185,17 +172,14 @@ impl CloudBillingHandler {
             .await
     }
 
-
     /// Get credits balance
     pub async fn get_credits(&self) -> Result<CreditsBalance> {
         self.client.get("/billing/credits").await
     }
-
 
     /// Apply promo code
     pub async fn apply_promo_code(&self, code: &str) -> Result<PromoCodeResponse> {
         let request = serde_json::json!({ "code": code });
         self.client.post("/billing/promo", &request).await
     }
-
 }

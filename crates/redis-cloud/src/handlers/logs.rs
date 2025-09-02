@@ -46,7 +46,6 @@ impl CloudLogsHandler {
             .await
     }
 
-
     /// Get system logs
     pub async fn system(
         &self,
@@ -71,7 +70,6 @@ impl CloudLogsHandler {
 
         self.client.get(&format!("/logs{}", query_string)).await
     }
-
 
     /// Get session logs
     pub async fn session(
@@ -99,5 +97,4 @@ impl CloudLogsHandler {
             .get(&format!("/session-logs{}", query_string))
             .await
     }
-
 }

@@ -19,18 +19,15 @@ impl CloudUserHandler {
         self.client.get("/users").await
     }
 
-
     /// Get user by ID
     pub async fn get(&self, user_id: u32) -> Result<CloudUser> {
         self.client.get(&format!("/users/{}", user_id)).await
     }
 
-
     /// Create a new user (invite)
     pub async fn create(&self, request: CreateUserRequest) -> Result<CloudUser> {
         self.client.post("/users", &request).await
     }
-
 
     /// Update user
     pub async fn update(&self, user_id: u32, request: UpdateUserRequest) -> Result<CloudUser> {
@@ -38,7 +35,6 @@ impl CloudUserHandler {
             .put(&format!("/users/{}", user_id), &request)
             .await
     }
-
 
     /// Delete user
     pub async fn delete(&self, user_id: u32) -> Result<Value> {

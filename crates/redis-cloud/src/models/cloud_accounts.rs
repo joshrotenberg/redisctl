@@ -35,4 +35,3 @@ pub struct UpdateCloudProviderAccountRequest {
     #[builder(default, setter(strip_option))]
     pub credentials: Option<Value>,
 }
-

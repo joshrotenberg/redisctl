@@ -1,3 +1,4 @@
+#![allow(unused_imports)]
 //! Cloud API handlers
 
 pub mod account;

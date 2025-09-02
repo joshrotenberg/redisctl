@@ -160,4 +160,3 @@ mod tests {
         assert_eq!(u.usage.len(), 2);
     }
 }
-

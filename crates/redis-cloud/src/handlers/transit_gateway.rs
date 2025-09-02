@@ -38,7 +38,11 @@ impl CloudTransitGatewayHandler {
     }
 
     /// Get transit gateway attachment details
-    pub async fn get_attachment(&self, subscription_id: u32, tgw_id: &str) -> Result<TransitGatewayAttachment> {
+    pub async fn get_attachment(
+        &self,
+        subscription_id: u32,
+        tgw_id: &str,
+    ) -> Result<TransitGatewayAttachment> {
         self.client
             .get(&format!(
                 "/subscriptions/{}/transitGateways/{}/attachment",
@@ -52,9 +56,10 @@ impl CloudTransitGatewayHandler {
         &self,
         subscription_id: u32,
         tgw_id: &str,
-        attachment: CreateTransitGatewayAttachmentRequest,
+        attachment: serde_json::Value,
     ) -> Result<TransitGatewayAttachment> {
-        self.client
+        let v: serde_json::Value = self
+            .client
             .post(
                 &format!(
                     "/subscriptions/{}/transitGateways/{}/attachment",
@@ -62,7 +67,12 @@ impl CloudTransitGatewayHandler {
                 ),
                 &attachment,
             )
-            .await
+            .await?;
+        if let Some(obj) = v.get("attachment") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Delete transit gateway attachment
@@ -76,7 +86,10 @@ impl CloudTransitGatewayHandler {
     }
 
     /// List transit gateway invitations
-    pub async fn list_invitations(&self, subscription_id: u32) -> Result<Vec<TransitGatewayInvitation>> {
+    pub async fn list_invitations(
+        &self,
+        subscription_id: u32,
+    ) -> Result<Vec<TransitGatewayInvitation>> {
         let v: serde_json::Value = self
             .client
             .get(&format!(
@@ -128,7 +141,11 @@ impl CloudTransitGatewayHandler {
     }
 
     /// List regional transit gateways
-    pub async fn list_regional(&self, subscription_id: u32, region_id: &str) -> Result<Vec<TransitGatewayAttachment>> {
+    pub async fn list_regional(
+        &self,
+        subscription_id: u32,
+        region_id: &str,
+    ) -> Result<Vec<TransitGatewayAttachment>> {
         let v: serde_json::Value = self
             .client
             .get(&format!(
@@ -166,9 +183,10 @@ impl CloudTransitGatewayHandler {
         subscription_id: u32,
         region_id: &str,
         tgw_id: &str,
-        attachment: CreateTransitGatewayAttachmentRequest,
+        attachment: serde_json::Value,
     ) -> Result<TransitGatewayAttachment> {
-        self.client
+        let v: serde_json::Value = self
+            .client
             .post(
                 &format!(
                     "/subscriptions/{}/regions/{}/transitGateways/{}/attachment",
@@ -176,7 +194,12 @@ impl CloudTransitGatewayHandler {
                 ),
                 &attachment,
             )
-            .await
+            .await?;
+        if let Some(obj) = v.get("attachment") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Delete regional transit gateway attachment

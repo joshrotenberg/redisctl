@@ -5,7 +5,6 @@ use crate::{
     client::CloudClient,
     models::{
         SamlConfig, SamlMetadata, SsoConfig, SsoGroupMapping, SsoTestResponse, SsoUserMapping,
-        UpdateSamlConfigRequest, UpdateSsoConfigRequest,
     },
 };
 
@@ -94,9 +93,7 @@ impl CloudSsoHandler {
 
     /// Delete SSO user mapping
     pub async fn delete_user_mapping(&self, user_id: u32) -> Result<()> {
-        self.client
-            .delete(&format!("/sso/users/{}", user_id))
-            .await
+        self.client.delete(&format!("/sso/users/{}", user_id)).await
     }
 
     /// Get SSO groups

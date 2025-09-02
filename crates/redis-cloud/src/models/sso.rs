@@ -71,4 +71,3 @@ pub struct SsoGroupMapping {
     #[serde(flatten)]
     pub extra: Value,
 }
-

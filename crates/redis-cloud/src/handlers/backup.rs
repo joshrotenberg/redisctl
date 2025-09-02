@@ -34,7 +34,6 @@ impl CloudBackupHandler {
         }
     }
 
-
     /// Create a backup
     pub async fn create(
         &self,
@@ -57,7 +56,6 @@ impl CloudBackupHandler {
             .await
     }
 
-
     /// Get backup details
     pub async fn get(
         &self,
@@ -72,7 +70,6 @@ impl CloudBackupHandler {
             ))
             .await
     }
-
 
     /// Restore from backup
     pub async fn restore(
@@ -92,7 +89,6 @@ impl CloudBackupHandler {
             .await
     }
 
-
     /// Delete backup
     pub async fn delete(
         &self,
@@ -107,5 +103,4 @@ impl CloudBackupHandler {
             ))
             .await
     }
-
 }

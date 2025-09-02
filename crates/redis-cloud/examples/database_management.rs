@@ -53,7 +53,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let db_id = first_db["databaseId"].as_u64().unwrap() as u32;
             println!("\nGetting details for database {}...", db_id);
 
-            let db_details = db_handler.get_raw(subscription_id, db_id).await?;
+            let db_details = db_handler.get(subscription_id, db_id).await?;
 
             println!("Database details:");
             println!("  Protocol: {}", db_details["protocol"]);

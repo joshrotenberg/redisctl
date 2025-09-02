@@ -69,4 +69,3 @@ pub struct UpdateCrdbRequest {
     #[builder(default, setter(strip_option))]
     pub memory_limit_in_gb: Option<f64>,
 }
-

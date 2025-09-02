@@ -51,4 +51,3 @@ mod tests {
         assert_eq!(a.status.as_deref(), Some("available"));
     }
 }
-

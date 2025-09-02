@@ -1,6 +1,10 @@
 //! Task operations handler
 
-use crate::{Result, client::CloudClient, models::{Task, TaskList}};
+use crate::{
+    Result,
+    client::CloudClient,
+    models::{Task, TaskList},
+};
 
 /// Handler for Cloud task operations
 pub struct CloudTaskHandler {
@@ -20,10 +24,16 @@ impl CloudTaskHandler {
         let v: serde_json::Value = self.client.get("/tasks").await?;
         if v.is_array() {
             let tasks: Vec<Task> = serde_json::from_value(v.clone())?;
-            Ok(TaskList { tasks, extra: serde_json::json!({}) })
+            Ok(TaskList {
+                tasks,
+                extra: serde_json::json!({}),
+            })
         } else {
             // Coerce unknown shapes to wrapper for forward-compat
-            Ok(TaskList { tasks: vec![], extra: v })
+            Ok(TaskList {
+                tasks: vec![],
+                extra: v,
+            })
         }
     }
 

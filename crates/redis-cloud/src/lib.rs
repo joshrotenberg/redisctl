@@ -261,72 +261,51 @@ pub mod client;
 mod handlers;
 pub mod models;
 
-// Flattened handler modules (re-exported from handlers/* for now)
-pub mod account;
-pub mod acl;
-pub mod api_keys;
-pub mod backup;
-pub mod billing;
-pub mod cloud_accounts;
-pub mod crdb;
-pub mod database;
-pub mod fixed;
-pub mod logs;
-pub mod metrics;
-pub mod peering;
-pub mod private_service_connect;
-pub mod region;
-pub mod sso;
-pub mod subscription;
-pub mod tasks;
-pub mod transit_gateway;
-pub mod users;
-
 #[cfg(test)]
 mod lib_tests;
 
 // Re-export from the new structure
 pub use client::{CloudClient, CloudClientBuilder};
 
-// Re-export handlers explicitly from flattened modules
-pub use account::CloudAccountHandler;
-pub use acl::CloudAclHandler;
-pub use api_keys::CloudApiKeyHandler;
-pub use backup::CloudBackupHandler;
-pub use billing::CloudBillingHandler;
-pub use cloud_accounts::CloudAccountsHandler;
-pub use crdb::CloudCrdbHandler;
-pub use database::CloudDatabaseHandler;
-pub use fixed::CloudFixedHandler;
-pub use logs::CloudLogsHandler;
-pub use metrics::CloudMetricsHandler;
-pub use peering::CloudPeeringHandler;
-pub use private_service_connect::CloudPrivateServiceConnectHandler;
-pub use region::CloudRegionHandler;
-pub use sso::CloudSsoHandler;
-pub use subscription::CloudSubscriptionHandler;
-pub use tasks::CloudTaskHandler;
-pub use transit_gateway::CloudTransitGatewayHandler;
-pub use users::CloudUserHandler;
+// Re-export handlers from handlers::* directly
+pub use handlers::account::CloudAccountHandler;
+pub use handlers::acl::CloudAclHandler;
+pub use handlers::api_keys::CloudApiKeyHandler;
+pub use handlers::backup::CloudBackupHandler;
+pub use handlers::billing::CloudBillingHandler;
+pub use handlers::cloud_accounts::CloudAccountsHandler;
+pub use handlers::crdb::CloudCrdbHandler;
+pub use handlers::database::CloudDatabaseHandler;
+pub use handlers::fixed::CloudFixedHandler;
+pub use handlers::logs::CloudLogsHandler;
+pub use handlers::metrics::CloudMetricsHandler;
+pub use handlers::peering::CloudPeeringHandler;
+pub use handlers::private_service_connect::CloudPrivateServiceConnectHandler;
+pub use handlers::region::CloudRegionHandler;
+pub use handlers::sso::CloudSsoHandler;
+pub use handlers::subscription::CloudSubscriptionHandler;
+pub use handlers::tasks::CloudTaskHandler;
+pub use handlers::transit_gateway::CloudTransitGatewayHandler;
+pub use handlers::users::CloudUserHandler;
 
 // Re-export models explicitly
 pub use models::{
     // Account models
     AccountKey,
+    // API keys models
+    ApiKey,
+    ApiKeyAuditLogEntry,
+    ApiKeyAuditLogsResponse,
+    ApiKeyPermissions,
+    ApiKeyRequest,
+    ApiKeyUsagePoint,
+    ApiKeyUsageResponse,
+    ApiKeysResponse,
     CloudAccount,
     // Backup models
     CloudBackup,
     // Database models
     CloudDatabase,
-    // API keys models
-    ApiKey,
-    ApiKeysResponse,
-    ApiKeyRequest,
-    ApiKeyPermissions,
-    ApiKeyUsageResponse,
-    ApiKeyUsagePoint,
-    ApiKeyAuditLogsResponse,
-    ApiKeyAuditLogEntry,
     // Metrics models
     CloudMetrics,
     // Peering models

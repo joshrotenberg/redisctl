@@ -227,7 +227,6 @@ impl CloudDatabaseHandler {
         self.update(subscription_id, database_id, request).await
     }
 
-
     /// List all databases across all subscriptions
     pub async fn list_all(&self) -> Result<Vec<CloudDatabase>> {
         let response: Value = self.client.get("/databases").await?;
@@ -238,16 +237,12 @@ impl CloudDatabaseHandler {
         }
     }
 
-
     /// List databases for subscription as Value
     pub async fn list(&self, subscription_id: u32) -> Result<Value> {
         self.client
             .get(&format!("/subscriptions/{}/databases", subscription_id))
             .await
     }
-
-
-
 
     /// Backup database
     pub async fn backup(&self, subscription_id: u32, database_id: u32) -> Result<Value> {
@@ -370,5 +365,4 @@ impl CloudDatabaseHandler {
             ))
             .await
     }
-
 }
