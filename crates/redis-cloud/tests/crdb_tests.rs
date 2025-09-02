@@ -82,7 +82,8 @@ async fn test_list_crdb() {
     let result = handler.list().await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let crdbs_vec = result.unwrap();
+    let response = json!({"crdbs": crdbs_vec});
     let crdbs = response["crdbs"].as_array().unwrap();
     assert_eq!(crdbs.len(), 2);
     assert_eq!(crdbs[0]["name"], "global-cache");
@@ -172,7 +173,8 @@ async fn test_get_crdb() {
     let result = handler.get(1001).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let crdb_obj = result.unwrap();
+    let response = json!({"crdb": crdb_obj});
     let crdb = &response["crdb"];
     assert_eq!(crdb["crdbId"], 1001);
     assert_eq!(crdb["name"], "global-cache");
@@ -270,8 +272,8 @@ async fn test_create_crdb() {
     let result = handler.create(request).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    assert!(response["taskId"].is_string());
+    let crdb_obj = result.unwrap();
+    let response = json!({"crdb": crdb_obj});
     let crdb = &response["crdb"];
     assert_eq!(crdb["name"], "new-global-db");
     assert_eq!(crdb["status"], "pending");
@@ -309,8 +311,8 @@ async fn test_update_crdb() {
     let result = handler.update(1001, request).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    assert!(response["taskId"].is_string());
+    let crdb_obj = result.unwrap();
+    let response = json!({"crdb": crdb_obj});
     let crdb = &response["crdb"];
     assert_eq!(crdb["name"], "updated-global-cache");
     assert_eq!(crdb["status"], "updating");
@@ -336,8 +338,6 @@ async fn test_delete_crdb() {
     let result = handler.delete(1001).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    assert_eq!(response["message"], "Active-Active database 1001 deleted");
 }
 
 #[tokio::test]

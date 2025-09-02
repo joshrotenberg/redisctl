@@ -36,10 +36,7 @@ impl CloudAccountsHandler {
     }
 
     /// Create a new cloud account
-    pub async fn create(
-        &self,
-        request: CreateCloudProviderAccountRequest,
-    ) -> Result<CloudProviderAccount> {
+    pub async fn create(&self, request: serde_json::Value) -> Result<CloudProviderAccount> {
         self.client.post("/cloud-accounts", &request).await
     }
 
@@ -47,7 +44,7 @@ impl CloudAccountsHandler {
     pub async fn update(
         &self,
         account_id: u32,
-        request: UpdateCloudProviderAccountRequest,
+        request: serde_json::Value,
     ) -> Result<CloudProviderAccount> {
         self.client
             .put(&format!("/cloud-accounts/{}", account_id), &request)

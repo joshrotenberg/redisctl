@@ -36,12 +36,12 @@ impl CloudCrdbHandler {
     }
 
     /// Create Active-Active database
-    pub async fn create(&self, request: CreateCrdbRequest) -> Result<CloudCrdb> {
+    pub async fn create(&self, request: serde_json::Value) -> Result<CloudCrdb> {
         self.client.post("/crdb", &request).await
     }
 
     /// Update Active-Active database
-    pub async fn update(&self, crdb_id: u32, request: UpdateCrdbRequest) -> Result<CloudCrdb> {
+    pub async fn update(&self, crdb_id: u32, request: serde_json::Value) -> Result<CloudCrdb> {
         self.client
             .put(&format!("/crdb/{}", crdb_id), &request)
             .await
@@ -65,7 +65,7 @@ impl CloudCrdbHandler {
     }
 
     /// Add region to Active-Active database
-    pub async fn add_region(&self, crdb_id: u32, region: CloudCrdbRegion) -> Result<CloudCrdb> {
+    pub async fn add_region(&self, crdb_id: u32, region: serde_json::Value) -> Result<CloudCrdb> {
         self.client
             .post(&format!("/crdb/{}/regions", crdb_id), &region)
             .await

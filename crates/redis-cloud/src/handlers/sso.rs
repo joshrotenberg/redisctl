@@ -25,7 +25,7 @@ impl CloudSsoHandler {
     }
 
     /// Update SSO configuration (typed)
-    pub async fn update(&self, request: UpdateSsoConfigRequest) -> Result<SsoConfig> {
+    pub async fn update(&self, request: serde_json::Value) -> Result<SsoConfig> {
         self.client.put("/sso", &request).await
     }
 
@@ -35,7 +35,7 @@ impl CloudSsoHandler {
     }
 
     /// Test SSO configuration
-    pub async fn test(&self, request: UpdateSsoConfigRequest) -> Result<SsoTestResponse> {
+    pub async fn test(&self, request: serde_json::Value) -> Result<SsoTestResponse> {
         self.client.post("/sso/test", &request).await
     }
 
@@ -45,7 +45,7 @@ impl CloudSsoHandler {
     }
 
     /// Update SAML configuration
-    pub async fn update_saml(&self, request: UpdateSamlConfigRequest) -> Result<SamlConfig> {
+    pub async fn update_saml(&self, request: serde_json::Value) -> Result<SamlConfig> {
         self.client.put("/sso/saml", &request).await
     }
 
@@ -55,8 +55,7 @@ impl CloudSsoHandler {
     }
 
     /// Upload SAML certificate
-    pub async fn upload_saml_cert(&self, certificate_pem: String) -> Result<SamlConfig> {
-        let payload = serde_json::json!({"certificate": certificate_pem});
+    pub async fn upload_saml_cert(&self, payload: serde_json::Value) -> Result<SamlConfig> {
         self.client.post("/sso/saml/certificate", &payload).await
     }
 
@@ -78,7 +77,7 @@ impl CloudSsoHandler {
     }
 
     /// Create SSO user mapping
-    pub async fn create_user_mapping(&self, mapping: SsoUserMapping) -> Result<SsoUserMapping> {
+    pub async fn create_user_mapping(&self, mapping: serde_json::Value) -> Result<SsoUserMapping> {
         self.client.post("/sso/users", &mapping).await
     }
 
@@ -86,7 +85,7 @@ impl CloudSsoHandler {
     pub async fn update_user_mapping(
         &self,
         user_id: u32,
-        mapping: SsoUserMapping,
+        mapping: serde_json::Value,
     ) -> Result<SsoUserMapping> {
         self.client
             .put(&format!("/sso/users/{}", user_id), &mapping)
