@@ -92,6 +92,7 @@ impl CloudSubscriptionHandler {
         }
     }
 
+
     /// Create a new subscription
     pub async fn create(&self, request: CreateSubscriptionRequest) -> Result<CloudSubscription> {
         self.client.post("/subscriptions", &request).await
@@ -133,29 +134,6 @@ impl CloudSubscriptionHandler {
         self.client.get("/cloud-accounts").await
     }
 
-    /// List with result as Value for CLI filtering
-    pub async fn list_raw(&self) -> Result<Value> {
-        self.client.get("/subscriptions").await
-    }
-
-    /// Get as Value for CLI
-    pub async fn get_raw(&self, subscription_id: u32) -> Result<Value> {
-        self.client
-            .get(&format!("/subscriptions/{}", subscription_id))
-            .await
-    }
-
-    /// Create with Value for flexibility
-    pub async fn create_raw(&self, request: Value) -> Result<Value> {
-        self.client.post("/subscriptions", &request).await
-    }
-
-    /// Update with Value
-    pub async fn update_raw(&self, subscription_id: u32, request: Value) -> Result<Value> {
-        self.client
-            .put(&format!("/subscriptions/{}", subscription_id), &request)
-            .await
-    }
 
     /// Get pricing
     pub async fn get_pricing(&self, subscription_id: u32) -> Result<Value> {
@@ -186,6 +164,28 @@ impl CloudSubscriptionHandler {
                 &request,
             )
             .await
+    }
+
+    /// Get subscription CIDR (modern endpoint)
+    pub async fn get_cidr(&self, subscription_id: u32) -> Result<Value> {
+        self.client
+            .get(&format!("/subscriptions/{}/cidr", subscription_id))
+            .await
+    }
+
+    /// Get maintenance windows for subscription
+    pub async fn maintenance_windows(&self, subscription_id: u32) -> Result<Value> {
+        self.client
+            .get(&format!(
+                "/subscriptions/{}/maintenance-windows",
+                subscription_id
+            ))
+            .await
+    }
+
+    /// List available Redis versions for subscriptions
+    pub async fn redis_versions(&self) -> Result<Value> {
+        self.client.get("/subscriptions/redis-versions").await
     }
 
     /// Get VPC peerings

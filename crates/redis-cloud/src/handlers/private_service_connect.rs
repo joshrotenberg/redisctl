@@ -1,7 +1,10 @@
 //! Private Service Connect operations handler
 
-use crate::{Result, client::CloudClient};
-use serde_json::Value;
+use crate::{
+    Result,
+    client::CloudClient,
+    models::{PscEndpoint, PscScripts, PscService},
+};
 
 /// Handler for Cloud Private Service Connect operations
 pub struct CloudPrivateServiceConnectHandler {
@@ -14,17 +17,25 @@ impl CloudPrivateServiceConnectHandler {
     }
 
     /// List all private service connect services for a subscription
-    pub async fn list(&self, subscription_id: u32) -> Result<Value> {
-        self.client
+    pub async fn list(&self, subscription_id: u32) -> Result<Vec<PscService>> {
+        let v: serde_json::Value = self
+            .client
             .get(&format!(
                 "/subscriptions/{}/private-service-connect",
                 subscription_id
             ))
-            .await
+            .await?;
+        if v.is_array() {
+            serde_json::from_value(v).map_err(Into::into)
+        } else if let Some(arr) = v.get("services") {
+            serde_json::from_value(arr.clone()).map_err(Into::into)
+        } else {
+            Ok(vec![])
+        }
     }
 
     /// Get private service connect service details
-    pub async fn get(&self, subscription_id: u32, psc_service_id: &str) -> Result<Value> {
+    pub async fn get(&self, subscription_id: u32, psc_service_id: &str) -> Result<PscService> {
         self.client
             .get(&format!(
                 "/subscriptions/{}/private-service-connect/{}",
@@ -34,7 +45,7 @@ impl CloudPrivateServiceConnectHandler {
     }
 
     /// Create private service connect service
-    pub async fn create(&self, subscription_id: u32, service: Value) -> Result<Value> {
+    pub async fn create(&self, subscription_id: u32, service: PscService) -> Result<PscService> {
         self.client
             .post(
                 &format!("/subscriptions/{}/private-service-connect", subscription_id),
@@ -48,8 +59,8 @@ impl CloudPrivateServiceConnectHandler {
         &self,
         subscription_id: u32,
         psc_service_id: &str,
-        service: Value,
-    ) -> Result<Value> {
+        service: PscService,
+    ) -> Result<PscService> {
         self.client
             .put(
                 &format!(
@@ -77,7 +88,7 @@ impl CloudPrivateServiceConnectHandler {
         subscription_id: u32,
         psc_service_id: &str,
         endpoint_id: &str,
-    ) -> Result<Value> {
+    ) -> Result<PscEndpoint> {
         self.client
             .get(&format!(
                 "/subscriptions/{}/private-service-connect/{}/endpoints/{}",
@@ -92,7 +103,7 @@ impl CloudPrivateServiceConnectHandler {
         subscription_id: u32,
         psc_service_id: &str,
         endpoint_id: &str,
-    ) -> Result<Value> {
+    ) -> Result<PscScripts> {
         self.client
             .get(&format!(
                 "/subscriptions/{}/private-service-connect/{}/endpoints/{}/creationScripts",
@@ -107,7 +118,7 @@ impl CloudPrivateServiceConnectHandler {
         subscription_id: u32,
         psc_service_id: &str,
         endpoint_id: &str,
-    ) -> Result<Value> {
+    ) -> Result<PscScripts> {
         self.client
             .get(&format!(
                 "/subscriptions/{}/private-service-connect/{}/endpoints/{}/deletionScripts",
@@ -117,13 +128,21 @@ impl CloudPrivateServiceConnectHandler {
     }
 
     /// List regional private service connect services
-    pub async fn list_regional(&self, subscription_id: u32, region_id: &str) -> Result<Value> {
-        self.client
+    pub async fn list_regional(&self, subscription_id: u32, region_id: &str) -> Result<Vec<PscService>> {
+        let v: serde_json::Value = self
+            .client
             .get(&format!(
                 "/subscriptions/{}/regions/{}/private-service-connect",
                 subscription_id, region_id
             ))
-            .await
+            .await?;
+        if v.is_array() {
+            serde_json::from_value(v).map_err(Into::into)
+        } else if let Some(arr) = v.get("services") {
+            serde_json::from_value(arr.clone()).map_err(Into::into)
+        } else {
+            Ok(vec![])
+        }
     }
 
     /// Get regional private service connect service
@@ -132,7 +151,7 @@ impl CloudPrivateServiceConnectHandler {
         subscription_id: u32,
         region_id: &str,
         psc_service_id: &str,
-    ) -> Result<Value> {
+    ) -> Result<PscService> {
         self.client
             .get(&format!(
                 "/subscriptions/{}/regions/{}/private-service-connect/{}",
@@ -146,8 +165,8 @@ impl CloudPrivateServiceConnectHandler {
         &self,
         subscription_id: u32,
         region_id: &str,
-        service: Value,
-    ) -> Result<Value> {
+        service: PscService,
+    ) -> Result<PscService> {
         self.client
             .post(
                 &format!(
@@ -165,8 +184,8 @@ impl CloudPrivateServiceConnectHandler {
         subscription_id: u32,
         region_id: &str,
         psc_service_id: &str,
-        service: Value,
-    ) -> Result<Value> {
+        service: PscService,
+    ) -> Result<PscService> {
         self.client
             .put(
                 &format!(
@@ -200,7 +219,7 @@ impl CloudPrivateServiceConnectHandler {
         region_id: &str,
         psc_service_id: &str,
         endpoint_id: &str,
-    ) -> Result<Value> {
+    ) -> Result<PscEndpoint> {
         self.client
             .get(&format!(
                 "/subscriptions/{}/regions/{}/private-service-connect/{}/endpoints/{}",
@@ -216,7 +235,7 @@ impl CloudPrivateServiceConnectHandler {
         region_id: &str,
         psc_service_id: &str,
         endpoint_id: &str,
-    ) -> Result<Value> {
+    ) -> Result<PscScripts> {
         self.client
             .get(&format!(
                 "/subscriptions/{}/regions/{}/private-service-connect/{}/endpoints/{}/creationScripts",
@@ -232,7 +251,7 @@ impl CloudPrivateServiceConnectHandler {
         region_id: &str,
         psc_service_id: &str,
         endpoint_id: &str,
-    ) -> Result<Value> {
+    ) -> Result<PscScripts> {
         self.client
             .get(&format!(
                 "/subscriptions/{}/regions/{}/private-service-connect/{}/endpoints/{}/deletionScripts",

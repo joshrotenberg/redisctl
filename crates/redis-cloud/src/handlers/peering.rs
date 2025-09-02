@@ -31,6 +31,7 @@ impl CloudPeeringHandler {
         }
     }
 
+
     /// Create a new peering
     pub async fn create(&self, request: CreatePeeringRequest) -> Result<CloudPeering> {
         self.client
@@ -40,6 +41,7 @@ impl CloudPeeringHandler {
             )
             .await
     }
+
 
     /// Get peering details
     pub async fn get(&self, subscription_id: u32, peering_id: &str) -> Result<CloudPeering> {
@@ -51,6 +53,7 @@ impl CloudPeeringHandler {
             .await
     }
 
+
     /// Delete peering
     pub async fn delete(&self, subscription_id: u32, peering_id: &str) -> Result<()> {
         self.client
@@ -60,4 +63,5 @@ impl CloudPeeringHandler {
             ))
             .await
     }
+
 }

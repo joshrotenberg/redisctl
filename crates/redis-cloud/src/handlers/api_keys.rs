@@ -1,6 +1,17 @@
 //! API keys management handler
+//!
+//! Provides both typed and raw accessors for working with API keys. Prefer the
+//! typed helpers for most application code; raw methods are kept for CLI and
+//! power-user scenarios where arbitrary JSON shape is desirable.
 
-use crate::{Result, client::CloudClient};
+use crate::{
+    client::CloudClient,
+    models::{
+        ApiKey, ApiKeyAuditLogsResponse, ApiKeyPermissions, ApiKeyRequest, ApiKeyUsageResponse,
+        ApiKeysResponse,
+    },
+    Result,
+};
 use serde_json::Value;
 
 /// Handler for Cloud API key management
@@ -13,25 +24,26 @@ impl CloudApiKeyHandler {
         CloudApiKeyHandler { client }
     }
 
-    /// List all API keys
-    pub async fn list(&self) -> Result<Value> {
-        self.client.get("/api-keys").await
+    /// List all API keys (typed)
+    pub async fn list(&self) -> Result<Vec<ApiKey>> {
+        let resp: ApiKeysResponse = self.client.get("/api-keys").await?;
+        Ok(resp.api_keys)
     }
 
-    /// Get API key by ID
-    pub async fn get(&self, key_id: u32) -> Result<Value> {
+    /// Get API key by ID (typed)
+    pub async fn get(&self, key_id: u32) -> Result<ApiKey> {
         self.client.get(&format!("/api-keys/{}", key_id)).await
     }
 
-    /// Create API key
-    pub async fn create(&self, request: Value) -> Result<Value> {
-        self.client.post("/api-keys", &request).await
+    /// Create API key (typed)
+    pub async fn create(&self, request: &ApiKeyRequest) -> Result<ApiKey> {
+        self.client.post("/api-keys", request).await
     }
 
-    /// Update API key
-    pub async fn update(&self, key_id: u32, request: Value) -> Result<Value> {
+    /// Update API key (typed)
+    pub async fn update(&self, key_id: u32, request: &ApiKeyRequest) -> Result<ApiKey> {
         self.client
-            .put(&format!("/api-keys/{}", key_id), &request)
+            .put(&format!("/api-keys/{}", key_id), request)
             .await
     }
 
@@ -48,17 +60,21 @@ impl CloudApiKeyHandler {
             .await
     }
 
-    /// Get API key permissions
-    pub async fn get_permissions(&self, key_id: u32) -> Result<Value> {
+    /// Get API key permissions (typed)
+    pub async fn get_permissions(&self, key_id: u32) -> Result<ApiKeyPermissions> {
         self.client
             .get(&format!("/api-keys/{}/permissions", key_id))
             .await
     }
 
-    /// Update API key permissions
-    pub async fn update_permissions(&self, key_id: u32, request: Value) -> Result<Value> {
+    /// Update API key permissions (typed)
+    pub async fn update_permissions(
+        &self,
+        key_id: u32,
+        request: &ApiKeyPermissions,
+    ) -> Result<ApiKeyPermissions> {
         self.client
-            .put(&format!("/api-keys/{}/permissions", key_id), &request)
+            .put(&format!("/api-keys/{}/permissions", key_id), request)
             .await
     }
 
@@ -76,15 +92,15 @@ impl CloudApiKeyHandler {
             .await
     }
 
-    /// Get API key usage statistics
-    pub async fn get_usage(&self, key_id: u32, period: &str) -> Result<Value> {
+    /// Get API key usage statistics (typed)
+    pub async fn get_usage(&self, key_id: u32, period: &str) -> Result<ApiKeyUsageResponse> {
         self.client
             .get(&format!("/api-keys/{}/usage?period={}", key_id, period))
             .await
     }
 
-    /// List API key audit logs
-    pub async fn get_audit_logs(&self, key_id: u32) -> Result<Value> {
+    /// List API key audit logs (typed)
+    pub async fn get_audit_logs(&self, key_id: u32) -> Result<ApiKeyAuditLogsResponse> {
         self.client
             .get(&format!("/api-keys/{}/audit", key_id))
             .await

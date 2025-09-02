@@ -50,6 +50,7 @@ impl CloudMetricsHandler {
             .await
     }
 
+
     /// Get subscription metrics
     pub async fn subscription(
         &self,

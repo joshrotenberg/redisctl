@@ -173,6 +173,34 @@
 //! # }
 //! ```
 //!
+//! #### API Keys (Typed)
+//! ```rust,no_run
+//! use redis_cloud::{CloudClient, CloudApiKeyHandler, ApiKeyRequest};
+//!
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = CloudClient::builder()
+//!     .api_key("key")
+//!     .api_secret("secret")
+//!     .build()?;
+//!
+//! let keys = CloudApiKeyHandler::new(client.clone());
+//! let all = keys.list_typed().await?; // Vec<ApiKey>
+//! if let Some(first) = all.first() {
+//!     let detailed = keys.get_typed(first.id).await?;
+//!     let _usage = keys.get_usage_typed(detailed.id, "7d").await?;
+//! }
+//!
+//! let created = keys
+//!     .create_typed(&ApiKeyRequest { name: "ci-bot".into(), status: None })
+//!     .await?;
+//! let _updated = keys
+//!     .update_typed(created.id, &ApiKeyRequest { name: "ci-bot".into(), status: Some("disabled".into()) })
+//!     .await?;
+//! # Ok(())
+//! # }
+//! ```
+//!
 //! ## Error Handling
 //!
 //! The client provides comprehensive error handling for different failure scenarios:
@@ -230,8 +258,29 @@
 //! These credentials can be obtained from the Redis Cloud console under Account Settings > API Keys.
 
 pub mod client;
-pub mod handlers;
+mod handlers;
 pub mod models;
+
+// Flattened handler modules (re-exported from handlers/* for now)
+pub mod account;
+pub mod acl;
+pub mod api_keys;
+pub mod backup;
+pub mod billing;
+pub mod cloud_accounts;
+pub mod crdb;
+pub mod database;
+pub mod fixed;
+pub mod logs;
+pub mod metrics;
+pub mod peering;
+pub mod private_service_connect;
+pub mod region;
+pub mod sso;
+pub mod subscription;
+pub mod tasks;
+pub mod transit_gateway;
+pub mod users;
 
 #[cfg(test)]
 mod lib_tests;
@@ -239,14 +288,26 @@ mod lib_tests;
 // Re-export from the new structure
 pub use client::{CloudClient, CloudClientBuilder};
 
-// Re-export handlers explicitly
-pub use handlers::{
-    CloudAccountHandler, CloudAccountsHandler, CloudAclHandler, CloudApiKeyHandler,
-    CloudBackupHandler, CloudBillingHandler, CloudCrdbHandler, CloudDatabaseHandler,
-    CloudFixedHandler, CloudLogsHandler, CloudMetricsHandler, CloudPeeringHandler,
-    CloudPrivateServiceConnectHandler, CloudRegionHandler, CloudSsoHandler,
-    CloudSubscriptionHandler, CloudTaskHandler, CloudTransitGatewayHandler, CloudUserHandler,
-};
+// Re-export handlers explicitly from flattened modules
+pub use account::CloudAccountHandler;
+pub use acl::CloudAclHandler;
+pub use api_keys::CloudApiKeyHandler;
+pub use backup::CloudBackupHandler;
+pub use billing::CloudBillingHandler;
+pub use cloud_accounts::CloudAccountsHandler;
+pub use crdb::CloudCrdbHandler;
+pub use database::CloudDatabaseHandler;
+pub use fixed::CloudFixedHandler;
+pub use logs::CloudLogsHandler;
+pub use metrics::CloudMetricsHandler;
+pub use peering::CloudPeeringHandler;
+pub use private_service_connect::CloudPrivateServiceConnectHandler;
+pub use region::CloudRegionHandler;
+pub use sso::CloudSsoHandler;
+pub use subscription::CloudSubscriptionHandler;
+pub use tasks::CloudTaskHandler;
+pub use transit_gateway::CloudTransitGatewayHandler;
+pub use users::CloudUserHandler;
 
 // Re-export models explicitly
 pub use models::{
@@ -257,6 +318,15 @@ pub use models::{
     CloudBackup,
     // Database models
     CloudDatabase,
+    // API keys models
+    ApiKey,
+    ApiKeysResponse,
+    ApiKeyRequest,
+    ApiKeyPermissions,
+    ApiKeyUsageResponse,
+    ApiKeyUsagePoint,
+    ApiKeyAuditLogsResponse,
+    ApiKeyAuditLogEntry,
     // Metrics models
     CloudMetrics,
     // Peering models

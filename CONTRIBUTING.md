@@ -121,10 +121,24 @@ Please be respectful and constructive in all interactions.
 
 ### API Design
 
-- Keep interfaces consistent
-- Provide both typed and untyped responses
+- Keep interfaces consistent and ergonomic
+- Prefer typed request/response models; use untyped `serde_json::Value` only for
+  intentionally opaque or multipart-style payloads (e.g., module uploads) or
+  highly heterogeneous aggregates
 - Use builder patterns for complex configurations
-- Handle errors gracefully with context
+- Handle errors gracefully with context (`anyhow::Context`, `thiserror`)
+- Where multiple API versions exist (v1/v2), expose explicit versioned sub‑handlers,
+  for example `actions.v1()` and `actions.v2()`
+
+### Working Style (PR Flow)
+
+1. Create a feature/fix branch (e.g., `feat/...`, `fix/...`).
+2. Open a Draft PR early. Push incremental, focused commits (use Conventional Commits).
+3. Keep the PR body up to date with scope and a short checklist.
+4. Ensure CI passes locally (`fmt`, `clippy -D warnings`, `test`) and in GitHub.
+5. When complete and green, mark the PR “Ready for review”.
+6. Prefer “Squash and merge” to produce a clean, single commit on `main`.
+7. Reference and close related issues in the PR description.
 
 ## Release Process
 
