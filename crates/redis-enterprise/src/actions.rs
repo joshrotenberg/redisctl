@@ -1,4 +1,8 @@
 //! Action management for Redis Enterprise async operations
+//!
+//! Overview
+//! - Track async tasks across the cluster
+//! - v1 and v2 endpoints exposed via `v1()` and `v2()` accessors
 
 use crate::client::RestClient;
 use crate::error::Result;

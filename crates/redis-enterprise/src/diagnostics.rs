@@ -1,4 +1,8 @@
 //! Diagnostic operations for Redis Enterprise
+//!
+//! Overview
+//! - Run checks, retrieve reports, and list available checks
+//! - Typed config GET/PUT for diagnostics settings
 
 use crate::client::RestClient;
 use crate::error::Result;

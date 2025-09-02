@@ -1,4 +1,12 @@
 //! Database (BDB) management commands for Redis Enterprise
+//!
+//! Overview
+//! - Create, update, delete databases
+//! - Operational actions: start/stop/restart, export/import/backup/restore
+//! - Insights: endpoints, shards, metrics/stats, availability
+//! - Advanced: passwords, modules config/upgrade, traffic control
+//!
+//! Tip: For time-series metrics, also see the `StatsHandler` for aggregate queries.
 
 use crate::client::RestClient;
 use crate::error::Result;

@@ -1,4 +1,9 @@
 //! Redis module management for Redis Enterprise
+//!
+//! Overview
+//! - v1: list/get/upload/update/delete
+//! - v2: modern upload/delete APIs
+//!   Accessors `v1()` and `v2()` provide explicit version selection.
 
 use crate::client::RestClient;
 use crate::error::Result;

@@ -1,4 +1,8 @@
 //! OCSP (Online Certificate Status Protocol) management for Redis Enterprise
+//!
+//! Overview
+//! - Query and configure OCSP settings
+//! - Status check and test endpoints
 
 use crate::client::RestClient;
 use crate::error::Result;

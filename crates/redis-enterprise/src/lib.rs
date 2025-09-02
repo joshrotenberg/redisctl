@@ -7,12 +7,14 @@
 //!
 //! # Features
 //!
-//! - **Complete API Coverage**: All 29 Enterprise REST API endpoint categories
+//! - **Complete API Coverage**: Full coverage of v1 endpoints plus select v2
+//!   endpoints where they exist (e.g., actions, modules)
 //! - **Type-Safe Operations**: Strongly typed request/response models
 //! - **Flexible Authentication**: Basic auth with optional SSL verification
 //! - **Async/Await Support**: Built on Tokio for high-performance async operations
 //! - **Error Handling**: Comprehensive error types with context
 //! - **Builder Patterns**: Ergonomic API for complex request construction
+//! - **Versioned APIs**: Clear accessors for v1 and v2 where both exist
 //!
 //! # Quick Start
 //!
@@ -133,6 +135,36 @@
 //! # Ok(())
 //! # }
 //! ```
+//!
+//! ## Versioned Endpoints (v1/v2)
+//!
+//! Some Enterprise endpoints have both v1 and v2 flavors. Use versioned sub-handlers
+//! to make intent explicit and keep models clean.
+//!
+//! ```no_run
+//! use redis_enterprise::{EnterpriseClient, ActionHandler, ModuleHandler};
+//!
+//! # async fn example(client: EnterpriseClient) -> Result<(), Box<dyn std::error::Error>> {
+//! // Actions: v1 and v2
+//! let actions = ActionHandler::new(client.clone());
+//! let v1_actions = actions.v1().list().await?; // GET /v1/actions
+//! let v2_actions = actions.v2().list().await?; // GET /v2/actions
+//!
+//! // Modules: v1 and v2
+//! let modules = ModuleHandler::new(client.clone());
+//! let all = modules.v1().list().await?;            // GET /v1/modules
+//! // v2 upload body can be an opaque Value or multipart in a higher-level helper
+//! let uploaded = modules.v2().upload(serde_json::json!({"name": "search", "data": "..."})).await?;
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! # Typed-Only Client
+//!
+//! The Enterprise client exposes typed request/response APIs by default. Raw JSON
+//! passthroughs are avoided except for intentionally opaque operations (for example,
+//! database command passthrough or module uploads). This keeps CLI and library usage
+//! consistent and safer while maintaining flexibility where the wire format is open.
 //!
 //! ## User Management
 //!

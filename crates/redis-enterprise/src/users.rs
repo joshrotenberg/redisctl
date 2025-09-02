@@ -1,4 +1,24 @@
 //! User and role management for Redis Enterprise
+//!
+//! Overview
+//! - Typed CRUD for users and roles
+//! - Auth flows: authorize, password set/update/delete, JWT refresh
+//! - Permissions discovery helpers
+//!
+//! Example
+//! ```no_run
+//! use redis_enterprise::{EnterpriseClient, UserHandler, CreateUserRequest};
+//!
+//! # async fn ex(client: EnterpriseClient) -> anyhow::Result<()> {
+//! let users = UserHandler::new(client);
+//! let u = users.create(CreateUserRequest::builder()
+//!     .email("dev@example.com")
+//!     .password("secret")
+//!     .role("db_member")
+//!     .build()).await?;
+//! # Ok(())
+//! # }
+//! ```
 
 use crate::client::RestClient;
 use crate::error::Result;

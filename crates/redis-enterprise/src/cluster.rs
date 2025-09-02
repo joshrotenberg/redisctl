@@ -1,4 +1,10 @@
 //! Cluster management commands for Redis Enterprise
+//!
+//! Overview
+//! - Read: info, settings, topology, license, nodes
+//! - Actions: reset, recover, join node, policy and services configuration
+//! - Certificates and LDAP helpers
+//! - Alert detail queries
 
 use crate::client::RestClient;
 use crate::error::Result;

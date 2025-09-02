@@ -1,4 +1,9 @@
 //! Shard management for Redis Enterprise
+//!
+//! Overview
+//! - List/get shard placement and roles
+//! - Per-shard stats and per-metric time-series
+//! - Failover and migrate actions (global and per-shard) with typed requests
 
 use crate::client::RestClient;
 use crate::error::Result;

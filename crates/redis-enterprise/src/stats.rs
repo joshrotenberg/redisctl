@@ -1,4 +1,9 @@
 //! Statistics and metrics for Redis Enterprise
+//!
+//! Overview
+//! - Cluster, node, database, and shard statistics
+//! - Time windows via `StatsQuery` (interval, stime, etime, metrics)
+//! - "last" snapshots for quick health checks
 
 use crate::client::RestClient;
 use crate::error::Result;
