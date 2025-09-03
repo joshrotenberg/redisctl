@@ -3,6 +3,7 @@ use clap::Parser;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod cli;
+mod commands;
 mod config;
 mod connection;
 mod error;
@@ -187,30 +188,22 @@ async fn execute_profile_command(
 }
 
 async fn execute_api_command(
-    _cli: &Cli,
-    _conn_mgr: &ConnectionManager,
+    cli: &Cli,
+    conn_mgr: &ConnectionManager,
     deployment: &config::DeploymentType,
     method: &cli::HttpMethod,
     path: &str,
     data: Option<&str>,
 ) -> Result<(), RedisCtlError> {
-    println!("Raw API access will be implemented in the next PR");
-    println!(
-        "Command: {} {} {} with data: {:?}",
-        deployment,
-        method_to_string(method),
-        path,
-        data
-    );
-    Ok(())
-}
-
-fn method_to_string(method: &cli::HttpMethod) -> &'static str {
-    match method {
-        cli::HttpMethod::Get => "GET",
-        cli::HttpMethod::Post => "POST",
-        cli::HttpMethod::Put => "PUT",
-        cli::HttpMethod::Patch => "PATCH",
-        cli::HttpMethod::Delete => "DELETE",
-    }
+    commands::api::handle_api_command(commands::api::ApiCommandParams {
+        config: conn_mgr.config.clone(),
+        profile_name: cli.profile.clone(),
+        deployment: *deployment,
+        method: method.clone(),
+        path: path.to_string(),
+        data: data.map(|s| s.to_string()),
+        query: cli.query.clone(),
+        output_format: cli.output,
+    })
+    .await
 }

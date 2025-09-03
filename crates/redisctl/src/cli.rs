@@ -34,7 +34,7 @@ pub struct Cli {
 }
 
 /// Output format options
-#[derive(Debug, Clone, clap::ValueEnum)]
+#[derive(Debug, Clone, Copy, clap::ValueEnum)]
 pub enum OutputFormat {
     /// Automatically choose format based on command and context
     Auto,
