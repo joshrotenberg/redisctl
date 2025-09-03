@@ -6,7 +6,9 @@
 #![allow(dead_code)] // Foundation code - will be used in future PRs
 
 use anyhow::{Context, Result};
-use directories::{BaseDirs, ProjectDirs};
+#[cfg(target_os = "macos")]
+use directories::BaseDirs;
+use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
