@@ -298,9 +298,27 @@ pub struct DatabaseInfo {
 /// Database endpoint information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EndpointInfo {
+    /// Unique identifier for the endpoint
+    pub uid: Option<String>,
+    /// List of IP addresses for the endpoint
     pub addr: Option<Vec<String>>,
+    /// Port number for the endpoint
     pub port: Option<u16>,
+    /// DNS name for the endpoint
     pub dns_name: Option<String>,
+    /// Proxy policy for the endpoint
+    pub proxy_policy: Option<String>,
+    /// Address type (e.g., "internal", "external")
+    pub addr_type: Option<String>,
+    /// OSS cluster API preferred IP type
+    pub oss_cluster_api_preferred_ip_type: Option<String>,
+    /// List of proxy UIDs to exclude
+    pub exclude_proxies: Option<Vec<u32>>,
+    /// List of proxy UIDs to include
+    pub include_proxies: Option<Vec<u32>>,
+    /// Capture any additional fields
+    #[serde(flatten)]
+    pub extra: Value,
 }
 
 /// Module configuration for database creation
@@ -526,7 +544,7 @@ impl DatabaseHandler {
     }
 
     /// Get database endpoints (BDB.ENDPOINTS)
-    pub async fn endpoints(&self, uid: u32) -> Result<Value> {
+    pub async fn endpoints(&self, uid: u32) -> Result<Vec<EndpointInfo>> {
         self.client
             .get(&format!("/v1/bdbs/{}/endpoints", uid))
             .await

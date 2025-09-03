@@ -386,4 +386,70 @@ mod tests {
         assert!(result.is_ok());
         assert_eq!(result.unwrap()["status"], "joined");
     }
+
+    #[tokio::test]
+    async fn test_database_get_endpoints() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("GET"))
+            .and(path("/v1/bdbs/1/endpoints"))
+            .and(basic_auth("admin", "password"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+                {
+                    "uid": "endpoint:1:1",
+                    "addr": ["192.168.1.10", "192.168.1.11"],
+                    "port": 12000,
+                    "dns_name": "redis-12000.cluster.local",
+                    "proxy_policy": "single",
+                    "addr_type": "internal",
+                    "oss_cluster_api_preferred_ip_type": "internal"
+                },
+                {
+                    "uid": "endpoint:1:2",
+                    "addr": ["10.0.0.5"],
+                    "port": 12001,
+                    "dns_name": "redis-12001.cluster.local",
+                    "proxy_policy": "all-master-shards",
+                    "addr_type": "external",
+                    "exclude_proxies": [1, 2],
+                    "include_proxies": [3, 4, 5]
+                }
+            ])))
+            .mount(&mock_server)
+            .await;
+
+        let client = EnterpriseClient::builder()
+            .base_url(mock_server.uri())
+            .username("admin")
+            .password("password")
+            .build()
+            .unwrap();
+
+        let handler = crate::bdb::DatabaseHandler::new(client);
+        let result = handler.endpoints(1).await;
+
+        assert!(result.is_ok());
+        let endpoints = result.unwrap();
+        assert_eq!(endpoints.len(), 2);
+
+        // Check first endpoint
+        assert_eq!(endpoints[0].uid, Some("endpoint:1:1".to_string()));
+        assert_eq!(endpoints[0].port, Some(12000));
+        assert_eq!(
+            endpoints[0].dns_name,
+            Some("redis-12000.cluster.local".to_string())
+        );
+        assert_eq!(endpoints[0].proxy_policy, Some("single".to_string()));
+        assert_eq!(endpoints[0].addr_type, Some("internal".to_string()));
+
+        // Check second endpoint
+        assert_eq!(endpoints[1].uid, Some("endpoint:1:2".to_string()));
+        assert_eq!(endpoints[1].port, Some(12001));
+        assert_eq!(
+            endpoints[1].proxy_policy,
+            Some("all-master-shards".to_string())
+        );
+        assert_eq!(endpoints[1].exclude_proxies, Some(vec![1, 2]));
+        assert_eq!(endpoints[1].include_proxies, Some(vec![3, 4, 5]));
+    }
 }
