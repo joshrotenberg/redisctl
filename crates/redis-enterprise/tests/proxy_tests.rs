@@ -285,16 +285,13 @@ async fn test_proxy_stats_metric() {
         .unwrap();
 
     let handler = ProxyHandler::new(client);
-    let result = handler.stats_metric_raw(1, "connections").await;
-
-    assert!(result.is_ok());
-    let metric_stats = result.unwrap();
-    assert_eq!(metric_stats["interval"], "1sec");
-    assert_eq!(metric_stats["timestamps"].as_array().unwrap().len(), 3);
-    assert_eq!(metric_stats["values"].as_array().unwrap().len(), 3);
-    assert_eq!(metric_stats["values"][0], 25);
-    assert_eq!(metric_stats["values"][1], 30);
-    assert_eq!(metric_stats["values"][2], 28);
+    let metric_stats = handler.stats_metric(1, "connections").await.unwrap();
+    assert_eq!(metric_stats.interval, "1sec");
+    assert_eq!(metric_stats.timestamps.len(), 3);
+    assert_eq!(metric_stats.values.len(), 3);
+    assert_eq!(metric_stats.values[0], 25);
+    assert_eq!(metric_stats.values[1], 30);
+    assert_eq!(metric_stats.values[2], 28);
 }
 
 #[tokio::test]
@@ -320,13 +317,10 @@ async fn test_proxy_stats_metric_ops() {
         .unwrap();
 
     let handler = ProxyHandler::new(client);
-    let result = handler.stats_metric_raw(2, "ops_per_sec").await;
-
-    assert!(result.is_ok());
-    let metric_stats = result.unwrap();
-    assert_eq!(metric_stats["interval"], "1min");
-    assert_eq!(metric_stats["values"][0], 162.0);
-    assert_eq!(metric_stats["values"][1], 168.0);
+    let metric_stats = handler.stats_metric(2, "ops_per_sec").await.unwrap();
+    assert_eq!(metric_stats.interval, "1min");
+    assert_eq!(metric_stats.values[0], 162.0);
+    assert_eq!(metric_stats.values[1], 168.0);
 }
 
 #[tokio::test]
@@ -548,8 +542,7 @@ async fn test_proxy_stats_metric_invalid() {
         .unwrap();
 
     let handler = ProxyHandler::new(client);
-    let result = handler.stats_metric_raw(1, "invalid_metric").await;
-
+    let result = handler.stats_metric(1, "invalid_metric").await;
     assert!(result.is_err());
 }
 

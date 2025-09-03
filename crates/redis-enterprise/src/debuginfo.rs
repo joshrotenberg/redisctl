@@ -1,4 +1,8 @@
 //! Debug information collection for Redis Enterprise
+//!
+//! Overview
+//! - Create and track debuginfo tasks, download artifacts
+//! - Convenience routes for node/all scopes
 
 use crate::client::RestClient;
 use crate::error::Result;
@@ -88,6 +92,30 @@ impl DebugInfoHandler {
     pub async fn cancel(&self, task_id: &str) -> Result<()> {
         self.client
             .delete(&format!("/v1/debuginfo/{}", task_id))
+            .await
+    }
+
+    /// Get all debug info across nodes - GET /v1/debuginfo/all
+    pub async fn all(&self) -> Result<Value> {
+        self.client.get("/v1/debuginfo/all").await
+    }
+
+    /// Get all debug info for a specific database - GET /v1/debuginfo/all/bdb/{uid}
+    pub async fn all_bdb(&self, bdb_uid: u32) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/debuginfo/all/bdb/{}", bdb_uid))
+            .await
+    }
+
+    /// Get node debug info - GET /v1/debuginfo/node
+    pub async fn node(&self) -> Result<Value> {
+        self.client.get("/v1/debuginfo/node").await
+    }
+
+    /// Get node debug info for a specific database - GET /v1/debuginfo/node/bdb/{uid}
+    pub async fn node_bdb(&self, bdb_uid: u32) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/debuginfo/node/bdb/{}", bdb_uid))
             .await
     }
 }

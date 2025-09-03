@@ -1,4 +1,24 @@
 //! User and role management for Redis Enterprise
+//!
+//! Overview
+//! - Typed CRUD for users and roles
+//! - Auth flows: authorize, password set/update/delete, JWT refresh
+//! - Permissions discovery helpers
+//!
+//! Example
+//! ```no_run
+//! use redis_enterprise::{EnterpriseClient, UserHandler, CreateUserRequest};
+//!
+//! # async fn ex(client: EnterpriseClient) -> anyhow::Result<()> {
+//! let users = UserHandler::new(client);
+//! let u = users.create(CreateUserRequest::builder()
+//!     .email("dev@example.com")
+//!     .password("secret")
+//!     .role("db_member")
+//!     .build()).await?;
+//! # Ok(())
+//! # }
+//! ```
 
 use crate::client::RestClient;
 use crate::error::Result;
@@ -169,6 +189,83 @@ impl UserHandler {
     pub async fn delete(&self, uid: u32) -> Result<()> {
         self.client.delete(&format!("/v1/users/{}", uid)).await
     }
+
+    /// Get permissions - GET /v1/users/permissions (raw)
+    pub async fn permissions(&self) -> Result<Value> {
+        self.client.get("/v1/users/permissions").await
+    }
+
+    /// Get permission detail - GET /v1/users/permissions/{perm} (raw)
+    pub async fn permission_detail(&self, perm: &str) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/users/permissions/{}", perm))
+            .await
+    }
+
+    /// Authorize user (login) - POST /v1/users/authorize (raw)
+    pub async fn authorize(&self, body: AuthRequest) -> Result<AuthResponse> {
+        self.client.post("/v1/users/authorize", &body).await
+    }
+
+    /// Set password - POST /v1/users/password (raw)
+    pub async fn password_set(&self, body: PasswordSet) -> Result<()> {
+        self.client.post_action("/v1/users/password", &body).await
+    }
+
+    /// Update password - PUT /v1/users/password (raw)
+    pub async fn password_update(&self, body: PasswordUpdate) -> Result<()> {
+        self.client.put("/v1/users/password", &body).await
+    }
+
+    /// Delete password - DELETE /v1/users/password
+    pub async fn password_delete(&self) -> Result<()> {
+        self.client.delete("/v1/users/password").await
+    }
+
+    /// Refresh JWT - POST /v1/users/refresh_jwt (raw)
+    pub async fn refresh_jwt(&self, body: JwtRefreshRequest) -> Result<JwtRefreshResponse> {
+        self.client.post("/v1/users/refresh_jwt", &body).await
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AuthRequest {
+    pub email: String,
+    pub password: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AuthResponse {
+    pub jwt: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expires_at: Option<String>,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PasswordSet {
+    pub email: String,
+    pub password: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PasswordUpdate {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub current_password: Option<String>,
+    pub new_password: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct JwtRefreshRequest {
+    pub jwt: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct JwtRefreshResponse {
+    pub jwt: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expires_at: Option<String>,
 }
 
 /// Role handler for managing roles

@@ -1,4 +1,8 @@
 //! Diagnostic operations for Redis Enterprise
+//!
+//! Overview
+//! - Run checks, retrieve reports, and list available checks
+//! - Typed config GET/PUT for diagnostics settings
 
 use crate::client::RestClient;
 use crate::error::Result;
@@ -93,5 +97,15 @@ impl DiagnosticsHandler {
     /// List all diagnostic reports
     pub async fn list_reports(&self) -> Result<Vec<DiagnosticReport>> {
         self.client.get("/v1/diagnostics/reports").await
+    }
+
+    /// Get diagnostics configuration/state - GET /v1/diagnostics
+    pub async fn get_config(&self) -> Result<Value> {
+        self.client.get("/v1/diagnostics").await
+    }
+
+    /// Update diagnostics configuration/state - PUT /v1/diagnostics
+    pub async fn update_config(&self, body: Value) -> Result<Value> {
+        self.client.put("/v1/diagnostics", &body).await
     }
 }

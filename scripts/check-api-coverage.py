@@ -2,15 +2,24 @@
 """
 API Coverage Checker for Redis Enterprise and Redis Cloud
 
-This script analyzes the handler implementations to determine API coverage
-by comparing implemented methods against known API endpoints.
+Enhanced to parse the local Redis Enterprise REST routing table (HTML) and
+compare code endpoints against documented ones. By default, only /v1 and /v2
+endpoints are considered for coverage (legacy /crdbs and /crdb_tasks are
+excluded). Use this to identify missing endpoints and track progress toward
+100% API coverage.
+
+Optional dependencies: none (HTML parsed via regex). BeautifulSoup/lxml are not
+required.
 """
 
 import os
 import re
 import json
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Set, Tuple, Iterable
+
+import argparse
+import sys
 
 def find_handler_methods(handler_path: Path) -> Dict[str, List[str]]:
     """Find all public async functions in handler files."""
@@ -50,16 +59,19 @@ def find_api_calls(handler_path: Path) -> Dict[str, Set[Tuple[str, str]]]:
         handler_name = handler_file.stem
         endpoints = set()
         
-        # Find all client.get/post/put/delete calls
+        # Find all client.get/post/put/delete/patch calls
         patterns = [
-            r'\.get\(&format!\("([^"]+)"',
-            r'\.post\(&format!\("([^"]+)"',
-            r'\.put\(&format!\("([^"]+)"',
-            r'\.delete\(&format!\("([^"]+)"',
+            # Allow whitespace/newlines between '(' and &format!
+            r'\.get\(\s*&format!\(\s*"([^"]+)"',
+            r'\.post\(\s*&format!\(\s*"([^"]+)"',
+            r'\.put\(\s*&format!\(\s*"([^"]+)"',
+            r'\.delete\(\s*&format!\(\s*"([^"]+)"',
+            r'\.patch\(\s*&format!\(\s*"([^"]+)"',
             r'\.get\("([^"]+)"\)',
             r'\.post\("([^"]+)"',
             r'\.put\("([^"]+)"',
             r'\.delete\("([^"]+)"',
+            r'\.patch\("([^"]+)"',
         ]
         
         for pattern in patterns:
@@ -74,6 +86,8 @@ def find_api_calls(handler_path: Path) -> Dict[str, Set[Tuple[str, str]]]:
                     method = 'PUT'
                 elif 'delete' in pattern:
                     method = 'DELETE'
+                elif 'patch' in pattern:
+                    method = 'PATCH'
                 endpoints.add((method, match))
                 
         api_calls[handler_name] = endpoints
@@ -124,8 +138,64 @@ def check_dual_interface(typed_coverage: Dict[str, Dict[str, bool]]) -> Dict[str
             
     return violations
 
+
+def normalize_path(path: str, drop_query: bool = True) -> str:
+    """Normalize endpoint path placeholders to a canonical form for comparison."""
+    # Replace Rust format placeholders and doc placeholders with {}
+    path = re.sub(r"\{[^\}]+\}", "{}", path)
+    path = re.sub(r"\((?:int:)?[^\)]+\)", "{}", path)
+    # Normalize duplicate slashes
+    path = re.sub(r"//+", "/", path)
+    if drop_query:
+        path = path.split("?")[0]
+    return path
+
+
+def parse_routing_table_html(html_path: Path) -> Set[Tuple[str, str]]:
+    """Parse documented endpoints from the local routing table HTML using regex only.
+
+    Returns a set of (METHOD, PATH) tuples.
+    """
+    if not html_path.exists():
+        return set()
+    html = html_path.read_text(errors="ignore")
+    # Match <code class="xref">GET /v1/...</code>
+    pattern = re.compile(r'<code class="xref">\s*([A-Z]+)\s+([^<]+?)\s*</code>')
+    endpoints: Set[Tuple[str, str]] = set()
+    for method, path in pattern.findall(html):
+        endpoints.add((method, normalize_path(path)))
+    return endpoints
+
+
+def filter_scope(endpoints: Iterable[Tuple[str, str]], include_v2: bool = True) -> Set[Tuple[str, str]]:
+    """Keep only /v1 and (optionally) /v2 endpoints. Excludes legacy /crdbs, /crdb_tasks."""
+    scoped: Set[Tuple[str, str]] = set()
+    for method, path in endpoints:
+        if path.startswith("/v1/"):
+            scoped.add((method, path))
+        elif include_v2 and path.startswith("/v2/"):
+            scoped.add((method, path))
+        # else: skip legacy or other roots
+    return scoped
+
+
+def group_by_category(endpoints: Iterable[Tuple[str, str]]) -> Dict[str, List[Tuple[str, str]]]:
+    """Group endpoints by category (the first segment after /v1/ or /v2/)."""
+    grouped: Dict[str, List[Tuple[str, str]]] = {}
+    for method, path in endpoints:
+        root = "unknown"
+        if path.startswith("/v1/") or path.startswith("/v2/"):
+            root = path.split("/")[2]
+        grouped.setdefault(root, []).append((method, path))
+    return grouped
+
 def main():
     """Main function to analyze API coverage."""
+    parser = argparse.ArgumentParser(description="API coverage analyzer")
+    parser.add_argument("--fail-on-gaps", action="store_true", help="Exit non-zero if gaps exist in scoped endpoints")
+    parser.add_argument("--routing-table", default="tmp/rest-html/http-routingtable.html", help="Path to routing table HTML")
+    parser.add_argument("--scope", choices=["v1", "v1v2"], default="v1v2", help="Endpoint scope to require coverage for")
+    args = parser.parse_args()
     # Paths to handler directories
     enterprise_handlers = Path("crates/redis-enterprise/src")
     cloud_handlers = Path("crates/redis-cloud/src/handlers")
@@ -153,7 +223,7 @@ def main():
         total_endpoints = sum(len(e) for e in api_calls.values())
         
         print(f"Total methods: {total_methods}")
-        print(f"Total unique API endpoints: {total_endpoints}")
+        print(f"Total unique API endpoints (from code): {total_endpoints}")
         
         # Check for dual interface violations
         violations = check_dual_interface(typed_coverage)
@@ -165,12 +235,55 @@ def main():
                     print(f"    - {issue}")
         
         # List all endpoints
-        print("\n### API Endpoints by Handler:")
+        print("\n### API Endpoints by Handler (from code):")
         for handler, endpoints in sorted(api_calls.items()):
             if endpoints:
                 print(f"\n  {handler}:")
                 for method, endpoint in sorted(endpoints):
                     print(f"    {method:6} {endpoint}")
+
+        # Compare with documented endpoints (scoped)
+        print("\n---\n")
+        print("### Documentation Diff (scoped)")
+        rt_path = Path(args.routing_table)
+        doc_endpoints_all = parse_routing_table_html(rt_path)
+        if not doc_endpoints_all:
+            print(f"Routing table not found at {rt_path}; skipping doc diff.")
+        else:
+            include_v2 = args.scope == "v1v2"
+            doc_scoped = filter_scope(doc_endpoints_all, include_v2=include_v2)
+
+            # Normalize code endpoints similarly and scope to v1/v2
+            code_eps: Set[Tuple[str, str]] = set()
+            for handler, eps in api_calls.items():
+                for method, endpoint in eps:
+                    norm = normalize_path(endpoint)
+                    # Only keep v1/v2
+                    if norm.startswith("/v1/") or (include_v2 and norm.startswith("/v2/")):
+                        code_eps.add((method, norm))
+
+            missing = sorted(doc_scoped - code_eps)
+            extra = sorted(code_eps - doc_scoped)
+
+            print(f"Scoped documented endpoints: {len(doc_scoped)}")
+            print(f"Scoped code endpoints:       {len(code_eps)}")
+            print(f"Missing in code:             {len(missing)}")
+            print(f"Extra in code:               {len(extra)}")
+
+            # Group missing by category
+            if missing:
+                print("\n#### Missing by Category:")
+                by_cat = group_by_category(missing)
+                for cat in sorted(by_cat.keys()):
+                    print(f"- {cat}: {len(by_cat[cat])}")
+                    for m, p in by_cat[cat][:6]:
+                        print(f"    {m:6} {p}")
+                    if len(by_cat[cat]) > 6:
+                        print("    ...")
+
+            if args.fail_on_gaps and missing:
+                print("\nCoverage gaps detected.", file=sys.stderr)
+                sys.exit(1)
     
     # Analyze Cloud
     if cloud_handlers.exists():

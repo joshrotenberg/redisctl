@@ -1,4 +1,9 @@
 //! Proxy management for Redis Enterprise
+//!
+//! Overview
+//! - List/get proxies
+//! - Per-proxy metrics (interval/timestamps/values)
+//! - Bulk and per-proxy updates via typed `ProxyUpdate`
 
 use crate::client::RestClient;
 use crate::error::Result;
@@ -8,12 +13,9 @@ use serde_json::Value;
 /// Response for a single metric query
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetricResponse {
-    /// Metric name
-    pub metric: String,
-    /// Metric value
-    pub value: Value,
-    /// Timestamp if available
-    pub timestamp: Option<String>,
+    pub interval: String,
+    pub timestamps: Vec<i64>,
+    pub values: Vec<Value>,
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -114,4 +116,27 @@ impl ProxyHandler {
             .post_action(&format!("/v1/proxies/{}/actions/reload", uid), &Value::Null)
             .await
     }
+
+    /// Update proxies (bulk) - PUT /v1/proxies
+    pub async fn update_all(&self, update: ProxyUpdate) -> Result<Vec<Proxy>> {
+        self.client.put("/v1/proxies", &update).await
+    }
+
+    /// Update specific proxy - PUT /v1/proxies/{uid}
+    pub async fn update(&self, uid: u32, update: ProxyUpdate) -> Result<Proxy> {
+        self.client
+            .put(&format!("/v1/proxies/{}", uid), &update)
+            .await
+    }
+}
+
+/// Proxy update body
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProxyUpdate {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_connections: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub threads: Option<u32>,
+    #[serde(flatten)]
+    pub extra: Value,
 }

@@ -1,4 +1,12 @@
 //! Database (BDB) management commands for Redis Enterprise
+//!
+//! Overview
+//! - Create, update, delete databases
+//! - Operational actions: start/stop/restart, export/import/backup/restore
+//! - Insights: endpoints, shards, metrics/stats, availability
+//! - Advanced: passwords, modules config/upgrade, traffic control
+//!
+//! Tip: For time-series metrics, also see the `StatsHandler` for aggregate queries.
 
 use crate::client::RestClient;
 use crate::error::Result;
@@ -26,7 +34,8 @@ pub struct DatabaseActionResponse {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BackupResponse {
     /// The action UID for tracking the backup operation
-    pub action_uid: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub action_uid: Option<String>,
     /// Backup UID if available
     pub backup_uid: Option<String>,
     /// Additional fields from the response
@@ -38,7 +47,8 @@ pub struct BackupResponse {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ImportResponse {
     /// The action UID for tracking the import operation
-    pub action_uid: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub action_uid: Option<String>,
     /// Import status
     pub status: Option<String>,
     /// Additional fields from the response
@@ -50,7 +60,8 @@ pub struct ImportResponse {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExportResponse {
     /// The action UID for tracking the export operation
-    pub action_uid: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub action_uid: Option<String>,
     /// Export status
     pub status: Option<String>,
     /// Additional fields from the response
@@ -581,6 +592,356 @@ impl DatabaseHandler {
     pub async fn endpoints(&self, uid: u32) -> Result<Value> {
         self.client
             .get(&format!("/v1/bdbs/{}/endpoints", uid))
+            .await
+    }
+
+    /// Optimize shards placement (status) - GET
+    pub async fn optimize_shards_placement(&self, uid: u32) -> Result<Value> {
+        self.client
+            .get(&format!(
+                "/v1/bdbs/{}/actions/optimize_shards_placement",
+                uid
+            ))
+            .await
+    }
+
+    /// Recover database (status) - GET
+    pub async fn recover_status(&self, uid: u32) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/bdbs/{}/actions/recover", uid))
+            .await
+    }
+
+    /// Recover database - POST (typed)
+    pub async fn recover(&self, uid: u32) -> Result<DatabaseActionResponse> {
+        self.client
+            .post(
+                &format!("/v1/bdbs/{}/actions/recover", uid),
+                &serde_json::json!({}),
+            )
+            .await
+    }
+
+    /// Recover database - POST (raw)
+    pub async fn recover_raw(&self, uid: u32) -> Result<Value> {
+        self.client
+            .post(
+                &format!("/v1/bdbs/{}/actions/recover", uid),
+                &serde_json::json!({}),
+            )
+            .await
+    }
+
+    /// Resume traffic - POST (typed)
+    pub async fn resume_traffic(&self, uid: u32) -> Result<DatabaseActionResponse> {
+        self.client
+            .post(
+                &format!("/v1/bdbs/{}/actions/resume_traffic", uid),
+                &serde_json::json!({}),
+            )
+            .await
+    }
+
+    /// Resume traffic - POST (raw)
+    pub async fn resume_traffic_raw(&self, uid: u32) -> Result<Value> {
+        self.client
+            .post(
+                &format!("/v1/bdbs/{}/actions/resume_traffic", uid),
+                &serde_json::json!({}),
+            )
+            .await
+    }
+
+    /// Stop traffic - POST (typed)
+    pub async fn stop_traffic(&self, uid: u32) -> Result<DatabaseActionResponse> {
+        self.client
+            .post(
+                &format!("/v1/bdbs/{}/actions/stop_traffic", uid),
+                &serde_json::json!({}),
+            )
+            .await
+    }
+
+    /// Stop traffic - POST (raw)
+    pub async fn stop_traffic_raw(&self, uid: u32) -> Result<Value> {
+        self.client
+            .post(
+                &format!("/v1/bdbs/{}/actions/stop_traffic", uid),
+                &serde_json::json!({}),
+            )
+            .await
+    }
+
+    /// Rebalance database - PUT (typed)
+    pub async fn rebalance(&self, uid: u32) -> Result<DatabaseActionResponse> {
+        self.client
+            .put(
+                &format!("/v1/bdbs/{}/actions/rebalance", uid),
+                &serde_json::json!({}),
+            )
+            .await
+    }
+
+    /// Rebalance database - PUT (raw)
+    pub async fn rebalance_raw(&self, uid: u32) -> Result<Value> {
+        self.client
+            .put(
+                &format!("/v1/bdbs/{}/actions/rebalance", uid),
+                &serde_json::json!({}),
+            )
+            .await
+    }
+
+    /// Revamp database - PUT (typed)
+    pub async fn revamp(&self, uid: u32) -> Result<DatabaseActionResponse> {
+        self.client
+            .put(
+                &format!("/v1/bdbs/{}/actions/revamp", uid),
+                &serde_json::json!({}),
+            )
+            .await
+    }
+
+    /// Revamp database - PUT (raw)
+    pub async fn revamp_raw(&self, uid: u32) -> Result<Value> {
+        self.client
+            .put(
+                &format!("/v1/bdbs/{}/actions/revamp", uid),
+                &serde_json::json!({}),
+            )
+            .await
+    }
+
+    /// Reset backup status - PUT
+    pub async fn backup_reset_status(&self, uid: u32) -> Result<Value> {
+        self.client
+            .put(
+                &format!("/v1/bdbs/{}/actions/backup_reset_status", uid),
+                &serde_json::json!({}),
+            )
+            .await
+    }
+
+    /// Reset export status - PUT
+    pub async fn export_reset_status(&self, uid: u32) -> Result<Value> {
+        self.client
+            .put(
+                &format!("/v1/bdbs/{}/actions/export_reset_status", uid),
+                &serde_json::json!({}),
+            )
+            .await
+    }
+
+    /// Reset import status - PUT
+    pub async fn import_reset_status(&self, uid: u32) -> Result<Value> {
+        self.client
+            .put(
+                &format!("/v1/bdbs/{}/actions/import_reset_status", uid),
+                &serde_json::json!({}),
+            )
+            .await
+    }
+
+    /// Peer stats for a database - GET
+    pub async fn peer_stats(&self, uid: u32) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/bdbs/{}/peer_stats", uid))
+            .await
+    }
+
+    /// Peer stats for a specific peer - GET
+    pub async fn peer_stats_for(&self, uid: u32, peer_uid: u32) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/bdbs/{}/peer_stats/{}", uid, peer_uid))
+            .await
+    }
+
+    /// Sync source stats for a database - GET
+    pub async fn sync_source_stats(&self, uid: u32) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/bdbs/{}/sync_source_stats", uid))
+            .await
+    }
+
+    /// Sync source stats for a specific source - GET
+    pub async fn sync_source_stats_for(&self, uid: u32, src_uid: u32) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/bdbs/{}/sync_source_stats/{}", uid, src_uid))
+            .await
+    }
+
+    /// Syncer state (all) - GET
+    pub async fn syncer_state(&self, uid: u32) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/bdbs/{}/syncer_state", uid))
+            .await
+    }
+
+    /// Syncer state for CRDT - GET
+    pub async fn syncer_state_crdt(&self, uid: u32) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/bdbs/{}/syncer_state/crdt", uid))
+            .await
+    }
+
+    /// Syncer state for replica - GET
+    pub async fn syncer_state_replica(&self, uid: u32) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/bdbs/{}/syncer_state/replica", uid))
+            .await
+    }
+
+    /// Generic database command passthrough - POST
+    pub async fn command_raw(&self, uid: u32, body: Value) -> Result<Value> {
+        self.client
+            .post(&format!("/v1/bdbs/{}/command", uid), &body)
+            .await
+    }
+
+    /// Database passwords create - POST (raw)
+    pub async fn passwords_create_raw(&self, uid: u32, body: Value) -> Result<Value> {
+        self.client
+            .post(&format!("/v1/bdbs/{}/passwords", uid), &body)
+            .await
+    }
+
+    /// Database passwords update - PUT (raw)
+    pub async fn passwords_update_raw(&self, uid: u32, body: Value) -> Result<Value> {
+        self.client
+            .put(&format!("/v1/bdbs/{}/passwords", uid), &body)
+            .await
+    }
+
+    /// Database passwords delete - DELETE
+    pub async fn passwords_delete(&self, uid: u32) -> Result<()> {
+        self.client
+            .delete(&format!("/v1/bdbs/{}/passwords", uid))
+            .await
+    }
+
+    /// Post database alert operation - POST (raw)
+    pub async fn alerts_post_raw(&self, uid: u32, body: Value) -> Result<Value> {
+        self.client
+            .post(&format!("/v1/bdbs/alerts/{}", uid), &body)
+            .await
+    }
+
+    /// List all database alerts - GET
+    pub async fn alerts_all(&self) -> Result<Value> {
+        self.client.get("/v1/bdbs/alerts").await
+    }
+
+    /// List alerts for a specific database - GET
+    pub async fn alerts_for(&self, uid: u32) -> Result<Value> {
+        self.client.get(&format!("/v1/bdbs/alerts/{}", uid)).await
+    }
+
+    /// Get a specific alert for a database - GET
+    pub async fn alert_detail(&self, uid: u32, alert: &str) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/bdbs/alerts/{}/{}", uid, alert))
+            .await
+    }
+
+    /// CRDT source alerts - GET
+    pub async fn crdt_source_alerts_all(&self) -> Result<Value> {
+        self.client.get("/v1/bdbs/crdt_sources/alerts").await
+    }
+
+    /// CRDT source alerts for DB - GET
+    pub async fn crdt_source_alerts_for(&self, uid: u32) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/bdbs/crdt_sources/alerts/{}", uid))
+            .await
+    }
+
+    /// CRDT source alerts for specific source - GET
+    pub async fn crdt_source_alerts_source(&self, uid: u32, source_id: u32) -> Result<Value> {
+        self.client
+            .get(&format!(
+                "/v1/bdbs/crdt_sources/alerts/{}/{}",
+                uid, source_id
+            ))
+            .await
+    }
+
+    /// CRDT source alert detail - GET
+    pub async fn crdt_source_alert_detail(
+        &self,
+        uid: u32,
+        source_id: u32,
+        alert: &str,
+    ) -> Result<Value> {
+        self.client
+            .get(&format!(
+                "/v1/bdbs/crdt_sources/alerts/{}/{}/{}",
+                uid, source_id, alert
+            ))
+            .await
+    }
+
+    /// Replica source alerts - GET
+    pub async fn replica_source_alerts_all(&self) -> Result<Value> {
+        self.client.get("/v1/bdbs/replica_sources/alerts").await
+    }
+
+    /// Replica source alerts for DB - GET
+    pub async fn replica_source_alerts_for(&self, uid: u32) -> Result<Value> {
+        self.client
+            .get(&format!("/v1/bdbs/replica_sources/alerts/{}", uid))
+            .await
+    }
+
+    /// Replica source alerts for specific source - GET
+    pub async fn replica_source_alerts_source(&self, uid: u32, source_id: u32) -> Result<Value> {
+        self.client
+            .get(&format!(
+                "/v1/bdbs/replica_sources/alerts/{}/{}",
+                uid, source_id
+            ))
+            .await
+    }
+
+    /// Replica source alert detail - GET
+    pub async fn replica_source_alert_detail(
+        &self,
+        uid: u32,
+        source_id: u32,
+        alert: &str,
+    ) -> Result<Value> {
+        self.client
+            .get(&format!(
+                "/v1/bdbs/replica_sources/alerts/{}/{}/{}",
+                uid, source_id, alert
+            ))
+            .await
+    }
+
+    /// Modules config for a database - POST (raw)
+    pub async fn modules_config_raw(&self, uid: u32, body: Value) -> Result<Value> {
+        self.client
+            .post(&format!("/v1/bdbs/{}/modules/config", uid), &body)
+            .await
+    }
+
+    /// Modules upgrade for a database - POST (raw)
+    pub async fn modules_upgrade_raw(&self, uid: u32, body: Value) -> Result<Value> {
+        self.client
+            .post(&format!("/v1/bdbs/{}/modules/upgrade", uid), &body)
+            .await
+    }
+
+    /// Engine upgrade shortcut (non-actions) - POST (raw)
+    pub async fn upgrade_direct_raw(&self, uid: u32, body: Value) -> Result<Value> {
+        self.client
+            .post(&format!("/v1/bdbs/{}/upgrade", uid), &body)
+            .await
+    }
+
+    /// Update a single field via path - PUT (raw)
+    pub async fn update_field_raw(&self, uid: u32, field: &str, body: Value) -> Result<Value> {
+        self.client
+            .put(&format!("/v1/bdbs/{}/{}", uid, field), &body)
             .await
     }
 

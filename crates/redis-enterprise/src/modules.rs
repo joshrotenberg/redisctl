@@ -1,4 +1,9 @@
 //! Redis module management for Redis Enterprise
+//!
+//! Overview
+//! - v1: list/get/upload/update/delete
+//! - v2: modern upload/delete APIs
+//!   Accessors `v1()` and `v2()` provide explicit version selection.
 
 use crate::client::RestClient;
 use crate::error::Result;
@@ -74,5 +79,101 @@ impl ModuleHandler {
         self.client
             .put(&format!("/v1/modules/{}", uid), &updates)
             .await
+    }
+
+    /// Configure modules for a specific database - POST /v1/modules/config/bdb/{uid}
+    pub async fn config_bdb(&self, bdb_uid: u32, config: Value) -> Result<Module> {
+        self.client
+            .post(&format!("/v1/modules/config/bdb/{}", bdb_uid), &config)
+            .await
+    }
+
+    /// Upgrade modules for a specific database - POST /v1/modules/upgrade/bdb/{uid}
+    pub async fn upgrade_bdb(&self, bdb_uid: u32, body: Value) -> Result<Module> {
+        self.client
+            .post(&format!("/v1/modules/upgrade/bdb/{}", bdb_uid), &body)
+            .await
+    }
+
+    /// Upload module via v2 API - POST /v2/modules
+    pub async fn upload_v2(&self, body: Value) -> Result<Module> {
+        self.client.post("/v2/modules", &body).await
+    }
+
+    /// Delete module via v2 API - DELETE /v2/modules/{uid}
+    pub async fn delete_v2(&self, uid: &str) -> Result<()> {
+        self.client.delete(&format!("/v2/modules/{}", uid)).await
+    }
+
+    // Versioned accessors
+    pub fn v1(&self) -> v1::ModulesV1 {
+        v1::ModulesV1::new(self.client.clone())
+    }
+
+    pub fn v2(&self) -> v2::ModulesV2 {
+        v2::ModulesV2::new(self.client.clone())
+    }
+}
+
+pub mod v1 {
+    use super::{Module, RestClient};
+    use crate::error::Result;
+    use serde_json::Value;
+
+    pub struct ModulesV1 {
+        client: RestClient,
+    }
+
+    impl ModulesV1 {
+        pub(crate) fn new(client: RestClient) -> Self {
+            Self { client }
+        }
+
+        pub async fn list(&self) -> Result<Vec<Module>> {
+            self.client.get("/v1/modules").await
+        }
+
+        pub async fn get(&self, uid: &str) -> Result<Module> {
+            self.client.get(&format!("/v1/modules/{}", uid)).await
+        }
+
+        pub async fn upload(&self, data: Vec<u8>) -> Result<Module> {
+            let body = serde_json::json!({ "module": data });
+            self.client.post("/v1/modules", &body).await
+        }
+
+        pub async fn delete(&self, uid: &str) -> Result<()> {
+            self.client.delete(&format!("/v1/modules/{}", uid)).await
+        }
+
+        pub async fn update(&self, uid: &str, updates: Value) -> Result<Module> {
+            self.client
+                .put(&format!("/v1/modules/{}", uid), &updates)
+                .await
+        }
+    }
+}
+
+pub mod v2 {
+    use super::{Module, RestClient};
+    use crate::error::Result;
+    use serde_json::Value;
+
+    pub struct ModulesV2 {
+        client: RestClient,
+    }
+
+    impl ModulesV2 {
+        pub(crate) fn new(client: RestClient) -> Self {
+            Self { client }
+        }
+
+        pub async fn upload(&self, body: Value) -> Result<Module> {
+            self.client.post("/v2/modules", &body).await
+        }
+
+        pub async fn delete(&self, uid: &str) -> Result<()> {
+            self.client.delete(&format!("/v2/modules/{}", uid)).await
+        }
     }
 }

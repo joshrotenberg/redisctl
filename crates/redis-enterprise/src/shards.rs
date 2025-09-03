@@ -1,4 +1,9 @@
 //! Shard management for Redis Enterprise
+//!
+//! Overview
+//! - List/get shard placement and roles
+//! - Per-shard stats and per-metric time-series
+//! - Failover and migrate actions (global and per-shard) with typed requests
 
 use crate::client::RestClient;
 use crate::error::Result;
@@ -8,12 +13,9 @@ use serde_json::Value;
 /// Response for a single metric query
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetricResponse {
-    /// Metric name
-    pub metric: String,
-    /// Metric value
-    pub value: Value,
-    /// Timestamp if available
-    pub timestamp: Option<String>,
+    pub interval: String,
+    pub timestamps: Vec<i64>,
+    pub values: Vec<Value>,
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -88,12 +90,7 @@ impl ShardHandler {
             .await
     }
 
-    /// Get shard statistics for a specific metric - raw version
-    pub async fn stats_metric_raw(&self, uid: &str, metric: &str) -> Result<Value> {
-        self.client
-            .get(&format!("/v1/shards/{}/stats/{}", uid, metric))
-            .await
-    }
+    // raw variant removed: use stats_metric()
 
     /// Get shards for a specific database
     pub async fn list_by_database(&self, bdb_uid: u32) -> Result<Vec<Shard>> {
@@ -108,4 +105,47 @@ impl ShardHandler {
             .get(&format!("/v1/nodes/{}/shards", node_uid))
             .await
     }
+
+    // Aggregate raw helpers removed; use StatsHandler for aggregates
+
+    /// Global failover - POST /v1/shards/actions/failover
+    pub async fn failover_all(&self, body: ShardActionRequest) -> Result<Action> {
+        self.client.post("/v1/shards/actions/failover", &body).await
+    }
+
+    /// Global migrate - POST /v1/shards/actions/migrate
+    pub async fn migrate_all(&self, body: ShardActionRequest) -> Result<Action> {
+        self.client.post("/v1/shards/actions/migrate", &body).await
+    }
+
+    /// Per-shard failover - POST /v1/shards/{uid}/actions/failover
+    pub async fn failover(&self, uid: &str, body: ShardActionRequest) -> Result<Action> {
+        self.client
+            .post(&format!("/v1/shards/{}/actions/failover", uid), &body)
+            .await
+    }
+
+    /// Per-shard migrate - POST /v1/shards/{uid}/actions/migrate
+    pub async fn migrate(&self, uid: &str, body: ShardActionRequest) -> Result<Action> {
+        self.client
+            .post(&format!("/v1/shards/{}/actions/migrate", uid), &body)
+            .await
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ShardActionRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub shard_uids: Option<Vec<String>>,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Action {
+    pub action_uid: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub status: Option<String>,
+    #[serde(flatten)]
+    pub extra: Value,
 }

@@ -1,4 +1,8 @@
 //! OCSP (Online Certificate Status Protocol) management for Redis Enterprise
+//!
+//! Overview
+//! - Query and configure OCSP settings
+//! - Status check and test endpoints
 
 use crate::client::RestClient;
 use crate::error::Result;
@@ -84,6 +88,13 @@ impl OcspHandler {
     /// Test OCSP connectivity
     pub async fn test(&self) -> Result<OcspTestResult> {
         self.client.get("/v1/ocsp/test").await
+    }
+
+    /// Test OCSP via POST
+    pub async fn test_post(&self) -> Result<OcspTestResult> {
+        self.client
+            .post("/v1/ocsp/test", &serde_json::Value::Null)
+            .await
     }
 
     /// Trigger OCSP query

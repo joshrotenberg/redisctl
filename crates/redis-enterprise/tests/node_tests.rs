@@ -39,6 +39,114 @@ fn test_node() -> serde_json::Value {
     })
 }
 
+#[tokio::test]
+async fn test_node_actions_alerts_and_status() {
+    let mock_server = MockServer::start().await;
+
+    // Global actions
+    Mock::given(method("GET"))
+        .and(path("/v1/nodes/actions"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(success_response(json!(["maintenance_on"])))
+        .mount(&mock_server)
+        .await;
+
+    // Alerts
+    Mock::given(method("GET"))
+        .and(path("/v1/nodes/alerts/1"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(success_response(json!([{"name": "high_cpu"}])))
+        .mount(&mock_server)
+        .await;
+
+    // Status
+    Mock::given(method("GET"))
+        .and(path("/v1/nodes/1/status"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(success_response(json!({"status": "ok"})))
+        .mount(&mock_server)
+        .await;
+
+    let client = EnterpriseClient::builder()
+        .base_url(mock_server.uri())
+        .username("admin")
+        .password("password")
+        .build()
+        .unwrap();
+
+    let handler = NodeHandler::new(client);
+    let acts = handler.list_actions().await.unwrap();
+    assert!(acts.is_array());
+
+    let alerts = handler.alerts_for(1).await.unwrap();
+    assert!(alerts.is_array());
+
+    let stat = handler.status(1).await.unwrap();
+    assert_eq!(stat["status"], "ok");
+}
+
+#[tokio::test]
+async fn test_node_snapshots_and_action_paths() {
+    let mock_server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/v1/nodes/1/snapshots"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(success_response(json!(["s1"])))
+        .mount(&mock_server)
+        .await;
+
+    Mock::given(method("POST"))
+        .and(path("/v1/nodes/1/snapshots/s1"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(success_response(json!({"created": true})))
+        .mount(&mock_server)
+        .await;
+
+    Mock::given(method("DELETE"))
+        .and(path("/v1/nodes/1/snapshots/s1"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(no_content_response())
+        .mount(&mock_server)
+        .await;
+
+    Mock::given(method("POST"))
+        .and(path("/v1/nodes/1/actions/maintenance_on"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(success_response(json!({"action_uid": "a1"})))
+        .mount(&mock_server)
+        .await;
+
+    Mock::given(method("DELETE"))
+        .and(path("/v1/nodes/1/actions/maintenance_on"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(no_content_response())
+        .mount(&mock_server)
+        .await;
+
+    let client = EnterpriseClient::builder()
+        .base_url(mock_server.uri())
+        .username("admin")
+        .password("password")
+        .build()
+        .unwrap();
+
+    let handler = NodeHandler::new(client);
+
+    let snaps = handler.snapshots(1).await.unwrap();
+    assert!(snaps.is_array());
+
+    handler.snapshot_create(1, "s1").await.unwrap();
+    handler.snapshot_delete(1, "s1").await.unwrap();
+
+    let r = handler
+        .action_execute(1, "maintenance_on", serde_json::json!({}))
+        .await
+        .unwrap();
+    assert_eq!(r["action_uid"], "a1");
+    handler.action_delete(1, "maintenance_on").await.unwrap();
+}
+
 fn test_slave_node() -> serde_json::Value {
     json!({
         "uid": 2,
@@ -450,12 +558,8 @@ async fn test_node_execute_action_maintenance_on() {
         .unwrap();
 
     let handler = NodeHandler::new(client);
-    let result = handler.execute_action_raw(1, "maintenance_on").await;
-
-    assert!(result.is_ok());
-    let response = result.unwrap();
-    assert_eq!(response["action_uid"], "action-123-abc");
-    assert_eq!(response["status"], "pending");
+    let response = handler.execute_action(1, "maintenance_on").await.unwrap();
+    assert_eq!(response.action_uid, "action-123-abc");
 }
 
 #[tokio::test]
@@ -487,12 +591,8 @@ async fn test_node_execute_action_maintenance_off() {
         .unwrap();
 
     let handler = NodeHandler::new(client);
-    let result = handler.execute_action_raw(1, "maintenance_off").await;
-
-    assert!(result.is_ok());
-    let response = result.unwrap();
-    assert_eq!(response["action_uid"], "action-456-def");
-    assert_eq!(response["status"], "completed");
+    let response = handler.execute_action(1, "maintenance_off").await.unwrap();
+    assert_eq!(response.action_uid, "action-456-def");
 }
 
 #[tokio::test]
@@ -520,7 +620,7 @@ async fn test_node_execute_action_invalid() {
         .unwrap();
 
     let handler = NodeHandler::new(client);
-    let result = handler.execute_action_raw(1, "invalid_action").await;
+    let result = handler.execute_action(1, "invalid_action").await;
 
     assert!(result.is_err());
 }
@@ -550,7 +650,7 @@ async fn test_node_execute_action_nonexistent_node() {
         .unwrap();
 
     let handler = NodeHandler::new(client);
-    let result = handler.execute_action_raw(999, "restart").await;
+    let result = handler.execute_action(999, "restart").await;
 
     assert!(result.is_err());
 }
