@@ -130,6 +130,7 @@ pub struct CreateRedisRuleRequest {
     pub description: Option<String>,
     #[builder(default = true)]
     #[serde(default = "crate::models::acl::default_true")]
+    #[serde(skip_serializing_if = "crate::models::acl::is_true")]
     pub is_active: bool,
 }
 
@@ -173,6 +174,7 @@ pub struct CreateDatabaseAclRequest {
     pub redis_rule_id: u32,
     #[builder(default = true)]
     #[serde(default = "crate::models::acl::default_true")]
+    #[serde(skip_serializing_if = "crate::models::acl::is_true")]
     pub is_active: bool,
 }
 
@@ -189,4 +191,7 @@ pub struct UpdateDatabaseAclRequest {
 
 pub(crate) fn default_true() -> bool {
     true
+}
+pub(crate) fn is_true(b: &bool) -> bool {
+    *b
 }
