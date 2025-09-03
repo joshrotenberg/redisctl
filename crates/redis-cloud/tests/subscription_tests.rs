@@ -1,7 +1,7 @@
 use redis_cloud::client::CloudClient;
 use redis_cloud::subscriptions::{
-    CloudProviderConfig, CreateSubscriptionRequest, RegionConfig,
-    SubscriptionHandler, UpdateSubscriptionRequest,
+    CloudProviderConfig, CreateSubscriptionRequest, RegionConfig, SubscriptionHandler,
+    UpdateSubscriptionRequest,
 };
 use redis_cloud::types::{CloudProvider, MemoryStorage};
 use wiremock::matchers::{header, method, path};

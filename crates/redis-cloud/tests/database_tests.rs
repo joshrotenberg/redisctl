@@ -1,7 +1,5 @@
 use redis_cloud::client::CloudClient;
-use redis_cloud::databases::{
-    CreateDatabaseRequest, DatabaseHandler, UpdateDatabaseRequest,
-};
+use redis_cloud::databases::{CreateDatabaseRequest, DatabaseHandler, UpdateDatabaseRequest};
 use redis_cloud::types::{DataPersistence, EvictionPolicy, Protocol};
 use wiremock::matchers::{header, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
