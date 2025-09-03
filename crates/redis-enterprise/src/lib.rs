@@ -271,6 +271,23 @@
 //! # }
 //! ```
 //!
+//! ## Handler Overview
+//!
+//! The library exposes focused handlers per API domain to keep code organized and discoverable:
+//!
+//! | Handler | Purpose | Key Operations |
+//! |---------|---------|----------------|
+//! | `ClusterHandler` | Cluster lifecycle | info, update, license, services |
+//! | `BdbHandler` | Databases (BDB) | list, get, create, update, delete, stats |
+//! | `NodeHandler` | Node management | list, get, stats |
+//! | `UserHandler` | Users | list, get, create, update, delete |
+//! | `RoleHandler` | Roles | list, get, assign |
+//! | `ModuleHandler` | Modules | list (v1), upload (v2) |
+//! | `AlertHandler` | Alerts | list, acknowledge |
+//! | `StatsHandler` | Monitoring | cluster/node/database stats |
+//! | `LogsHandler` | Logs | cluster and database logs |
+//! | `ActionHandler` | Actions | v1/v2 workflows |
+//!
 //! # Production Best Practices
 //!
 //! - **Connection Pooling**: The client reuses HTTP connections automatically
