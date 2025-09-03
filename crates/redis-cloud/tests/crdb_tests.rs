@@ -595,16 +595,14 @@ async fn test_get_metrics() {
     let handler = CloudCrdbHandler::new(client);
     let result = handler.get_metrics(1001, "memory,ops", "1h").await;
 
-    assert!(result.is_ok());
+    assert!(result.is_ok(), "Failed to get metrics: {:?}", result.err());
     let metrics_obj = result.unwrap();
-    let response = json!({"metrics": metrics_obj});
-    let metrics = &response["metrics"];
-    assert_eq!(metrics["crdbId"], 1001);
-    assert_eq!(metrics["period"], "1h");
-    let data = &metrics["data"];
+    assert_eq!(metrics_obj.crdb_id, 1001);
+    assert_eq!(metrics_obj.period, "1h");
+    let data = metrics_obj.data.as_ref().unwrap();
     assert!(data["memory"].is_array());
     assert!(data["ops"].is_array());
-    let region_metrics = metrics["regionMetrics"].as_array().unwrap();
+    let region_metrics = metrics_obj.region_metrics.as_ref().unwrap();
     assert_eq!(region_metrics.len(), 2);
 }
 

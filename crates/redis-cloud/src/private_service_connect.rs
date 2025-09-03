@@ -22,7 +22,7 @@ pub struct PscService {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PscScripts {
-    pub script: String,
+    pub scripts: Value,
     #[serde(flatten)]
     pub extra: Value,
 }

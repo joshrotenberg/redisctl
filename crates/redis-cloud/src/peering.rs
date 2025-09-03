@@ -22,13 +22,12 @@ pub struct CloudPeering {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreatePeeringRequest {
-    pub name: String,
+    pub subscription_id: u32,
     pub provider: String,
     pub aws_account_id: Option<String>,
-    pub vpc_id: Option<String>,
-    pub vpc_cidr: Option<String>,
+    pub vpc_id: String,
+    pub vpc_cidr: String,
     pub region: String,
-    pub subscription_id: u32,
 }
 
 /// Handler for Cloud peering operations

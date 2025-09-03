@@ -16,8 +16,13 @@ pub struct CloudMetrics {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Measurement {
     pub name: String,
-    pub value: MetricValue,
-    pub timestamp: Option<String>,
+    pub values: Vec<MetricDataPoint>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MetricDataPoint {
+    pub timestamp: String,
+    pub value: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -350,14 +350,14 @@ pub use billing::{
     AddPaymentMethodRequest, BillingInfo, Invoice, PaymentMethod, UpdatePaymentMethodRequest,
 };
 pub use database::{CloudDatabase, CreateDatabaseRequest, UpdateDatabaseRequest};
-pub use metrics::{CloudMetrics, SubscriptionMetrics, Measurement, MetricValue};
+pub use metrics::{CloudMetrics, Measurement, MetricValue, SubscriptionMetrics};
 pub use peering::{CloudPeering, CreatePeeringRequest};
 pub use subscription::{CloudSubscription, CreateSubscriptionRequest, UpdateSubscriptionRequest};
 
 // Additional types for backward compatibility
 pub use database::Clustering;
-pub use subscription::{CloudProvider, CloudProviderConfig, CloudRegion, CloudRegionConfig};
 pub use database::ThroughputMeasurement;
+pub use subscription::{CloudProvider, CloudProviderConfig, CloudRegion, CloudRegionConfig};
 
 // Re-export error types
 use thiserror::Error;
