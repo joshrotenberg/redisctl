@@ -1,4 +1,50 @@
-//! Cloud Accounts operations and models
+//! Cloud provider account management operations and models
+//!
+//! This module handles the integration between Redis Cloud and your cloud provider
+//! accounts (AWS, GCP, Azure). It manages cloud account credentials, access keys,
+//! and provider-specific configurations.
+//!
+//! # Overview
+//!
+//! Cloud accounts are the bridge between Redis Cloud and your infrastructure provider.
+//! They store the credentials and permissions needed for Redis Cloud to provision
+//! resources in your cloud environment.
+//!
+//! # Supported Providers
+//!
+//! - **AWS**: Amazon Web Services accounts with IAM roles or access keys
+//! - **GCP**: Google Cloud Platform projects with service accounts
+//! - **Azure**: Microsoft Azure subscriptions with service principals
+//!
+//! # Key Features
+//!
+//! - **Account Registration**: Register cloud provider accounts with Redis Cloud
+//! - **Credential Management**: Securely store and manage cloud credentials
+//! - **Access Key Operations**: Create, update, and delete cloud access keys
+//! - **Provider Details**: Retrieve provider-specific account information
+//! - **Multi-cloud Support**: Manage accounts across different cloud providers
+//!
+//! # Example Usage
+//!
+//! ```no_run
+//! use redis_cloud::{CloudClient, CloudAccountHandler};
+//!
+//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = CloudClient::builder()
+//!     .api_key("your-api-key")
+//!     .api_secret("your-api-secret")
+//!     .build()?;
+//!
+//! let handler = CloudAccountHandler::new(client);
+//!
+//! // List all cloud accounts
+//! let accounts = handler.get_cloud_accounts().await?;
+//!
+//! // Get specific account details (account ID 123)
+//! let account = handler.get_cloud_account_by_id(123).await?;
+//! # Ok(())
+//! # }
+//! ```
 
 use crate::{CloudClient, Result};
 use serde::{Deserialize, Serialize};
@@ -184,7 +230,10 @@ pub struct TaskStateUpdate {
 // Handler
 // ============================================================================
 
-/// Cloud Accounts operations handler
+/// Handler for cloud provider account operations
+///
+/// Manages integration with AWS, GCP, and Azure accounts, including
+/// credential management and provider-specific configurations.
 pub struct CloudAccountsHandler {
     client: CloudClient,
 }

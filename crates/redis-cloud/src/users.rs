@@ -1,4 +1,53 @@
-//! Users operations and models
+//! User management and authentication
+//!
+//! This module provides comprehensive user management functionality for Redis Cloud,
+//! including user creation, role assignment, password management, and multi-factor
+//! authentication configuration.
+//!
+//! # Overview
+//!
+//! Users in Redis Cloud can have different roles and permissions that control their
+//! access to subscriptions, databases, and account settings. The system supports both
+//! local users and SSO/SAML integrated users.
+//!
+//! # User Roles
+//!
+//! - **Owner**: Full administrative access to all resources
+//! - **Manager**: Can manage subscriptions and databases
+//! - **Viewer**: Read-only access to resources
+//! - **Billing Admin**: Access to billing and payment information
+//! - **Custom Roles**: Organization-specific roles with custom permissions
+//!
+//! # Key Features
+//!
+//! - **User Lifecycle**: Create, update, delete, and invite users
+//! - **Role Management**: Assign and modify user roles
+//! - **Password Policies**: Enforce password complexity and rotation
+//! - **MFA Support**: Two-factor authentication configuration
+//! - **API Access**: Manage programmatic access for users
+//! - **Audit Trail**: Track user actions and changes
+//!
+//! # Example Usage
+//!
+//! ```no_run
+//! use redis_cloud::{CloudClient, UserHandler};
+//!
+//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = CloudClient::builder()
+//!     .api_key("your-api-key")
+//!     .api_secret("your-api-secret")
+//!     .build()?;
+//!
+//! let handler = UserHandler::new(client);
+//!
+//! // List all users
+//! let users = handler.get_all_users().await?;
+//!
+//! // Get specific user details (user ID 123)
+//! let user = handler.get_user_by_id(123).await?;
+//! # Ok(())
+//! # }
+//! ```
 
 use crate::{CloudClient, Result};
 use serde::{Deserialize, Serialize};
@@ -155,7 +204,10 @@ pub struct AccountUser {
 // Handler
 // ============================================================================
 
-/// Users operations handler
+/// Handler for user management operations
+///
+/// Manages user accounts, roles, permissions, invitations,
+/// and authentication settings including MFA configuration.
 pub struct UsersHandler {
     client: CloudClient,
 }

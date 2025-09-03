@@ -1,4 +1,47 @@
-//! Account operations and models
+//! Account management operations and models
+//!
+//! This module provides comprehensive account management functionality for Redis Cloud,
+//! including account information retrieval, settings management, API keys, owners,
+//! payment methods, SSO/SAML configuration, and billing address management.
+//!
+//! # Overview
+//!
+//! The account module is the central point for managing organization-wide settings and
+//! configurations in Redis Cloud. It handles everything from basic account information
+//! to advanced features like SSO integration and API key management.
+//!
+//! # Key Features
+//!
+//! - **Account Information**: Get current account details and metadata
+//! - **API Key Management**: Create, list, and manage API keys for programmatic access
+//! - **Owner Management**: Manage account owners and their permissions
+//! - **Payment Methods**: Handle payment methods and billing configuration
+//! - **SSO/SAML**: Configure single sign-on and SAML integration
+//! - **Billing Address**: Manage billing address information
+//!
+//! # Example Usage
+//!
+//! ```no_run
+//! use redis_cloud::{CloudClient, AccountHandler};
+//!
+//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = CloudClient::builder()
+//!     .api_key("your-api-key")
+//!     .api_secret("your-api-secret")
+//!     .build()?;
+//!
+//! let handler = AccountHandler::new(client);
+//!
+//! // Get current account information
+//! let account = handler.get_current_account().await?;
+//! println!("Account info: {:?}", account);
+//!
+//! // Get payment methods
+//! let payment_methods = handler.get_account_payment_methods().await?;
+//! println!("Payment methods: {:?}", payment_methods);
+//! # Ok(())
+//! # }
+//! ```
 
 use crate::{CloudClient, Result};
 use serde::{Deserialize, Serialize};
@@ -243,6 +286,10 @@ pub struct AccountSessionLogEntries {
 // ============================================================================
 
 /// Account operations handler
+/// Handler for account management operations
+///
+/// Provides methods for managing account information, API keys, owners,
+/// payment methods, SSO/SAML configuration, and billing addresses.
 pub struct AccountHandler {
     client: CloudClient,
 }

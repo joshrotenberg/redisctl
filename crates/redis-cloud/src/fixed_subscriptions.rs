@@ -1,4 +1,53 @@
-//! Subscriptions - Essentials operations and models
+//! Subscription management for Essentials (Fixed) plans
+//!
+//! This module manages Redis Cloud Essentials subscriptions, which provide
+//! simplified, fixed-capacity Redis deployments with predictable pricing.
+//! Essentials subscriptions are ideal for smaller, stable workloads.
+//!
+//! # Overview
+//!
+//! Essentials subscriptions offer a streamlined experience with pre-defined
+//! plans that include specific memory allocations, regions, and feature sets.
+//! Unlike Pro subscriptions, they don't support auto-scaling or multi-region
+//! deployments.
+//!
+//! # Key Features
+//!
+//! - **Fixed Plans**: Pre-defined subscription plans with set resources
+//! - **Simple Management**: Create, update, and delete subscriptions
+//! - **Plan Discovery**: Browse available plans by region and size
+//! - **Redis Versions**: Access supported Redis versions for the subscription
+//! - **Cost Predictability**: Fixed monthly pricing based on plan selection
+//!
+//! # Plan Structure
+//!
+//! Essentials plans are defined by:
+//! - Memory size (250MB to 12GB)
+//! - Cloud provider and region
+//! - Included features and modules
+//! - Fixed monthly price
+//!
+//! # Example Usage
+//!
+//! ```no_run
+//! use redis_cloud::{CloudClient, FixedSubscriptionHandler};
+//!
+//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = CloudClient::builder()
+//!     .api_key("your-api-key")
+//!     .api_secret("your-api-secret")
+//!     .build()?;
+//!
+//! let handler = FixedSubscriptionHandler::new(client);
+//!
+//! // List available plans
+//! let plans = handler.get_all_fixed_subscriptions_plans(None, None).await?;
+//!
+//! // Get all fixed subscriptions
+//! let subscriptions = handler.get_all_subscriptions_1().await?;
+//! # Ok(())
+//! # }
+//! ```
 
 use crate::{CloudClient, Result};
 use serde::{Deserialize, Serialize};
@@ -362,7 +411,10 @@ pub struct TaskStateUpdate {
 // Handler
 // ============================================================================
 
-/// Subscriptions - Essentials operations handler
+/// Handler for Essentials subscription operations
+///
+/// Manages fixed-capacity subscriptions with pre-defined plans,
+/// simplified pricing, and streamlined configuration options.
 pub struct FixedSubscriptionsHandler {
     client: CloudClient,
 }
