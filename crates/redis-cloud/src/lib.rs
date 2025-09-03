@@ -175,7 +175,8 @@
 //!
 //! #### API Keys (Typed)
 //! ```rust,no_run
-//! use redis_cloud::{CloudClient, CloudApiKeyHandler, ApiKeyRequest};
+//! use redis_cloud::{CloudClient, CloudApiKeyHandler};
+//! use serde_json::json;
 //!
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -185,17 +186,17 @@
 //!     .build()?;
 //!
 //! let keys = CloudApiKeyHandler::new(client.clone());
-//! let all = keys.list_typed().await?; // Vec<ApiKey>
+//! let all = keys.list().await?; // Vec<ApiKey>
 //! if let Some(first) = all.first() {
-//!     let detailed = keys.get_typed(first.id).await?;
-//!     let _usage = keys.get_usage_typed(detailed.id, "7d").await?;
+//!     let detailed = keys.get(first.id).await?;
+//!     let _usage = keys.get_usage(detailed.id, "7d").await?;
 //! }
 //!
 //! let created = keys
-//!     .create_typed(&ApiKeyRequest { name: "ci-bot".into(), status: None })
+//!     .create(&json!({ "name": "ci-bot" }))
 //!     .await?;
 //! let _updated = keys
-//!     .update_typed(created.id, &ApiKeyRequest { name: "ci-bot".into(), status: Some("disabled".into()) })
+//!     .update(created.id, &json!({ "name": "ci-bot", "status": "disabled" }))
 //!     .await?;
 //! # Ok(())
 //! # }

@@ -30,6 +30,8 @@ impl CloudTransitGatewayHandler {
             .await?;
         if v.is_array() {
             serde_json::from_value(v).map_err(Into::into)
+        } else if let Some(arr) = v.get("transitGateways") {
+            serde_json::from_value(arr.clone()).map_err(Into::into)
         } else if let Some(arr) = v.get("attachments") {
             serde_json::from_value(arr.clone()).map_err(Into::into)
         } else {
@@ -43,12 +45,18 @@ impl CloudTransitGatewayHandler {
         subscription_id: u32,
         tgw_id: &str,
     ) -> Result<TransitGatewayAttachment> {
-        self.client
+        let v: serde_json::Value = self
+            .client
             .get(&format!(
                 "/subscriptions/{}/transitGateways/{}/attachment",
                 subscription_id, tgw_id
             ))
-            .await
+            .await?;
+        if let Some(obj) = v.get("attachment") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Create transit gateway attachment
@@ -151,6 +159,8 @@ impl CloudTransitGatewayHandler {
             .await?;
         if v.is_array() {
             serde_json::from_value(v).map_err(Into::into)
+        } else if let Some(arr) = v.get("transitGateways") {
+            serde_json::from_value(arr.clone()).map_err(Into::into)
         } else if let Some(arr) = v.get("attachments") {
             serde_json::from_value(arr.clone()).map_err(Into::into)
         } else {
@@ -165,12 +175,18 @@ impl CloudTransitGatewayHandler {
         region_id: &str,
         tgw_id: &str,
     ) -> Result<TransitGatewayAttachment> {
-        self.client
+        let v: serde_json::Value = self
+            .client
             .get(&format!(
                 "/subscriptions/{}/regions/{}/transitGateways/{}/attachment",
                 subscription_id, region_id, tgw_id
             ))
-            .await
+            .await?;
+        if let Some(obj) = v.get("attachment") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Create regional transit gateway attachment

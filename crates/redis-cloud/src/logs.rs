@@ -68,7 +68,24 @@ impl CloudLogsHandler {
             format!("?{}", query_params.join("&"))
         };
 
-        self.client.get(&format!("/logs{}", query_string)).await
+        let mut resp: SystemLogsResponse =
+            self.client.get(&format!("/logs{}", query_string)).await?;
+        if resp.total.is_none()
+            && let Some(p) = &resp.pagination
+        {
+            resp.total = p.total;
+        }
+        if resp.limit.is_none()
+            && let Some(p) = &resp.pagination
+        {
+            resp.limit = p.limit;
+        }
+        if resp.offset.is_none()
+            && let Some(p) = &resp.pagination
+        {
+            resp.offset = p.offset;
+        }
+        Ok(resp)
     }
 
     /// Get session logs
@@ -93,8 +110,25 @@ impl CloudLogsHandler {
             format!("?{}", query_params.join("&"))
         };
 
-        self.client
+        let mut resp: SessionLogsResponse = self
+            .client
             .get(&format!("/session-logs{}", query_string))
-            .await
+            .await?;
+        if resp.total.is_none()
+            && let Some(p) = &resp.pagination
+        {
+            resp.total = p.total;
+        }
+        if resp.limit.is_none()
+            && let Some(p) = &resp.pagination
+        {
+            resp.limit = p.limit;
+        }
+        if resp.offset.is_none()
+            && let Some(p) = &resp.pagination
+        {
+            resp.offset = p.offset;
+        }
+        Ok(resp)
     }
 }

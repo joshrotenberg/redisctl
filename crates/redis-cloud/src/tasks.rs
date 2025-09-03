@@ -39,6 +39,11 @@ impl CloudTaskHandler {
 
     /// Get task by ID
     pub async fn get(&self, task_id: &str) -> Result<Task> {
-        self.client.get(&format!("/tasks/{}", task_id)).await
+        let v: serde_json::Value = self.client.get(&format!("/tasks/{}", task_id)).await?;
+        if let Some(obj) = v.get("task") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 }

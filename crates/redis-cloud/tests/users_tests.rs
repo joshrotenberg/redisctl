@@ -80,7 +80,7 @@ async fn test_users_list() {
 
     assert!(result.is_ok());
     let users_vec = result.unwrap();
-    let response = json!({"users": users_vec});
+    let response = json!({"users": users_vec, "totalCount": 3});
     let users = response["users"].as_array().unwrap();
     assert_eq!(users.len(), 3);
 

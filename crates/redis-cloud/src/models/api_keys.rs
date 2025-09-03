@@ -115,6 +115,38 @@ pub struct ApiKeyAuditLogEntry {
     pub extra: Value,
 }
 
+/// Summary usage model for API key (matches tests' expected keys)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ApiKeyEndpointUsage {
+    pub path: String,
+    pub method: String,
+    pub requests: u64,
+    #[serde(rename = "averageResponseTime")]
+    pub average_response_time: f64,
+
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ApiKeyUsageSummary {
+    pub period: String,
+    #[serde(rename = "totalRequests")]
+    pub total_requests: u64,
+    #[serde(rename = "successfulRequests")]
+    pub successful_requests: u64,
+    #[serde(rename = "failedRequests")]
+    pub failed_requests: u64,
+    #[serde(rename = "averageResponseTime")]
+    pub average_response_time: f64,
+    #[serde(rename = "peakRequestsPerHour")]
+    pub peak_requests_per_hour: u64,
+    pub endpoints: Vec<ApiKeyEndpointUsage>,
+
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

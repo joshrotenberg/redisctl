@@ -6,18 +6,20 @@ use serde_json::Value;
 /// Background task/job in Redis Cloud
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Task {
-    #[serde(alias = "taskId", alias = "id")]
-    pub id: String,
+    #[serde(rename = "taskId", alias = "id")]
+    pub task_id: String,
     pub status: String,
-    #[serde(alias = "createdAt")]
+    #[serde(rename = "createdAt")]
     pub created_at: Option<String>,
-    #[serde(alias = "updatedAt")]
+    #[serde(rename = "updatedAt")]
     pub updated_at: Option<String>,
 
-    #[serde(alias = "type")]
-    pub resource_type: Option<String>,
-    #[serde(alias = "databaseId")]
-    pub resource_id: Option<String>,
+    #[serde(rename = "type")]
+    pub task_type: Option<String>,
+    /// Present on some task types
+    #[serde(rename = "databaseId")]
+    pub database_id: Option<u64>,
+    /// Optional human-readable message/description
     pub message: Option<String>,
 
     #[serde(flatten)]

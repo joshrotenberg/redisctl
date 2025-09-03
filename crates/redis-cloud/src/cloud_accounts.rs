@@ -19,6 +19,8 @@ impl CloudAccountsHandler {
             serde_json::from_value(v).map_err(Into::into)
         } else if let Some(arr) = v.get("accounts") {
             serde_json::from_value(arr.clone()).map_err(Into::into)
+        } else if let Some(arr) = v.get("cloudAccounts") {
+            serde_json::from_value(arr.clone()).map_err(Into::into)
         } else {
             Ok(vec![])
         }

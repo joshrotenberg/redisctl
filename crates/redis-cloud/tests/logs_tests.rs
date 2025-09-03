@@ -366,7 +366,7 @@ async fn test_session_logs_basic() {
 
     assert!(result.is_ok());
     let resp = result.unwrap();
-    let response = json!({"sessionLogs": resp.logs});
+    let response = serde_json::to_value(resp).unwrap();
     let session_logs = response["sessionLogs"].as_array().unwrap();
     assert_eq!(session_logs.len(), 3);
 
@@ -463,7 +463,7 @@ async fn test_session_logs_empty_response() {
 
     assert!(result.is_ok());
     let resp = result.unwrap();
-    let response = json!({"sessionLogs": resp.logs});
+    let response = serde_json::to_value(resp).unwrap();
     let session_logs = response["sessionLogs"].as_array().unwrap();
     assert_eq!(session_logs.len(), 0);
     assert_eq!(response["pagination"]["total"], 0);

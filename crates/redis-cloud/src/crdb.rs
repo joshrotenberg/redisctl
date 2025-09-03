@@ -30,19 +30,35 @@ impl CloudCrdbHandler {
 
     /// Get Active-Active database by ID
     pub async fn get(&self, crdb_id: u32) -> Result<CloudCrdb> {
-        self.client.get(&format!("/crdb/{}", crdb_id)).await
+        let v: serde_json::Value = self.client.get(&format!("/crdb/{}", crdb_id)).await?;
+        if let Some(obj) = v.get("crdb") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Create Active-Active database
     pub async fn create(&self, request: serde_json::Value) -> Result<CloudCrdb> {
-        self.client.post("/crdb", &request).await
+        let v: serde_json::Value = self.client.post("/crdb", &request).await?;
+        if let Some(obj) = v.get("crdb") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Update Active-Active database
     pub async fn update(&self, crdb_id: u32, request: serde_json::Value) -> Result<CloudCrdb> {
-        self.client
+        let v: serde_json::Value = self
+            .client
             .put(&format!("/crdb/{}", crdb_id), &request)
-            .await
+            .await?;
+        if let Some(obj) = v.get("crdb") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Delete Active-Active database
@@ -97,9 +113,15 @@ impl CloudCrdbHandler {
 
     /// Get specific Active-Active task
     pub async fn get_task(&self, crdb_id: u32, task_id: &str) -> Result<CrdbTask> {
-        self.client
+        let v: serde_json::Value = self
+            .client
             .get(&format!("/crdb/{}/tasks/{}", crdb_id, task_id))
-            .await
+            .await?;
+        if let Some(obj) = v.get("task") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Get Active-Active database metrics
@@ -109,12 +131,18 @@ impl CloudCrdbHandler {
         metrics: &str,
         period: &str,
     ) -> Result<CrdbMetrics> {
-        self.client
+        let v: serde_json::Value = self
+            .client
             .get(&format!(
                 "/crdb/{}/metrics?metrics={}&period={}",
                 crdb_id, metrics, period
             ))
-            .await
+            .await?;
+        if let Some(obj) = v.get("metrics") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Get Active-Active database backup

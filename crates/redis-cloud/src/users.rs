@@ -16,7 +16,14 @@ impl CloudUserHandler {
 
     /// List all users
     pub async fn list(&self) -> Result<Vec<CloudUser>> {
-        self.client.get("/users").await
+        let v: serde_json::Value = self.client.get("/users").await?;
+        if let Some(arr) = v.get("users") {
+            serde_json::from_value(arr.clone()).map_err(Into::into)
+        } else if v.is_array() {
+            serde_json::from_value(v).map_err(Into::into)
+        } else {
+            Ok(vec![])
+        }
     }
 
     /// Get user by ID

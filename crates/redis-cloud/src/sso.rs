@@ -20,12 +20,22 @@ impl CloudSsoHandler {
 
     /// Get SSO configuration (typed)
     pub async fn get(&self) -> Result<SsoConfig> {
-        self.client.get("/sso").await
+        let v: serde_json::Value = self.client.get("/sso").await?;
+        if let Some(obj) = v.get("sso") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Update SSO configuration (typed)
     pub async fn update(&self, request: serde_json::Value) -> Result<SsoConfig> {
-        self.client.put("/sso", &request).await
+        let v: serde_json::Value = self.client.put("/sso", &request).await?;
+        if let Some(obj) = v.get("sso") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Delete SSO configuration
@@ -35,26 +45,46 @@ impl CloudSsoHandler {
 
     /// Test SSO configuration
     pub async fn test(&self, request: serde_json::Value) -> Result<SsoTestResponse> {
-        self.client.post("/sso/test", &request).await
+        let v: serde_json::Value = self.client.post("/sso/test", &request).await?;
+        if let Some(obj) = v.get("test") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Get SAML configuration
     pub async fn get_saml(&self) -> Result<SamlConfig> {
-        self.client.get("/sso/saml").await
+        let v: serde_json::Value = self.client.get("/sso/saml").await?;
+        if let Some(obj) = v.get("saml") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Update SAML configuration
     pub async fn update_saml(&self, request: serde_json::Value) -> Result<SamlConfig> {
-        self.client.put("/sso/saml", &request).await
+        let v: serde_json::Value = self.client.put("/sso/saml", &request).await?;
+        if let Some(obj) = v.get("saml") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Get SAML metadata
     pub async fn get_saml_metadata(&self) -> Result<SamlMetadata> {
-        self.client.get("/sso/saml/metadata").await
+        let v: serde_json::Value = self.client.get("/sso/saml/metadata").await?;
+        if let Some(obj) = v.get("metadata") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Upload SAML certificate
-    pub async fn upload_saml_cert(&self, payload: serde_json::Value) -> Result<SamlConfig> {
+    pub async fn upload_saml_cert(&self, payload: serde_json::Value) -> Result<serde_json::Value> {
         self.client.post("/sso/saml/certificate", &payload).await
     }
 
@@ -72,12 +102,22 @@ impl CloudSsoHandler {
 
     /// Get SSO user by ID
     pub async fn get_user(&self, user_id: u32) -> Result<SsoUserMapping> {
-        self.client.get(&format!("/sso/users/{}", user_id)).await
+        let v: serde_json::Value = self.client.get(&format!("/sso/users/{}", user_id)).await?;
+        if let Some(obj) = v.get("user") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Create SSO user mapping
     pub async fn create_user_mapping(&self, mapping: serde_json::Value) -> Result<SsoUserMapping> {
-        self.client.post("/sso/users", &mapping).await
+        let v: serde_json::Value = self.client.post("/sso/users", &mapping).await?;
+        if let Some(obj) = v.get("user") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Update SSO user mapping
@@ -86,9 +126,15 @@ impl CloudSsoHandler {
         user_id: u32,
         mapping: serde_json::Value,
     ) -> Result<SsoUserMapping> {
-        self.client
+        let v: serde_json::Value = self
+            .client
             .put(&format!("/sso/users/{}", user_id), &mapping)
-            .await
+            .await?;
+        if let Some(obj) = v.get("user") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Delete SSO user mapping
@@ -110,7 +156,12 @@ impl CloudSsoHandler {
 
     /// Map SSO group to role
     pub async fn map_group(&self, mapping: serde_json::Value) -> Result<SsoGroupMapping> {
-        self.client.post("/sso/groups", &mapping).await
+        let v: serde_json::Value = self.client.post("/sso/groups", &mapping).await?;
+        if let Some(obj) = v.get("group") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Update SSO group mapping
@@ -119,9 +170,15 @@ impl CloudSsoHandler {
         group_id: u32,
         mapping: serde_json::Value,
     ) -> Result<SsoGroupMapping> {
-        self.client
+        let v: serde_json::Value = self
+            .client
             .put(&format!("/sso/groups/{}", group_id), &mapping)
-            .await
+            .await?;
+        if let Some(obj) = v.get("group") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Delete SSO group mapping

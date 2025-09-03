@@ -358,7 +358,6 @@ async fn test_region_list_empty() {
     let response = json!({"regions": regions_vec});
     let regions = response["regions"].as_array().unwrap();
     assert_eq!(regions.len(), 0);
-    assert_eq!(response["totalCount"], 0);
 }
 
 // Error handling tests
