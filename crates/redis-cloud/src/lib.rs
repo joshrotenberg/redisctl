@@ -16,7 +16,7 @@
 //! ## Quick Start
 //!
 //! ```rust,no_run
-//! use redis_cloud::{CloudClient, CloudDatabaseHandler};
+//! use redis_cloud::{CloudClient, DatabaseHandler};
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -27,9 +27,9 @@
 //!         .build()?;
 //!
 //!     // List all databases  
-//!     let db_handler = CloudDatabaseHandler::new(client.clone());
-//!     let databases = db_handler.list(123).await?;
-//!     println!("Found {} databases", databases.as_array().unwrap_or(&vec![]).len());
+//!     let db_handler = DatabaseHandler::new(client.clone());
+//!     let databases = db_handler.get_subscription_databases(123, None, None).await?;
+//!     println!("Found databases: {:?}", databases);
 //!
 //!     Ok(())
 //! }
@@ -91,7 +91,7 @@
 //! ### Working with Subscriptions
 //!
 //! ```rust,no_run
-//! use redis_cloud::{CloudClient, CloudSubscriptionHandler};
+//! use redis_cloud::{CloudClient, SubscriptionHandler};
 //! use serde_json::json;
 //!
 //! # #[tokio::main]
@@ -101,10 +101,10 @@
 //!     .api_secret("secret")
 //!     .build()?;
 //!
-//! let sub_handler = CloudSubscriptionHandler::new(client.clone());
+//! let sub_handler = SubscriptionHandler::new(client.clone());
 //!
 //! // List subscriptions
-//! let subscriptions = sub_handler.list().await?;
+//! let subscriptions = sub_handler.get_all_subscriptions().await?;
 //!
 //! // Create a new subscription using raw API
 //! let new_subscription = json!({
@@ -121,7 +121,7 @@
 //! ### Database Management
 //!
 //! ```rust,no_run
-//! use redis_cloud::{CloudClient, CloudDatabaseHandler};
+//! use redis_cloud::{CloudClient, DatabaseHandler};
 //! use serde_json::json;
 //!
 //! # #[tokio::main]
@@ -131,7 +131,7 @@
 //!     .api_secret("secret")
 //!     .build()?;
 //!
-//! let db_handler = CloudDatabaseHandler::new(client.clone());
+//! let db_handler = DatabaseHandler::new(client.clone());
 //!
 //! // Create database using raw API
 //! let database_config = json!({
@@ -143,7 +143,7 @@
 //! let database = client.post_raw("/subscriptions/123/databases", database_config).await?;
 //!
 //! // Get database info
-//! let db_info = db_handler.get(123, 456).await?;
+//! let db_info = db_handler.get_subscription_database_by_id(123, 456).await?;
 //! # Ok(())
 //! # }
 //! ```
@@ -152,7 +152,7 @@
 //!
 //! #### VPC Peering
 //! ```rust,no_run
-//! use redis_cloud::{CloudClient, CloudPeeringHandler};
+//! use redis_cloud::{CloudClient, ConnectivityHandler};
 //! use serde_json::json;
 //!
 //! # #[tokio::main]
@@ -162,7 +162,7 @@
 //!     .api_secret("secret")
 //!     .build()?;
 //!
-//! let peering_handler = CloudPeeringHandler::new(client.clone());
+//! let peering_handler = ConnectivityHandler::new(client.clone());
 //!
 //! let peering_request = json!({
 //!     "aws_account_id": "123456789012",
@@ -177,7 +177,7 @@
 //!
 //! #### SSO/SAML Management
 //! ```rust,no_run
-//! use redis_cloud::{CloudClient, CloudSsoHandler};
+//! use redis_cloud::{CloudClient, AccountHandler};
 //! use serde_json::json;
 //!
 //! # #[tokio::main]
@@ -187,7 +187,7 @@
 //!     .api_secret("secret")
 //!     .build()?;
 //!
-//! let sso_handler = CloudSsoHandler::new(client.clone());
+//! let sso_handler = AccountHandler::new(client.clone());
 //!
 //! // Configure SSO using raw API
 //! let sso_config = json!({
@@ -201,7 +201,7 @@
 //!
 //! #### API Keys (Typed)
 //! ```rust,no_run
-//! use redis_cloud::{CloudClient, CloudApiKeyHandler};
+//! use redis_cloud::{CloudClient, AccountHandler};
 //! use serde_json::json;
 //!
 //! # #[tokio::main]
@@ -211,19 +211,8 @@
 //!     .api_secret("secret")
 //!     .build()?;
 //!
-//! let keys = CloudApiKeyHandler::new(client.clone());
-//! let all = keys.list().await?; // Vec<ApiKey>
-//! if let Some(first) = all.first() {
-//!     let detailed = keys.get(first.id).await?;
-//!     let _usage = keys.get_usage(detailed.id, "7d").await?;
-//! }
-//!
-//! let created = keys
-//!     .create(&json!({ "name": "ci-bot" }))
-//!     .await?;
-//! let _updated = keys
-//!     .update(created.id, &json!({ "name": "ci-bot", "status": "disabled" }))
-//!     .await?;
+//! let account = AccountHandler::new(client.clone());
+//! let account_info = account.get_current_account().await?;
 //! # Ok(())
 //! # }
 //! ```
@@ -233,7 +222,7 @@
 //! The client provides comprehensive error handling for different failure scenarios:
 //!
 //! ```rust,no_run
-//! use redis_cloud::{CloudClient, CloudError, CloudDatabaseHandler};
+//! use redis_cloud::{CloudClient, CloudError, DatabaseHandler};
 //!
 //! # #[tokio::main]
 //! # async fn main() {
@@ -242,14 +231,14 @@
 //!     .api_secret("secret")
 //!     .build().unwrap();
 //!
-//! let db_handler = CloudDatabaseHandler::new(client.clone());
+//! let db_handler = DatabaseHandler::new(client.clone());
 //!
-//! match db_handler.get(123, 456).await {
+//! match db_handler.get_subscription_database_by_id(123, 456).await {
 //!     Ok(database) => println!("Database: {:?}", database),
 //!     Err(CloudError::ApiError { code: 404, .. }) => {
 //!         println!("Database not found");
 //!     },
-//!     Err(CloudError::AuthenticationFailed) => {
+//!     Err(CloudError::AuthenticationFailed { message }) => {
 //!         println!("Invalid API credentials");
 //!     },
 //!     Err(e) => println!("Other error: {}", e),
@@ -300,8 +289,29 @@ pub use client::{CloudClient, CloudClientBuilder};
 // Types module for shared models
 pub mod types;
 
-// Handler modules will be added incrementally as we implement them from the spec
-// Each module will contain the handler struct, models, and associated methods
+// Handler modules - each handles a specific API domain
+pub mod account;
+pub mod acl;
+pub mod cloud_accounts;
+pub mod connectivity;
+pub mod databases;
+pub mod fixed_databases;
+pub mod fixed_subscriptions;
+pub mod subscriptions;
+pub mod tasks;
+pub mod users;
+
+// Re-export handlers with standard naming
+pub use account::AccountHandler;
+pub use acl::AclHandler;
+pub use cloud_accounts::CloudAccountsHandler as CloudAccountHandler;
+pub use connectivity::ConnectivityHandler;
+pub use databases::DatabasesHandler as DatabaseHandler;
+pub use fixed_databases::FixedDatabasesHandler as FixedDatabaseHandler;
+pub use fixed_subscriptions::FixedSubscriptionsHandler as FixedSubscriptionHandler;
+pub use subscriptions::SubscriptionsHandler as SubscriptionHandler;
+pub use tasks::TasksHandler as TaskHandler;
+pub use users::UsersHandler as UserHandler;
 
 // Re-export error types
 use thiserror::Error;
