@@ -13,14 +13,14 @@ if ! command -v pre-commit &> /dev/null; then
 fi
 
 # Install the hooks
-echo "Installing pre-commit hooks..."
-pre-commit install
+echo "Installing pre-commit and pre-push hooks..."
+pre-commit install --hook-type pre-commit --hook-type pre-push
 
-echo "Pre-commit hooks installed successfully!"
+echo "Pre-commit and pre-push hooks installed successfully!"
 echo ""
-echo "The following hooks will run on commit:"
+echo "The following hooks will run on commit and push:"
 echo "  - cargo fmt --all --check"
 echo "  - cargo clippy --all-targets --all-features -- -D warnings"
-echo "  - cargo test --all-features"
+echo "  - cargo test --workspace --all-features"
 echo ""
 echo "To run hooks manually: pre-commit run --all-files"

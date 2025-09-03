@@ -56,7 +56,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 The `examples/` directory contains runnable examples demonstrating common use cases:
 
-- [`basic.rs`](examples/basic.rs) - Getting started with the API client
+- [`basic_cloud.rs`](examples/basic_cloud.rs) - Getting started with the API client
 - [`database_management.rs`](examples/database_management.rs) - Managing databases
 
 Run examples with:

@@ -1,6 +1,12 @@
 //! Transit Gateway operations handler
 
-use crate::{Result, client::CloudClient};
+use crate::{
+    Result,
+    client::CloudClient,
+    models::{
+        TransitGatewayAttachment, TransitGatewayAttachmentCreateRequest, TransitGatewayInvitation,
+    },
+};
 use serde_json::Value;
 
 /// Handler for Cloud Transit Gateway operations
@@ -14,23 +20,43 @@ impl CloudTransitGatewayHandler {
     }
 
     /// List all transit gateways for a subscription
-    pub async fn list(&self, subscription_id: u32) -> Result<Value> {
-        self.client
+    pub async fn list(&self, subscription_id: u32) -> Result<Vec<TransitGatewayAttachment>> {
+        let v: serde_json::Value = self
+            .client
             .get(&format!(
                 "/subscriptions/{}/transitGateways",
                 subscription_id
             ))
-            .await
+            .await?;
+        if v.is_array() {
+            serde_json::from_value(v).map_err(Into::into)
+        } else if let Some(arr) = v.get("transitGateways") {
+            serde_json::from_value(arr.clone()).map_err(Into::into)
+        } else if let Some(arr) = v.get("attachments") {
+            serde_json::from_value(arr.clone()).map_err(Into::into)
+        } else {
+            Ok(vec![])
+        }
     }
 
     /// Get transit gateway attachment details
-    pub async fn get_attachment(&self, subscription_id: u32, tgw_id: &str) -> Result<Value> {
-        self.client
+    pub async fn get_attachment(
+        &self,
+        subscription_id: u32,
+        tgw_id: &str,
+    ) -> Result<TransitGatewayAttachment> {
+        let v: serde_json::Value = self
+            .client
             .get(&format!(
                 "/subscriptions/{}/transitGateways/{}/attachment",
                 subscription_id, tgw_id
             ))
-            .await
+            .await?;
+        if let Some(obj) = v.get("attachment") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Create transit gateway attachment
@@ -38,9 +64,10 @@ impl CloudTransitGatewayHandler {
         &self,
         subscription_id: u32,
         tgw_id: &str,
-        attachment: Value,
-    ) -> Result<Value> {
-        self.client
+        attachment: TransitGatewayAttachmentCreateRequest,
+    ) -> Result<serde_json::Value> {
+        let v: serde_json::Value = self
+            .client
             .post(
                 &format!(
                     "/subscriptions/{}/transitGateways/{}/attachment",
@@ -48,7 +75,8 @@ impl CloudTransitGatewayHandler {
                 ),
                 &attachment,
             )
-            .await
+            .await?;
+        Ok(v)
     }
 
     /// Delete transit gateway attachment
@@ -62,13 +90,24 @@ impl CloudTransitGatewayHandler {
     }
 
     /// List transit gateway invitations
-    pub async fn list_invitations(&self, subscription_id: u32) -> Result<Value> {
-        self.client
+    pub async fn list_invitations(
+        &self,
+        subscription_id: u32,
+    ) -> Result<Vec<TransitGatewayInvitation>> {
+        let v: serde_json::Value = self
+            .client
             .get(&format!(
                 "/subscriptions/{}/transitGateways/invitations",
                 subscription_id
             ))
-            .await
+            .await?;
+        if v.is_array() {
+            serde_json::from_value(v).map_err(Into::into)
+        } else if let Some(arr) = v.get("invitations") {
+            serde_json::from_value(arr.clone()).map_err(Into::into)
+        } else {
+            Ok(vec![])
+        }
     }
 
     /// Accept transit gateway invitation
@@ -76,7 +115,7 @@ impl CloudTransitGatewayHandler {
         &self,
         subscription_id: u32,
         invitation_id: &str,
-    ) -> Result<Value> {
+    ) -> Result<serde_json::Value> {
         self.client
             .post(
                 &format!(
@@ -93,7 +132,7 @@ impl CloudTransitGatewayHandler {
         &self,
         subscription_id: u32,
         invitation_id: &str,
-    ) -> Result<Value> {
+    ) -> Result<serde_json::Value> {
         self.client
             .post(
                 &format!(
@@ -106,13 +145,27 @@ impl CloudTransitGatewayHandler {
     }
 
     /// List regional transit gateways
-    pub async fn list_regional(&self, subscription_id: u32, region_id: &str) -> Result<Value> {
-        self.client
+    pub async fn list_regional(
+        &self,
+        subscription_id: u32,
+        region_id: &str,
+    ) -> Result<Vec<TransitGatewayAttachment>> {
+        let v: serde_json::Value = self
+            .client
             .get(&format!(
                 "/subscriptions/{}/regions/{}/transitGateways",
                 subscription_id, region_id
             ))
-            .await
+            .await?;
+        if v.is_array() {
+            serde_json::from_value(v).map_err(Into::into)
+        } else if let Some(arr) = v.get("transitGateways") {
+            serde_json::from_value(arr.clone()).map_err(Into::into)
+        } else if let Some(arr) = v.get("attachments") {
+            serde_json::from_value(arr.clone()).map_err(Into::into)
+        } else {
+            Ok(vec![])
+        }
     }
 
     /// Get regional transit gateway attachment
@@ -121,13 +174,19 @@ impl CloudTransitGatewayHandler {
         subscription_id: u32,
         region_id: &str,
         tgw_id: &str,
-    ) -> Result<Value> {
-        self.client
+    ) -> Result<TransitGatewayAttachment> {
+        let v: serde_json::Value = self
+            .client
             .get(&format!(
                 "/subscriptions/{}/regions/{}/transitGateways/{}/attachment",
                 subscription_id, region_id, tgw_id
             ))
-            .await
+            .await?;
+        if let Some(obj) = v.get("attachment") {
+            serde_json::from_value(obj.clone()).map_err(Into::into)
+        } else {
+            serde_json::from_value(v).map_err(Into::into)
+        }
     }
 
     /// Create regional transit gateway attachment
@@ -136,9 +195,10 @@ impl CloudTransitGatewayHandler {
         subscription_id: u32,
         region_id: &str,
         tgw_id: &str,
-        attachment: Value,
-    ) -> Result<Value> {
-        self.client
+        attachment: TransitGatewayAttachmentCreateRequest,
+    ) -> Result<serde_json::Value> {
+        let v: serde_json::Value = self
+            .client
             .post(
                 &format!(
                     "/subscriptions/{}/regions/{}/transitGateways/{}/attachment",
@@ -146,7 +206,8 @@ impl CloudTransitGatewayHandler {
                 ),
                 &attachment,
             )
-            .await
+            .await?;
+        Ok(v)
     }
 
     /// Delete regional transit gateway attachment
@@ -169,13 +230,21 @@ impl CloudTransitGatewayHandler {
         &self,
         subscription_id: u32,
         region_id: &str,
-    ) -> Result<Value> {
-        self.client
+    ) -> Result<Vec<TransitGatewayInvitation>> {
+        let v: serde_json::Value = self
+            .client
             .get(&format!(
                 "/subscriptions/{}/regions/{}/transitGateways/invitations",
                 subscription_id, region_id
             ))
-            .await
+            .await?;
+        if v.is_array() {
+            serde_json::from_value(v).map_err(Into::into)
+        } else if let Some(arr) = v.get("invitations") {
+            serde_json::from_value(arr.clone()).map_err(Into::into)
+        } else {
+            Ok(vec![])
+        }
     }
 
     /// Accept regional transit gateway invitation
@@ -184,7 +253,7 @@ impl CloudTransitGatewayHandler {
         subscription_id: u32,
         region_id: &str,
         invitation_id: &str,
-    ) -> Result<Value> {
+    ) -> Result<serde_json::Value> {
         self.client
             .post(
                 &format!(
@@ -202,7 +271,7 @@ impl CloudTransitGatewayHandler {
         subscription_id: u32,
         region_id: &str,
         invitation_id: &str,
-    ) -> Result<Value> {
+    ) -> Result<serde_json::Value> {
         self.client
             .post(
                 &format!(

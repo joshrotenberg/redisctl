@@ -34,16 +34,6 @@ impl CloudBackupHandler {
         }
     }
 
-    /// List all backups for a database - raw version
-    pub async fn list_raw(&self, subscription_id: u32, database_id: u32) -> Result<Value> {
-        self.client
-            .get(&format!(
-                "/subscriptions/{}/databases/{}/backups",
-                subscription_id, database_id
-            ))
-            .await
-    }
-
     /// Create a backup
     pub async fn create(
         &self,
@@ -55,24 +45,6 @@ impl CloudBackupHandler {
             database_id,
             description,
         };
-        self.client
-            .post(
-                &format!(
-                    "/subscriptions/{}/databases/{}/backup",
-                    subscription_id, database_id
-                ),
-                &request,
-            )
-            .await
-    }
-
-    /// Create a backup - raw version
-    pub async fn create_raw(
-        &self,
-        subscription_id: u32,
-        database_id: u32,
-        request: Value,
-    ) -> Result<Value> {
         self.client
             .post(
                 &format!(
@@ -99,21 +71,6 @@ impl CloudBackupHandler {
             .await
     }
 
-    /// Get backup details - raw version
-    pub async fn get_raw(
-        &self,
-        subscription_id: u32,
-        database_id: u32,
-        backup_id: &str,
-    ) -> Result<Value> {
-        self.client
-            .get(&format!(
-                "/subscriptions/{}/databases/{}/backups/{}",
-                subscription_id, database_id, backup_id
-            ))
-            .await
-    }
-
     /// Restore from backup
     pub async fn restore(
         &self,
@@ -128,25 +85,6 @@ impl CloudBackupHandler {
                     subscription_id, database_id, backup_id
                 ),
                 &serde_json::json!({}),
-            )
-            .await
-    }
-
-    /// Restore from backup - raw version
-    pub async fn restore_raw(
-        &self,
-        subscription_id: u32,
-        database_id: u32,
-        backup_id: &str,
-        request: Value,
-    ) -> Result<Value> {
-        self.client
-            .post(
-                &format!(
-                    "/subscriptions/{}/databases/{}/backups/{}/restore",
-                    subscription_id, database_id, backup_id
-                ),
-                &request,
             )
             .await
     }

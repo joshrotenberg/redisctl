@@ -80,7 +80,8 @@ async fn test_list_transit_gateways() {
     let result = handler.list(100001).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let tgws_vec = result.unwrap();
+    let response = json!({"transitGateways": tgws_vec});
     let tgws = response["transitGateways"].as_array().unwrap();
     assert_eq!(tgws.len(), 2);
     assert_eq!(tgws[0]["id"], "tgw-12345");
@@ -110,7 +111,8 @@ async fn test_list_transit_gateways_empty() {
     let result = handler.list(100001).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let tgws_vec = result.unwrap();
+    let response = json!({"transitGateways": tgws_vec});
     let tgws = response["transitGateways"].as_array().unwrap();
     assert_eq!(tgws.len(), 0);
 }
@@ -158,7 +160,8 @@ async fn test_get_attachment() {
     let result = handler.get_attachment(100001, "tgw-12345").await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let attachment_obj = result.unwrap();
+    let response = json!({"attachment": attachment_obj});
     let attachment = &response["attachment"];
     assert_eq!(attachment["transitGatewayId"], "tgw-12345");
     assert_eq!(attachment["attachmentId"], "tgw-attach-abcdef123456");
@@ -246,9 +249,9 @@ async fn test_create_attachment() {
             "Project": "RedisCloud"
         }
     });
-    let result = handler
-        .create_attachment(100001, "tgw-12345", attachment_request)
-        .await;
+    let req: redis_cloud::models::transit_gateway::TransitGatewayAttachmentCreateRequest =
+        serde_json::from_value(attachment_request).unwrap();
+    let result = handler.create_attachment(100001, "tgw-12345", req).await;
 
     assert!(result.is_ok());
     let response = result.unwrap();
@@ -328,7 +331,8 @@ async fn test_list_invitations() {
     let result = handler.list_invitations(100001).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let inv_vec = result.unwrap();
+    let response = json!({"invitations": inv_vec});
     let invitations = response["invitations"].as_array().unwrap();
     assert_eq!(invitations.len(), 2);
     assert_eq!(invitations[0]["id"], "invite-tgw-001");
@@ -453,7 +457,8 @@ async fn test_list_regional_transit_gateways() {
     let result = handler.list_regional(100001, "us-east-1").await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let tgws_vec = result.unwrap();
+    let response = json!({"transitGateways": tgws_vec});
     let tgws = response["transitGateways"].as_array().unwrap();
     assert_eq!(tgws.len(), 1);
     assert_eq!(tgws[0]["id"], "tgw-region-12345");
@@ -506,7 +511,8 @@ async fn test_get_regional_attachment() {
         .await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let attachment_obj = result.unwrap();
+    let response = json!({"attachment": attachment_obj});
     let attachment = &response["attachment"];
     assert_eq!(attachment["transitGatewayId"], "tgw-region-12345");
     assert_eq!(attachment["region"], "us-east-1");
@@ -564,8 +570,10 @@ async fn test_create_regional_attachment() {
             "10.3.0.0/16"
         ]
     });
+    let req: redis_cloud::models::transit_gateway::TransitGatewayAttachmentCreateRequest =
+        serde_json::from_value(attachment_request).unwrap();
     let result = handler
-        .create_regional_attachment(100001, "us-west-2", "tgw-region-67890", attachment_request)
+        .create_regional_attachment(100001, "us-west-2", "tgw-region-67890", req)
         .await;
 
     assert!(result.is_ok());
@@ -633,7 +641,8 @@ async fn test_list_regional_invitations() {
     let result = handler.list_regional_invitations(100001, "us-east-1").await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let inv_vec = result.unwrap();
+    let response = json!({"invitations": inv_vec});
     let invitations = response["invitations"].as_array().unwrap();
     assert_eq!(invitations.len(), 1);
     assert_eq!(invitations[0]["id"], "invite-regional-001");

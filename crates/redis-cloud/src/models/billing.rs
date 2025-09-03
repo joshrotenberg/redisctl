@@ -55,15 +55,22 @@ pub struct InvoiceItem {
 /// Payment method information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PaymentMethod {
-    pub id: u32,
+    #[serde(rename = "id")]
+    pub id: String,
+    #[serde(rename = "type")]
     pub method_type: String,
     pub is_default: bool,
     pub created_at: Option<String>,
     pub updated_at: Option<String>,
+    #[serde(rename = "last4")]
     pub last_four: Option<String>,
+    #[serde(rename = "expiryMonth")]
     pub expiry_month: Option<u8>,
+    #[serde(rename = "expiryYear")]
     pub expiry_year: Option<u16>,
+    #[serde(rename = "cardType")]
     pub card_brand: Option<String>,
+    #[serde(rename = "billingAddress")]
     pub billing_address: Option<BillingAddress>,
 
     #[serde(flatten)]
@@ -77,6 +84,7 @@ pub struct BillingAddress {
     pub line2: Option<String>,
     pub city: Option<String>,
     pub state: Option<String>,
+    #[serde(rename = "postalCode")]
     pub postal_code: Option<String>,
     pub country: Option<String>,
 
@@ -87,18 +95,25 @@ pub struct BillingAddress {
 /// Request to add a payment method
 #[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
 pub struct AddPaymentMethodRequest {
+    #[serde(rename = "type")]
     pub method_type: String,
     #[builder(default, setter(strip_option))]
+    #[serde(rename = "cardNumber")]
     pub card_number: Option<String>,
     #[builder(default, setter(strip_option))]
+    #[serde(rename = "expiryMonth")]
     pub expiry_month: Option<u8>,
     #[builder(default, setter(strip_option))]
+    #[serde(rename = "expiryYear")]
     pub expiry_year: Option<u16>,
     #[builder(default, setter(strip_option))]
+    #[serde(rename = "cvc")]
     pub cvv: Option<String>,
     #[builder(default, setter(strip_option))]
+    #[serde(rename = "billingAddress")]
     pub billing_address: Option<BillingAddress>,
     #[builder(default, setter(strip_option))]
+    #[serde(rename = "setAsDefault")]
     pub set_as_default: Option<bool>,
 }
 
@@ -106,10 +121,13 @@ pub struct AddPaymentMethodRequest {
 #[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
 pub struct UpdatePaymentMethodRequest {
     #[builder(default, setter(strip_option))]
+    #[serde(rename = "expiryMonth")]
     pub expiry_month: Option<u8>,
     #[builder(default, setter(strip_option))]
+    #[serde(rename = "expiryYear")]
     pub expiry_year: Option<u16>,
     #[builder(default, setter(strip_option))]
+    #[serde(rename = "billingAddress")]
     pub billing_address: Option<BillingAddress>,
 }
 

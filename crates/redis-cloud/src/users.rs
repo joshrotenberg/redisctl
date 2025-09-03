@@ -16,12 +16,14 @@ impl CloudUserHandler {
 
     /// List all users
     pub async fn list(&self) -> Result<Vec<CloudUser>> {
-        self.client.get("/users").await
-    }
-
-    /// List all users - raw version
-    pub async fn list_raw(&self) -> Result<Value> {
-        self.client.get("/users").await
+        let v: serde_json::Value = self.client.get("/users").await?;
+        if let Some(arr) = v.get("users") {
+            serde_json::from_value(arr.clone()).map_err(Into::into)
+        } else if v.is_array() {
+            serde_json::from_value(v).map_err(Into::into)
+        } else {
+            Ok(vec![])
+        }
     }
 
     /// Get user by ID
@@ -29,30 +31,13 @@ impl CloudUserHandler {
         self.client.get(&format!("/users/{}", user_id)).await
     }
 
-    /// Get user by ID - raw version
-    pub async fn get_raw(&self, user_id: u32) -> Result<Value> {
-        self.client.get(&format!("/users/{}", user_id)).await
-    }
-
     /// Create a new user (invite)
-    pub async fn create(&self, request: CreateUserRequest) -> Result<CloudUser> {
-        self.client.post("/users", &request).await
-    }
-
-    /// Create a new user (invite) - raw version
-    pub async fn create_raw(&self, request: Value) -> Result<Value> {
+    pub async fn create(&self, request: serde_json::Value) -> Result<CloudUser> {
         self.client.post("/users", &request).await
     }
 
     /// Update user
-    pub async fn update(&self, user_id: u32, request: UpdateUserRequest) -> Result<CloudUser> {
-        self.client
-            .put(&format!("/users/{}", user_id), &request)
-            .await
-    }
-
-    /// Update user - raw version
-    pub async fn update_raw(&self, user_id: u32, request: Value) -> Result<Value> {
+    pub async fn update(&self, user_id: u32, request: serde_json::Value) -> Result<CloudUser> {
         self.client
             .put(&format!("/users/{}", user_id), &request)
             .await

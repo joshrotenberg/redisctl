@@ -2,7 +2,7 @@
 
 use crate::models::logs::*;
 use crate::{Result, client::CloudClient};
-use serde_json::Value;
+// no additional imports
 
 /// Handler for Cloud logs operations
 pub struct CloudLogsHandler {
@@ -22,38 +22,6 @@ impl CloudLogsHandler {
         limit: Option<u32>,
         offset: Option<u32>,
     ) -> Result<LogsResponse> {
-        let mut query_params = vec![];
-
-        if let Some(limit_val) = limit {
-            query_params.push(format!("limit={}", limit_val));
-        }
-
-        if let Some(offset_val) = offset {
-            query_params.push(format!("offset={}", offset_val));
-        }
-
-        let query_string = if query_params.is_empty() {
-            String::new()
-        } else {
-            format!("?{}", query_params.join("&"))
-        };
-
-        self.client
-            .get(&format!(
-                "/subscriptions/{}/databases/{}/logs{}",
-                subscription_id, database_id, query_string
-            ))
-            .await
-    }
-
-    /// Get database logs - raw version
-    pub async fn database_raw(
-        &self,
-        subscription_id: u32,
-        database_id: u32,
-        limit: Option<u32>,
-        offset: Option<u32>,
-    ) -> Result<Value> {
         let mut query_params = vec![];
 
         if let Some(limit_val) = limit {
@@ -100,28 +68,24 @@ impl CloudLogsHandler {
             format!("?{}", query_params.join("&"))
         };
 
-        self.client.get(&format!("/logs{}", query_string)).await
-    }
-
-    /// Get system logs - raw version
-    pub async fn system_raw(&self, limit: Option<u32>, offset: Option<u32>) -> Result<Value> {
-        let mut query_params = vec![];
-
-        if let Some(limit_val) = limit {
-            query_params.push(format!("limit={}", limit_val));
+        let mut resp: SystemLogsResponse =
+            self.client.get(&format!("/logs{}", query_string)).await?;
+        if resp.total.is_none()
+            && let Some(p) = &resp.pagination
+        {
+            resp.total = p.total;
         }
-
-        if let Some(offset_val) = offset {
-            query_params.push(format!("offset={}", offset_val));
+        if resp.limit.is_none()
+            && let Some(p) = &resp.pagination
+        {
+            resp.limit = p.limit;
         }
-
-        let query_string = if query_params.is_empty() {
-            String::new()
-        } else {
-            format!("?{}", query_params.join("&"))
-        };
-
-        self.client.get(&format!("/logs{}", query_string)).await
+        if resp.offset.is_none()
+            && let Some(p) = &resp.pagination
+        {
+            resp.offset = p.offset;
+        }
+        Ok(resp)
     }
 
     /// Get session logs
@@ -146,31 +110,25 @@ impl CloudLogsHandler {
             format!("?{}", query_params.join("&"))
         };
 
-        self.client
+        let mut resp: SessionLogsResponse = self
+            .client
             .get(&format!("/session-logs{}", query_string))
-            .await
-    }
-
-    /// Get session logs - raw version
-    pub async fn session_raw(&self, limit: Option<u32>, offset: Option<u32>) -> Result<Value> {
-        let mut query_params = vec![];
-
-        if let Some(limit_val) = limit {
-            query_params.push(format!("limit={}", limit_val));
+            .await?;
+        if resp.total.is_none()
+            && let Some(p) = &resp.pagination
+        {
+            resp.total = p.total;
         }
-
-        if let Some(offset_val) = offset {
-            query_params.push(format!("offset={}", offset_val));
+        if resp.limit.is_none()
+            && let Some(p) = &resp.pagination
+        {
+            resp.limit = p.limit;
         }
-
-        let query_string = if query_params.is_empty() {
-            String::new()
-        } else {
-            format!("?{}", query_params.join("&"))
-        };
-
-        self.client
-            .get(&format!("/session-logs{}", query_string))
-            .await
+        if resp.offset.is_none()
+            && let Some(p) = &resp.pagination
+        {
+            resp.offset = p.offset;
+        }
+        Ok(resp)
     }
 }

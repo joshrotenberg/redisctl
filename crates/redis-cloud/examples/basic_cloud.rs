@@ -5,7 +5,7 @@
 //! - Get account information
 //! - List subscriptions
 //!
-//! Run with: cargo run --example basic
+//! Run with: cargo run --example basic_cloud
 
 use redis_cloud::CloudClient;
 use std::env;

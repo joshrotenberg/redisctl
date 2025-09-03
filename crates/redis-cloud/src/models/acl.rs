@@ -24,10 +24,13 @@ pub struct AclUser {
 pub struct CreateAclUserRequest {
     pub name: String,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub email: Option<String>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub password: Option<String>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub roles: Option<Vec<u32>>,
 }
 
@@ -35,12 +38,16 @@ pub struct CreateAclUserRequest {
 #[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
 pub struct UpdateAclUserRequest {
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub email: Option<String>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub password: Option<String>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub roles: Option<Vec<u32>>,
 }
 
@@ -72,10 +79,13 @@ pub struct DatabaseAclBinding {
 pub struct CreateAclRoleRequest {
     pub name: String,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub redis_rules: Option<Vec<u32>>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub databases: Option<Vec<DatabaseAclBinding>>,
 }
 
@@ -83,12 +93,16 @@ pub struct CreateAclRoleRequest {
 #[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
 pub struct UpdateAclRoleRequest {
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub redis_rules: Option<Vec<u32>>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub databases: Option<Vec<DatabaseAclBinding>>,
 }
 
@@ -115,6 +129,8 @@ pub struct CreateRedisRuleRequest {
     #[builder(default, setter(strip_option))]
     pub description: Option<String>,
     #[builder(default = true)]
+    #[serde(default = "crate::models::acl::default_true")]
+    #[serde(skip_serializing_if = "crate::models::acl::is_true")]
     pub is_active: bool,
 }
 
@@ -122,12 +138,16 @@ pub struct CreateRedisRuleRequest {
 #[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
 pub struct UpdateRedisRuleRequest {
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub acl_syntax: Option<String>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub is_active: Option<bool>,
 }
 
@@ -153,6 +173,7 @@ pub struct CreateDatabaseAclRequest {
     pub name: String,
     pub redis_rule_id: u32,
     #[builder(default = true)]
+    #[serde(default = "crate::models::acl::default_true")]
     pub is_active: bool,
 }
 
@@ -165,4 +186,11 @@ pub struct UpdateDatabaseAclRequest {
     pub redis_rule_id: Option<u32>,
     #[builder(default, setter(strip_option))]
     pub is_active: Option<bool>,
+}
+
+pub(crate) fn default_true() -> bool {
+    true
+}
+pub(crate) fn is_true(b: &bool) -> bool {
+    *b
 }

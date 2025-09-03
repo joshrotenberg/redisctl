@@ -5,7 +5,7 @@
 //! - Get cluster information
 //! - List databases and nodes
 //!
-//! Run with: cargo run --example basic
+//! Run with: cargo run --example basic_enterprise
 
 use redis_enterprise::{BdbHandler, EnterpriseClient};
 use std::env;

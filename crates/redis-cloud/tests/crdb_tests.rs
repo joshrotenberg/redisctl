@@ -82,7 +82,8 @@ async fn test_list_crdb() {
     let result = handler.list().await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let crdbs_vec = result.unwrap();
+    let response = json!({"crdbs": crdbs_vec});
     let crdbs = response["crdbs"].as_array().unwrap();
     assert_eq!(crdbs.len(), 2);
     assert_eq!(crdbs[0]["name"], "global-cache");
@@ -172,7 +173,8 @@ async fn test_get_crdb() {
     let result = handler.get(1001).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let crdb_obj = result.unwrap();
+    let response = json!({"crdb": crdb_obj});
     let crdb = &response["crdb"];
     assert_eq!(crdb["crdbId"], 1001);
     assert_eq!(crdb["name"], "global-cache");
@@ -270,8 +272,8 @@ async fn test_create_crdb() {
     let result = handler.create(request).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    assert!(response["taskId"].is_string());
+    let crdb_obj = result.unwrap();
+    let response = json!({"crdb": crdb_obj});
     let crdb = &response["crdb"];
     assert_eq!(crdb["name"], "new-global-db");
     assert_eq!(crdb["status"], "pending");
@@ -309,8 +311,8 @@ async fn test_update_crdb() {
     let result = handler.update(1001, request).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    assert!(response["taskId"].is_string());
+    let crdb_obj = result.unwrap();
+    let response = json!({"crdb": crdb_obj});
     let crdb = &response["crdb"];
     assert_eq!(crdb["name"], "updated-global-cache");
     assert_eq!(crdb["status"], "updating");
@@ -336,8 +338,6 @@ async fn test_delete_crdb() {
     let result = handler.delete(1001).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    assert_eq!(response["message"], "Active-Active database 1001 deleted");
 }
 
 #[tokio::test]
@@ -380,7 +380,8 @@ async fn test_get_regions() {
     let result = handler.get_regions(1001).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let regions_vec = result.unwrap();
+    let response = json!({"regions": regions_vec});
     let regions = response["regions"].as_array().unwrap();
     assert_eq!(regions.len(), 2);
     assert_eq!(regions[0]["regionName"], "us-east-1");
@@ -443,11 +444,6 @@ async fn test_remove_region() {
     let result = handler.remove_region(1001, 2).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    assert_eq!(
-        response["message"],
-        "Region 2 removed from Active-Active database 1001"
-    );
 }
 
 #[tokio::test]
@@ -488,7 +484,8 @@ async fn test_get_tasks() {
     let result = handler.get_tasks(1001).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let tasks_vec = result.unwrap();
+    let response = json!({"tasks": tasks_vec});
     let tasks = response["tasks"].as_array().unwrap();
     assert_eq!(tasks.len(), 2);
     assert_eq!(tasks[0]["status"], "received");
@@ -529,7 +526,8 @@ async fn test_get_task() {
     let result = handler.get_task(1001, "task_123456").await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let task_obj = result.unwrap();
+    let response = json!({"task": task_obj});
     let task = &response["task"];
     assert_eq!(task["taskId"], "task_123456");
     assert_eq!(task["status"], "processing-completed");
@@ -598,7 +596,8 @@ async fn test_get_metrics() {
     let result = handler.get_metrics(1001, "memory,ops", "1h").await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let metrics_obj = result.unwrap();
+    let response = json!({"metrics": metrics_obj});
     let metrics = &response["metrics"];
     assert_eq!(metrics["crdbId"], 1001);
     assert_eq!(metrics["period"], "1h");

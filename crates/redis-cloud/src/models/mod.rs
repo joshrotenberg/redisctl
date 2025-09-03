@@ -28,23 +28,39 @@
 
 pub mod account;
 pub mod acl;
+pub mod api_keys;
 pub mod backup;
 pub mod billing;
+pub mod cloud_accounts;
+pub mod crdb;
 pub mod database;
 pub mod logs;
 pub mod metrics;
 pub mod peering;
+pub mod private_service_connect;
+pub mod region;
+pub mod sso;
 pub mod subscription;
+pub mod tasks;
+pub mod transit_gateway;
 pub mod users;
 
 // Re-export all models
 pub use account::*;
 pub use acl::*;
+pub use api_keys::*;
 pub use backup::*;
 pub use billing::*;
+pub use cloud_accounts::*;
+pub use crdb::*;
 pub use database::*;
 pub use logs::*;
 pub use metrics::*;
 pub use peering::*;
+pub use private_service_connect::*;
+pub use region::*;
+pub use sso::*;
 pub use subscription::*;
+pub use tasks::*;
+pub use transit_gateway::*;
 pub use users::*;

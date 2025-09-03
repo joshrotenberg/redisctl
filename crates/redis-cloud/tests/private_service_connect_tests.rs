@@ -80,7 +80,8 @@ async fn test_list_private_service_connect() {
     let result = handler.list(100001).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let pscs_vec = result.unwrap();
+    let response = serde_json::json!({"privateServiceConnects": pscs_vec});
     let pscs = response["privateServiceConnects"].as_array().unwrap();
     assert_eq!(pscs.len(), 2);
     assert_eq!(pscs[0]["id"], "psc-123456");
@@ -111,7 +112,8 @@ async fn test_list_private_service_connect_empty() {
     let result = handler.list(100001).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let pscs_vec = result.unwrap();
+    let response = serde_json::json!({"privateServiceConnects": pscs_vec});
     let pscs = response["privateServiceConnects"].as_array().unwrap();
     assert_eq!(pscs.len(), 0);
 }
@@ -173,7 +175,8 @@ async fn test_get_private_service_connect() {
     let result = handler.get(100001, "psc-123456").await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let psc_obj = result.unwrap();
+    let response = serde_json::json!({"privateServiceConnect": psc_obj});
     let psc = &response["privateServiceConnect"];
     assert_eq!(psc["id"], "psc-123456");
     assert_eq!(psc["name"], "Production PSC");
@@ -255,11 +258,13 @@ async fn test_create_private_service_connect() {
             "domain": "redis.staging"
         }
     });
-    let result = handler.create(100001, service_request).await;
+    let req: redis_cloud::models::private_service_connect::PscCreateRequest =
+        serde_json::from_value(service_request).unwrap();
+    let result = handler.create(100001, req).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    assert!(response["taskId"].is_string());
+    let psc_obj = result.unwrap();
+    let response = serde_json::json!({"privateServiceConnect": psc_obj});
     let psc = &response["privateServiceConnect"];
     assert_eq!(psc["name"], "Staging PSC");
     assert_eq!(psc["status"], "pending");
@@ -298,11 +303,13 @@ async fn test_update_private_service_connect() {
             "connectionLimit": 100
         }
     });
-    let result = handler.update(100001, "psc-123456", update_request).await;
+    let req: redis_cloud::models::private_service_connect::PscUpdateRequest =
+        serde_json::from_value(update_request).unwrap();
+    let result = handler.update(100001, "psc-123456", req).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    assert!(response["taskId"].is_string());
+    let psc_obj = result.unwrap();
+    let response = serde_json::json!({"privateServiceConnect": psc_obj});
     let psc = &response["privateServiceConnect"];
     assert_eq!(psc["name"], "Updated Production PSC");
     assert_eq!(psc["status"], "updating");
@@ -375,8 +382,8 @@ async fn test_get_endpoint() {
         .await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    let endpoint = &response["endpoint"];
+    let endpoint_obj = result.unwrap();
+    let endpoint = serde_json::to_value(endpoint_obj).unwrap();
     assert_eq!(endpoint["id"], "endpoint-001");
     assert_eq!(endpoint["name"], "prod-endpoint-1");
     assert_eq!(endpoint["status"], "connected");
@@ -426,8 +433,8 @@ async fn test_get_creation_scripts() {
         .await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    let scripts = &response["scripts"];
+    let scripts_obj = result.unwrap();
+    let scripts = &scripts_obj.scripts;
     assert!(scripts["terraform"].is_object());
     assert!(scripts["gcloud"].is_object());
     assert!(
@@ -486,8 +493,8 @@ async fn test_get_deletion_scripts() {
         .await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    let scripts = &response["scripts"];
+    let scripts_obj = result.unwrap();
+    let scripts = &scripts_obj.scripts;
     assert!(
         scripts["terraform"]["warning"]
             .as_str()
@@ -542,7 +549,8 @@ async fn test_list_regional_private_service_connect() {
     let result = handler.list_regional(100001, "us-central1").await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let pscs_vec = result.unwrap();
+    let response = json!({"privateServiceConnects": pscs_vec});
     let pscs = response["privateServiceConnects"].as_array().unwrap();
     assert_eq!(pscs.len(), 1);
     assert_eq!(pscs[0]["id"], "psc-regional-001");
@@ -595,7 +603,8 @@ async fn test_get_regional_private_service_connect() {
         .await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let psc_obj = result.unwrap();
+    let response = json!({"privateServiceConnect": psc_obj});
     let psc = &response["privateServiceConnect"];
     assert_eq!(psc["id"], "psc-regional-001");
     assert_eq!(psc["region"], "us-central1");
@@ -633,13 +642,13 @@ async fn test_create_regional_private_service_connect() {
         "description": "Regional PSC for west region",
         "availabilityZones": ["us-west1-a", "us-west1-b"]
     });
-    let result = handler
-        .create_regional(100001, "us-west1", service_request)
-        .await;
+    let req: redis_cloud::models::private_service_connect::PscCreateRequest =
+        serde_json::from_value(service_request).unwrap();
+    let result = handler.create_regional(100001, "us-west1", req).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    assert!(response["taskId"].is_string());
+    let psc_obj = result.unwrap();
+    let response = serde_json::json!({"privateServiceConnect": psc_obj});
     let psc = &response["privateServiceConnect"];
     assert_eq!(psc["name"], "Regional PSC West");
     assert_eq!(psc["region"], "us-west1");
@@ -676,13 +685,15 @@ async fn test_update_regional_private_service_connect() {
             "connectionLimit": 30
         }
     });
+    let req: redis_cloud::models::private_service_connect::PscUpdateRequest =
+        serde_json::from_value(update_request).unwrap();
     let result = handler
-        .update_regional(100001, "us-central1", "psc-regional-001", update_request)
+        .update_regional(100001, "us-central1", "psc-regional-001", req)
         .await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    assert!(response["taskId"].is_string());
+    let psc_obj = result.unwrap();
+    let response = serde_json::json!({"privateServiceConnect": psc_obj});
     let psc = &response["privateServiceConnect"];
     assert_eq!(psc["name"], "Updated Regional PSC Central");
     assert_eq!(psc["status"], "updating");
@@ -752,8 +763,8 @@ async fn test_get_regional_endpoint() {
         .await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    let endpoint = &response["endpoint"];
+    let endpoint_obj = result.unwrap();
+    let endpoint = serde_json::to_value(endpoint_obj).unwrap();
     assert_eq!(endpoint["id"], "endpoint-regional-001");
     assert_eq!(endpoint["availabilityZone"], "us-central1-a");
     assert_eq!(endpoint["status"], "connected");
@@ -796,8 +807,8 @@ async fn test_get_regional_creation_scripts() {
         .await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    let scripts = &response["scripts"];
+    let scripts_obj = result.unwrap();
+    let scripts = &scripts_obj.scripts;
     assert!(
         scripts["terraform"]["main"]
             .as_str()
@@ -843,8 +854,8 @@ async fn test_get_regional_deletion_scripts() {
         .await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    let scripts = &response["scripts"];
+    let scripts_obj = result.unwrap();
+    let scripts = &scripts_obj.scripts;
     assert!(
         scripts["terraform"]["main"]
             .as_str()

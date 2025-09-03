@@ -173,6 +173,35 @@
 //! # }
 //! ```
 //!
+//! #### API Keys (Typed)
+//! ```rust,no_run
+//! use redis_cloud::{CloudClient, CloudApiKeyHandler};
+//! use serde_json::json;
+//!
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = CloudClient::builder()
+//!     .api_key("key")
+//!     .api_secret("secret")
+//!     .build()?;
+//!
+//! let keys = CloudApiKeyHandler::new(client.clone());
+//! let all = keys.list().await?; // Vec<ApiKey>
+//! if let Some(first) = all.first() {
+//!     let detailed = keys.get(first.id).await?;
+//!     let _usage = keys.get_usage(detailed.id, "7d").await?;
+//! }
+//!
+//! let created = keys
+//!     .create(&json!({ "name": "ci-bot" }))
+//!     .await?;
+//! let _updated = keys
+//!     .update(created.id, &json!({ "name": "ci-bot", "status": "disabled" }))
+//!     .await?;
+//! # Ok(())
+//! # }
+//! ```
+//!
 //! ## Error Handling
 //!
 //! The client provides comprehensive error handling for different failure scenarios:
@@ -230,28 +259,69 @@
 //! These credentials can be obtained from the Redis Cloud console under Account Settings > API Keys.
 
 pub mod client;
-pub mod handlers;
 pub mod models;
 
 #[cfg(test)]
 mod lib_tests;
 
-// Re-export from the new structure
+// Re-export client types
 pub use client::{CloudClient, CloudClientBuilder};
 
-// Re-export handlers explicitly
-pub use handlers::{
-    CloudAccountHandler, CloudAccountsHandler, CloudAclHandler, CloudApiKeyHandler,
-    CloudBackupHandler, CloudBillingHandler, CloudCrdbHandler, CloudDatabaseHandler,
-    CloudFixedHandler, CloudLogsHandler, CloudMetricsHandler, CloudPeeringHandler,
-    CloudPrivateServiceConnectHandler, CloudRegionHandler, CloudSsoHandler,
-    CloudSubscriptionHandler, CloudTaskHandler, CloudTransitGatewayHandler, CloudUserHandler,
-};
+// Flat modules
+pub mod account;
+pub mod acl;
+pub mod api_keys;
+pub mod backup;
+pub mod billing;
+pub mod cloud_accounts;
+pub mod crdb;
+pub mod database;
+pub mod fixed;
+pub mod logs;
+pub mod metrics;
+pub mod peering;
+pub mod private_service_connect;
+pub mod region;
+pub mod sso;
+pub mod subscription;
+pub mod tasks;
+pub mod transit_gateway;
+pub mod users;
+
+// Root-level re-exports
+pub use account::CloudAccountHandler;
+pub use acl::CloudAclHandler;
+pub use api_keys::CloudApiKeyHandler;
+pub use backup::CloudBackupHandler;
+pub use billing::CloudBillingHandler;
+pub use cloud_accounts::CloudAccountsHandler;
+pub use crdb::CloudCrdbHandler;
+pub use database::CloudDatabaseHandler;
+pub use fixed::CloudFixedHandler;
+pub use logs::CloudLogsHandler;
+pub use metrics::CloudMetricsHandler;
+pub use peering::CloudPeeringHandler;
+pub use private_service_connect::CloudPrivateServiceConnectHandler;
+pub use region::CloudRegionHandler;
+pub use sso::CloudSsoHandler;
+pub use subscription::CloudSubscriptionHandler;
+pub use tasks::CloudTaskHandler;
+pub use transit_gateway::CloudTransitGatewayHandler;
+pub use users::CloudUserHandler;
 
 // Re-export models explicitly
 pub use models::{
     // Account models
     AccountKey,
+    // API keys models
+    ApiKey,
+    ApiKeyAuditLogEntry,
+    ApiKeyAuditLogsResponse,
+    ApiKeyPermissions,
+    ApiKeyRequest,
+    ApiKeyUsagePoint,
+    ApiKeyUsageResponse,
+    ApiKeysResponse,
     CloudAccount,
     // Backup models
     CloudBackup,
@@ -300,3 +370,7 @@ pub enum CloudError {
 }
 
 pub type Result<T> = std::result::Result<T, CloudError>;
+// Expose a `types` module that re-exports models, to mirror `redis-enterprise::types`.
+
+// Expose a `types` module that re-exports models, to mirror `redis-enterprise::types`.
+pub mod types;

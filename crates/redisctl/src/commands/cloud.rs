@@ -132,7 +132,6 @@ pub async fn handle_database_command(
             memory_limit,
         } => {
             let (subscription_id, database_id) = parse_database_id(&id)?;
-            let handler = redis_cloud::CloudDatabaseHandler::new(client.clone());
             let mut update_data = serde_json::Map::new();
 
             if let Some(name) = name {
@@ -145,10 +144,12 @@ pub async fn handle_database_command(
                 );
             }
 
-            let database = handler
-                .update_raw(
-                    subscription_id,
-                    database_id,
+            let database = client
+                .put_raw(
+                    &format!(
+                        "/subscriptions/{}/databases/{}",
+                        subscription_id, database_id
+                    ),
                     serde_json::Value::Object(update_data),
                 )
                 .await?;
@@ -225,17 +226,15 @@ pub async fn handle_subscription_command(
             provider,
             region,
         } => {
-            let handler = redis_cloud::CloudSubscriptionHandler::new(client.clone());
             let create_data = serde_json::json!({
                 "name": name,
                 "cloudProvider": provider,
                 "region": region
             });
-            let subscription = handler.create_raw(create_data).await?;
+            let subscription = client.post_raw("/subscriptions", create_data).await?;
             print_output(subscription, output_format, query)?;
         }
         SubscriptionCommands::Update { id, name } => {
-            let handler = redis_cloud::CloudSubscriptionHandler::new(client.clone());
             let mut update_data = serde_json::Map::new();
             if let Some(name) = name {
                 update_data.insert("name".to_string(), serde_json::Value::String(name));
@@ -243,8 +242,11 @@ pub async fn handle_subscription_command(
             if update_data.is_empty() {
                 anyhow::bail!("No update fields provided");
             }
-            let subscription = handler
-                .update_raw(id.parse()?, serde_json::Value::Object(update_data))
+            let subscription = client
+                .put_raw(
+                    &format!("/subscriptions/{}", id),
+                    serde_json::Value::Object(update_data),
+                )
                 .await?;
             print_output(subscription, output_format, query)?;
         }
@@ -363,7 +365,6 @@ pub async fn handle_user_command(
             password,
             roles,
         } => {
-            let handler = redis_cloud::CloudUserHandler::new(client.clone());
             let mut create_data = serde_json::json!({
                 "name": name
             });
@@ -380,7 +381,7 @@ pub async fn handle_user_command(
                 );
             }
 
-            let user = handler.create_raw(create_data).await?;
+            let user = client.post_raw("/users", create_data).await?;
             print_output(user, output_format, query)?;
         }
         UserCommands::Update {
@@ -388,7 +389,6 @@ pub async fn handle_user_command(
             email,
             password,
         } => {
-            let handler = redis_cloud::CloudUserHandler::new(client.clone());
             let mut update_data = serde_json::Map::new();
             if let Some(email) = email {
                 update_data.insert("email".to_string(), serde_json::Value::String(email));
@@ -399,8 +399,11 @@ pub async fn handle_user_command(
             if update_data.is_empty() {
                 anyhow::bail!("No update fields provided");
             }
-            let user = handler
-                .update_raw(id.parse()?, serde_json::Value::Object(update_data))
+            let user = client
+                .put_raw(
+                    &format!("/users/{}", id),
+                    serde_json::Value::Object(update_data),
+                )
                 .await?;
             print_output(user, output_format, query)?;
         }
@@ -545,13 +548,18 @@ pub async fn handle_acl_command(
             name,
             rule,
         } => {
-            let handler = redis_cloud::CloudAclHandler::new(client.clone());
             let create_data = serde_json::json!({
                 "name": name,
                 "aclRule": rule
             });
-            let acl = handler
-                .create_raw(subscription_id, database_id, create_data)
+            let acl = client
+                .post_raw(
+                    &format!(
+                        "/subscriptions/{}/databases/{}/acl",
+                        subscription_id, database_id
+                    ),
+                    create_data,
+                )
                 .await?;
             print_output(acl, output_format, query)?;
         }
@@ -561,12 +569,17 @@ pub async fn handle_acl_command(
             acl_id,
             rule,
         } => {
-            let handler = redis_cloud::CloudAclHandler::new(client.clone());
             let update_data = serde_json::json!({
                 "aclRule": rule
             });
-            let acl = handler
-                .update_raw(subscription_id, database_id, acl_id, update_data)
+            let acl = client
+                .put_raw(
+                    &format!(
+                        "/subscriptions/{}/databases/{}/acl/{}",
+                        subscription_id, database_id, acl_id
+                    ),
+                    update_data,
+                )
                 .await?;
             print_output(acl, output_format, query)?;
         }
@@ -925,12 +938,11 @@ pub async fn handle_api_key_command(
             print_output(key, output_format, query)?;
         }
         ApiKeyCommands::Create { name, role } => {
-            let handler = redis_cloud::CloudApiKeyHandler::new(client.clone());
             let create_data = serde_json::json!({
                 "name": name,
                 "role": role
             });
-            let key = handler.create(create_data).await?;
+            let key = client.post_raw("/api-keys", create_data).await?;
             print_output(key, output_format, query)?;
         }
         ApiKeyCommands::Update { key_id, name, role } => {
@@ -941,9 +953,11 @@ pub async fn handle_api_key_command(
             if let Some(role) = role {
                 update_data.insert("role".to_string(), serde_json::Value::String(role));
             }
-            let handler = redis_cloud::CloudApiKeyHandler::new(client.clone());
-            let key = handler
-                .update(key_id, serde_json::Value::Object(update_data))
+            let key = client
+                .put_raw(
+                    &format!("/api-keys/{}", key_id),
+                    serde_json::Value::Object(update_data),
+                )
                 .await?;
             print_output(key, output_format, query)?;
         }

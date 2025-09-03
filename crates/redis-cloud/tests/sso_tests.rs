@@ -58,7 +58,8 @@ async fn test_get_sso_config() {
     let result = handler.get().await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let cfg = result.unwrap();
+    let response = json!({"sso": cfg});
     let sso = &response["sso"];
     assert_eq!(sso["enabled"], true);
     assert_eq!(sso["provider"], "saml");
@@ -87,7 +88,8 @@ async fn test_get_sso_config_disabled() {
     let result = handler.get().await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let cfg = result.unwrap();
+    let response = json!({"sso": cfg});
     let sso = &response["sso"];
     assert_eq!(sso["enabled"], false);
 }
@@ -125,7 +127,8 @@ async fn test_update_sso_config() {
     let result = handler.update(request).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let cfg = result.unwrap();
+    let response = json!({"sso": cfg});
     let sso = &response["sso"];
     assert_eq!(sso["enabled"], true);
     assert_eq!(sso["ssoUrl"], "https://new-idp.example.com/sso/redirect");
@@ -150,8 +153,6 @@ async fn test_delete_sso_config() {
     let result = handler.delete().await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    assert_eq!(response["message"], "SSO configuration deleted");
 }
 
 #[tokio::test]
@@ -187,7 +188,8 @@ async fn test_test_sso_config() {
     let result = handler.test(request).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let test_resp = result.unwrap();
+    let response = json!({"test": test_resp});
     let test = &response["test"];
     assert_eq!(test["success"], true);
     assert_eq!(test["message"], "SSO configuration test successful");
@@ -227,7 +229,8 @@ async fn test_test_sso_config_failure() {
     let result = handler.test(request).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let test_resp = result.unwrap();
+    let response = json!({"test": test_resp});
     let test = &response["test"];
     assert_eq!(test["success"], false);
     let details = &test["details"];
@@ -268,7 +271,8 @@ async fn test_get_saml_config() {
     let result = handler.get_saml().await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let saml_cfg = result.unwrap();
+    let response = json!({"saml": saml_cfg});
     let saml = &response["saml"];
     assert_eq!(saml["entityId"], "https://redis.example.com/sso");
     assert_eq!(saml["signRequest"], true);
@@ -307,7 +311,8 @@ async fn test_update_saml_config() {
     let result = handler.update_saml(request).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let saml_cfg = result.unwrap();
+    let response = json!({"saml": saml_cfg});
     let saml = &response["saml"];
     assert_eq!(
         saml["ssoUrl"],
@@ -342,7 +347,8 @@ async fn test_get_saml_metadata() {
     let result = handler.get_saml_metadata().await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let meta = result.unwrap();
+    let response = json!({"metadata": meta});
     let metadata = &response["metadata"];
     assert!(metadata["xml"].as_str().unwrap().starts_with("<?xml"));
     assert_eq!(metadata["entityId"], "https://redis.example.com/sso");
@@ -377,7 +383,7 @@ async fn test_upload_saml_cert() {
     let result = handler.upload_saml_cert(request).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let response = serde_json::to_value(result.unwrap()).unwrap();
     let cert = &response["certificate"];
     assert_eq!(cert["subject"], "CN=idp.example.com");
     assert_eq!(cert["issuer"], "CN=CA Certificate Authority");
@@ -437,7 +443,8 @@ async fn test_list_sso_users() {
     let result = handler.list_users().await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let users_vec = result.unwrap();
+    let response = json!({"users": users_vec});
     let users = response["users"].as_array().unwrap();
     assert_eq!(users.len(), 2);
     assert_eq!(users[0]["email"], "john.doe@example.com");
@@ -483,7 +490,8 @@ async fn test_get_sso_user() {
     let result = handler.get_user(1).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let user_obj = result.unwrap();
+    let response = json!({"user": user_obj});
     let user = &response["user"];
     assert_eq!(user["id"], 1);
     assert_eq!(user["email"], "john.doe@example.com");
@@ -538,7 +546,8 @@ async fn test_create_user_mapping() {
     let result = handler.create_user_mapping(request).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let user_obj = result.unwrap();
+    let response = json!({"user": user_obj});
     let user = &response["user"];
     assert_eq!(user["email"], "bob.wilson@example.com");
     assert_eq!(user["role"], "viewer");
@@ -585,7 +594,8 @@ async fn test_update_user_mapping() {
     let result = handler.update_user_mapping(1, request).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let user_obj = result.unwrap();
+    let response = json!({"user": user_obj});
     let user = &response["user"];
     assert_eq!(user["role"], "owner");
     assert_eq!(
@@ -611,8 +621,6 @@ async fn test_delete_user_mapping() {
     let result = handler.delete_user_mapping(1).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
-    assert_eq!(response["message"], "SSO user mapping 1 deleted");
 }
 
 #[tokio::test]
@@ -653,7 +661,8 @@ async fn test_list_sso_groups() {
     let result = handler.list_groups().await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let groups_vec = result.unwrap();
+    let response = json!({"groups": groups_vec});
     let groups = response["groups"].as_array().unwrap();
     assert_eq!(groups.len(), 2);
     assert_eq!(groups[0]["name"], "developers");
@@ -695,7 +704,8 @@ async fn test_map_group() {
     let result = handler.map_group(request).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let group_obj = result.unwrap();
+    let response = json!({"group": group_obj});
     let group = &response["group"];
     assert_eq!(group["name"], "qa-team");
     assert_eq!(group["role"], "viewer");
@@ -735,7 +745,8 @@ async fn test_update_group_mapping() {
     let result = handler.update_group_mapping(1, request).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let group_obj = result.unwrap();
+    let response = json!({"group": group_obj});
     let group = &response["group"];
     assert_eq!(group["displayName"], "Senior Software Developers");
     assert_eq!(group["role"], "admin");

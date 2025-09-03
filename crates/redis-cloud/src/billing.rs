@@ -1,0 +1,198 @@
+//! Billing and payment operations handler
+//!
+//! This module provides comprehensive billing and payment management for Redis Cloud,
+//! including invoice management, payment method handling, cost analysis, and usage reporting.
+//!
+//! # Examples
+//!
+//! ```rust,no_run
+//! use redis_cloud::{CloudClient, CloudBillingHandler};
+//! use serde_json::json;
+//!
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = CloudClient::builder()
+//!     .api_key("your-api-key")
+//!     .api_secret("your-api-secret")
+//!     .build()?;
+//!
+//! let billing_handler = CloudBillingHandler::new(client);
+//!
+//! // Get current billing information
+//! let billing_info = billing_handler.get_info().await?;
+//!
+//! // List all invoices
+//! let invoices = billing_handler.list_invoices().await?;
+//!
+//! // Get usage report for date range
+//! let usage = billing_handler.get_usage("2024-01-01", "2024-01-31").await?;
+//!
+//! // List payment methods
+//! let payment_methods = billing_handler.list_payment_methods().await?;
+//! # Ok(())
+//! # }
+//! ```
+
+use crate::models::billing::*;
+use crate::{Result, client::CloudClient};
+use serde_json::Value;
+
+/// Handler for Cloud billing and payment operations
+///
+/// Provides access to billing information, invoice management, payment methods,
+/// cost analysis, and usage reporting. Essential for monitoring and managing
+/// Redis Cloud costs and payment configuration.
+pub struct CloudBillingHandler {
+    client: CloudClient,
+}
+
+impl CloudBillingHandler {
+    pub fn new(client: CloudClient) -> Self {
+        CloudBillingHandler { client }
+    }
+
+    /// Get current billing information
+    pub async fn get_info(&self) -> Result<BillingInfo> {
+        self.client.get("/billing").await
+    }
+
+    /// Get billing history
+    pub async fn get_history(
+        &self,
+        start_date: Option<&str>,
+        end_date: Option<&str>,
+    ) -> Result<Value> {
+        let mut path = "/billing/history".to_string();
+        if let (Some(start), Some(end)) = (start_date, end_date) {
+            path = format!("{}?start={}&end={}", path, start, end);
+        }
+        let v: Value = self.client.get(&path).await?;
+        Ok(v.get("billingHistory").cloned().unwrap_or(v))
+    }
+
+    /// Get current invoice
+    pub async fn get_current_invoice(&self) -> Result<Value> {
+        let v: Value = self.client.get("/billing/invoice/current").await?;
+        Ok(v.get("invoice").cloned().unwrap_or(v))
+    }
+
+    /// Get invoice by ID
+    pub async fn get_invoice(&self, invoice_id: &str) -> Result<Value> {
+        let v: Value = self
+            .client
+            .get(&format!("/billing/invoices/{}", invoice_id))
+            .await?;
+        Ok(v.get("invoice").cloned().unwrap_or(v))
+    }
+
+    /// List all invoices
+    pub async fn list_invoices(&self) -> Result<Value> {
+        let v: Value = self.client.get("/billing/invoices").await?;
+        Ok(v.get("invoices").cloned().unwrap_or(v))
+    }
+
+    /// Download invoice PDF
+    pub async fn download_invoice(&self, invoice_id: &str) -> Result<Value> {
+        self.client
+            .get(&format!("/billing/invoices/{}/download", invoice_id))
+            .await
+    }
+
+    /// Get payment methods
+    pub async fn list_payment_methods(&self) -> Result<Value> {
+        let v: Value = self.client.get("/payment-methods").await?;
+        Ok(v.get("paymentMethods").cloned().unwrap_or(v))
+    }
+
+    /// Get payment method by ID
+    pub async fn get_payment_method(&self, method_id: u32) -> Result<Value> {
+        let v: Value = self
+            .client
+            .get(&format!("/payment-methods/{}", method_id))
+            .await?;
+        Ok(v.get("paymentMethod").cloned().unwrap_or(v))
+    }
+
+    /// Add payment method
+    pub async fn add_payment_method(&self, request: AddPaymentMethodRequest) -> Result<Value> {
+        let v: Value = self.client.post("/payment-methods", &request).await?;
+        Ok(v.get("paymentMethod").cloned().unwrap_or(v))
+    }
+
+    /// Update payment method
+    pub async fn update_payment_method(
+        &self,
+        method_id: u32,
+        request: UpdatePaymentMethodRequest,
+    ) -> Result<Value> {
+        let v: Value = self
+            .client
+            .put(&format!("/payment-methods/{}", method_id), &request)
+            .await?;
+        Ok(v.get("paymentMethod").cloned().unwrap_or(v))
+    }
+
+    /// Delete payment method
+    pub async fn delete_payment_method(&self, method_id: u32) -> Result<Value> {
+        self.client
+            .delete(&format!("/payment-methods/{}", method_id))
+            .await?;
+        Ok(serde_json::json!({"message": format!("Payment method {} deleted", method_id)}))
+    }
+
+    /// Set default payment method
+    pub async fn set_default_payment_method(&self, method_id: u32) -> Result<Value> {
+        self.client
+            .post(
+                &format!("/payment-methods/{}/set-default", method_id),
+                &Value::Null,
+            )
+            .await
+    }
+
+    /// Get billing alerts configuration
+    pub async fn get_alerts(&self) -> Result<Value> {
+        let v: Value = self.client.get("/billing/alerts").await?;
+        Ok(v.get("alerts").cloned().unwrap_or(v))
+    }
+
+    /// Update billing alerts configuration
+    pub async fn update_alerts(&self, request: UpdateBillingAlertsRequest) -> Result<Value> {
+        let v: Value = self.client.put("/billing/alerts", &request).await?;
+        Ok(v.get("alerts").cloned().unwrap_or(v))
+    }
+
+    /// Get cost breakdown
+    pub async fn get_cost_breakdown(&self, period: &str) -> Result<Value> {
+        let v: Value = self
+            .client
+            .get(&format!("/billing/costs?period={}", period))
+            .await?;
+        Ok(v.get("costs").cloned().unwrap_or(v))
+    }
+
+    /// Get usage report
+    pub async fn get_usage(&self, start_date: &str, end_date: &str) -> Result<Value> {
+        let v: Value = self
+            .client
+            .get(&format!(
+                "/billing/usage?start={}&end={}",
+                start_date, end_date
+            ))
+            .await?;
+        Ok(v.get("usage").cloned().unwrap_or(v))
+    }
+
+    /// Get credits balance
+    pub async fn get_credits(&self) -> Result<Value> {
+        let v: Value = self.client.get("/billing/credits").await?;
+        Ok(v.get("credits").cloned().unwrap_or(v))
+    }
+
+    /// Apply promo code
+    pub async fn apply_promo_code(&self, code: &str) -> Result<Value> {
+        let request = serde_json::json!({ "code": code });
+        let v: Value = self.client.post("/billing/promo", &request).await?;
+        Ok(v.get("promo").cloned().unwrap_or(v))
+    }
+}

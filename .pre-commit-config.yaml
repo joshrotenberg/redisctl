@@ -8,6 +8,7 @@ repos:
         files: \.rs$
         args: [--all, --check]
         pass_filenames: false
+        stages: [commit]
         
       - id: cargo-clippy
         name: cargo clippy
@@ -16,11 +17,13 @@ repos:
         files: \.rs$
         args: [--all-targets, --all-features, --, -D, warnings]
         pass_filenames: false
+        stages: [commit, push]
         
       - id: cargo-test
         name: cargo test
         entry: cargo test
         language: system
         files: \.rs$
-        args: [--all-features]
+        args: [--workspace, --all-features]
         pass_filenames: false
+        stages: [commit, push]

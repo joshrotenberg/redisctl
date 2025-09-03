@@ -187,7 +187,8 @@ async fn test_list_cloud_accounts() {
     let result = handler.list().await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let accounts_vec = result.unwrap();
+    let response = json!({"cloudAccounts": accounts_vec});
     let accounts = response["cloudAccounts"].as_array().unwrap();
     assert_eq!(accounts.len(), 3);
 
@@ -224,9 +225,7 @@ async fn test_list_cloud_accounts() {
     assert_eq!(accounts[2]["error"], "Authentication failed");
 
     // Check pagination
-    let pagination = &response["pagination"];
-    assert_eq!(pagination["total"], 3);
-    assert_eq!(pagination["hasMore"], false);
+    // pagination omitted in typed results
 }
 
 #[tokio::test]
@@ -255,7 +254,8 @@ async fn test_list_cloud_accounts_empty() {
     let result = handler.list().await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let accounts_vec = result.unwrap();
+    let response = json!({"cloudAccounts": accounts_vec});
     let accounts = response["cloudAccounts"].as_array().unwrap();
     assert_eq!(accounts.len(), 0);
 }
@@ -278,7 +278,7 @@ async fn test_get_cloud_account() {
     let result = handler.get(101).await;
 
     assert!(result.is_ok());
-    let account = result.unwrap();
+    let account = serde_json::to_value(result.unwrap()).unwrap();
     assert_eq!(account["id"], 101);
     assert_eq!(account["name"], "Production AWS Account");
     assert_eq!(account["provider"], "AWS");
@@ -361,7 +361,7 @@ async fn test_create_cloud_account() {
     let result = handler.create(create_request).await;
 
     assert!(result.is_ok());
-    let account = result.unwrap();
+    let account = serde_json::to_value(result.unwrap()).unwrap();
     assert_eq!(account["id"], 104);
     assert_eq!(account["name"], "New Test Account");
     assert_eq!(account["provider"], "AWS");
@@ -455,7 +455,7 @@ async fn test_update_cloud_account() {
     let result = handler.update(101, update_request).await;
 
     assert!(result.is_ok());
-    let account = result.unwrap();
+    let account = serde_json::to_value(result.unwrap()).unwrap();
     assert_eq!(account["id"], 101);
     assert_eq!(account["name"], "Updated Production AWS Account");
 
@@ -656,7 +656,7 @@ async fn test_create_cloud_account_gcp() {
     let result = handler.create(create_request).await;
 
     assert!(result.is_ok());
-    let account = result.unwrap();
+    let account = serde_json::to_value(result.unwrap()).unwrap();
     assert_eq!(account["id"], 105);
     assert_eq!(account["provider"], "GCP");
     assert_eq!(account["credentials"]["type"], "service_account");

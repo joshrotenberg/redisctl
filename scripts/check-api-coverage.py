@@ -195,6 +195,7 @@ def main():
     parser.add_argument("--fail-on-gaps", action="store_true", help="Exit non-zero if gaps exist in scoped endpoints")
     parser.add_argument("--routing-table", default="tmp/rest-html/http-routingtable.html", help="Path to routing table HTML")
     parser.add_argument("--scope", choices=["v1", "v1v2"], default="v1v2", help="Endpoint scope to require coverage for")
+    parser.add_argument("--cloud-openapi", default=None, help="Path or URL to Redis Cloud OpenAPI JSON for coverage")
     args = parser.parse_args()
     # Paths to handler directories
     enterprise_handlers = Path("crates/redis-enterprise/src")
@@ -321,15 +322,9 @@ def main():
         print(f"Raw-only methods: {total_raw_only}")
         print(f"Typed coverage: {total_typed / (total_typed + total_raw_only) * 100:.1f}%")
         
-        # Check for dual interface violations
-        violations = check_dual_interface(typed_coverage)
-        if violations:
-            print("\n### Dual Interface Violations:")
-            for handler, issues in violations.items():
-                print(f"  {handler}:")
-                for issue in issues:
-                    print(f"    - {issue}")
-        
+        # Note: For Cloud we do NOT require dual interfaces.
+        # Handlers should prefer typed methods only, and raw access goes via CloudClient.
+
         # List handlers with no typed methods
         print("\n### Handlers Needing Typed Interfaces:")
         for handler, methods in typed_coverage.items():
@@ -337,6 +332,65 @@ def main():
             if typed_count == 0:
                 method_count = sum(1 for m in methods.keys() if not m.endswith('_raw'))
                 print(f"  {handler}: 0/{method_count} methods typed")
+
+        # Optional: compare to OpenAPI specification if provided
+        if args.cloud_openapi:
+            import json, urllib.request
+            import re as _re
+
+            print("\n---\n")
+            print("### OpenAPI Diff (Cloud)")
+            # Load OpenAPI JSON (URL or file)
+            try:
+                if args.cloud_openapi.startswith("http"):
+                    with urllib.request.urlopen(args.cloud_openapi, timeout=20) as resp:
+                        spec = json.load(resp)
+                else:
+                    with open(args.cloud_openapi, 'r') as f:
+                        spec = json.load(f)
+            except Exception as e:
+                print(f"Failed to load OpenAPI spec: {e}")
+                spec = None
+
+            if spec and 'paths' in spec:
+                oa_eps = set()
+                for p, methods_map in spec['paths'].items():
+                    for m in methods_map.keys():
+                        m_up = m.upper()
+                        if m_up in ("GET","POST","PUT","PATCH","DELETE"):
+                            p_norm = _re.sub(r"\{[^\}]+\}", "{}", p)
+                            oa_eps.add((m_up, p_norm))
+
+                # Gather code endpoints (normalized)
+                code_eps = set()
+                for handler, eps in find_api_calls(cloud_handlers).items():
+                    for method, endpoint in eps:
+                        p_norm = normalize_path(endpoint)
+                        code_eps.add((method, p_norm))
+
+                missing = sorted(oa_eps - code_eps)
+                extra = sorted(code_eps - oa_eps)
+
+                print(f"OpenAPI endpoints: {len(oa_eps)}")
+                print(f"Code endpoints:    {len(code_eps)}")
+                print(f"Missing in code:   {len(missing)}")
+                print(f"Extra in code:     {len(extra)}")
+
+                # Group missing by first path segment
+                from collections import defaultdict
+                def root(path: str) -> str:
+                    parts = [p for p in path.split('/') if p]
+                    return parts[0] if parts else '/'
+                bycat = defaultdict(list)
+                for m in missing:
+                    bycat[root(m[1])].append(m)
+                print("\n#### Missing by Category:")
+                for cat in sorted(bycat.keys()):
+                    print(f"- {cat}: {len(bycat[cat])}")
+                    for method, path in bycat[cat][:6]:
+                        print(f"    {method:6} {path}")
+                    if len(bycat[cat]) > 6:
+                        print("    ...")
 
 if __name__ == "__main__":
     main()

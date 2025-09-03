@@ -263,6 +263,7 @@ async fn test_subscription_metrics_basic() {
 
     assert!(result.is_ok());
     let metrics = result.unwrap();
+    let metrics = json!({"subscriptionMetrics": metrics});
     assert_eq!(metrics["subscriptionMetrics"]["subscriptionId"], 12345);
     assert_eq!(
         metrics["subscriptionMetrics"]["totalMemoryUsage"],
@@ -305,6 +306,7 @@ async fn test_subscription_metrics_with_time_range() {
 
     assert!(result.is_ok());
     let metrics = result.unwrap();
+    let metrics = json!({"subscriptionMetrics": metrics});
     assert_eq!(metrics["subscriptionMetrics"]["subscriptionId"], 12345);
 }
 
