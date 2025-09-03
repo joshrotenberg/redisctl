@@ -62,6 +62,32 @@
 //! # }
 //! ```
 //!
+//! ### Typed vs Raw API
+//!
+//! This client offers typed handlers for common operations as well as raw helpers when you
+//! need full control over request/response payloads:
+//!
+//! - Prefer typed handlers (e.g., `CloudDatabaseHandler`) for structured, ergonomic access.
+//! - Use raw helpers for passthroughs: `get_raw`, `post_raw`, `put_raw`, `patch_raw`, `delete_raw`.
+//!
+//! ```rust,no_run
+//! use redis_cloud::CloudClient;
+//! use serde_json::json;
+//!
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = CloudClient::builder()
+//!     .api_key("key")
+//!     .api_secret("secret")
+//!     .build()?;
+//!
+//! // Raw call example
+//! let created = client.post_raw("/subscriptions", json!({ "name": "example" })).await?;
+//! println!("{}", created);
+//! # Ok(())
+//! # }
+//! ```
+//!
 //! ### Working with Subscriptions
 //!
 //! ```rust,no_run
@@ -110,7 +136,7 @@
 //! // Create database using raw API
 //! let database_config = json!({
 //!     "name": "my-database",
-//!     "memory_limit_in_gb": 1.0,
+//!     "memoryLimitInGb": 1.0,
 //!     "support_oss_cluster_api": false,
 //!     "replication": true
 //! });
@@ -228,6 +254,11 @@
 //! - `x-api-secret-key`: Your API secret
 //!
 //! These credentials can be obtained from the Redis Cloud console under Account Settings > API Keys.
+//!
+//! Environment variables commonly used with this client:
+//! - `REDIS_CLOUD_API_KEY`
+//! - `REDIS_CLOUD_API_SECRET`
+//! - Optional: set a custom base URL via the builder for non‑prod/test environments (defaults to `https://api.redislabs.com/v1`).
 
 pub mod client;
 pub mod handlers;
