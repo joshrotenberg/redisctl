@@ -1,4 +1,9 @@
-//! Endpoint management and statistics for Redis Enterprise
+//! Database endpoint configuration and monitoring
+//!
+//! ## Overview
+//! - Configure database endpoints
+//! - Query endpoint statistics
+//! - Manage endpoint routing
 
 use crate::client::RestClient;
 use crate::error::Result;

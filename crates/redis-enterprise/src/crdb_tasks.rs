@@ -1,4 +1,9 @@
-//! Active-Active (CRDB) task management for Redis Enterprise
+//! Active-Active database task operations
+//!
+//! ## Overview
+//! - Track CRDB async operations
+//! - Query task status
+//! - Manage replication tasks
 
 use crate::client::RestClient;
 use crate::error::Result;

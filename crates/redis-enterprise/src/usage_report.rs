@@ -1,4 +1,9 @@
-//! Usage reporting for Redis Enterprise
+//! Usage reporting and telemetry
+//!
+//! ## Overview
+//! - Generate usage reports
+//! - Configure telemetry settings
+//! - Export usage data
 
 use crate::client::RestClient;
 use crate::error::Result;

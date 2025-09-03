@@ -1,9 +1,62 @@
-//! Statistics and metrics for Redis Enterprise
+//! Statistics and metrics collection for Redis Enterprise
 //!
-//! Overview
-//! - Cluster, node, database, and shard statistics
-//! - Time windows via `StatsQuery` (interval, stime, etime, metrics)
-//! - "last" snapshots for quick health checks
+//! ## Overview
+//! - Query cluster, node, database, and shard statistics
+//! - Retrieve time-series metrics with configurable intervals
+//! - Access both current and historical performance data
+//!
+//! ## Return Types
+//!
+//! Stats methods return either typed responses (`StatsResponse`, `LastStatsResponse`)
+//! or raw `serde_json::Value` for endpoints with dynamic metric names as keys.
+//! The Value returns allow access to all metrics without compile-time knowledge
+//! of metric names.
+//!
+//! ## Examples
+//!
+//! ### Querying Database Stats
+//! ```no_run
+//! use redis_enterprise::{EnterpriseClient, StatsHandler};
+//! use redis_enterprise::stats::StatsQuery;
+//!
+//! # async fn example(client: EnterpriseClient) -> Result<(), Box<dyn std::error::Error>> {
+//! let stats = StatsHandler::new(client);
+//!
+//! // Get last interval stats for a database
+//! let last_stats = stats.database_last(1).await?;
+//! println!("Database stats: {:?}", last_stats);
+//!
+//! // Query with specific interval (all metrics by default)
+//! let query = StatsQuery {
+//!     interval: Some("5min".to_string()),
+//!     stime: None,
+//!     etime: None,
+//!     metrics: None,  // None means all metrics
+//! };
+//! let historical = stats.database(1, Some(query)).await?;
+//! println!("5-minute intervals: {:?}", historical.intervals);
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ### Cluster-Wide Statistics
+//! ```no_run
+//! # use redis_enterprise::{EnterpriseClient, StatsHandler};
+//! # async fn example(client: EnterpriseClient) -> Result<(), Box<dyn std::error::Error>> {
+//! let stats = StatsHandler::new(client);
+//!
+//! // Get aggregated stats for all nodes
+//! let all_nodes = stats.nodes_last().await?;
+//! println!("Total stats across cluster: {:?}", all_nodes.stats);
+//!
+//! // Get aggregated database stats
+//! let all_dbs = stats.databases_last().await?;
+//! for resource_stats in &all_dbs.stats {
+//!     println!("Resource {}: {:?}", resource_stats.uid, resource_stats.intervals);
+//! }
+//! # Ok(())
+//! # }
+//! ```
 
 use crate::client::RestClient;
 use crate::error::Result;

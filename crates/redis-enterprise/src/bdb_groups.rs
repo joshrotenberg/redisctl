@@ -1,4 +1,9 @@
-//! Database Groups management for Redis Enterprise
+//! Database group configuration
+//!
+//! ## Overview
+//! - Manage database groups
+//! - Configure group settings
+//! - Query group membership
 
 use crate::client::RestClient;
 use crate::error::Result;

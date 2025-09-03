@@ -1,4 +1,9 @@
-//! Active-Active Database (CRDB) management for Redis Enterprise
+//! Active-Active (CRDB) database management
+//!
+//! ## Overview
+//! - Create and manage Active-Active databases
+//! - Configure cross-region replication
+//! - Monitor CRDB status
 
 use crate::client::RestClient;
 use crate::error::Result;

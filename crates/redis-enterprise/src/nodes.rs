@@ -1,10 +1,9 @@
-//! Node management for Redis Enterprise
+//! Nodes management for Redis Enterprise
 //!
-//! Overview
-//! - List/get/update/remove nodes
-//! - Node actions (e.g., maintenance_on/off) with typed responses
-//! - Status and watchdog status (per-node and aggregate)
-//! - Shards and proxies per-node
+//! ## Overview
+//! - List and query resources
+//! - Create and update configurations
+//! - Monitor status and metrics
 
 use crate::client::RestClient;
 use crate::error::Result;

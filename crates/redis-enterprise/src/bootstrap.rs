@@ -1,4 +1,9 @@
-//! Bootstrap operations for Redis Enterprise cluster initialization
+//! Cluster bootstrap and node joining operations
+//!
+//! ## Overview
+//! - Bootstrap new clusters
+//! - Join nodes to existing clusters
+//! - Configure initial settings
 
 use crate::client::RestClient;
 use crate::error::Result;

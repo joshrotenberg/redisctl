@@ -1,4 +1,9 @@
-//! License management for Redis Enterprise
+//! License management and validation
+//!
+//! ## Overview
+//! - Query license status
+//! - Update license keys
+//! - Monitor license expiration
 
 use crate::client::RestClient;
 use crate::error::Result;

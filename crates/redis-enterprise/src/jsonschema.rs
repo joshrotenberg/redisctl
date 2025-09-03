@@ -1,4 +1,9 @@
-//! JSON Schema definitions for Redis Enterprise API
+//! JSON Schema definitions for API validation
+//!
+//! ## Overview
+//! - Get schema for API objects
+//! - Validate request/response formats
+//! - Query available schemas
 
 use crate::client::RestClient;
 use crate::error::Result;

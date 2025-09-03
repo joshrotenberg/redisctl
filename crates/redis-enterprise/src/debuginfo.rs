@@ -1,8 +1,9 @@
-//! Debug information collection for Redis Enterprise
+//! Debuginfo management for Redis Enterprise
 //!
-//! Overview
-//! - Create and track debuginfo tasks, download artifacts
-//! - Convenience routes for node/all scopes
+//! ## Overview
+//! - List and query resources
+//! - Create and update configurations
+//! - Monitor status and metrics
 
 use crate::client::RestClient;
 use crate::error::Result;

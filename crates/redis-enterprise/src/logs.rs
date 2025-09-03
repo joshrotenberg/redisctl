@@ -1,4 +1,9 @@
-//! Event log management for Redis Enterprise
+//! Log management and retrieval
+//!
+//! ## Overview
+//! - Query cluster logs
+//! - Configure log levels
+//! - Export log data
 
 use crate::client::RestClient;
 use crate::error::Result;

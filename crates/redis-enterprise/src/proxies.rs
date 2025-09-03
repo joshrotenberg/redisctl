@@ -1,9 +1,9 @@
-//! Proxy management for Redis Enterprise
+//! Proxies management for Redis Enterprise
 //!
-//! Overview
-//! - List/get proxies
-//! - Per-proxy metrics (interval/timestamps/values)
-//! - Bulk and per-proxy updates via typed `ProxyUpdate`
+//! ## Overview
+//! - List and query resources
+//! - Create and update configurations
+//! - Monitor status and metrics
 
 use crate::client::RestClient;
 use crate::error::Result;

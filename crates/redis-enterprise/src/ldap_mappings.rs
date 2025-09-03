@@ -1,4 +1,9 @@
-//! LDAP mapping management for Redis Enterprise
+//! LDAP integration and role mapping
+//!
+//! ## Overview
+//! - Configure LDAP mappings
+//! - Map LDAP groups to roles
+//! - Query mapping status
 
 use crate::client::RestClient;
 use crate::error::Result;

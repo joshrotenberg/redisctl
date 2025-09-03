@@ -1,4 +1,9 @@
-//! Alert management for Redis Enterprise
+//! Alert configuration and management
+//!
+//! ## Overview
+//! - Configure alert settings
+//! - Query alert history
+//! - Manage alert thresholds
 
 use crate::client::RestClient;
 use crate::error::Result;
