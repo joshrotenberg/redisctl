@@ -42,14 +42,11 @@
 //!
 //! let handler = DatabaseHandler::new(client);
 //!
-//! // List all databases in a subscription
-//! let databases = handler.get_subscription_databases(subscription_id, None, None).await?;
+//! // List all databases in a subscription (subscription ID 123)
+//! let databases = handler.get_subscription_databases(123, None, None).await?;
 //!
 //! // Get specific database details
-//! let database = handler.get_subscription_database_by_id(subscription_id, database_id).await?;
-//!
-//! // Create a backup
-//! let backup = handler.backup_database(subscription_id, database_id, &backup_request).await?;
+//! let database = handler.get_subscription_database_by_id(123, 456).await?;
 //! # Ok(())
 //! # }
 //! ```

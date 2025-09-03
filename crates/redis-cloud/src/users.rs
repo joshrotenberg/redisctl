@@ -41,16 +41,10 @@
 //! let handler = UserHandler::new(client);
 //!
 //! // List all users
-//! let users = handler.get_users(None).await?;
+//! let users = handler.get_all_users().await?;
 //!
-//! // Get specific user details
-//! let user = handler.get_users_by_id(user_id).await?;
-//!
-//! // Invite a new user
-//! let invitation = handler.invite(&invite_request).await?;
-//!
-//! // Update user roles
-//! let updated = handler.update_user(user_id, &update_request).await?;
+//! // Get specific user details (user ID 123)
+//! let user = handler.get_user_by_id(123).await?;
 //! # Ok(())
 //! # }
 //! ```

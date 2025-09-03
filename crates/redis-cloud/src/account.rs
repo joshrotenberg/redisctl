@@ -34,10 +34,11 @@
 //!
 //! // Get current account information
 //! let account = handler.get_current_account().await?;
-//! println!("Account ID: {}", account.id.unwrap_or_default());
+//! println!("Account info: {:?}", account);
 //!
-//! // List API keys
-//! let api_keys = handler.get_api_keys().await?;
+//! // Get payment methods
+//! let payment_methods = handler.get_account_payment_methods().await?;
+//! println!("Payment methods: {:?}", payment_methods);
 //! # Ok(())
 //! # }
 //! ```

@@ -84,13 +84,15 @@ async fn test_create_subscription() {
                 region: "us-west-2".to_string(),
                 multiple_availability_zones: None,
                 preferred_availability_zones: None,
-                networking: Some(redis_cloud::subscriptions::SubscriptionRegionNetworkingSpec {
-                    deployment_cidr: Some("10.0.0.0/20".to_string()),
-                    vpc_id: None,
-                    subnet_ids: None,
-                    security_group_id: None,
-                    extra: serde_json::Value::Null,
-                }),
+                networking: Some(
+                    redis_cloud::subscriptions::SubscriptionRegionNetworkingSpec {
+                        deployment_cidr: Some("10.0.0.0/20".to_string()),
+                        vpc_id: None,
+                        subnet_ids: None,
+                        security_group_id: None,
+                        extra: serde_json::Value::Null,
+                    },
+                ),
                 extra: serde_json::Value::Null,
             }],
             extra: serde_json::Value::Null,

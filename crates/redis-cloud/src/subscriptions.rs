@@ -42,17 +42,11 @@
 //! // List all Pro subscriptions
 //! let subscriptions = handler.get_all_subscriptions().await?;
 //!
-//! // Get subscription details
-//! let subscription = handler.get_subscription_by_id(subscription_id).await?;
-//!
-//! // Update CIDR whitelist
-//! let cidr_update = handler.update_subscription_cidr_white_list(
-//!     subscription_id,
-//!     &cidr_request
-//! ).await?;
+//! // Get subscription details (subscription ID 123)
+//! let subscription = handler.get_subscription_by_id(123).await?;
 //!
 //! // Manage maintenance windows
-//! let windows = handler.get_subscription_maintenance_windows(subscription_id).await?;
+//! let windows = handler.get_subscription_maintenance_windows(123).await?;
 //! # Ok(())
 //! # }
 //! ```

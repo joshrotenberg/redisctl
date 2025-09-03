@@ -39,14 +39,8 @@
 //!
 //! let handler = FixedDatabaseHandler::new(client);
 //!
-//! // List databases in a fixed subscription
-//! let databases = handler.get_fixed_subscription_databases(subscription_id, None, None).await?;
-//!
-//! // Create a new fixed database
-//! let database = handler.create_fixed_database(subscription_id, &create_request).await?;
-//!
-//! // Backup a fixed database
-//! let backup = handler.backup_database_1(subscription_id, database_id, &backup_request).await?;
+//! // Example: List databases in a fixed subscription (ID 123)
+//! let databases = handler.get_fixed_subscription_databases(123, None, None).await?;
 //! # Ok(())
 //! # }
 //! ```

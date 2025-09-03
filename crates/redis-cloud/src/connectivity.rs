@@ -38,11 +38,11 @@
 //!
 //! let handler = ConnectivityHandler::new(client);
 //!
-//! // List VPC peerings for a subscription
-//! let peerings = handler.get_subscription_vpc_peerings(subscription_id).await?;
+//! // Get VPC peering for a subscription (subscription ID 123)
+//! let peerings = handler.get_vpc_peering(123).await?;
 //!
 //! // Get Transit Gateway attachments
-//! let tgw_attachments = handler.get_subscription_transit_gateways(subscription_id).await?;
+//! let tgw_attachments = handler.get_tgws(123).await?;
 //! # Ok(())
 //! # }
 //! ```

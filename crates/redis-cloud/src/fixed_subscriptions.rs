@@ -45,9 +45,6 @@
 //!
 //! // Get all fixed subscriptions
 //! let subscriptions = handler.get_all_subscriptions_1().await?;
-//!
-//! // Create a new fixed subscription
-//! let subscription = handler.create_subscription_1(&create_request).await?;
 //! # Ok(())
 //! # }
 //! ```

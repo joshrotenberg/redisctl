@@ -40,8 +40,8 @@
 //! // List all cloud accounts
 //! let accounts = handler.get_cloud_accounts().await?;
 //!
-//! // Get specific account details
-//! let account = handler.get_cloud_accounts_by_id(account_id).await?;
+//! // Get specific account details (account ID 123)
+//! let account = handler.get_cloud_account_by_id(123).await?;
 //! # Ok(())
 //! # }
 //! ```

@@ -31,11 +31,11 @@
 //!
 //! let handler = AclHandler::new(client);
 //!
-//! // List ACL users for a database
-//! let users = handler.get_acl_users(subscription_id, database_id).await?;
+//! // List all ACL users
+//! let users = handler.get_all_users_1().await?;
 //!
-//! // Get Redis rules for a database
-//! let rules = handler.get_redis_rules(subscription_id, database_id).await?;
+//! // Get all Redis rules
+//! let rules = handler.get_all_redis_rules().await?;
 //! # Ok(())
 //! # }
 //! ```
