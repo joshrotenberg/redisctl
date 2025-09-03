@@ -89,13 +89,6 @@ impl ProxyHandler {
             .await
     }
 
-    /// Get proxy statistics for a specific metric - raw version
-    pub async fn stats_metric_raw(&self, uid: u32, metric: &str) -> Result<Value> {
-        self.client
-            .get(&format!("/v1/proxies/{}/stats/{}", uid, metric))
-            .await
-    }
-
     /// Get proxies for a specific database
     pub async fn list_by_database(&self, bdb_uid: u32) -> Result<Vec<Proxy>> {
         self.client

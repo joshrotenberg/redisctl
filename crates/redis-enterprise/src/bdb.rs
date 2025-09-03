@@ -458,28 +458,8 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Restart database (BDB.RESTART) - raw version
-    pub async fn restart_raw(&self, uid: u32) -> Result<Value> {
-        self.client
-            .post(
-                &format!("/v1/bdbs/{}/actions/restart", uid),
-                &serde_json::json!({}),
-            )
-            .await
-    }
-
     /// Export database (BDB.EXPORT) - typed version
     pub async fn export(&self, uid: u32, export_location: &str) -> Result<ExportResponse> {
-        let body = serde_json::json!({
-            "export_location": export_location
-        });
-        self.client
-            .post(&format!("/v1/bdbs/{}/actions/export", uid), &body)
-            .await
-    }
-
-    /// Export database (BDB.EXPORT) - raw version
-    pub async fn export_raw(&self, uid: u32, export_location: &str) -> Result<Value> {
         let body = serde_json::json!({
             "export_location": export_location
         });
@@ -504,29 +484,8 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Import database (BDB.IMPORT) - raw version
-    pub async fn import_raw(&self, uid: u32, import_location: &str, flush: bool) -> Result<Value> {
-        let body = serde_json::json!({
-            "import_location": import_location,
-            "flush": flush
-        });
-        self.client
-            .post(&format!("/v1/bdbs/{}/actions/import", uid), &body)
-            .await
-    }
-
     /// Flush database (BDB.FLUSH) - typed version
     pub async fn flush(&self, uid: u32) -> Result<DatabaseActionResponse> {
-        self.client
-            .post(
-                &format!("/v1/bdbs/{}/actions/flush", uid),
-                &serde_json::json!({}),
-            )
-            .await
-    }
-
-    /// Flush database (BDB.FLUSH) - raw version
-    pub async fn flush_raw(&self, uid: u32) -> Result<Value> {
         self.client
             .post(
                 &format!("/v1/bdbs/{}/actions/flush", uid),
@@ -545,34 +504,12 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Backup database (BDB.BACKUP) - raw version
-    pub async fn backup_raw(&self, uid: u32) -> Result<Value> {
-        self.client
-            .post(
-                &format!("/v1/bdbs/{}/actions/backup", uid),
-                &serde_json::json!({}),
-            )
-            .await
-    }
-
     /// Restore database from backup (BDB.RESTORE) - typed version
     pub async fn restore(
         &self,
         uid: u32,
         backup_uid: Option<&str>,
     ) -> Result<DatabaseActionResponse> {
-        let body = if let Some(backup_id) = backup_uid {
-            serde_json::json!({ "backup_uid": backup_id })
-        } else {
-            serde_json::json!({})
-        };
-        self.client
-            .post(&format!("/v1/bdbs/{}/actions/restore", uid), &body)
-            .await
-    }
-
-    /// Restore database from backup (BDB.RESTORE) - raw version
-    pub async fn restore_raw(&self, uid: u32, backup_uid: Option<&str>) -> Result<Value> {
         let body = if let Some(backup_id) = backup_uid {
             serde_json::json!({ "backup_uid": backup_id })
         } else {
@@ -622,28 +559,8 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Recover database - POST (raw)
-    pub async fn recover_raw(&self, uid: u32) -> Result<Value> {
-        self.client
-            .post(
-                &format!("/v1/bdbs/{}/actions/recover", uid),
-                &serde_json::json!({}),
-            )
-            .await
-    }
-
     /// Resume traffic - POST (typed)
     pub async fn resume_traffic(&self, uid: u32) -> Result<DatabaseActionResponse> {
-        self.client
-            .post(
-                &format!("/v1/bdbs/{}/actions/resume_traffic", uid),
-                &serde_json::json!({}),
-            )
-            .await
-    }
-
-    /// Resume traffic - POST (raw)
-    pub async fn resume_traffic_raw(&self, uid: u32) -> Result<Value> {
         self.client
             .post(
                 &format!("/v1/bdbs/{}/actions/resume_traffic", uid),
@@ -662,16 +579,6 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Stop traffic - POST (raw)
-    pub async fn stop_traffic_raw(&self, uid: u32) -> Result<Value> {
-        self.client
-            .post(
-                &format!("/v1/bdbs/{}/actions/stop_traffic", uid),
-                &serde_json::json!({}),
-            )
-            .await
-    }
-
     /// Rebalance database - PUT (typed)
     pub async fn rebalance(&self, uid: u32) -> Result<DatabaseActionResponse> {
         self.client
@@ -682,28 +589,8 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Rebalance database - PUT (raw)
-    pub async fn rebalance_raw(&self, uid: u32) -> Result<Value> {
-        self.client
-            .put(
-                &format!("/v1/bdbs/{}/actions/rebalance", uid),
-                &serde_json::json!({}),
-            )
-            .await
-    }
-
     /// Revamp database - PUT (typed)
     pub async fn revamp(&self, uid: u32) -> Result<DatabaseActionResponse> {
-        self.client
-            .put(
-                &format!("/v1/bdbs/{}/actions/revamp", uid),
-                &serde_json::json!({}),
-            )
-            .await
-    }
-
-    /// Revamp database - PUT (raw)
-    pub async fn revamp_raw(&self, uid: u32) -> Result<Value> {
         self.client
             .put(
                 &format!("/v1/bdbs/{}/actions/revamp", uid),
@@ -791,38 +678,10 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Generic database command passthrough - POST
-    pub async fn command_raw(&self, uid: u32, body: Value) -> Result<Value> {
-        self.client
-            .post(&format!("/v1/bdbs/{}/command", uid), &body)
-            .await
-    }
-
-    /// Database passwords create - POST (raw)
-    pub async fn passwords_create_raw(&self, uid: u32, body: Value) -> Result<Value> {
-        self.client
-            .post(&format!("/v1/bdbs/{}/passwords", uid), &body)
-            .await
-    }
-
-    /// Database passwords update - PUT (raw)
-    pub async fn passwords_update_raw(&self, uid: u32, body: Value) -> Result<Value> {
-        self.client
-            .put(&format!("/v1/bdbs/{}/passwords", uid), &body)
-            .await
-    }
-
     /// Database passwords delete - DELETE
     pub async fn passwords_delete(&self, uid: u32) -> Result<()> {
         self.client
             .delete(&format!("/v1/bdbs/{}/passwords", uid))
-            .await
-    }
-
-    /// Post database alert operation - POST (raw)
-    pub async fn alerts_post_raw(&self, uid: u32, body: Value) -> Result<Value> {
-        self.client
-            .post(&format!("/v1/bdbs/alerts/{}", uid), &body)
             .await
     }
 
@@ -917,34 +776,6 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Modules config for a database - POST (raw)
-    pub async fn modules_config_raw(&self, uid: u32, body: Value) -> Result<Value> {
-        self.client
-            .post(&format!("/v1/bdbs/{}/modules/config", uid), &body)
-            .await
-    }
-
-    /// Modules upgrade for a database - POST (raw)
-    pub async fn modules_upgrade_raw(&self, uid: u32, body: Value) -> Result<Value> {
-        self.client
-            .post(&format!("/v1/bdbs/{}/modules/upgrade", uid), &body)
-            .await
-    }
-
-    /// Engine upgrade shortcut (non-actions) - POST (raw)
-    pub async fn upgrade_direct_raw(&self, uid: u32, body: Value) -> Result<Value> {
-        self.client
-            .post(&format!("/v1/bdbs/{}/upgrade", uid), &body)
-            .await
-    }
-
-    /// Update a single field via path - PUT (raw)
-    pub async fn update_field_raw(&self, uid: u32, field: &str, body: Value) -> Result<Value> {
-        self.client
-            .put(&format!("/v1/bdbs/{}/{}", uid, field), &body)
-            .await
-    }
-
     /// Upgrade database with new module version (BDB.UPGRADE) - typed version
     pub async fn upgrade(
         &self,
@@ -961,38 +792,12 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Upgrade database with new module version (BDB.UPGRADE) - raw version
-    pub async fn upgrade_raw(
-        &self,
-        uid: u32,
-        module_name: &str,
-        new_version: &str,
-    ) -> Result<Value> {
-        let body = serde_json::json!({
-            "module_name": module_name,
-            "new_version": new_version
-        });
-        self.client
-            .post(&format!("/v1/bdbs/{}/actions/upgrade", uid), &body)
-            .await
-    }
-
     /// Reset database password (BDB.RESET_PASSWORD) - typed version
     pub async fn reset_password(
         &self,
         uid: u32,
         new_password: &str,
     ) -> Result<DatabaseActionResponse> {
-        let body = serde_json::json!({
-            "authentication_redis_pass": new_password
-        });
-        self.client
-            .post(&format!("/v1/bdbs/{}/actions/reset_password", uid), &body)
-            .await
-    }
-
-    /// Reset database password (BDB.RESET_PASSWORD) - raw version
-    pub async fn reset_password_raw(&self, uid: u32, new_password: &str) -> Result<Value> {
         let body = serde_json::json!({
             "authentication_redis_pass": new_password
         });
@@ -1017,11 +822,6 @@ impl DatabaseHandler {
 
     /// Create database using v2 API (supports recovery plan)
     pub async fn create_v2(&self, request: Value) -> Result<DatabaseInfo> {
-        self.client.post("/v2/bdbs", &request).await
-    }
-
-    /// Create database using v2 API - raw version
-    pub async fn create_v2_raw(&self, request: Value) -> Result<Value> {
         self.client.post("/v2/bdbs", &request).await
     }
 }

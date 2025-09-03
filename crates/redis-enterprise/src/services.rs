@@ -123,8 +123,8 @@ impl ServicesHandler {
             .await
     }
 
-    /// Create a service - POST /v1/services (raw)
-    pub async fn create_raw(&self, body: Value) -> Result<Service> {
+    /// Create a service - POST /v1/services
+    pub async fn create(&self, body: Value) -> Result<Service> {
         self.client.post("/v1/services", &body).await
     }
 }
