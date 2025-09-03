@@ -258,7 +258,8 @@ async fn test_create_private_service_connect() {
             "domain": "redis.staging"
         }
     });
-    let req: redis_cloud::models::private_service_connect::PscCreateRequest = serde_json::from_value(service_request).unwrap();
+    let req: redis_cloud::models::private_service_connect::PscCreateRequest =
+        serde_json::from_value(service_request).unwrap();
     let result = handler.create(100001, req).await;
 
     assert!(result.is_ok());
@@ -302,7 +303,8 @@ async fn test_update_private_service_connect() {
             "connectionLimit": 100
         }
     });
-    let req: redis_cloud::models::private_service_connect::PscUpdateRequest = serde_json::from_value(update_request).unwrap();
+    let req: redis_cloud::models::private_service_connect::PscUpdateRequest =
+        serde_json::from_value(update_request).unwrap();
     let result = handler.update(100001, "psc-123456", req).await;
 
     assert!(result.is_ok());
@@ -640,10 +642,9 @@ async fn test_create_regional_private_service_connect() {
         "description": "Regional PSC for west region",
         "availabilityZones": ["us-west1-a", "us-west1-b"]
     });
-    let req: redis_cloud::models::private_service_connect::PscCreateRequest = serde_json::from_value(service_request).unwrap();
-    let result = handler
-        .create_regional(100001, "us-west1", req)
-        .await;
+    let req: redis_cloud::models::private_service_connect::PscCreateRequest =
+        serde_json::from_value(service_request).unwrap();
+    let result = handler.create_regional(100001, "us-west1", req).await;
 
     assert!(result.is_ok());
     let psc_obj = result.unwrap();
@@ -684,7 +685,8 @@ async fn test_update_regional_private_service_connect() {
             "connectionLimit": 30
         }
     });
-    let req: redis_cloud::models::private_service_connect::PscUpdateRequest = serde_json::from_value(update_request).unwrap();
+    let req: redis_cloud::models::private_service_connect::PscUpdateRequest =
+        serde_json::from_value(update_request).unwrap();
     let result = handler
         .update_regional(100001, "us-central1", "psc-regional-001", req)
         .await;

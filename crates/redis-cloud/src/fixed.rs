@@ -62,7 +62,6 @@ impl CloudFixedHandler {
             .await
     }
 
-
     /// Delete a database in a fixed subscription
     pub async fn delete_database(&self, subscription_id: u32, database_id: u32) -> Result<()> {
         self.client
@@ -72,7 +71,6 @@ impl CloudFixedHandler {
             ))
             .await
     }
-
 
     /// List database tags (fixed)
     pub async fn database_tags(&self, subscription_id: u32, database_id: u32) -> Result<Value> {
@@ -98,5 +96,4 @@ impl CloudFixedHandler {
             ))
             .await
     }
-
 }

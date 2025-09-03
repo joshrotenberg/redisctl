@@ -249,10 +249,9 @@ async fn test_create_attachment() {
             "Project": "RedisCloud"
         }
     });
-    let req: redis_cloud::models::transit_gateway::TransitGatewayAttachmentCreateRequest = serde_json::from_value(attachment_request).unwrap();
-    let result = handler
-        .create_attachment(100001, "tgw-12345", req)
-        .await;
+    let req: redis_cloud::models::transit_gateway::TransitGatewayAttachmentCreateRequest =
+        serde_json::from_value(attachment_request).unwrap();
+    let result = handler.create_attachment(100001, "tgw-12345", req).await;
 
     assert!(result.is_ok());
     let response = result.unwrap();
@@ -571,7 +570,8 @@ async fn test_create_regional_attachment() {
             "10.3.0.0/16"
         ]
     });
-    let req: redis_cloud::models::transit_gateway::TransitGatewayAttachmentCreateRequest = serde_json::from_value(attachment_request).unwrap();
+    let req: redis_cloud::models::transit_gateway::TransitGatewayAttachmentCreateRequest =
+        serde_json::from_value(attachment_request).unwrap();
     let result = handler
         .create_regional_attachment(100001, "us-west-2", "tgw-region-67890", req)
         .await;

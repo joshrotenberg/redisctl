@@ -66,7 +66,11 @@ impl CloudCrdbHandler {
     }
 
     /// Add region to Active-Active database
-    pub async fn add_region(&self, crdb_id: u32, region: serde_json::Value) -> Result<serde_json::Value> {
+    pub async fn add_region(
+        &self,
+        crdb_id: u32,
+        region: serde_json::Value,
+    ) -> Result<serde_json::Value> {
         self.client
             .post(&format!("/crdb/{}/regions", crdb_id), &region)
             .await

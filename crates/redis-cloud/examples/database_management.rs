@@ -7,7 +7,7 @@
 //!
 //! Run with: cargo run --example database_management
 
-use redis_cloud::{CloudClient};
+use redis_cloud::CloudClient;
 use redis_cloud::database::CloudDatabaseHandler;
 use std::env;
 
