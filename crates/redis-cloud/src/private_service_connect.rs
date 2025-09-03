@@ -1,10 +1,41 @@
 //! Private Service Connect operations handler
 
-use crate::{
-    Result,
-    client::CloudClient,
-    models::{PscCreateRequest, PscEndpoint, PscScripts, PscService, PscUpdateRequest},
-};
+use crate::{Result, client::CloudClient};
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PscEndpoint {
+    pub id: u32,
+    pub name: String,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PscService {
+    pub id: u32,
+    pub name: String,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PscScripts {
+    pub scripts: Value,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PscCreateRequest {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PscUpdateRequest {
+    pub name: Option<String>,
+}
 
 /// Handler for Cloud Private Service Connect operations
 pub struct CloudPrivateServiceConnectHandler {

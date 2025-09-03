@@ -1,10 +1,23 @@
 //! Task operations handler
 
-use crate::{
-    Result,
-    client::CloudClient,
-    models::{Task, TaskList},
-};
+use crate::{Result, client::CloudClient};
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Task {
+    pub task_id: String,
+    pub status: String,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TaskList {
+    pub tasks: Vec<Task>,
+    #[serde(flatten)]
+    pub extra: Value,
+}
 
 /// Handler for Cloud task operations
 pub struct CloudTaskHandler {

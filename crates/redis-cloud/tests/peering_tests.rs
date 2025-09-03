@@ -381,8 +381,10 @@ async fn test_get_peering() {
     assert_eq!(peering.vpc_id, Some("vpc-0123456789abcdef0".to_string()));
     assert_eq!(peering.vpc_cidr, Some("10.0.0.0/16".to_string()));
 
+    // Check fields
+    assert_eq!(peering.region, Some("us-east-1".to_string()));
+
     // Check extra fields
-    assert_eq!(peering.extra["region"], "us-east-1");
     assert_eq!(peering.extra["provider"], "AWS");
     assert_eq!(peering.extra["dnsResolution"], true);
 

@@ -1,13 +1,31 @@
 //! Transit Gateway operations handler
 
-use crate::{
-    Result,
-    client::CloudClient,
-    models::{
-        TransitGatewayAttachment, TransitGatewayAttachmentCreateRequest, TransitGatewayInvitation,
-    },
-};
+use crate::{Result, client::CloudClient};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TransitGatewayAttachment {
+    pub id: u32,
+    pub name: String,
+    pub status: String,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TransitGatewayAttachmentCreateRequest {
+    pub name: String,
+    pub transit_gateway_id: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TransitGatewayInvitation {
+    pub id: u32,
+    pub status: String,
+    #[serde(flatten)]
+    pub extra: Value,
+}
 
 /// Handler for Cloud Transit Gateway operations
 pub struct CloudTransitGatewayHandler {

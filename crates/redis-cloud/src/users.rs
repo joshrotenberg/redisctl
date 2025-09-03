@@ -1,8 +1,27 @@
 //! User management operations handler
 
-use crate::models::users::*;
 use crate::{Result, client::CloudClient};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct User {
+    pub id: u32,
+    pub name: String,
+    pub email: String,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CloudUser {
+    pub id: u32,
+    pub name: String,
+    pub email: String,
+    pub role: Option<String>,
+    #[serde(flatten)]
+    pub extra: Value,
+}
 
 /// Handler for Cloud user operations
 pub struct CloudUserHandler {

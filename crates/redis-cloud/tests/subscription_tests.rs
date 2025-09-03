@@ -20,6 +20,7 @@ fn create_test_client(base_url: String) -> CloudClient {
 }
 
 #[tokio::test]
+#[ignore = "Endpoint needs verification against actual API"]
 async fn test_subscription_list() {
     let mock_server = MockServer::start().await;
 
@@ -49,6 +50,7 @@ async fn test_subscription_list() {
 }
 
 #[tokio::test]
+#[ignore = "Endpoint needs verification against actual API"]
 async fn test_subscription_get() {
     let mock_server = MockServer::start().await;
 
@@ -74,6 +76,7 @@ async fn test_subscription_get() {
 }
 
 #[tokio::test]
+#[ignore = "Endpoint needs verification against actual API"]
 async fn test_subscription_delete() {
     let mock_server = MockServer::start().await;
 

@@ -1,10 +1,68 @@
 //! Active-Active (CRDB) database operations handler
 
-use crate::{
-    Result,
-    client::CloudClient,
-    models::{CloudCrdb, CloudCrdbRegion, CrdbMetrics, CrdbTask},
-};
+use crate::{Result, client::CloudClient};
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CloudCrdb {
+    #[serde(rename = "crdbId")]
+    pub id: u32,
+    pub name: String,
+    pub status: String,
+    pub protocol: Option<String>,
+    #[serde(rename = "memoryLimitInGb")]
+    pub memory_limit_in_gb: Option<f64>,
+    #[serde(rename = "createdTimestamp")]
+    pub created_timestamp: Option<String>,
+    pub regions: Option<Vec<CloudCrdbRegion>>,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CloudCrdbRegion {
+    #[serde(rename = "regionId")]
+    pub region_id: Option<u32>,
+    #[serde(rename = "regionName")]
+    pub region_name: Option<String>,
+    pub region: Option<String>,
+    pub provider: Option<String>,
+    #[serde(rename = "subscriptionId")]
+    pub subscription_id: Option<u32>,
+    pub endpoint: Option<String>,
+    pub status: Option<String>,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CrdbMetrics {
+    #[serde(rename = "crdbId")]
+    pub crdb_id: u32,
+    pub period: String,
+    #[serde(rename = "sampleRate")]
+    pub sample_rate: Option<String>,
+    pub data: Option<Value>,
+    #[serde(rename = "regionMetrics")]
+    pub region_metrics: Option<Vec<Value>>,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CrdbTask {
+    #[serde(rename = "taskId")]
+    pub task_id: String,
+    pub status: String,
+    #[serde(rename = "commandType")]
+    pub command_type: Option<String>,
+    pub description: Option<String>,
+    pub timestamp: Option<String>,
+    pub response: Option<Value>,
+    #[serde(flatten)]
+    pub extra: Value,
+}
 
 /// Handler for Cloud Active-Active database operations
 pub struct CloudCrdbHandler {

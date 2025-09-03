@@ -35,14 +35,59 @@
 //! # }
 //! ```
 
-use crate::{
-    Result,
-    client::CloudClient,
-    models::{
-        CloudDatabase, CloudSubscription, CreateSubscriptionRequest, UpdateSubscriptionRequest,
-    },
-};
+use crate::{Result, client::CloudClient, database::CloudDatabase};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CloudSubscription {
+    pub id: u32,
+    pub name: String,
+    pub status: String,
+    pub provider: String,
+    pub region: String,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreateSubscriptionRequest {
+    pub name: String,
+    pub provider: String,
+    pub region: String,
+    pub plan: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UpdateSubscriptionRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CloudProvider {
+    pub provider: String,
+    pub regions: Vec<CloudRegion>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CloudProviderConfig {
+    pub provider: String,
+    pub cloud_account_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CloudRegion {
+    pub region: String,
+    pub availability_zones: Option<Vec<String>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CloudRegionConfig {
+    pub region: String,
+    pub networking_deployment_cidr: Option<String>,
+    pub preferred_availability_zones: Option<Vec<String>>,
+}
 
 /// Handler for Cloud subscription operations
 ///

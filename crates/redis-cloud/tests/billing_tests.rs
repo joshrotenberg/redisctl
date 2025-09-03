@@ -405,7 +405,7 @@ async fn test_add_payment_method() {
             "postalCode": "94105"
         }
     });
-    let req: redis_cloud::models::billing::AddPaymentMethodRequest =
+    let req: redis_cloud::billing::AddPaymentMethodRequest =
         serde_json::from_value(request).unwrap();
     let result = handler.add_payment_method(req).await;
 
@@ -448,7 +448,7 @@ async fn test_update_payment_method() {
             "postalCode": "10001"
         }
     });
-    let req: redis_cloud::models::billing::UpdatePaymentMethodRequest =
+    let req: redis_cloud::billing::UpdatePaymentMethodRequest =
         serde_json::from_value(request).unwrap();
     let result = handler.update_payment_method(123, req).await;
 
@@ -586,7 +586,7 @@ async fn test_update_alerts() {
         ],
         "recipients": ["admin@example.com"]
     });
-    let req: redis_cloud::models::billing::UpdateBillingAlertsRequest =
+    let req: redis_cloud::billing::UpdateBillingAlertsRequest =
         serde_json::from_value(request).unwrap();
     let result = handler.update_alerts(req).await;
 

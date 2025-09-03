@@ -1,6 +1,16 @@
 //! Cloud account operations handler
 
-use crate::{Result, client::CloudClient, models::CloudProviderAccount};
+use crate::{Result, client::CloudClient};
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CloudProviderAccount {
+    pub id: u32,
+    pub name: String,
+    #[serde(flatten)]
+    pub extra: Value,
+}
 
 /// Handler for Cloud account operations
 pub struct CloudAccountsHandler {
