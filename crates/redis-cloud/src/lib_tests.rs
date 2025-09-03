@@ -79,17 +79,22 @@ mod tests {
 
         assert!(result.is_err());
         match result.unwrap_err() {
-            CloudError::ApiError { code, .. } => {
-                assert_eq!(code, 404);
+            CloudError::NotFound { .. } => {
+                // Expected 404 Not Found error
             }
-            _ => panic!("Expected ApiError"),
+            err => panic!("Expected NotFound error, got: {:?}", err),
         }
     }
 
     #[test]
     fn test_cloud_error_display() {
-        let err = CloudError::AuthenticationFailed;
-        assert_eq!(err.to_string(), "Authentication failed");
+        let err = CloudError::AuthenticationFailed {
+            message: "Invalid credentials".to_string(),
+        };
+        assert_eq!(
+            err.to_string(),
+            "Authentication failed (401): Invalid credentials"
+        );
 
         let err = CloudError::ApiError {
             code: 400,

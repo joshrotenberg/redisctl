@@ -297,67 +297,11 @@ mod lib_tests;
 // Re-export client types
 pub use client::{CloudClient, CloudClientBuilder};
 
-// Flat modules
-pub mod account;
-pub mod acl;
-pub mod api_keys;
-pub mod backup;
-pub mod billing;
-pub mod cloud_accounts;
-pub mod crdb;
-pub mod database;
-pub mod fixed;
-pub mod logs;
-pub mod metrics;
-pub mod peering;
-pub mod private_service_connect;
-pub mod region;
-pub mod sso;
-pub mod subscription;
-pub mod tasks;
-pub mod transit_gateway;
-pub mod users;
+// Types module for shared models
+pub mod types;
 
-// Root-level re-exports
-pub use account::CloudAccountHandler;
-pub use acl::CloudAclHandler;
-pub use api_keys::CloudApiKeyHandler;
-pub use backup::CloudBackupHandler;
-pub use billing::CloudBillingHandler;
-pub use cloud_accounts::CloudAccountsHandler;
-pub use crdb::CloudCrdbHandler;
-pub use database::CloudDatabaseHandler;
-pub use fixed::CloudFixedHandler;
-pub use logs::CloudLogsHandler;
-pub use metrics::CloudMetricsHandler;
-pub use peering::CloudPeeringHandler;
-pub use private_service_connect::CloudPrivateServiceConnectHandler;
-pub use region::CloudRegionHandler;
-pub use sso::CloudSsoHandler;
-pub use subscription::CloudSubscriptionHandler;
-pub use tasks::CloudTaskHandler;
-pub use transit_gateway::CloudTransitGatewayHandler;
-pub use users::CloudUserHandler;
-
-// Re-export key types from handler modules
-pub use account::{AccountKey, AccountResponse, CloudAccount};
-pub use api_keys::{
-    ApiKey, ApiKeyAuditLogEntry, ApiKeyAuditLogsResponse, ApiKeyPermissions, ApiKeyRequest,
-    ApiKeyUsagePoint, ApiKeyUsageResponse, ApiKeysResponse,
-};
-pub use backup::{CloudBackup, CreateBackupRequest};
-pub use billing::{
-    AddPaymentMethodRequest, BillingInfo, Invoice, PaymentMethod, UpdatePaymentMethodRequest,
-};
-pub use database::{CloudDatabase, CreateDatabaseRequest, UpdateDatabaseRequest};
-pub use metrics::{CloudMetrics, Measurement, MetricValue, SubscriptionMetrics};
-pub use peering::{CloudPeering, CreatePeeringRequest};
-pub use subscription::{CloudSubscription, CreateSubscriptionRequest, UpdateSubscriptionRequest};
-
-// Additional types for backward compatibility
-pub use database::Clustering;
-pub use database::ThroughputMeasurement;
-pub use subscription::{CloudProvider, CloudProviderConfig, CloudRegion, CloudRegionConfig};
+// Handler modules will be added incrementally as we implement them from the spec
+// Each module will contain the handler struct, models, and associated methods
 
 // Re-export error types
 use thiserror::Error;
@@ -367,8 +311,26 @@ pub enum CloudError {
     #[error("HTTP request failed: {0}")]
     Request(#[from] reqwest::Error),
 
-    #[error("Authentication failed")]
-    AuthenticationFailed,
+    #[error("Bad Request (400): {message}")]
+    BadRequest { message: String },
+
+    #[error("Authentication failed (401): {message}")]
+    AuthenticationFailed { message: String },
+
+    #[error("Forbidden (403): {message}")]
+    Forbidden { message: String },
+
+    #[error("Not Found (404): {message}")]
+    NotFound { message: String },
+
+    #[error("Precondition Failed (412): Feature flag for this flow is off")]
+    PreconditionFailed,
+
+    #[error("Internal Server Error (500): {message}")]
+    InternalServerError { message: String },
+
+    #[error("Service Unavailable (503): {message}")]
+    ServiceUnavailable { message: String },
 
     #[error("API error ({code}): {message}")]
     ApiError { code: u16, message: String },
@@ -381,7 +343,3 @@ pub enum CloudError {
 }
 
 pub type Result<T> = std::result::Result<T, CloudError>;
-// Expose a `types` module that re-exports models, to mirror `redis-enterprise::types`.
-
-// Expose a `types` module that re-exports models, to mirror `redis-enterprise::types`.
-pub mod types;

@@ -1,19 +1,4 @@
-// Re-export types from handler modules for parity with redis-enterprise
-pub use crate::account::*;
-pub use crate::acl::*;
-pub use crate::api_keys::*;
-pub use crate::backup::*;
-pub use crate::billing::*;
-pub use crate::cloud_accounts::*;
-pub use crate::crdb::*;
-pub use crate::database::*;
-pub use crate::logs::*;
-pub use crate::metrics::*;
-pub use crate::peering::*;
-pub use crate::private_service_connect::*;
-pub use crate::region::*;
-pub use crate::sso::*;
-pub use crate::subscription::*;
-pub use crate::tasks::*;
-pub use crate::transit_gateway::*;
-pub use crate::users::*;
+//! Shared types for Redis Cloud API
+//!
+//! This module will re-export types from handler modules as they are implemented.
+//! For now, it's empty as we implement handlers incrementally from the OpenAPI spec.
