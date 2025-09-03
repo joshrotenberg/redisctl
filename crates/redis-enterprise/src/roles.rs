@@ -1,4 +1,9 @@
-//! Role management for Redis Enterprise
+//! Role-based access control
+//!
+//! ## Overview
+//! - Create and manage roles
+//! - Configure role permissions
+//! - Query role assignments
 
 use crate::client::RestClient;
 use crate::error::Result;

@@ -1,4 +1,9 @@
-//! Data migration operations for Redis Enterprise
+//! Database migration operations
+//!
+//! ## Overview
+//! - Perform database migrations
+//! - Track migration status
+//! - Manage migration plans
 
 use crate::client::RestClient;
 use crate::error::Result;

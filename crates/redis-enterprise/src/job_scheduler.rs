@@ -1,4 +1,9 @@
-//! Job scheduler management for Redis Enterprise
+//! Scheduled job management
+//!
+//! ## Overview
+//! - Configure scheduled jobs
+//! - Query job history
+//! - Manage job execution
 
 use crate::client::RestClient;
 use crate::error::Result;

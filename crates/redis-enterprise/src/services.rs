@@ -1,8 +1,9 @@
-//! Service configuration for Redis Enterprise
+//! Service configuration and management
 //!
-//! Overview
-//! - List/get/update services
-//! - Start/stop/restart, and retrieve service status
+//! ## Overview
+//! - Configure cluster services
+//! - Start/stop services
+//! - Query service status
 
 use crate::client::RestClient;
 use crate::error::Result;

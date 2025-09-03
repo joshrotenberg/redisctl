@@ -1,12 +1,76 @@
-//! Database (BDB) management commands for Redis Enterprise
+//! Database (BDB) management for Redis Enterprise
 //!
-//! Overview
-//! - Create, update, delete databases
-//! - Operational actions: start/stop/restart, export/import/backup/restore
-//! - Insights: endpoints, shards, metrics/stats, availability
-//! - Advanced: passwords, modules config/upgrade, traffic control
+//! ## Overview
+//! - Create, list, update, and delete databases
+//! - Execute database actions (backup, restore, import, export)
+//! - Monitor database status and metrics
+//! - Configure database endpoints and sharding
 //!
-//! Tip: For time-series metrics, also see the `StatsHandler` for aggregate queries.
+//! ## Examples
+//!
+//! ### Creating a Database
+//! ```no_run
+//! use redis_enterprise::{EnterpriseClient, BdbHandler as DatabaseHandler, CreateDatabaseRequest};
+//!
+//! # async fn example(client: EnterpriseClient) -> Result<(), Box<dyn std::error::Error>> {
+//! let handler = DatabaseHandler::new(client);
+//!
+//! // Simple cache database
+//! let cache_db = CreateDatabaseRequest::builder()
+//!     .name("my-cache")
+//!     .memory_size(1_073_741_824)  // 1GB
+//!     .eviction_policy("allkeys-lru")
+//!     .persistence("disabled")
+//!     .build();
+//!
+//! let db = handler.create(cache_db).await?;
+//! println!("Created database with ID: {}", db.uid);
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ### Database Actions
+//! ```no_run
+//! # use redis_enterprise::{EnterpriseClient, BdbHandler as DatabaseHandler};
+//! # async fn example(client: EnterpriseClient) -> Result<(), Box<dyn std::error::Error>> {
+//! let handler = DatabaseHandler::new(client);
+//! let db_id = 1;
+//!
+//! // Backup database
+//! let backup = handler.backup(db_id).await?;
+//! println!("Backup started: {:?}", backup.action_uid);
+//!
+//! // Export to remote location
+//! let export = handler.export(db_id, "ftp://backup.site/db.rdb").await?;
+//! println!("Export initiated: {:?}", export.action_uid);
+//!
+//! // Import from backup
+//! let import = handler.import(db_id, "ftp://backup.site/db.rdb", true).await?;
+//! println!("Import started: {:?}", import.action_uid);
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ### Monitoring Databases
+//! ```no_run
+//! # use redis_enterprise::{EnterpriseClient, BdbHandler as DatabaseHandler};
+//! # async fn example(client: EnterpriseClient) -> Result<(), Box<dyn std::error::Error>> {
+//! let handler = DatabaseHandler::new(client);
+//!
+//! // List all databases
+//! let databases = handler.list().await?;
+//! for db in databases {
+//!     println!("{}: {} MB used", db.name, db.memory_used.unwrap_or(0) / 1_048_576);
+//! }
+//!
+//! // Get database endpoints
+//! let endpoints = handler.endpoints(1).await?;
+//! for endpoint in endpoints {
+//!     println!("Endpoint: {:?}:{:?}", endpoint.dns_name, endpoint.port);
+//! }
+//! # Ok(())
+//! # }
+//! ```
 
 use crate::client::RestClient;
 use crate::error::Result;

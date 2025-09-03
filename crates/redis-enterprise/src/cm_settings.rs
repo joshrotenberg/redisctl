@@ -1,4 +1,9 @@
-//! Cluster Manager settings for Redis Enterprise
+//! Cluster Manager configuration
+//!
+//! ## Overview
+//! - Configure CM settings
+//! - Manage cluster-wide parameters
+//! - Query configuration status
 
 use crate::client::RestClient;
 use crate::error::Result;

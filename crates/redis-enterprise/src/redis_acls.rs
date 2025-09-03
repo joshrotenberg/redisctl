@@ -1,8 +1,9 @@
-//! Redis Access Control List (ACL) management for Redis Enterprise
+//! Redis ACL management
 //!
-//! Overview
-//! - Typed create/update/delete and list/get
-//! - Validate ACL definitions with a typed response
+//! ## Overview
+//! - Configure Redis ACLs
+//! - Manage user permissions
+//! - Query ACL rules
 
 use crate::client::RestClient;
 use crate::error::Result;

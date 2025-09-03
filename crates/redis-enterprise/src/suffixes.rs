@@ -1,4 +1,9 @@
-//! DNS suffix management for Redis Enterprise
+//! Database name suffix management
+//!
+//! ## Overview
+//! - Configure database suffixes
+//! - Manage suffix rules
+//! - Query suffix usage
 
 use crate::client::RestClient;
 use crate::error::Result;

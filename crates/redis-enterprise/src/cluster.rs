@@ -1,10 +1,51 @@
-//! Cluster management commands for Redis Enterprise
+//! Cluster management for Redis Enterprise
 //!
-//! Overview
-//! - Read: info, settings, topology, license, nodes
-//! - Actions: reset, recover, join node, policy and services configuration
-//! - Certificates and LDAP helpers
-//! - Alert detail queries
+//! ## Overview
+//! - Query cluster info, settings, topology, and license
+//! - Manage nodes (join, remove, maintenance mode)
+//! - Configure cluster policies and services
+//! - Handle certificates and LDAP configuration
+//!
+//! ## Examples
+//!
+//! ### Getting Cluster Information
+//! ```no_run
+//! use redis_enterprise::{EnterpriseClient, ClusterHandler};
+//!
+//! # async fn example(client: EnterpriseClient) -> Result<(), Box<dyn std::error::Error>> {
+//! let cluster = ClusterHandler::new(client);
+//!
+//! // Get basic cluster info
+//! let info = cluster.info().await?;
+//! println!("Cluster: {} ({})", info.name, info.version.unwrap_or_default());
+//!
+//! // Check license status
+//! let license = cluster.license().await?;
+//! println!("Licensed shards: {:?}", license.shards_limit);
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ### Node Management
+//! ```no_run
+//! # use redis_enterprise::{EnterpriseClient, ClusterHandler};
+//! # async fn example(client: EnterpriseClient) -> Result<(), Box<dyn std::error::Error>> {
+//! let cluster = ClusterHandler::new(client);
+//!
+//! // Join a new node to the cluster
+//! let result = cluster.join_node(
+//!     "192.168.1.100",
+//!     "admin",
+//!     "password"
+//! ).await?;
+//! println!("Node joined: {:?}", result);
+//!
+//! // Remove a node
+//! let action = cluster.remove_node(3).await?;
+//! println!("Removal started: {:?}", action);
+//! # Ok(())
+//! # }
+//! ```
 
 use crate::client::RestClient;
 use crate::error::Result;

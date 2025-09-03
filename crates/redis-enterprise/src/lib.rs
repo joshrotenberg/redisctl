@@ -33,6 +33,23 @@
 //! - `REDIS_ENTERPRISE_PASSWORD`: Password for authentication
 //! - `REDIS_ENTERPRISE_INSECURE`: Set to `true` to skip SSL verification (dev only)
 //!
+//! # Module Organization
+//!
+//! The library is organized into domain-specific modules:
+//!
+//! - **Core Resources**: [`bdb`], [`cluster`], [`nodes`], [`users`], [`roles`]
+//! - **Monitoring**: [`stats`], [`alerts`], [`logs`], [`diagnostics`]
+//! - **Advanced**: [`crdb`], [`shards`], [`proxies`], [`redis_acls`]
+//! - **Configuration**: [`services`], [`cm_settings`], [`suffixes`]
+//!
+//! # Return Types
+//!
+//! Most methods return strongly-typed structs. Methods returning `serde_json::Value`:
+//! - **Stats/Metrics**: Dynamic keys based on metric names
+//! - **Legacy endpoints**: `start()`, `stop()` - use typed action methods instead
+//! - **Variable schemas**: Endpoints with version-dependent responses
+//! - **Passthrough access**: For direct API access via the CLI
+//!
 //! # Examples
 //!
 //! ## Creating a Client

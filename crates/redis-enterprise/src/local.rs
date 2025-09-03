@@ -1,4 +1,9 @@
-//! Local node and services endpoints
+//! Local node operations and health checks
+//!
+//! ## Overview
+//! - Query local node status
+//! - Perform health checks
+//! - Manage local services
 
 use crate::client::RestClient;
 use crate::error::Result;
