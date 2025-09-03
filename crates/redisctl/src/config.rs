@@ -6,7 +6,7 @@
 #![allow(dead_code)] // Foundation code - will be used in future PRs
 
 use anyhow::{Context, Result};
-use directories::ProjectDirs;
+use directories::{BaseDirs, ProjectDirs};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -204,7 +204,37 @@ impl Config {
     }
 
     /// Get the path to the configuration file
+    ///
+    /// On macOS, this supports both the standard macOS path and Linux-style ~/.config path:
+    /// 1. Check ~/.config/redisctl/config.toml (Linux-style, preferred for consistency)
+    /// 2. Fall back to ~/Library/Application Support/com.redis.redisctl/config.toml (macOS standard)
+    ///
+    /// On Linux: ~/.config/redisctl/config.toml
+    /// On Windows: %APPDATA%\redis\redisctl\config.toml
     pub fn config_path() -> Result<PathBuf> {
+        // On macOS, check for Linux-style path first for cross-platform consistency
+        #[cfg(target_os = "macos")]
+        {
+            if let Some(base_dirs) = BaseDirs::new() {
+                let home_dir = base_dirs.home_dir();
+                let linux_style_path = home_dir
+                    .join(".config")
+                    .join("redisctl")
+                    .join("config.toml");
+
+                // If Linux-style config exists, use it
+                if linux_style_path.exists() {
+                    return Ok(linux_style_path);
+                }
+
+                // Also check if the config directory exists (user might have created it)
+                if linux_style_path.parent().is_some_and(|p| p.exists()) {
+                    return Ok(linux_style_path);
+                }
+            }
+        }
+
+        // Use platform-specific standard path
         let proj_dirs = ProjectDirs::from("com", "redis", "redisctl")
             .context("Failed to determine config directory")?;
 
