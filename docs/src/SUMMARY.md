@@ -69,6 +69,11 @@
   - [logs](./cli-reference/enterprise/logs.md)
   - [stats](./cli-reference/enterprise/stats.md)
 
+# Libraries
+- [Overview](./libraries/README.md)
+  - [Redis Cloud Library](./libraries/redis-cloud.md)
+  - [Redis Enterprise Library](./libraries/redis-enterprise.md)
+
 # Workflows
 - [Cluster Bootstrap](./workflows/cluster-bootstrap.md)
 - [Database Creation](./workflows/database-creation.md)
