@@ -124,7 +124,15 @@ impl Config {
         let content = fs::read_to_string(&config_path)
             .with_context(|| format!("Failed to read config from {:?}", config_path))?;
 
-        toml::from_str(&content)
+        // Expand environment variables in the config content
+        let expanded_content = Self::expand_env_vars(&content).with_context(|| {
+            format!(
+                "Failed to expand environment variables in config from {:?}",
+                config_path
+            )
+        })?;
+
+        toml::from_str(&expanded_content)
             .with_context(|| format!("Failed to parse config from {:?}", config_path))
     }
 
@@ -240,6 +248,27 @@ impl Config {
 
         Ok(proj_dirs.config_dir().join("config.toml"))
     }
+
+    /// Expand environment variables in configuration content
+    ///
+    /// Supports ${VAR} and ${VAR:-default} syntax for environment variable expansion.
+    /// This allows configs to reference environment variables while maintaining
+    /// static fallback values.
+    ///
+    /// Example:
+    /// ```toml
+    /// api_key = "${REDIS_CLOUD_API_KEY}"
+    /// api_url = "${REDIS_CLOUD_API_URL:-https://api.redislabs.com/v1}"
+    /// ```
+    fn expand_env_vars(content: &str) -> Result<String> {
+        match shellexpand::env(content) {
+            Ok(expanded) => Ok(expanded.to_string()),
+            Err(e) => Err(anyhow::anyhow!(
+                "Environment variable expansion failed: {}",
+                e
+            )),
+        }
+    }
 }
 
 fn default_cloud_url() -> String {
@@ -289,5 +318,116 @@ mod tests {
         assert_eq!(secret, "secret");
         assert_eq!(url, "url");
         assert!(cloud_profile.enterprise_credentials().is_none());
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn test_env_var_expansion() {
+        // Test basic environment variable expansion
+        unsafe {
+            std::env::set_var("TEST_API_KEY", "test-key-value");
+            std::env::set_var("TEST_API_SECRET", "test-secret-value");
+        }
+
+        let content = r#"
+[profiles.test]
+deployment_type = "cloud"
+api_key = "${TEST_API_KEY}"
+api_secret = "${TEST_API_SECRET}"
+"#;
+
+        let expanded = Config::expand_env_vars(content).unwrap();
+        assert!(expanded.contains("test-key-value"));
+        assert!(expanded.contains("test-secret-value"));
+
+        // Clean up
+        unsafe {
+            std::env::remove_var("TEST_API_KEY");
+            std::env::remove_var("TEST_API_SECRET");
+        }
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn test_env_var_expansion_with_defaults() {
+        // Test environment variable expansion with defaults
+        unsafe {
+            std::env::remove_var("NONEXISTENT_VAR"); // Ensure it doesn't exist
+        }
+
+        let content = r#"
+[profiles.test]
+deployment_type = "cloud"
+api_key = "${NONEXISTENT_VAR:-default-key}"
+api_url = "${NONEXISTENT_URL:-https://api.redislabs.com/v1}"
+"#;
+
+        let expanded = Config::expand_env_vars(content).unwrap();
+        assert!(expanded.contains("default-key"));
+        assert!(expanded.contains("https://api.redislabs.com/v1"));
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn test_env_var_expansion_mixed() {
+        // Test mixed static and dynamic values
+        unsafe {
+            std::env::set_var("TEST_DYNAMIC_KEY", "dynamic-value");
+        }
+
+        let content = r#"
+[profiles.test]
+deployment_type = "cloud"
+api_key = "${TEST_DYNAMIC_KEY}"
+api_secret = "static-secret"
+api_url = "${MISSING_VAR:-https://api.redislabs.com/v1}"
+"#;
+
+        let expanded = Config::expand_env_vars(content).unwrap();
+        assert!(expanded.contains("dynamic-value"));
+        assert!(expanded.contains("static-secret"));
+        assert!(expanded.contains("https://api.redislabs.com/v1"));
+
+        // Clean up
+        unsafe {
+            std::env::remove_var("TEST_DYNAMIC_KEY");
+        }
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn test_full_config_with_env_expansion() {
+        // Test complete config parsing with environment variables
+        unsafe {
+            std::env::set_var("REDIS_TEST_KEY", "expanded-key");
+            std::env::set_var("REDIS_TEST_SECRET", "expanded-secret");
+        }
+
+        let config_content = r#"
+default_profile = "test"
+
+[profiles.test]
+deployment_type = "cloud"
+api_key = "${REDIS_TEST_KEY}"
+api_secret = "${REDIS_TEST_SECRET}"
+api_url = "${REDIS_TEST_URL:-https://api.redislabs.com/v1}"
+"#;
+
+        let expanded = Config::expand_env_vars(config_content).unwrap();
+        let config: Config = toml::from_str(&expanded).unwrap();
+
+        assert_eq!(config.default_profile, Some("test".to_string()));
+
+        let profile = config.profiles.get("test").unwrap();
+        let (key, secret, url) = profile.cloud_credentials().unwrap();
+        assert_eq!(key, "expanded-key");
+        assert_eq!(secret, "expanded-secret");
+        assert_eq!(url, "https://api.redislabs.com/v1");
+
+        // Clean up
+        unsafe {
+            std::env::remove_var("REDIS_TEST_KEY");
+            std::env::remove_var("REDIS_TEST_SECRET");
+        }
     }
 }

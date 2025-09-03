@@ -41,6 +41,7 @@ jmespath = { workspace = true }
 config = { workspace = true }
 toml = { workspace = true }
 directories = { workspace = true }
+shellexpand = "3.1"
 
 # Conditional dependencies for feature-gated binaries
 [features]
@@ -54,6 +55,7 @@ assert_cmd = "2.0"
 predicates = "3.0"
 tempfile = "3.8"
 criterion = "0.5"
+serial_test = "3.1"
 
 [[bench]]
 name = "api_performance"
