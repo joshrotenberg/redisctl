@@ -478,8 +478,9 @@ async fn test_acl_list_error() {
 async fn test_acl_create_validation_error() {
     let mock_server = MockServer::start().await;
     let request_body = json!({
-        "rule": "",
-        "name": ""
+        "name": "",
+        "redis_rule_id": 0,
+        "is_active": true
     });
 
     Mock::given(method("POST"))
@@ -493,7 +494,7 @@ async fn test_acl_create_validation_error() {
                 "error": {
                     "type": "VALIDATION_ERROR",
                     "status": 400,
-                    "description": "Rule and name are required fields"
+                    "description": "redis_rule_id and name are required fields"
                 }
             }),
         ))
@@ -502,7 +503,11 @@ async fn test_acl_create_validation_error() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let req: redis_cloud::models::acl::CreateDatabaseAclRequest = serde_json::from_value(request_body).unwrap();
+    let req = redis_cloud::models::acl::CreateDatabaseAclRequest {
+        name: "".to_string(),
+        redis_rule_id: 0,
+        is_active: true,
+    };
     let result = handler.create(12345, 67890, req).await;
 
     assert!(result.is_err());
