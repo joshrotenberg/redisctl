@@ -1,12 +1,51 @@
 //! SSO/SAML configuration handler
 
-use crate::{
-    Result,
-    client::CloudClient,
-    models::{
-        SamlConfig, SamlMetadata, SsoConfig, SsoGroupMapping, SsoTestResponse, SsoUserMapping,
-    },
-};
+use crate::{Result, client::CloudClient};
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SsoConfig {
+    pub enabled: bool,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SamlConfig {
+    pub enabled: bool,
+    pub metadata: Option<String>,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SamlMetadata {
+    pub metadata: String,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SsoUserMapping {
+    pub user_id: String,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SsoGroupMapping {
+    pub group_name: String,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SsoTestResponse {
+    pub success: bool,
+    #[serde(flatten)]
+    pub extra: Value,
+}
 
 /// Handler for Cloud SSO/SAML operations
 pub struct CloudSsoHandler {

@@ -133,7 +133,7 @@ async fn test_database_acl_create() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let req: redis_cloud::models::acl::CreateDatabaseAclRequest =
+    let req: redis_cloud::acl::CreateDatabaseAclRequest =
         serde_json::from_value(request_body).unwrap();
     let result = handler.create(12345, 67890, req).await;
 
@@ -171,7 +171,7 @@ async fn test_database_acl_update() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let req: redis_cloud::models::acl::UpdateDatabaseAclRequest =
+    let req: redis_cloud::acl::UpdateDatabaseAclRequest =
         serde_json::from_value(request_body).unwrap();
     let result = handler.update(12345, 67890, 1, req).await;
 
@@ -286,8 +286,7 @@ async fn test_acl_user_create() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let req: redis_cloud::models::acl::CreateAclUserRequest =
-        serde_json::from_value(request_body).unwrap();
+    let req: redis_cloud::acl::CreateAclUserRequest = serde_json::from_value(request_body).unwrap();
     let result = handler.create_user(req).await;
 
     assert!(result.is_ok());
@@ -370,8 +369,7 @@ async fn test_acl_role_create() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let req: redis_cloud::models::acl::CreateAclRoleRequest =
-        serde_json::from_value(request_body).unwrap();
+    let req: redis_cloud::acl::CreateAclRoleRequest = serde_json::from_value(request_body).unwrap();
     let result = handler.create_role(req).await;
 
     assert!(result.is_ok());
@@ -440,7 +438,7 @@ async fn test_redis_rule_create() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let req: redis_cloud::models::acl::CreateRedisRuleRequest =
+    let req: redis_cloud::acl::CreateRedisRuleRequest =
         serde_json::from_value(request_body).unwrap();
     let result = handler.create_redis_rule(req).await;
 
@@ -508,7 +506,7 @@ async fn test_acl_create_validation_error() {
 
     let client = create_test_client(mock_server.uri());
     let handler = CloudAclHandler::new(client);
-    let req = redis_cloud::models::acl::CreateDatabaseAclRequest {
+    let req = redis_cloud::acl::CreateDatabaseAclRequest {
         name: "".to_string(),
         redis_rule_id: 0,
         is_active: true,

@@ -1,11 +1,40 @@
 //! Metrics operations handler
 
-use crate::{
-    Result,
-    client::CloudClient,
-    models::{CloudMetrics, SubscriptionMetrics},
-};
+use crate::{Result, client::CloudClient};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CloudMetrics {
+    pub database_id: u32,
+    pub subscription_id: u32,
+    pub measurements: Vec<Measurement>,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Measurement {
+    pub name: String,
+    pub value: MetricValue,
+    pub timestamp: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum MetricValue {
+    Number(f64),
+    String(String),
+    Array(Vec<f64>),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SubscriptionMetrics {
+    pub subscription_id: u32,
+    pub metrics: Vec<CloudMetrics>,
+    #[serde(flatten)]
+    pub extra: Value,
+}
 
 /// Handler for Cloud metrics operations
 pub struct CloudMetricsHandler {

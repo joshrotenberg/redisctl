@@ -290,7 +290,6 @@
 //! - Optional: set a custom base URL via the builder for non‑prod/test environments (defaults to `https://api.redislabs.com/v1`).
 
 pub mod client;
-pub mod models;
 
 #[cfg(test)]
 mod lib_tests;
@@ -340,44 +339,25 @@ pub use tasks::CloudTaskHandler;
 pub use transit_gateway::CloudTransitGatewayHandler;
 pub use users::CloudUserHandler;
 
-// Re-export models explicitly
-pub use models::{
-    // Account models
-    AccountKey,
-    // API keys models
-    ApiKey,
-    ApiKeyAuditLogEntry,
-    ApiKeyAuditLogsResponse,
-    ApiKeyPermissions,
-    ApiKeyRequest,
-    ApiKeyUsagePoint,
-    ApiKeyUsageResponse,
-    ApiKeysResponse,
-    CloudAccount,
-    // Backup models
-    CloudBackup,
-    // Database models
-    CloudDatabase,
-    // Metrics models
-    CloudMetrics,
-    // Peering models
-    CloudPeering,
-    // Subscription models
-    CloudProvider,
-    CloudProviderConfig,
-    CloudRegion,
-    CloudRegionConfig,
-    CloudSubscription,
-    CreateBackupRequest,
-    CreateDatabaseRequest,
-    CreatePeeringRequest,
-    CreateSubscriptionRequest,
-    Measurement,
-    MetricValue,
-    ThroughputMeasurement,
-    UpdateDatabaseRequest,
-    UpdateSubscriptionRequest,
+// Re-export key types from handler modules
+pub use account::{AccountKey, AccountResponse, CloudAccount};
+pub use api_keys::{
+    ApiKey, ApiKeyAuditLogEntry, ApiKeyAuditLogsResponse, ApiKeyPermissions, ApiKeyRequest,
+    ApiKeyUsagePoint, ApiKeyUsageResponse, ApiKeysResponse,
 };
+pub use backup::{CloudBackup, CreateBackupRequest};
+pub use billing::{
+    AddPaymentMethodRequest, BillingInfo, Invoice, PaymentMethod, UpdatePaymentMethodRequest,
+};
+pub use database::{CloudDatabase, CreateDatabaseRequest, UpdateDatabaseRequest};
+pub use metrics::{CloudMetrics, SubscriptionMetrics, Measurement, MetricValue};
+pub use peering::{CloudPeering, CreatePeeringRequest};
+pub use subscription::{CloudSubscription, CreateSubscriptionRequest, UpdateSubscriptionRequest};
+
+// Additional types for backward compatibility
+pub use database::Clustering;
+pub use subscription::{CloudProvider, CloudProviderConfig, CloudRegion, CloudRegionConfig};
+pub use database::ThroughputMeasurement;
 
 // Re-export error types
 use thiserror::Error;

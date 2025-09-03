@@ -1,7 +1,17 @@
 //! Region operations handler
 
-use crate::{Result, client::CloudClient, models::RegionInfo};
+use crate::{Result, client::CloudClient};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RegionInfo {
+    pub region: String,
+    pub provider: String,
+    pub availability_zones: Option<Vec<String>>,
+    #[serde(flatten)]
+    pub extra: Value,
+}
 
 /// Handler for Cloud regions
 pub struct CloudRegionHandler {

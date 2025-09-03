@@ -2,40 +2,151 @@
 //!
 //! This module provides comprehensive billing and payment management for Redis Cloud,
 //! including invoice management, payment method handling, cost analysis, and usage reporting.
-//!
-//! # Examples
-//!
-//! ```rust,no_run
-//! use redis_cloud::{CloudClient, CloudBillingHandler};
-//! use serde_json::json;
-//!
-//! # #[tokio::main]
-//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let client = CloudClient::builder()
-//!     .api_key("your-api-key")
-//!     .api_secret("your-api-secret")
-//!     .build()?;
-//!
-//! let billing_handler = CloudBillingHandler::new(client);
-//!
-//! // Get current billing information
-//! let billing_info = billing_handler.get_info().await?;
-//!
-//! // List all invoices
-//! let invoices = billing_handler.list_invoices().await?;
-//!
-//! // Get usage report for date range
-//! let usage = billing_handler.get_usage("2024-01-01", "2024-01-31").await?;
-//!
-//! // List payment methods
-//! let payment_methods = billing_handler.list_payment_methods().await?;
-//! # Ok(())
-//! # }
-//! ```
 
-use crate::models::billing::*;
 use crate::{Result, client::CloudClient};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use typed_builder::TypedBuilder;
+
+/// Billing information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BillingInfo {
+    pub account_id: Option<u32>,
+    pub balance: Option<f64>,
+    pub currency: Option<String>,
+    pub billing_cycle: Option<String>,
+    pub next_billing_date: Option<String>,
+    pub payment_method_id: Option<u32>,
+    pub status: Option<String>,
+
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+/// Invoice information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Invoice {
+    pub id: String,
+    pub invoice_number: Option<String>,
+    pub date: String,
+    pub due_date: Option<String>,
+    pub amount: f64,
+    pub currency: String,
+    pub status: String,
+    pub payment_status: Option<String>,
+    pub period_start: Option<String>,
+    pub period_end: Option<String>,
+    pub items: Option<Vec<InvoiceItem>>,
+
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+/// Invoice line item
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InvoiceItem {
+    pub description: String,
+    pub quantity: Option<f64>,
+    pub unit_price: Option<f64>,
+    pub amount: f64,
+    pub resource_type: Option<String>,
+    pub resource_id: Option<String>,
+
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+/// Payment method information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PaymentMethod {
+    #[serde(rename = "id")]
+    pub id: String,
+    #[serde(rename = "type")]
+    pub method_type: String,
+    pub is_default: bool,
+    pub created_at: Option<String>,
+    pub updated_at: Option<String>,
+    #[serde(rename = "last4")]
+    pub last_four: Option<String>,
+    #[serde(rename = "expiryMonth")]
+    pub expiry_month: Option<u8>,
+    #[serde(rename = "expiryYear")]
+    pub expiry_year: Option<u16>,
+    #[serde(rename = "cardType")]
+    pub card_brand: Option<String>,
+    #[serde(rename = "billingAddress")]
+    pub billing_address: Option<BillingAddress>,
+
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+/// Billing address
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BillingAddress {
+    pub line1: Option<String>,
+    pub line2: Option<String>,
+    pub city: Option<String>,
+    pub state: Option<String>,
+    #[serde(rename = "postalCode")]
+    pub postal_code: Option<String>,
+    pub country: Option<String>,
+
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+/// Request to add a payment method
+#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
+pub struct AddPaymentMethodRequest {
+    #[serde(rename = "type")]
+    pub method_type: String,
+    #[builder(default, setter(strip_option))]
+    #[serde(rename = "cardNumber")]
+    pub card_number: Option<String>,
+    #[builder(default, setter(strip_option))]
+    #[serde(rename = "expiryMonth")]
+    pub expiry_month: Option<u8>,
+    #[builder(default, setter(strip_option))]
+    #[serde(rename = "expiryYear")]
+    pub expiry_year: Option<u16>,
+    #[builder(default, setter(strip_option))]
+    #[serde(rename = "cvc")]
+    pub cvv: Option<String>,
+    #[builder(default, setter(strip_option))]
+    #[serde(rename = "billingAddress")]
+    pub billing_address: Option<BillingAddress>,
+    #[builder(default, setter(strip_option))]
+    #[serde(rename = "setAsDefault")]
+    pub set_as_default: Option<bool>,
+}
+
+/// Request to update a payment method
+#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
+pub struct UpdatePaymentMethodRequest {
+    #[builder(default, setter(strip_option))]
+    #[serde(rename = "expiryMonth")]
+    pub expiry_month: Option<u8>,
+    #[builder(default, setter(strip_option))]
+    #[serde(rename = "expiryYear")]
+    pub expiry_year: Option<u16>,
+    #[builder(default, setter(strip_option))]
+    #[serde(rename = "billingAddress")]
+    pub billing_address: Option<BillingAddress>,
+}
+
+/// Request to update billing alerts
+#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
+pub struct UpdateBillingAlertsRequest {
+    #[builder(default, setter(strip_option))]
+    pub enabled: Option<bool>,
+    #[builder(default, setter(strip_option))]
+    pub threshold_amount: Option<f64>,
+    #[builder(default, setter(strip_option))]
+    pub notification_emails: Option<Vec<String>>,
+    #[builder(default, setter(strip_option))]
+    pub alert_frequency: Option<String>,
+}
 
 /// Handler for Cloud billing and payment operations
 ///

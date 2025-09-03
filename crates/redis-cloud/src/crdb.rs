@@ -1,10 +1,41 @@
 //! Active-Active (CRDB) database operations handler
 
-use crate::{
-    Result,
-    client::CloudClient,
-    models::{CloudCrdb, CloudCrdbRegion, CrdbMetrics, CrdbTask},
-};
+use crate::{Result, client::CloudClient};
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CloudCrdb {
+    pub id: u32,
+    pub name: String,
+    pub status: String,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CloudCrdbRegion {
+    pub region: String,
+    pub provider: String,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CrdbMetrics {
+    pub timestamp: String,
+    pub value: f64,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CrdbTask {
+    pub task_id: String,
+    pub status: String,
+    #[serde(flatten)]
+    pub extra: Value,
+}
 
 /// Handler for Cloud Active-Active database operations
 pub struct CloudCrdbHandler {

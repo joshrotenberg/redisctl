@@ -1,8 +1,46 @@
 //! Logs operations handler
 
-use crate::models::logs::*;
 use crate::{Result, client::CloudClient};
-// no additional imports
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LogEntry {
+    pub timestamp: String,
+    pub level: String,
+    pub message: String,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LogsResponse {
+    pub logs: Vec<LogEntry>,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SystemLogsResponse {
+    pub logs: Vec<LogEntry>,
+    pub total: Option<u32>,
+    pub limit: Option<u32>,
+    pub offset: Option<u32>,
+    pub pagination: Option<Value>,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionLogsResponse {
+    pub logs: Vec<LogEntry>,
+    pub total: Option<u32>,
+    pub limit: Option<u32>,
+    pub offset: Option<u32>,
+    pub pagination: Option<Value>,
+    #[serde(flatten)]
+    pub extra: Value,
+}
 
 /// Handler for Cloud logs operations
 pub struct CloudLogsHandler {
@@ -73,17 +111,17 @@ impl CloudLogsHandler {
         if resp.total.is_none()
             && let Some(p) = &resp.pagination
         {
-            resp.total = p.total;
+            resp.total = p.get("total").and_then(|v| v.as_u64()).map(|v| v as u32);
         }
         if resp.limit.is_none()
             && let Some(p) = &resp.pagination
         {
-            resp.limit = p.limit;
+            resp.limit = p.get("limit").and_then(|v| v.as_u64()).map(|v| v as u32);
         }
         if resp.offset.is_none()
             && let Some(p) = &resp.pagination
         {
-            resp.offset = p.offset;
+            resp.offset = p.get("offset").and_then(|v| v.as_u64()).map(|v| v as u32);
         }
         Ok(resp)
     }
@@ -117,17 +155,17 @@ impl CloudLogsHandler {
         if resp.total.is_none()
             && let Some(p) = &resp.pagination
         {
-            resp.total = p.total;
+            resp.total = p.get("total").and_then(|v| v.as_u64()).map(|v| v as u32);
         }
         if resp.limit.is_none()
             && let Some(p) = &resp.pagination
         {
-            resp.limit = p.limit;
+            resp.limit = p.get("limit").and_then(|v| v.as_u64()).map(|v| v as u32);
         }
         if resp.offset.is_none()
             && let Some(p) = &resp.pagination
         {
-            resp.offset = p.offset;
+            resp.offset = p.get("offset").and_then(|v| v.as_u64()).map(|v| v as u32);
         }
         Ok(resp)
     }

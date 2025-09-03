@@ -1,11 +1,35 @@
 //! VPC Peering operations handler
 
-use crate::{
-    Result,
-    client::CloudClient,
-    models::{CloudPeering, CreatePeeringRequest},
-};
+use crate::{Result, client::CloudClient};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CloudPeering {
+    pub id: u32,
+    pub name: String,
+    pub status: String,
+    pub peering_id: String,
+    pub subscription_id: u32,
+    pub provider_peering_id: Option<String>,
+    pub aws_account_id: Option<String>,
+    pub vpc_id: Option<String>,
+    pub vpc_cidr: Option<String>,
+    pub region: Option<String>,
+    #[serde(flatten)]
+    pub extra: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreatePeeringRequest {
+    pub name: String,
+    pub provider: String,
+    pub aws_account_id: Option<String>,
+    pub vpc_id: Option<String>,
+    pub vpc_cidr: Option<String>,
+    pub region: String,
+    pub subscription_id: u32,
+}
 
 /// Handler for Cloud peering operations
 pub struct CloudPeeringHandler {
