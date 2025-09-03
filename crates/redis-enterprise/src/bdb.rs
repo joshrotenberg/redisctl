@@ -549,7 +549,7 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Recover database - POST (typed)
+    /// Recover database - POST
     pub async fn recover(&self, uid: u32) -> Result<DatabaseActionResponse> {
         self.client
             .post(
@@ -559,7 +559,7 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Resume traffic - POST (typed)
+    /// Resume traffic - POST
     pub async fn resume_traffic(&self, uid: u32) -> Result<DatabaseActionResponse> {
         self.client
             .post(
@@ -569,7 +569,7 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Stop traffic - POST (typed)
+    /// Stop traffic - POST
     pub async fn stop_traffic(&self, uid: u32) -> Result<DatabaseActionResponse> {
         self.client
             .post(
@@ -579,7 +579,7 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Rebalance database - PUT (typed)
+    /// Rebalance database - PUT
     pub async fn rebalance(&self, uid: u32) -> Result<DatabaseActionResponse> {
         self.client
             .put(
@@ -589,7 +589,7 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Revamp database - PUT (typed)
+    /// Revamp database - PUT
     pub async fn revamp(&self, uid: u32) -> Result<DatabaseActionResponse> {
         self.client
             .put(

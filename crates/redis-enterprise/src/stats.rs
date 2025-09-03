@@ -87,7 +87,7 @@ impl StatsHandler {
         }
     }
 
-    /// Get cluster stats for last interval - typed version
+    /// Get cluster stats for last interval
     pub async fn cluster_last(&self) -> Result<LastStatsResponse> {
         self.client.get("/v1/cluster/stats/last").await
     }
@@ -106,7 +106,7 @@ impl StatsHandler {
         }
     }
 
-    /// Get node stats for last interval - typed version
+    /// Get node stats for last interval
     pub async fn node_last(&self, uid: u32) -> Result<LastStatsResponse> {
         self.client
             .get(&format!("/v1/nodes/{}/stats/last", uid))
@@ -115,7 +115,7 @@ impl StatsHandler {
 
     // raw variant removed: use node_last()
 
-    /// Get all nodes stats - typed version
+    /// Get all nodes stats
     pub async fn nodes(&self, query: Option<StatsQuery>) -> Result<AggregatedStatsResponse> {
         if let Some(q) = query {
             let query_str = serde_urlencoded::to_string(&q).unwrap_or_default();
@@ -129,19 +129,19 @@ impl StatsHandler {
 
     // raw variant removed: use nodes()
 
-    /// Get all nodes last stats - typed version
+    /// Get all nodes last stats
     pub async fn nodes_last(&self) -> Result<AggregatedStatsResponse> {
         self.client.get("/v1/nodes/stats/last").await
     }
 
     // raw variant removed: use nodes_last()
 
-    /// Get node stats via alternate path form - typed version
+    /// Get node stats via alternate path form
     pub async fn node_alt(&self, uid: u32) -> Result<StatsResponse> {
         self.client.get(&format!("/v1/nodes/stats/{}", uid)).await
     }
 
-    /// Get node last stats via alternate path form - typed version
+    /// Get node last stats via alternate path form
     pub async fn node_last_alt(&self, uid: u32) -> Result<LastStatsResponse> {
         self.client
             .get(&format!("/v1/nodes/stats/last/{}", uid))
@@ -160,7 +160,7 @@ impl StatsHandler {
         }
     }
 
-    /// Get database stats for last interval - typed version
+    /// Get database stats for last interval
     pub async fn database_last(&self, uid: u32) -> Result<LastStatsResponse> {
         self.client
             .get(&format!("/v1/bdbs/{}/stats/last", uid))
@@ -169,7 +169,7 @@ impl StatsHandler {
 
     // raw variant removed: use database_last()
 
-    /// Get all databases stats - typed version
+    /// Get all databases stats
     pub async fn databases(&self, query: Option<StatsQuery>) -> Result<AggregatedStatsResponse> {
         if let Some(q) = query {
             let query_str = serde_urlencoded::to_string(&q).unwrap_or_default();
@@ -183,19 +183,19 @@ impl StatsHandler {
 
     // raw variant removed: use databases()
 
-    /// Get all databases last stats (aggregate) - typed version
+    /// Get all databases last stats (aggregate)
     pub async fn databases_last(&self) -> Result<AggregatedStatsResponse> {
         self.client.get("/v1/bdbs/stats/last").await
     }
 
     // raw variant removed: use databases_last()
 
-    /// Get database stats via alternate path form - typed version
+    /// Get database stats via alternate path form
     pub async fn database_alt(&self, uid: u32) -> Result<StatsResponse> {
         self.client.get(&format!("/v1/bdbs/stats/{}", uid)).await
     }
 
-    /// Get database last stats via alternate path form - typed version
+    /// Get database last stats via alternate path form
     pub async fn database_last_alt(&self, uid: u32) -> Result<LastStatsResponse> {
         self.client
             .get(&format!("/v1/bdbs/stats/last/{}", uid))
@@ -214,7 +214,7 @@ impl StatsHandler {
         }
     }
 
-    /// Get all shards stats - typed version
+    /// Get all shards stats
     pub async fn shards(&self, query: Option<StatsQuery>) -> Result<AggregatedStatsResponse> {
         if let Some(q) = query {
             let query_str = serde_urlencoded::to_string(&q).unwrap_or_default();

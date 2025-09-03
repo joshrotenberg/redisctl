@@ -74,7 +74,7 @@ impl CloudCrdbHandler {
         CloudCrdbHandler { client }
     }
 
-    /// List all Active-Active databases (typed)
+    /// List all Active-Active databases
     pub async fn list(&self) -> Result<Vec<CloudCrdb>> {
         let v: serde_json::Value = self.client.get("/crdb").await?;
         if v.is_array() {

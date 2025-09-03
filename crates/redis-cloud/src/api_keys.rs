@@ -157,13 +157,13 @@ impl CloudApiKeyHandler {
         CloudApiKeyHandler { client }
     }
 
-    /// List all API keys (typed)
+    /// List all API keys
     pub async fn list(&self) -> Result<Vec<ApiKey>> {
         let resp: ApiKeysResponse = self.client.get("/api-keys").await?;
         Ok(resp.api_keys)
     }
 
-    /// Get API key by ID (typed)
+    /// Get API key by ID
     pub async fn get(&self, key_id: u32) -> Result<ApiKey> {
         let v: Value = self.client.get(&format!("/api-keys/{}", key_id)).await?;
         if let Some(obj) = v.get("apiKey") {
@@ -173,7 +173,7 @@ impl CloudApiKeyHandler {
         }
     }
 
-    /// Create API key (typed)
+    /// Create API key
     pub async fn create(&self, request: &serde_json::Value) -> Result<ApiKey> {
         let v: Value = self.client.post("/api-keys", request).await?;
         if let Some(obj) = v.get("apiKey") {
@@ -183,7 +183,7 @@ impl CloudApiKeyHandler {
         }
     }
 
-    /// Update API key (typed)
+    /// Update API key
     pub async fn update(&self, key_id: u32, request: &serde_json::Value) -> Result<ApiKey> {
         let v: Value = self
             .client
@@ -211,7 +211,7 @@ impl CloudApiKeyHandler {
         Ok(v.get("apiKey").cloned().unwrap_or(v))
     }
 
-    /// Get API key permissions (typed)
+    /// Get API key permissions
     pub async fn get_permissions(&self, key_id: u32) -> Result<ApiKeyPermissions> {
         let v: Value = self
             .client
@@ -224,7 +224,7 @@ impl CloudApiKeyHandler {
         }
     }
 
-    /// Update API key permissions (typed)
+    /// Update API key permissions
     pub async fn update_permissions(
         &self,
         key_id: u32,
@@ -259,7 +259,7 @@ impl CloudApiKeyHandler {
         Ok(v.get("apiKey").cloned().unwrap_or(v))
     }
 
-    /// Get API key usage statistics (typed)
+    /// Get API key usage statistics
     pub async fn get_usage(&self, key_id: u32, period: &str) -> Result<ApiKeyUsageSummary> {
         let v: Value = self
             .client
@@ -269,7 +269,7 @@ impl CloudApiKeyHandler {
         serde_json::from_value(inner).map_err(Into::into)
     }
 
-    /// List API key audit logs (typed)
+    /// List API key audit logs
     pub async fn get_audit_logs(&self, key_id: u32) -> Result<ApiKeyAuditLogsResponse> {
         let v: Value = self
             .client

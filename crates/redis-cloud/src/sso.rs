@@ -57,7 +57,7 @@ impl CloudSsoHandler {
         CloudSsoHandler { client }
     }
 
-    /// Get SSO configuration (typed)
+    /// Get SSO configuration
     pub async fn get(&self) -> Result<SsoConfig> {
         let v: serde_json::Value = self.client.get("/sso").await?;
         if let Some(obj) = v.get("sso") {
@@ -67,7 +67,7 @@ impl CloudSsoHandler {
         }
     }
 
-    /// Update SSO configuration (typed)
+    /// Update SSO configuration
     pub async fn update(&self, request: serde_json::Value) -> Result<SsoConfig> {
         let v: serde_json::Value = self.client.put("/sso", &request).await?;
         if let Some(obj) = v.get("sso") {
