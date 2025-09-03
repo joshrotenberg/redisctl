@@ -9,6 +9,7 @@ use anyhow::Context;
 use serde_json::Value;
 
 /// Parameters for API command execution
+#[allow(dead_code)] // Used by binary target
 pub struct ApiCommandParams {
     pub config: Config,
     pub profile_name: Option<String>,
@@ -21,6 +22,7 @@ pub struct ApiCommandParams {
 }
 
 /// Handle raw API commands
+#[allow(dead_code)] // Used by binary target
 pub async fn handle_api_command(params: ApiCommandParams) -> CliResult<()> {
     let connection_manager = ConnectionManager::new(params.config);
 
@@ -53,6 +55,7 @@ pub async fn handle_api_command(params: ApiCommandParams) -> CliResult<()> {
 }
 
 /// Handle Cloud API calls
+#[allow(dead_code)] // Used by binary target
 async fn handle_cloud_api(
     connection_manager: ConnectionManager,
     profile_name: Option<&str>,
@@ -137,6 +140,7 @@ async fn handle_cloud_api(
 }
 
 /// Handle Enterprise API calls
+#[allow(dead_code)] // Used by binary target
 async fn handle_enterprise_api(
     connection_manager: ConnectionManager,
     profile_name: Option<&str>,

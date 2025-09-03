@@ -5,17 +5,20 @@ use crate::error::Result as CliResult;
 use anyhow::Context;
 
 /// Connection manager for creating authenticated clients
+#[allow(dead_code)] // Used by binary target
 pub struct ConnectionManager {
     pub config: Config,
 }
 
 impl ConnectionManager {
     /// Create a new connection manager with the given configuration
+    #[allow(dead_code)] // Used by binary target
     pub fn new(config: Config) -> Self {
         Self { config }
     }
 
     /// Get a profile by name, or the default profile if no name provided
+    #[allow(dead_code)] // Used by binary target
     pub fn get_profile(&self, profile_name: Option<&str>) -> CliResult<&Profile> {
         let name = match profile_name {
             Some(name) => name,
@@ -33,6 +36,7 @@ impl ConnectionManager {
     }
 
     /// Create a Cloud client from profile credentials with environment variable override support
+    #[allow(dead_code)] // Used by binary target
     pub async fn create_cloud_client(
         &self,
         profile_name: Option<&str>,
@@ -73,6 +77,7 @@ impl ConnectionManager {
     }
 
     /// Create an Enterprise client from profile credentials with environment variable override support
+    #[allow(dead_code)] // Used by binary target
     pub async fn create_enterprise_client(
         &self,
         profile_name: Option<&str>,
