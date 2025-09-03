@@ -234,7 +234,7 @@ impl ClusterHandler {
         Ok(serde_json::json!({"message": format!("Node {} removed", node_uid)}))
     }
 
-    /// Reset cluster to factory defaults (CLUSTER.RESET) - DANGEROUS - typed version
+    /// Reset cluster to factory defaults (CLUSTER.RESET) - DANGEROUS
     pub async fn reset(&self) -> Result<ClusterActionResponse> {
         self.client
             .post("/v1/cluster/actions/reset", &serde_json::json!({}))
@@ -243,7 +243,7 @@ impl ClusterHandler {
 
     // raw variant removed: use reset()
 
-    /// Recover cluster from failure (CLUSTER.RECOVER) - typed version
+    /// Recover cluster from failure (CLUSTER.RECOVER)
     pub async fn recover(&self) -> Result<ClusterActionResponse> {
         self.client
             .post("/v1/cluster/actions/recover", &serde_json::json!({}))

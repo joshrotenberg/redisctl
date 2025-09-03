@@ -22,7 +22,7 @@ impl CloudAccountsHandler {
         CloudAccountsHandler { client }
     }
 
-    /// List all cloud accounts (typed)
+    /// List all cloud accounts
     pub async fn list(&self) -> Result<Vec<CloudProviderAccount>> {
         let v: serde_json::Value = self.client.get("/cloud-accounts").await?;
         if v.is_array() {

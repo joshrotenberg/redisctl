@@ -82,15 +82,8 @@ impl ProxyHandler {
         self.client.get(&format!("/v1/proxies/{}/stats", uid)).await
     }
 
-    /// Get proxy statistics for a specific metric - typed version
+    /// Get proxy statistics for a specific metric
     pub async fn stats_metric(&self, uid: u32, metric: &str) -> Result<MetricResponse> {
-        self.client
-            .get(&format!("/v1/proxies/{}/stats/{}", uid, metric))
-            .await
-    }
-
-    /// Get proxy statistics for a specific metric - raw version
-    pub async fn stats_metric_raw(&self, uid: u32, metric: &str) -> Result<Value> {
         self.client
             .get(&format!("/v1/proxies/{}/stats/{}", uid, metric))
             .await

@@ -23,7 +23,7 @@ impl CloudRegionHandler {
         CloudRegionHandler { client }
     }
 
-    /// List available regions for a cloud provider (typed)
+    /// List available regions for a cloud provider
     pub async fn list(&self, provider: &str) -> Result<Vec<RegionInfo>> {
         let v: Value = self
             .client
@@ -39,14 +39,14 @@ impl CloudRegionHandler {
         }
     }
 
-    /// Get region details (typed)
+    /// Get region details
     pub async fn get(&self, provider: &str, region: &str) -> Result<RegionInfo> {
         self.client
             .get(&format!("/cloud-providers/{}/regions/{}", provider, region))
             .await
     }
 
-    /// List all regions (typed)
+    /// List all regions
     pub async fn list_all(&self) -> Result<Vec<RegionInfo>> {
         let v: Value = self.client.get("/regions").await?;
         if let Some(arr) = v.get("regions").and_then(|x| x.as_array()) {

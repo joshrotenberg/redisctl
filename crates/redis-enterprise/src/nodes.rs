@@ -171,7 +171,7 @@ impl NodeHandler {
         self.client.get(&format!("/v1/nodes/{}/actions", uid)).await
     }
 
-    /// Execute node action (e.g., "maintenance_on", "maintenance_off") - typed version
+    /// Execute node action (e.g., "maintenance_on", "maintenance_off")
     pub async fn execute_action(&self, uid: u32, action: &str) -> Result<NodeActionResponse> {
         let request = NodeActionRequest {
             action: action.to_string(),
