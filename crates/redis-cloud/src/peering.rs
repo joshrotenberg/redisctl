@@ -6,11 +6,9 @@ use serde_json::Value;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CloudPeering {
-    pub id: u32,
-    pub name: String,
-    pub status: String,
     pub peering_id: String,
     pub subscription_id: u32,
+    pub status: String,
     pub provider_peering_id: Option<String>,
     pub aws_account_id: Option<String>,
     pub vpc_id: Option<String>,
