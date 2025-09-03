@@ -158,7 +158,14 @@ impl CloudAclHandler {
 
     /// List Redis rules
     pub async fn list_redis_rules(&self) -> Result<Vec<RedisRule>> {
-        self.client.get("/acl/redisRules").await
+        let v: Value = self.client.get("/acl/redisRules").await?;
+        if v.is_array() {
+            serde_json::from_value(v).map_err(Into::into)
+        } else if let Some(arr) = v.get("rules") {
+            serde_json::from_value(arr.clone()).map_err(Into::into)
+        } else {
+            Ok(vec![])
+        }
     }
 
 
