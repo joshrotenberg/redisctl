@@ -174,7 +174,6 @@ pub struct CreateDatabaseAclRequest {
     pub redis_rule_id: u32,
     #[builder(default = true)]
     #[serde(default = "crate::models::acl::default_true")]
-    #[serde(skip_serializing_if = "crate::models::acl::is_true")]
     pub is_active: bool,
 }
 
