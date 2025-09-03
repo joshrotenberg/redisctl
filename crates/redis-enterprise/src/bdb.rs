@@ -448,7 +448,7 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Restart database (BDB.RESTART) - typed version
+    /// Restart database (BDB.RESTART)
     pub async fn restart(&self, uid: u32) -> Result<DatabaseActionResponse> {
         self.client
             .post(
@@ -458,7 +458,7 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Export database (BDB.EXPORT) - typed version
+    /// Export database (BDB.EXPORT)
     pub async fn export(&self, uid: u32, export_location: &str) -> Result<ExportResponse> {
         let body = serde_json::json!({
             "export_location": export_location
@@ -468,7 +468,7 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Import database (BDB.IMPORT) - typed version
+    /// Import database (BDB.IMPORT)
     pub async fn import(
         &self,
         uid: u32,
@@ -484,7 +484,7 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Flush database (BDB.FLUSH) - typed version
+    /// Flush database (BDB.FLUSH)
     pub async fn flush(&self, uid: u32) -> Result<DatabaseActionResponse> {
         self.client
             .post(
@@ -494,7 +494,7 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Backup database (BDB.BACKUP) - typed version
+    /// Backup database (BDB.BACKUP)
     pub async fn backup(&self, uid: u32) -> Result<BackupResponse> {
         self.client
             .post(
@@ -504,7 +504,7 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Restore database from backup (BDB.RESTORE) - typed version
+    /// Restore database from backup (BDB.RESTORE)
     pub async fn restore(
         &self,
         uid: u32,
@@ -776,7 +776,7 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Upgrade database with new module version (BDB.UPGRADE) - typed version
+    /// Upgrade database with new module version (BDB.UPGRADE)
     pub async fn upgrade(
         &self,
         uid: u32,
@@ -792,7 +792,7 @@ impl DatabaseHandler {
             .await
     }
 
-    /// Reset database password (BDB.RESET_PASSWORD) - typed version
+    /// Reset database password (BDB.RESET_PASSWORD)
     pub async fn reset_password(
         &self,
         uid: u32,
