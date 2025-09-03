@@ -1,62 +1,97 @@
-//! Task operations handler
+//! Tasks operations and models
 
-use crate::{Result, client::CloudClient};
+use crate::{CloudClient, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::HashMap;
 
+// ============================================================================
+// Models
+// ============================================================================
+
+/// ProcessorResponse
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Task {
-    pub task_id: String,
-    pub status: String,
+#[serde(rename_all = "camelCase")]
+pub struct ProcessorResponse {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub resource_id: Option<i32>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub additional_resource_id: Option<i32>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub resource: Option<HashMap<String, Value>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub additional_info: Option<String>,
+
+    /// Additional fields from the API
     #[serde(flatten)]
     pub extra: Value,
 }
 
+/// TaskStateUpdate
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TaskList {
-    pub tasks: Vec<Task>,
+#[serde(rename_all = "camelCase")]
+pub struct TaskStateUpdate {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub task_id: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub command_type: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub status: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timestamp: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub response: Option<ProcessorResponse>,
+
+    /// HATEOAS links
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub links: Option<Vec<HashMap<String, Value>>>,
+
+    /// Additional fields from the API
     #[serde(flatten)]
     pub extra: Value,
 }
 
-/// Handler for Cloud task operations
-pub struct CloudTaskHandler {
+// ============================================================================
+// Handler
+// ============================================================================
+
+/// Tasks operations handler
+pub struct TasksHandler {
     client: CloudClient,
 }
 
-impl CloudTaskHandler {
+impl TasksHandler {
+    /// Create a new handler
     pub fn new(client: CloudClient) -> Self {
-        CloudTaskHandler { client }
+        Self { client }
     }
 
-    /// List all tasks (typed wrapper). Accepts either {"tasks": [...]} or a bare array.
-    pub async fn list(&self) -> Result<TaskList> {
-        if let Ok(wrapper) = self.client.get::<TaskList>("/tasks").await {
-            return Ok(wrapper);
-        }
-        let v: serde_json::Value = self.client.get("/tasks").await?;
-        if v.is_array() {
-            let tasks: Vec<Task> = serde_json::from_value(v.clone())?;
-            Ok(TaskList {
-                tasks,
-                extra: serde_json::json!({}),
-            })
-        } else {
-            // Coerce unknown shapes to wrapper for forward-compat
-            Ok(TaskList {
-                tasks: vec![],
-                extra: v,
-            })
-        }
+    /// Get tasks
+    /// Gets a list of all currently running tasks for this account.
+    ///
+    /// GET /tasks
+    pub async fn get_all_tasks(&self) -> Result<()> {
+        self.client.get("/tasks").await
     }
 
-    /// Get task by ID
-    pub async fn get(&self, task_id: &str) -> Result<Task> {
-        let v: serde_json::Value = self.client.get(&format!("/tasks/{}", task_id)).await?;
-        if let Some(obj) = v.get("task") {
-            serde_json::from_value(obj.clone()).map_err(Into::into)
-        } else {
-            serde_json::from_value(v).map_err(Into::into)
-        }
+    /// Get a single task
+    /// Gets details and status of a single task by the Task ID.
+    ///
+    /// GET /tasks/{taskId}
+    pub async fn get_task_by_id(&self, task_id: String) -> Result<TaskStateUpdate> {
+        self.client.get(&format!("/tasks/{}", task_id)).await
     }
 }

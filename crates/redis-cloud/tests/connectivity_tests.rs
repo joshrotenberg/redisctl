@@ -1,25 +1,21 @@
-use redis_cloud::{AclHandler, CloudClient};
+use redis_cloud::{CloudClient, ConnectivityHandler};
 use serde_json::json;
 use wiremock::matchers::{header, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
 #[tokio::test]
-async fn test_get_all_redis_rules() {
+async fn test_get_vpc_peering() {
     let mock_server = MockServer::start().await;
 
     Mock::given(method("GET"))
-        .and(path("/acl/redisRules"))
+        .and(path("/subscriptions/123/peerings"))
         .and(header("x-api-key", "test-key"))
         .and(header("x-api-secret-key", "test-secret"))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({
-            "accountId": 123,
-            "links": [
-                {
-                    "href": "https://api.redislabs.com/v1/acl/redisRules/1",
-                    "type": "GET",
-                    "rel": "self"
-                }
-            ]
+            "taskId": "task-get-peering",
+            "commandType": "GET_VPC_PEERING",
+            "status": "completed",
+            "description": "Getting VPC peerings"
         })))
         .mount(&mock_server)
         .await;
@@ -31,30 +27,26 @@ async fn test_get_all_redis_rules() {
         .build()
         .unwrap();
 
-    let handler = AclHandler::new(client);
-    let result = handler.get_all_redis_rules().await.unwrap();
+    let handler = ConnectivityHandler::new(client);
+    let result = handler.get_vpc_peering(123).await.unwrap();
 
-    assert_eq!(result.account_id, Some(123));
-    assert!(result.links.is_some());
+    assert_eq!(result.task_id, Some("task-get-peering".to_string()));
+    assert_eq!(result.command_type, Some("GET_VPC_PEERING".to_string()));
 }
 
 #[tokio::test]
-async fn test_create_redis_rule() {
+async fn test_create_vpc_peering() {
     let mock_server = MockServer::start().await;
 
     Mock::given(method("POST"))
-        .and(path("/acl/redisRules"))
+        .and(path("/subscriptions/123/peerings"))
         .and(header("x-api-key", "test-key"))
         .and(header("x-api-secret-key", "test-secret"))
         .respond_with(ResponseTemplate::new(202).set_body_json(json!({
-            "taskId": "task-123",
-            "commandType": "CREATE_REDIS_RULE",
+            "taskId": "task-create-peering",
+            "commandType": "CREATE_VPC_PEERING",
             "status": "processing",
-            "description": "Creating Redis ACL rule",
-            "timestamp": "2024-01-01T00:00:00Z",
-            "response": {
-                "resourceId": 456
-            }
+            "description": "Creating VPC peering"
         })))
         .mount(&mock_server)
         .await;
@@ -66,32 +58,31 @@ async fn test_create_redis_rule() {
         .build()
         .unwrap();
 
-    let handler = AclHandler::new(client);
-    let request = redis_cloud::acl::AclRedisRuleCreateRequest {
-        name: "test-rule".to_string(),
-        redis_rule: "+get +set".to_string(),
+    let handler = ConnectivityHandler::new(client);
+    let request = redis_cloud::connectivity::VpcPeeringCreateBaseRequest {
+        provider: Some("AWS".to_string()),
         command_type: None,
         extra: serde_json::Value::Null,
     };
 
-    let result = handler.create_redis_rule(&request).await.unwrap();
-    assert_eq!(result.task_id, Some("task-123".to_string()));
-    assert_eq!(result.status, Some("processing".to_string()));
+    let result = handler.create_vpc_peering(123, &request).await.unwrap();
+    assert_eq!(result.task_id, Some("task-create-peering".to_string()));
+    assert_eq!(result.command_type, Some("CREATE_VPC_PEERING".to_string()));
 }
 
 #[tokio::test]
-async fn test_delete_redis_rule() {
+async fn test_delete_vpc_peering() {
     let mock_server = MockServer::start().await;
 
     Mock::given(method("DELETE"))
-        .and(path("/acl/redisRules/123"))
+        .and(path("/subscriptions/123/peerings/456"))
         .and(header("x-api-key", "test-key"))
         .and(header("x-api-secret-key", "test-secret"))
         .respond_with(ResponseTemplate::new(202).set_body_json(json!({
-            "taskId": "task-456",
-            "commandType": "DELETE_REDIS_RULE",
+            "taskId": "task-delete-peering",
+            "commandType": "DELETE_VPC_PEERING",
             "status": "processing",
-            "description": "Deleting Redis ACL rule"
+            "description": "Deleting VPC peering"
         })))
         .mount(&mock_server)
         .await;
@@ -103,30 +94,26 @@ async fn test_delete_redis_rule() {
         .build()
         .unwrap();
 
-    let handler = AclHandler::new(client);
-    let result = handler.delete_redis_rule(123).await.unwrap();
+    let handler = ConnectivityHandler::new(client);
+    let result = handler.delete_vpc_peering(123, 456).await.unwrap();
 
-    assert_eq!(result.task_id, Some("task-456".to_string()));
-    assert_eq!(result.command_type, Some("DELETE_REDIS_RULE".to_string()));
+    assert_eq!(result.task_id, Some("task-delete-peering".to_string()));
+    assert_eq!(result.command_type, Some("DELETE_VPC_PEERING".to_string()));
 }
 
 #[tokio::test]
-async fn test_get_roles() {
+async fn test_get_psc_service() {
     let mock_server = MockServer::start().await;
 
     Mock::given(method("GET"))
-        .and(path("/acl/roles"))
+        .and(path("/subscriptions/123/private-service-connect"))
         .and(header("x-api-key", "test-key"))
         .and(header("x-api-secret-key", "test-secret"))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({
-            "accountId": 123,
-            "links": [
-                {
-                    "href": "https://api.redislabs.com/v1/acl/roles/1",
-                    "type": "GET",
-                    "rel": "role"
-                }
-            ]
+            "taskId": "task-get-psc",
+            "commandType": "GET_PSC_SERVICE",
+            "status": "completed",
+            "description": "Getting PSC service"
         })))
         .mount(&mock_server)
         .await;
@@ -138,25 +125,26 @@ async fn test_get_roles() {
         .build()
         .unwrap();
 
-    let handler = AclHandler::new(client);
-    let result = handler.get_roles().await.unwrap();
+    let handler = ConnectivityHandler::new(client);
+    let result = handler.get_psc_service(123).await.unwrap();
 
-    assert_eq!(result.account_id, Some(123));
+    assert_eq!(result.task_id, Some("task-get-psc".to_string()));
+    assert_eq!(result.command_type, Some("GET_PSC_SERVICE".to_string()));
 }
 
 #[tokio::test]
-async fn test_create_user() {
+async fn test_create_psc_service() {
     let mock_server = MockServer::start().await;
 
     Mock::given(method("POST"))
-        .and(path("/acl/users"))
+        .and(path("/subscriptions/123/private-service-connect"))
         .and(header("x-api-key", "test-key"))
         .and(header("x-api-secret-key", "test-secret"))
         .respond_with(ResponseTemplate::new(202).set_body_json(json!({
-            "taskId": "task-789",
-            "commandType": "CREATE_USER",
+            "taskId": "task-create-psc",
+            "commandType": "CREATE_PSC_SERVICE",
             "status": "processing",
-            "description": "Creating ACL user"
+            "description": "Creating PSC service"
         })))
         .mount(&mock_server)
         .await;
@@ -168,32 +156,26 @@ async fn test_create_user() {
         .build()
         .unwrap();
 
-    let handler = AclHandler::new(client);
-    let request = redis_cloud::acl::AclUserCreateRequest {
-        name: "test-user".to_string(),
-        role: "test-role".to_string(),
-        password: "test-password".to_string(),
-        command_type: None,
-        extra: serde_json::Value::Null,
-    };
+    let handler = ConnectivityHandler::new(client);
+    let result = handler.create_psc_service(123).await.unwrap();
 
-    let result = handler.create_user(&request).await.unwrap();
-    assert_eq!(result.task_id, Some("task-789".to_string()));
+    assert_eq!(result.task_id, Some("task-create-psc".to_string()));
+    assert_eq!(result.command_type, Some("CREATE_PSC_SERVICE".to_string()));
 }
 
 #[tokio::test]
-async fn test_get_user_by_id() {
+async fn test_get_tgws() {
     let mock_server = MockServer::start().await;
 
     Mock::given(method("GET"))
-        .and(path("/acl/users/456"))
+        .and(path("/subscriptions/123/transitGateways"))
         .and(header("x-api-key", "test-key"))
         .and(header("x-api-secret-key", "test-secret"))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({
-            "id": 456,
-            "name": "test-user",
-            "role": "test-role",
-            "status": "active"
+            "taskId": "task-get-tgws",
+            "commandType": "GET_TGWS",
+            "status": "completed",
+            "description": "Getting TGWs"
         })))
         .mount(&mock_server)
         .await;
@@ -205,12 +187,11 @@ async fn test_get_user_by_id() {
         .build()
         .unwrap();
 
-    let handler = AclHandler::new(client);
-    let result = handler.get_user_by_id(456).await.unwrap();
+    let handler = ConnectivityHandler::new(client);
+    let result = handler.get_tgws(123).await.unwrap();
 
-    assert_eq!(result.id, Some(456));
-    assert_eq!(result.name, Some("test-user".to_string()));
-    assert_eq!(result.role, Some("test-role".to_string()));
+    assert_eq!(result.task_id, Some("task-get-tgws".to_string()));
+    assert_eq!(result.command_type, Some("GET_TGWS".to_string()));
 }
 
 #[tokio::test]
@@ -218,11 +199,11 @@ async fn test_error_handling_404() {
     let mock_server = MockServer::start().await;
 
     Mock::given(method("GET"))
-        .and(path("/acl/users/999"))
+        .and(path("/subscriptions/999/peerings"))
         .and(header("x-api-key", "test-key"))
         .and(header("x-api-secret-key", "test-secret"))
         .respond_with(ResponseTemplate::new(404).set_body_json(json!({
-            "error": "User not found"
+            "error": "Subscription not found"
         })))
         .mount(&mock_server)
         .await;
@@ -234,8 +215,8 @@ async fn test_error_handling_404() {
         .build()
         .unwrap();
 
-    let handler = AclHandler::new(client);
-    let result = handler.get_user_by_id(999).await;
+    let handler = ConnectivityHandler::new(client);
+    let result = handler.get_vpc_peering(999).await;
 
     assert!(result.is_err());
     if let Err(redis_cloud::CloudError::NotFound { message }) = result {

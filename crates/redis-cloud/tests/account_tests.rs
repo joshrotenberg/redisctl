@@ -1,296 +1,277 @@
-//! Account endpoint tests for Redis Cloud
-
-use redis_cloud::{CloudAccountHandler, CloudClient};
+use redis_cloud::{AccountHandler, CloudClient};
 use serde_json::json;
-use wiremock::matchers::{header, method, path};
+use wiremock::matchers::{header, method, path, query_param};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
-// Test helper functions
-fn success_response(body: serde_json::Value) -> ResponseTemplate {
-    ResponseTemplate::new(200).set_body_json(body)
-}
-
-fn error_response(status: u16, body: serde_json::Value) -> ResponseTemplate {
-    ResponseTemplate::new(status).set_body_json(body)
-}
-
-fn create_test_client(base_url: String) -> CloudClient {
-    CloudClient::builder()
-        .api_key("test-api-key")
-        .api_secret("test-secret-key")
-        .base_url(base_url)
-        .build()
-        .unwrap()
-}
-
 #[tokio::test]
-async fn test_account_info() {
+async fn test_get_current_account() {
     let mock_server = MockServer::start().await;
 
     Mock::given(method("GET"))
         .and(path("/"))
-        .and(header("x-api-key", "test-api-key"))
-        .and(header("x-api-secret-key", "test-secret-key"))
-        .respond_with(success_response(json!({
-            "account": {
-                "id": 12345,
-                "name": "Test Account",
-                "createdTimestamp": "2023-01-01T00:00:00Z",
-                "updatedTimestamp": "2023-01-02T00:00:00Z",
-                "key": {
-                    "name": "default",
-                    "accountId": 12345,
-                    "createdTimestamp": "2023-01-01T00:00:00Z",
-                    "updatedTimestamp": "2023-01-01T00:00:00Z"
-                }
-            }
-        })))
-        .mount(&mock_server)
-        .await;
-
-    let client = create_test_client(mock_server.uri());
-    let handler = CloudAccountHandler::new(client);
-    let result = handler.info().await;
-
-    assert!(result.is_ok());
-    let account = result.unwrap();
-    assert_eq!(account.id, 12345);
-    assert_eq!(account.name, "Test Account");
-    assert!(account.key.is_some());
-    let key = account.key.unwrap();
-    assert_eq!(key.name, "default");
-    assert_eq!(key.account_id, Some(12345));
-}
-
-#[tokio::test]
-async fn test_account_info_error() {
-    let mock_server = MockServer::start().await;
-
-    Mock::given(method("GET"))
-        .and(path("/"))
-        .and(header("x-api-key", "test-api-key"))
-        .and(header("x-api-secret-key", "test-secret-key"))
-        .respond_with(error_response(
-            401,
-            json!({
-                "error": {
-                    "type": "UNAUTHORIZED",
-                    "status": 401,
-                    "description": "Invalid API key"
-                }
-            }),
-        ))
-        .mount(&mock_server)
-        .await;
-
-    let client = create_test_client(mock_server.uri());
-    let handler = CloudAccountHandler::new(client);
-    let result = handler.info().await;
-
-    assert!(result.is_err());
-}
-
-#[tokio::test]
-async fn test_account_owner() {
-    let mock_server = MockServer::start().await;
-
-    Mock::given(method("GET"))
-        .and(path("/users/owners"))
-        .and(header("x-api-key", "test-api-key"))
-        .and(header("x-api-secret-key", "test-secret-key"))
-        .respond_with(success_response(json!({
-            "users": [{
-                "id": 1,
-                "name": "Account Owner",
-                "email": "owner@example.com",
-                "role": "owner",
-                "status": "active"
-            }]
-        })))
-        .mount(&mock_server)
-        .await;
-
-    let client = create_test_client(mock_server.uri());
-    let handler = CloudAccountHandler::new(client);
-    let result = handler.owner().await;
-
-    assert!(result.is_ok());
-    let response = result.unwrap();
-    let users = response["users"].as_array().unwrap();
-    assert_eq!(users.len(), 1);
-    assert_eq!(users[0]["email"], "owner@example.com");
-    assert_eq!(users[0]["role"], "owner");
-}
-
-#[tokio::test]
-async fn test_account_users() {
-    let mock_server = MockServer::start().await;
-
-    Mock::given(method("GET"))
-        .and(path("/users"))
-        .and(header("x-api-key", "test-api-key"))
-        .and(header("x-api-secret-key", "test-secret-key"))
-        .respond_with(success_response(json!({
-            "users": [
+        .and(header("x-api-key", "test-key"))
+        .and(header("x-api-secret-key", "test-secret"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "links": [
                 {
-                    "id": 1,
-                    "name": "Account Owner",
-                    "email": "owner@example.com",
-                    "role": "owner",
-                    "status": "active"
+                    "rel": "self",
+                    "href": "https://api.redislabs.com/v1/",
+                    "type": "GET"
+                }
+            ]
+        })))
+        .mount(&mock_server)
+        .await;
+
+    let client = CloudClient::builder()
+        .api_key("test-key".to_string())
+        .api_secret("test-secret".to_string())
+        .base_url(mock_server.uri())
+        .build()
+        .unwrap();
+
+    let handler = AccountHandler::new(client);
+    let result = handler.get_current_account().await.unwrap();
+
+    assert!(result.links.is_some());
+}
+
+#[tokio::test]
+async fn test_get_data_persistence_options() {
+    let mock_server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/data-persistence"))
+        .and(header("x-api-key", "test-key"))
+        .and(header("x-api-secret-key", "test-secret"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "dataPersistence": [
+                {
+                    "name": "none",
+                    "description": "None"
                 },
                 {
-                    "id": 2,
-                    "name": "User One",
-                    "email": "user1@example.com",
-                    "role": "admin",
-                    "status": "active"
+                    "name": "aof-every-1-sec",
+                    "description": "Append only file (AOF) - fsync every 1 second"
+                },
+                {
+                    "name": "aof-every-write",
+                    "description": "Append only file (AOF) - fsync every write"
+                },
+                {
+                    "name": "snapshot-every-1-hour",
+                    "description": "Snapshot every 1 hour"
+                },
+                {
+                    "name": "snapshot-every-6-hours",
+                    "description": "Snapshot every 6 hours"
+                },
+                {
+                    "name": "snapshot-every-12-hours",
+                    "description": "Snapshot every 12 hours"
                 }
             ]
         })))
         .mount(&mock_server)
         .await;
 
-    let client = create_test_client(mock_server.uri());
-    let handler = CloudAccountHandler::new(client);
-    let result = handler.users().await;
+    let client = CloudClient::builder()
+        .api_key("test-key".to_string())
+        .api_secret("test-secret".to_string())
+        .base_url(mock_server.uri())
+        .build()
+        .unwrap();
 
-    assert!(result.is_ok());
-    let response = result.unwrap();
-    let users = response["users"].as_array().unwrap();
-    assert_eq!(users.len(), 2);
-    assert_eq!(users[0]["role"], "owner");
-    assert_eq!(users[1]["role"], "admin");
+    let handler = AccountHandler::new(client);
+    let result = handler.get_data_persistence_options().await.unwrap();
+
+    assert!(result.data_persistence.is_some());
 }
 
 #[tokio::test]
-async fn test_get_account_alias() {
+async fn test_get_supported_database_modules() {
+    let mock_server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/database-modules"))
+        .and(header("x-api-key", "test-key"))
+        .and(header("x-api-secret-key", "test-secret"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "modules": [
+                {
+                    "module": "RediSearch",
+                    "moduleName": "RediSearch",
+                    "displayName": "Search and Query",
+                    "description": "Full-text search and secondary indexing",
+                    "parameters": []
+                },
+                {
+                    "module": "RedisGraph",
+                    "moduleName": "RedisGraph",
+                    "displayName": "Graph",
+                    "description": "Graph database",
+                    "parameters": []
+                }
+            ]
+        })))
+        .mount(&mock_server)
+        .await;
+
+    let client = CloudClient::builder()
+        .api_key("test-key".to_string())
+        .api_secret("test-secret".to_string())
+        .base_url(mock_server.uri())
+        .build()
+        .unwrap();
+
+    let handler = AccountHandler::new(client);
+    let result = handler.get_supported_database_modules().await.unwrap();
+
+    assert!(result.modules.is_some());
+}
+
+#[tokio::test]
+async fn test_get_supported_regions() {
+    let mock_server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/regions"))
+        .and(query_param("provider", "AWS"))
+        .and(header("x-api-key", "test-key"))
+        .and(header("x-api-secret-key", "test-secret"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "regions": [
+                {
+                    "name": "us-east-1",
+                    "provider": "AWS"
+                },
+                {
+                    "name": "us-west-2",
+                    "provider": "AWS"
+                },
+                {
+                    "name": "eu-west-1",
+                    "provider": "AWS"
+                },
+                {
+                    "name": "ap-southeast-1",
+                    "provider": "AWS"
+                }
+            ]
+        })))
+        .mount(&mock_server)
+        .await;
+
+    let client = CloudClient::builder()
+        .api_key("test-key".to_string())
+        .api_secret("test-secret".to_string())
+        .base_url(mock_server.uri())
+        .build()
+        .unwrap();
+
+    let handler = AccountHandler::new(client);
+    let result = handler
+        .get_supported_regions(Some("AWS".to_string()))
+        .await
+        .unwrap();
+
+    assert!(result.regions.is_some());
+}
+
+#[tokio::test]
+async fn test_get_account_payment_methods() {
+    let mock_server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/payment-methods"))
+        .and(header("x-api-key", "test-key"))
+        .and(header("x-api-secret-key", "test-secret"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "accountId": 123
+        })))
+        .mount(&mock_server)
+        .await;
+
+    let client = CloudClient::builder()
+        .api_key("test-key".to_string())
+        .api_secret("test-secret".to_string())
+        .base_url(mock_server.uri())
+        .build()
+        .unwrap();
+
+    let handler = AccountHandler::new(client);
+    let result = handler.get_account_payment_methods().await.unwrap();
+
+    assert!(result.account_id.is_some());
+}
+
+#[tokio::test]
+async fn test_get_account_system_logs() {
+    let mock_server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/logs"))
+        .and(query_param("limit", "20"))
+        .and(query_param("offset", "0"))
+        .and(header("x-api-key", "test-key"))
+        .and(header("x-api-secret-key", "test-secret"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "entries": [
+                {
+                    "id": 1,
+                    "time": "2024-01-01T00:00:00Z",
+                    "originator": "System",
+                    "type": "info",
+                    "description": "Test log entry"
+                }
+            ]
+        })))
+        .mount(&mock_server)
+        .await;
+
+    let client = CloudClient::builder()
+        .api_key("test-key".to_string())
+        .api_secret("test-secret".to_string())
+        .base_url(mock_server.uri())
+        .build()
+        .unwrap();
+
+    let handler = AccountHandler::new(client);
+    let result = handler
+        .get_account_system_logs(Some(0), Some(20))
+        .await
+        .unwrap();
+
+    assert!(result.entries.is_some());
+    let entries = result.entries.unwrap();
+    assert_eq!(entries.len(), 1);
+}
+
+#[tokio::test]
+async fn test_error_handling() {
     let mock_server = MockServer::start().await;
 
     Mock::given(method("GET"))
         .and(path("/"))
-        .and(header("x-api-key", "test-api-key"))
-        .and(header("x-api-secret-key", "test-secret-key"))
-        .respond_with(success_response(json!({
-            "account": {
-                "id": 12345,
-                "name": "Test Account"
-            }
+        .respond_with(ResponseTemplate::new(401).set_body_json(json!({
+            "error": "Invalid API credentials"
         })))
         .mount(&mock_server)
         .await;
 
-    let client = create_test_client(mock_server.uri());
-    let handler = CloudAccountHandler::new(client);
-    let result = handler.get_account().await;
+    let client = CloudClient::builder()
+        .api_key("wrong-key".to_string())
+        .api_secret("wrong-secret".to_string())
+        .base_url(mock_server.uri())
+        .build()
+        .unwrap();
 
-    assert!(result.is_ok());
-    let response = result.unwrap();
-    assert_eq!(response["account"]["id"], 12345);
-}
-
-#[tokio::test]
-async fn test_get_users_alias() {
-    let mock_server = MockServer::start().await;
-
-    Mock::given(method("GET"))
-        .and(path("/users"))
-        .and(header("x-api-key", "test-api-key"))
-        .and(header("x-api-secret-key", "test-secret-key"))
-        .respond_with(success_response(json!({
-            "users": []
-        })))
-        .mount(&mock_server)
-        .await;
-
-    let client = create_test_client(mock_server.uri());
-    let handler = CloudAccountHandler::new(client);
-    let result = handler.get_users().await;
-
-    assert!(result.is_ok());
-}
-
-#[tokio::test]
-async fn test_get_owner_alias() {
-    let mock_server = MockServer::start().await;
-
-    Mock::given(method("GET"))
-        .and(path("/users/owners"))
-        .and(header("x-api-key", "test-api-key"))
-        .and(header("x-api-secret-key", "test-secret-key"))
-        .respond_with(success_response(json!({
-            "users": []
-        })))
-        .mount(&mock_server)
-        .await;
-
-    let client = create_test_client(mock_server.uri());
-    let handler = CloudAccountHandler::new(client);
-    let result = handler.get_owner().await;
-
-    assert!(result.is_ok());
-}
-
-#[tokio::test]
-async fn test_get_payment_methods() {
-    let mock_server = MockServer::start().await;
-
-    Mock::given(method("GET"))
-        .and(path("/payment-methods"))
-        .and(header("x-api-key", "test-api-key"))
-        .and(header("x-api-secret-key", "test-secret-key"))
-        .respond_with(success_response(json!({
-            "paymentMethods": [
-                {
-                    "id": "pm_12345",
-                    "type": "card",
-                    "cardType": "visa",
-                    "last4": "4242",
-                    "expiryMonth": 12,
-                    "expiryYear": 2025,
-                    "isDefault": true
-                }
-            ]
-        })))
-        .mount(&mock_server)
-        .await;
-
-    let client = create_test_client(mock_server.uri());
-    let handler = CloudAccountHandler::new(client);
-    let result = handler.get_payment_methods().await;
-
-    assert!(result.is_ok());
-    let response = result.unwrap();
-    let payment_methods = response["paymentMethods"].as_array().unwrap();
-    assert_eq!(payment_methods.len(), 1);
-    assert_eq!(payment_methods[0]["type"], "card");
-    assert_eq!(payment_methods[0]["last4"], "4242");
-}
-
-#[tokio::test]
-async fn test_payment_methods_error() {
-    let mock_server = MockServer::start().await;
-
-    Mock::given(method("GET"))
-        .and(path("/payment-methods"))
-        .and(header("x-api-key", "test-api-key"))
-        .and(header("x-api-secret-key", "test-secret-key"))
-        .respond_with(error_response(
-            403,
-            json!({
-                "error": {
-                    "type": "FORBIDDEN",
-                    "status": 403,
-                    "description": "Insufficient permissions to access payment methods"
-                }
-            }),
-        ))
-        .mount(&mock_server)
-        .await;
-
-    let client = create_test_client(mock_server.uri());
-    let handler = CloudAccountHandler::new(client);
-    let result = handler.get_payment_methods().await;
+    let handler = AccountHandler::new(client);
+    let result = handler.get_current_account().await;
 
     assert!(result.is_err());
+    match result {
+        Err(redis_cloud::CloudError::AuthenticationFailed { .. }) => {}
+        _ => panic!("Expected AuthenticationFailed error"),
+    }
 }

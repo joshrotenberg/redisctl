@@ -202,10 +202,20 @@ impl CloudClient {
         } else {
             let status = response.status();
             let text = response.text().await.unwrap_or_default();
-            Err(RestError::ApiError {
-                code: status.as_u16(),
-                message: text,
-            })
+
+            match status.as_u16() {
+                400 => Err(RestError::BadRequest { message: text }),
+                401 => Err(RestError::AuthenticationFailed { message: text }),
+                403 => Err(RestError::Forbidden { message: text }),
+                404 => Err(RestError::NotFound { message: text }),
+                412 => Err(RestError::PreconditionFailed),
+                500 => Err(RestError::InternalServerError { message: text }),
+                503 => Err(RestError::ServiceUnavailable { message: text }),
+                _ => Err(RestError::ApiError {
+                    code: status.as_u16(),
+                    message: text,
+                }),
+            }
         }
     }
 
@@ -267,10 +277,20 @@ impl CloudClient {
         } else {
             let status = response.status();
             let text = response.text().await.unwrap_or_default();
-            Err(RestError::ApiError {
-                code: status.as_u16(),
-                message: text,
-            })
+
+            match status.as_u16() {
+                400 => Err(RestError::BadRequest { message: text }),
+                401 => Err(RestError::AuthenticationFailed { message: text }),
+                403 => Err(RestError::Forbidden { message: text }),
+                404 => Err(RestError::NotFound { message: text }),
+                412 => Err(RestError::PreconditionFailed),
+                500 => Err(RestError::InternalServerError { message: text }),
+                503 => Err(RestError::ServiceUnavailable { message: text }),
+                _ => Err(RestError::ApiError {
+                    code: status.as_u16(),
+                    message: text,
+                }),
+            }
         }
     }
 
@@ -292,22 +312,22 @@ impl CloudClient {
                 // If parsing fails, include the actual response for debugging
                 RestError::JsonError(e)
             })
-        } else if status == 401 {
-            // Get the error message from the response
-            let text = response
-                .text()
-                .await
-                .unwrap_or_else(|_| "No error message".to_string());
-            Err(RestError::ApiError {
-                code: 401,
-                message: format!("Authentication failed: {}", text),
-            })
         } else {
             let text = response.text().await.unwrap_or_default();
-            Err(RestError::ApiError {
-                code: status.as_u16(),
-                message: text,
-            })
+
+            match status.as_u16() {
+                400 => Err(RestError::BadRequest { message: text }),
+                401 => Err(RestError::AuthenticationFailed { message: text }),
+                403 => Err(RestError::Forbidden { message: text }),
+                404 => Err(RestError::NotFound { message: text }),
+                412 => Err(RestError::PreconditionFailed),
+                500 => Err(RestError::InternalServerError { message: text }),
+                503 => Err(RestError::ServiceUnavailable { message: text }),
+                _ => Err(RestError::ApiError {
+                    code: status.as_u16(),
+                    message: text,
+                }),
+            }
         }
     }
 }
