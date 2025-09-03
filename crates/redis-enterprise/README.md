@@ -59,7 +59,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 The `examples/` directory contains runnable examples demonstrating common use cases:
 
-- [`basic.rs`](examples/basic.rs) - Getting started with cluster connection
+- [`basic_enterprise.rs`](examples/basic_enterprise.rs) - Getting started with cluster connection
 - [`database_management.rs`](examples/database_management.rs) - Managing databases and viewing statistics
 
 Run examples with:
