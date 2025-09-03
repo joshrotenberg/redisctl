@@ -1,59 +1,87 @@
-#![allow(dead_code)]
+//! Error types for redisctl
+//!
+//! Defines structured error types using thiserror for better error handling and user experience.
+
+#![allow(dead_code)] // Foundation code - will be used in future PRs
 
 use thiserror::Error;
 
+/// Main error type for the redisctl application
 #[derive(Error, Debug)]
 pub enum RedisCtlError {
     #[error("Configuration error: {0}")]
-    Config(#[from] ConfigError),
+    Config(#[from] anyhow::Error),
 
-    #[error("Profile error: {0}")]
-    Profile(#[from] ProfileError),
-
-    #[error("Command routing error: {0}")]
-    Routing(#[from] RoutingError),
-}
-
-#[derive(Error, Debug)]
-pub enum ConfigError {
     #[error("Profile '{name}' not found")]
     ProfileNotFound { name: String },
 
-    #[error("No default profile set")]
-    NoDefaultProfile,
-
-    #[error("Config file error: {message}")]
-    FileError { message: String },
-}
-
-#[derive(Error, Debug)]
-pub enum ProfileError {
     #[error("Profile '{name}' is type '{actual_type}' but command requires '{expected_type}'")]
-    TypeMismatch {
+    ProfileTypeMismatch {
         name: String,
         actual_type: String,
         expected_type: String,
     },
 
+    #[error("No profile configured. Use 'redisctl profile set' to configure a profile.")]
+    NoProfileConfigured,
+
     #[error("Missing credentials for profile '{name}'")]
     MissingCredentials { name: String },
+
+    #[error("Authentication failed: {message}")]
+    AuthenticationFailed { message: String },
+
+    #[error("API error: {message}")]
+    ApiError { message: String },
+
+    #[error("Invalid input: {message}")]
+    InvalidInput { message: String },
+
+    #[error("Command not supported for deployment type '{deployment_type}'")]
+    UnsupportedDeploymentType { deployment_type: String },
+
+    #[error("Connection error: {message}")]
+    ConnectionError { message: String },
+
+    #[error("Output formatting error: {message}")]
+    OutputError { message: String },
 }
 
-#[derive(Error, Debug)]
-pub enum RoutingError {
-    #[error(
-        "Command '{command}' exists in both cloud and enterprise. Use 'redisctl cloud {command}' or 'redisctl enterprise {command}'"
-    )]
-    AmbiguousCommand { command: String },
+/// Result type for redisctl operations
+pub type Result<T> = std::result::Result<T, RedisCtlError>;
 
-    #[error("Command '{command}' not found in {deployment_type}")]
-    CommandNotFound {
-        command: String,
-        deployment_type: String,
-    },
+impl From<redis_cloud::CloudError> for RedisCtlError {
+    fn from(err: redis_cloud::CloudError) -> Self {
+        match err {
+            redis_cloud::CloudError::AuthenticationFailed { message } => {
+                RedisCtlError::AuthenticationFailed { message }
+            }
+            redis_cloud::CloudError::ConnectionError(message) => {
+                RedisCtlError::ConnectionError { message }
+            }
+            _ => RedisCtlError::ApiError {
+                message: err.to_string(),
+            },
+        }
+    }
+}
 
-    #[error(
-        "No profile specified and no default profile set. Use --profile or set REDISCTL_PROFILE"
-    )]
-    NoProfileSpecified,
+impl From<redis_enterprise::RestError> for RedisCtlError {
+    fn from(err: redis_enterprise::RestError) -> Self {
+        match err {
+            redis_enterprise::RestError::AuthenticationFailed => {
+                RedisCtlError::AuthenticationFailed {
+                    message: "Authentication failed".to_string(),
+                }
+            }
+            redis_enterprise::RestError::RequestFailed(reqwest_err) => {
+                RedisCtlError::ConnectionError {
+                    message: reqwest_err.to_string(),
+                }
+            }
+            _ => RedisCtlError::ApiError {
+                message: err.to_string(),
+            },
+        }
+    }
 }
