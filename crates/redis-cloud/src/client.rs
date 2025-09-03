@@ -1,58 +1,27 @@
-//! Redis Cloud API client core implementation
-//!
-//! This module contains the core HTTP client for interacting with the Redis Cloud REST API.
-//! It provides authentication handling, request/response processing, and error management.
-//!
-//! The client is designed around a builder pattern for flexible configuration and supports
-//! both typed and untyped API interactions.
+//! Redis Cloud API client implementation
 
-use crate::{CloudError as RestError, Result};
-use reqwest::Client;
-use serde::Serialize;
-use std::sync::Arc;
+use crate::error::{CloudError, Result};
+use reqwest::{Client, Response, StatusCode};
+use serde::{Serialize, de::DeserializeOwned};
+use serde_json::Value;
+use std::env;
 
-/// Builder for constructing a CloudClient with custom configuration
-///
-/// Provides a fluent interface for configuring API credentials, base URL, timeouts,
-/// and other client settings before creating the final CloudClient instance.
-///
-/// # Examples
-///
-/// ```rust,no_run
-/// use redis_cloud::CloudClient;
-///
-/// // Basic configuration
-/// let client = CloudClient::builder()
-///     .api_key("your-api-key")
-///     .api_secret("your-api-secret")
-///     .build()?;
-///
-/// // Advanced configuration
-/// let client = CloudClient::builder()
-///     .api_key("your-api-key")
-///     .api_secret("your-api-secret")
-///     .base_url("https://api.redislabs.com/v1".to_string())
-///     .timeout(std::time::Duration::from_secs(120))
-///     .build()?;
-/// # Ok::<(), Box<dyn std::error::Error>>(())
-/// ```
-#[derive(Debug, Clone)]
-pub struct CloudClientBuilder {
-    api_key: Option<String>,
-    api_secret: Option<String>,
+/// Redis Cloud API client
+#[derive(Clone, Debug)]
+pub struct CloudClient {
+    client: Client,
     base_url: String,
-    timeout: std::time::Duration,
+    api_key: String,
+    api_secret_key: String,
 }
 
-impl Default for CloudClientBuilder {
-    fn default() -> Self {
-        Self {
-            api_key: None,
-            api_secret: None,
-            base_url: "https://api.redislabs.com/v1".to_string(),
-            timeout: std::time::Duration::from_secs(30),
-        }
-    }
+/// Builder for CloudClient
+#[derive(Default)]
+pub struct CloudClientBuilder {
+    api_key: Option<String>,
+    api_secret_key: Option<String>,
+    base_url: Option<String>,
+    client: Option<Client>,
 }
 
 impl CloudClientBuilder {
@@ -67,247 +36,202 @@ impl CloudClientBuilder {
         self
     }
 
-    /// Set the API secret
-    pub fn api_secret(mut self, secret: impl Into<String>) -> Self {
-        self.api_secret = Some(secret.into());
+    /// Set the API secret key
+    pub fn api_secret_key(mut self, key: impl Into<String>) -> Self {
+        self.api_secret_key = Some(key.into());
         self
     }
 
     /// Set the base URL
     pub fn base_url(mut self, url: impl Into<String>) -> Self {
-        self.base_url = url.into();
+        self.base_url = Some(url.into());
         self
     }
 
-    /// Set the timeout
-    pub fn timeout(mut self, timeout: std::time::Duration) -> Self {
-        self.timeout = timeout;
+    /// Set the HTTP client
+    pub fn client(mut self, client: Client) -> Self {
+        self.client = Some(client);
         self
     }
 
-    /// Build the client
-    pub fn build(self) -> Result<CloudClient> {
-        let api_key = self
-            .api_key
-            .ok_or_else(|| RestError::ConnectionError("API key is required".to_string()))?;
-        let api_secret = self
-            .api_secret
-            .ok_or_else(|| RestError::ConnectionError("API secret is required".to_string()))?;
+    /// Build the CloudClient
+    pub fn build(self) -> CloudClient {
+        let base_url = self
+            .base_url
+            .unwrap_or_else(|| "https://api.redislabs.com/v1".to_string());
 
-        let client = Client::builder()
-            .timeout(self.timeout)
-            .build()
-            .map_err(|e| RestError::ConnectionError(e.to_string()))?;
-
-        Ok(CloudClient {
-            api_key,
-            api_secret,
-            base_url: self.base_url,
-            timeout: self.timeout,
-            client: Arc::new(client),
-        })
+        CloudClient {
+            client: self.client.unwrap_or_default(),
+            base_url: base_url.trim_end_matches('/').to_string(),
+            api_key: self.api_key.expect("API key is required"),
+            api_secret_key: self.api_secret_key.expect("API secret key is required"),
+        }
     }
-}
-
-/// Redis Cloud API client
-#[derive(Clone)]
-pub struct CloudClient {
-    pub(crate) api_key: String,
-    pub(crate) api_secret: String,
-    pub(crate) base_url: String,
-    #[allow(dead_code)]
-    pub(crate) timeout: std::time::Duration,
-    pub(crate) client: Arc<Client>,
 }
 
 impl CloudClient {
-    /// Create a new builder for the client
+    /// Create a new CloudClient builder
     pub fn builder() -> CloudClientBuilder {
         CloudClientBuilder::new()
     }
 
-    /// Make a GET request with API key authentication
-    pub async fn get<T: serde::de::DeserializeOwned>(&self, path: &str) -> Result<T> {
-        let url = format!("{}{}", self.base_url, path);
+    /// Create a new CloudClient with provided credentials
+    pub fn new(api_key: impl Into<String>, api_secret_key: impl Into<String>) -> Self {
+        CloudClient {
+            client: Client::new(),
+            base_url: "https://api.redislabs.com/v1".to_string(),
+            api_key: api_key.into(),
+            api_secret_key: api_secret_key.into(),
+        }
+    }
 
-        // Redis Cloud API uses these headers for authentication
+    /// Create a CloudClient from environment variables
+    pub fn from_env() -> Result<Self> {
+        let api_key = env::var("REDIS_CLOUD_API_KEY")?;
+        let api_secret_key = env::var("REDIS_CLOUD_API_SECRET_KEY")?;
+        let base_url = env::var("REDIS_CLOUD_URL")
+            .unwrap_or_else(|_| "https://api.redislabs.com/v1".to_string());
+
+        Ok(CloudClient {
+            client: Client::new(),
+            base_url: base_url.trim_end_matches('/').to_string(),
+            api_key,
+            api_secret_key,
+        })
+    }
+
+    /// Make a GET request
+    pub async fn get<T: DeserializeOwned>(&self, path: &str) -> Result<T> {
         let response = self
-            .client
-            .get(&url)
-            .header("x-api-key", &self.api_key)
-            .header("x-api-secret-key", &self.api_secret)
-            .send()
+            .request(reqwest::Method::GET, path, None::<&()>)
             .await?;
+        self.handle_response(response).await
+    }
 
+    /// Make a GET request returning raw JSON
+    pub async fn get_raw(&self, path: &str) -> Result<Value> {
+        let response = self
+            .request(reqwest::Method::GET, path, None::<&()>)
+            .await?;
         self.handle_response(response).await
     }
 
     /// Make a POST request
-    pub async fn post<B: Serialize, T: serde::de::DeserializeOwned>(
-        &self,
-        path: &str,
-        body: &B,
-    ) -> Result<T> {
-        let url = format!("{}{}", self.base_url, path);
-
-        // Same backwards header naming as GET
+    pub async fn post<T, R>(&self, path: &str, body: &T) -> Result<R>
+    where
+        T: Serialize,
+        R: DeserializeOwned,
+    {
         let response = self
-            .client
-            .post(&url)
-            .header("x-api-key", &self.api_key)
-            .header("x-api-secret-key", &self.api_secret)
-            .json(body)
-            .send()
+            .request(reqwest::Method::POST, path, Some(body))
             .await?;
+        self.handle_response(response).await
+    }
 
+    /// Make a POST request returning raw JSON
+    pub async fn post_raw(&self, path: &str, body: &Value) -> Result<Value> {
+        let response = self
+            .request(reqwest::Method::POST, path, Some(body))
+            .await?;
         self.handle_response(response).await
     }
 
     /// Make a PUT request
-    pub async fn put<B: Serialize, T: serde::de::DeserializeOwned>(
-        &self,
-        path: &str,
-        body: &B,
-    ) -> Result<T> {
-        let url = format!("{}{}", self.base_url, path);
+    pub async fn put<T, R>(&self, path: &str, body: &T) -> Result<R>
+    where
+        T: Serialize,
+        R: DeserializeOwned,
+    {
+        let response = self.request(reqwest::Method::PUT, path, Some(body)).await?;
+        self.handle_response(response).await
+    }
 
-        // Same backwards header naming as GET
-        let response = self
-            .client
-            .put(&url)
-            .header("x-api-key", &self.api_key)
-            .header("x-api-secret-key", &self.api_secret)
-            .json(body)
-            .send()
-            .await?;
-
+    /// Make a PUT request returning raw JSON
+    pub async fn put_raw(&self, path: &str, body: &Value) -> Result<Value> {
+        let response = self.request(reqwest::Method::PUT, path, Some(body)).await?;
         self.handle_response(response).await
     }
 
     /// Make a DELETE request
-    pub async fn delete(&self, path: &str) -> Result<()> {
-        let url = format!("{}{}", self.base_url, path);
-
-        // Same backwards header naming as GET
+    pub async fn delete<T: DeserializeOwned>(&self, path: &str) -> Result<T> {
         let response = self
-            .client
-            .delete(&url)
-            .header("x-api-key", &self.api_key)
-            .header("x-api-secret-key", &self.api_secret)
-            .send()
+            .request(reqwest::Method::DELETE, path, None::<&()>)
             .await?;
-
-        if response.status().is_success() {
-            Ok(())
-        } else {
-            let status = response.status();
-            let text = response.text().await.unwrap_or_default();
-            Err(RestError::ApiError {
-                code: status.as_u16(),
-                message: text,
-            })
-        }
-    }
-
-    /// Execute raw GET request returning JSON Value
-    pub async fn get_raw(&self, path: &str) -> Result<serde_json::Value> {
-        self.get(path).await
-    }
-
-    /// Execute raw POST request with JSON body
-    pub async fn post_raw(&self, path: &str, body: serde_json::Value) -> Result<serde_json::Value> {
-        self.post(path, &body).await
-    }
-
-    /// Execute raw PUT request with JSON body
-    pub async fn put_raw(&self, path: &str, body: serde_json::Value) -> Result<serde_json::Value> {
-        self.put(path, &body).await
-    }
-
-    /// Execute raw PATCH request with JSON body
-    pub async fn patch_raw(
-        &self,
-        path: &str,
-        body: serde_json::Value,
-    ) -> Result<serde_json::Value> {
-        let url = format!("{}{}", self.base_url, path);
-
-        // Use backwards header names for compatibility
-        let response = self
-            .client
-            .patch(&url)
-            .header("x-api-key", &self.api_key)
-            .header("x-api-secret-key", &self.api_secret)
-            .json(&body)
-            .send()
-            .await?;
-
         self.handle_response(response).await
     }
 
-    /// Execute raw DELETE request returning any response body
-    pub async fn delete_raw(&self, path: &str) -> Result<serde_json::Value> {
-        let url = format!("{}{}", self.base_url, path);
-
-        // Use backwards header names for compatibility
+    /// Make a DELETE request returning raw JSON
+    pub async fn delete_raw(&self, path: &str) -> Result<Value> {
         let response = self
-            .client
-            .delete(&url)
-            .header("x-api-key", &self.api_key)
-            .header("x-api-secret-key", &self.api_secret)
-            .send()
+            .request(reqwest::Method::DELETE, path, None::<&()>)
             .await?;
-
-        if response.status().is_success() {
-            if response.content_length() == Some(0) {
-                Ok(serde_json::json!({"status": "deleted"}))
-            } else {
-                response.json().await.map_err(Into::into)
-            }
-        } else {
-            let status = response.status();
-            let text = response.text().await.unwrap_or_default();
-            Err(RestError::ApiError {
-                code: status.as_u16(),
-                message: text,
-            })
-        }
+        self.handle_response(response).await
     }
 
-    /// Handle HTTP response
-    async fn handle_response<T: serde::de::DeserializeOwned>(
+    /// Make a PATCH request
+    pub async fn patch<T, R>(&self, path: &str, body: &T) -> Result<R>
+    where
+        T: Serialize,
+        R: DeserializeOwned,
+    {
+        let response = self
+            .request(reqwest::Method::PATCH, path, Some(body))
+            .await?;
+        self.handle_response(response).await
+    }
+
+    /// Make a PATCH request returning raw JSON
+    pub async fn patch_raw(&self, path: &str, body: &Value) -> Result<Value> {
+        let response = self
+            .request(reqwest::Method::PATCH, path, Some(body))
+            .await?;
+        self.handle_response(response).await
+    }
+
+    /// Internal request method
+    async fn request<T: Serialize>(
         &self,
-        response: reqwest::Response,
-    ) -> Result<T> {
+        method: reqwest::Method,
+        path: &str,
+        body: Option<&T>,
+    ) -> Result<Response> {
+        let url = format!("{}{}", self.base_url, path);
+
+        let mut request = self
+            .client
+            .request(method, &url)
+            .header("x-api-key", &self.api_key)
+            .header("x-api-secret-key", &self.api_secret_key)
+            .header("Content-Type", "application/json");
+
+        if let Some(body) = body {
+            request = request.json(body);
+        }
+
+        Ok(request.send().await?)
+    }
+
+    /// Handle the response
+    async fn handle_response<T: DeserializeOwned>(&self, response: Response) -> Result<T> {
         let status = response.status();
 
         if status.is_success() {
-            // Try to get the response text first for debugging
-            let text = response.text().await.map_err(|e| {
-                RestError::ConnectionError(format!("Failed to read response: {}", e))
-            })?;
-
-            // Try to parse as JSON
-            serde_json::from_str::<T>(&text).map_err(|e| {
-                // If parsing fails, include the actual response for debugging
-                RestError::JsonError(e)
-            })
-        } else if status == 401 {
-            // Get the error message from the response
-            let text = response
+            Ok(response.json().await?)
+        } else {
+            let error_text = response
                 .text()
                 .await
-                .unwrap_or_else(|_| "No error message".to_string());
-            Err(RestError::ApiError {
-                code: 401,
-                message: format!("Authentication failed: {}", text),
-            })
-        } else {
-            let text = response.text().await.unwrap_or_default();
-            Err(RestError::ApiError {
-                code: status.as_u16(),
-                message: text,
-            })
+                .unwrap_or_else(|_| "Unknown error".to_string());
+
+            match status {
+                StatusCode::UNAUTHORIZED => Err(CloudError::AuthenticationFailed(error_text)),
+                StatusCode::NOT_FOUND => Err(CloudError::NotFound(error_text)),
+                StatusCode::TOO_MANY_REQUESTS => Err(CloudError::RateLimitExceeded),
+                _ => Err(CloudError::ApiError {
+                    status: status.as_u16(),
+                    message: error_text,
+                }),
+            }
         }
     }
 }

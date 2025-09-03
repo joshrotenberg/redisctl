@@ -1,387 +1,94 @@
-//! Redis Cloud REST API Client
+//! Redis Cloud API client library
 //!
-//! A comprehensive Rust client for the Redis Cloud REST API, providing full access to
-//! subscription management, database operations, billing, monitoring, and advanced features
-//! like VPC peering, SSO/SAML, and Private Service Connect.
+//! This crate provides a comprehensive Rust client for the Redis Cloud REST API.
 //!
-//! ## Features
+//! ## Overview
 //!
-//! - **Subscription Management**: Create, update, delete subscriptions across AWS, GCP, Azure
-//! - **Database Operations**: Full CRUD operations, backups, imports, metrics
-//! - **Advanced Networking**: VPC peering, Transit Gateway, Private Service Connect
-//! - **Security & Access**: ACLs, SSO/SAML integration, API key management
-//! - **Monitoring & Billing**: Comprehensive metrics, logs, billing and payment management
-//! - **Enterprise Features**: Active-Active databases (CRDB), fixed/essentials plans
+//! The library is organized into logical modules that correspond to API resource types:
 //!
-//! ## Quick Start
-//!
-//! ```rust,no_run
-//! use redis_cloud::{CloudClient, CloudDatabaseHandler};
-//!
-//! #[tokio::main]
-//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     // Create client with API credentials
-//!     let client = CloudClient::builder()
-//!         .api_key("your-api-key")
-//!         .api_secret("your-api-secret")
-//!         .build()?;
-//!
-//!     // List all databases  
-//!     let db_handler = CloudDatabaseHandler::new(client.clone());
-//!     let databases = db_handler.list(123).await?;
-//!     println!("Found {} databases", databases.as_array().unwrap_or(&vec![]).len());
-//!
-//!     Ok(())
-//! }
-//! ```
-//!
-//! ## Core Usage Patterns
-//!
-//! ### Client Creation
-//!
-//! The client uses a builder pattern for flexible configuration:
-//!
-//! ```rust,no_run
-//! use redis_cloud::CloudClient;
-//!
-//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! // Basic client with default settings
-//! let client = CloudClient::builder()
-//!     .api_key("your-api-key")
-//!     .api_secret("your-api-secret")
-//!     .build()?;
-//!
-//! // Custom configuration
-//! let client2 = CloudClient::builder()
-//!     .api_key("your-api-key")
-//!     .api_secret("your-api-secret")
-//!     .base_url("https://api.redislabs.com/v1".to_string())
-//!     .timeout(std::time::Duration::from_secs(60))
-//!     .build()?;
-//! # Ok(())
-//! # }
-//! ```
-//!
-//! ### Typed vs Raw API
-//!
-//! This client offers typed handlers for common operations as well as raw helpers when you
-//! need full control over request/response payloads:
-//!
-//! - Prefer typed handlers (e.g., `CloudDatabaseHandler`) for structured, ergonomic access.
-//! - Use raw helpers for passthroughs: `get_raw`, `post_raw`, `put_raw`, `patch_raw`, `delete_raw`.
-//!
-//! ```rust,no_run
-//! use redis_cloud::CloudClient;
-//! use serde_json::json;
-//!
-//! # #[tokio::main]
-//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let client = CloudClient::builder()
-//!     .api_key("key")
-//!     .api_secret("secret")
-//!     .build()?;
-//!
-//! // Raw call example
-//! let created = client.post_raw("/subscriptions", json!({ "name": "example" })).await?;
-//! println!("{}", created);
-//! # Ok(())
-//! # }
-//! ```
-//!
-//! ### Working with Subscriptions
-//!
-//! ```rust,no_run
-//! use redis_cloud::{CloudClient, CloudSubscriptionHandler};
-//! use serde_json::json;
-//!
-//! # #[tokio::main]
-//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let client = CloudClient::builder()
-//!     .api_key("key")
-//!     .api_secret("secret")
-//!     .build()?;
-//!
-//! let sub_handler = CloudSubscriptionHandler::new(client.clone());
-//!
-//! // List subscriptions
-//! let subscriptions = sub_handler.list().await?;
-//!
-//! // Create a new subscription using raw API
-//! let new_subscription = json!({
-//!     "name": "my-redis-subscription",
-//!     "provider": "AWS",
-//!     "region": "us-east-1",
-//!     "plan": "cache.m5.large"
-//! });
-//! let created = client.post_raw("/subscriptions", new_subscription).await?;
-//! # Ok(())
-//! # }
-//! ```
-//!
-//! ### Database Management
-//!
-//! ```rust,no_run
-//! use redis_cloud::{CloudClient, CloudDatabaseHandler};
-//! use serde_json::json;
-//!
-//! # #[tokio::main]
-//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let client = CloudClient::builder()
-//!     .api_key("key")
-//!     .api_secret("secret")
-//!     .build()?;
-//!
-//! let db_handler = CloudDatabaseHandler::new(client.clone());
-//!
-//! // Create database using raw API
-//! let database_config = json!({
-//!     "name": "my-database",
-//!     "memoryLimitInGb": 1.0,
-//!     "support_oss_cluster_api": false,
-//!     "replication": true
-//! });
-//! let database = client.post_raw("/subscriptions/123/databases", database_config).await?;
-//!
-//! // Get database info
-//! let db_info = db_handler.get(123, 456).await?;
-//! # Ok(())
-//! # }
-//! ```
-//!
-//! ### Advanced Features
-//!
-//! #### VPC Peering
-//! ```rust,no_run
-//! use redis_cloud::{CloudClient, CloudPeeringHandler};
-//! use serde_json::json;
-//!
-//! # #[tokio::main]
-//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let client = CloudClient::builder()
-//!     .api_key("key")
-//!     .api_secret("secret")
-//!     .build()?;
-//!
-//! let peering_handler = CloudPeeringHandler::new(client.clone());
-//!
-//! let peering_request = json!({
-//!     "aws_account_id": "123456789012",
-//!     "vpc_id": "vpc-12345678",
-//!     "vpc_cidr": "10.0.0.0/16",
-//!     "region": "us-east-1"
-//! });
-//! let peering = client.post_raw("/subscriptions/123/peerings", peering_request).await?;
-//! # Ok(())
-//! # }
-//! ```
-//!
-//! #### SSO/SAML Management
-//! ```rust,no_run
-//! use redis_cloud::{CloudClient, CloudSsoHandler};
-//! use serde_json::json;
-//!
-//! # #[tokio::main]
-//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let client = CloudClient::builder()
-//!     .api_key("key")
-//!     .api_secret("secret")
-//!     .build()?;
-//!
-//! let sso_handler = CloudSsoHandler::new(client.clone());
-//!
-//! // Configure SSO using raw API
-//! let sso_config = json!({
-//!     "enabled": true,
-//!     "auto_provision": true
-//! });
-//! let config = client.put_raw("/sso", sso_config).await?;
-//! # Ok(())
-//! # }
-//! ```
-//!
-//! #### API Keys (Typed)
-//! ```rust,no_run
-//! use redis_cloud::{CloudClient, CloudApiKeyHandler};
-//! use serde_json::json;
-//!
-//! # #[tokio::main]
-//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let client = CloudClient::builder()
-//!     .api_key("key")
-//!     .api_secret("secret")
-//!     .build()?;
-//!
-//! let keys = CloudApiKeyHandler::new(client.clone());
-//! let all = keys.list().await?; // Vec<ApiKey>
-//! if let Some(first) = all.first() {
-//!     let detailed = keys.get(first.id).await?;
-//!     let _usage = keys.get_usage(detailed.id, "7d").await?;
-//! }
-//!
-//! let created = keys
-//!     .create(&json!({ "name": "ci-bot" }))
-//!     .await?;
-//! let _updated = keys
-//!     .update(created.id, &json!({ "name": "ci-bot", "status": "disabled" }))
-//!     .await?;
-//! # Ok(())
-//! # }
-//! ```
-//!
-//! ## Error Handling
-//!
-//! The client provides comprehensive error handling for different failure scenarios:
-//!
-//! ```rust,no_run
-//! use redis_cloud::{CloudClient, CloudError, CloudDatabaseHandler};
-//!
-//! # #[tokio::main]
-//! # async fn main() {
-//! let client = CloudClient::builder()
-//!     .api_key("key")
-//!     .api_secret("secret")
-//!     .build().unwrap();
-//!
-//! let db_handler = CloudDatabaseHandler::new(client.clone());
-//!
-//! match db_handler.get(123, 456).await {
-//!     Ok(database) => println!("Database: {:?}", database),
-//!     Err(CloudError::ApiError { code: 404, .. }) => {
-//!         println!("Database not found");
-//!     },
-//!     Err(CloudError::AuthenticationFailed) => {
-//!         println!("Invalid API credentials");
-//!     },
-//!     Err(e) => println!("Other error: {}", e),
-//! }
-//! # }
-//! ```
-//!
-//! ## Handler Overview
-//!
-//! The client provides specialized handlers for different API domains:
-//!
-//! | Handler | Purpose | Key Operations |
-//! |---------|---------|----------------|
-//! | [`CloudSubscriptionHandler`] | Subscription management | create, list, update, delete, pricing |
-//! | [`CloudDatabaseHandler`] | Database operations | create, backup, import, metrics, resize |
-//! | [`CloudAccountHandler`] | Account information | info, users, payment methods |
-//! | [`CloudUserHandler`] | User management | create, update, delete, invite |
-//! | [`CloudBillingHandler`] | Billing & payments | invoices, payment methods, usage reports |
-//! | [`CloudBackupHandler`] | Database backups | create, restore, list, delete |
-//! | [`CloudAclHandler`] | Access control | users, roles, Redis rules |
-//! | [`CloudPeeringHandler`] | VPC peering | create, delete, list peering connections |
-//! | [`CloudSsoHandler`] | SSO/SAML | configure, test, user/group mappings |
-//! | [`CloudMetricsHandler`] | Monitoring | database and subscription metrics |
-//! | [`CloudLogsHandler`] | Audit trails | system, database, and session logs |
-//! | [`CloudTaskHandler`] | Async operations | track long-running operations |
+//! - **Account** - Current account details and operations
+//! - **ACL** - Role-based access control (users, roles, Redis rules)
+//! - **Cloud Accounts** - AWS/GCP/Azure cloud account management
+//! - **Subscriptions** - Pro and Essentials subscription management
+//! - **Databases** - Database creation, configuration and management
+//! - **Connectivity** - VPC peering, Transit Gateway, Private Service Connect
+//! - **Tasks** - Asynchronous operation tracking
+//! - **Users** - Account user management
 //!
 //! ## Authentication
 //!
-//! Redis Cloud uses API key authentication with two required headers:
-//! - `x-api-key`: Your API key
-//! - `x-api-secret-key`: Your API secret
+//! The Redis Cloud API uses API key authentication:
 //!
-//! These credentials can be obtained from the Redis Cloud console under Account Settings > API Keys.
+//! ```no_run
+//! use redis_cloud::client::CloudClient;
 //!
-//! Environment variables commonly used with this client:
-//! - `REDIS_CLOUD_API_KEY`
-//! - `REDIS_CLOUD_API_SECRET`
-//! - Optional: set a custom base URL via the builder for non‑prod/test environments (defaults to `https://api.redislabs.com/v1`).
+//! let client = CloudClient::builder()
+//!     .api_key("your-api-key")
+//!     .api_secret_key("your-secret-key")
+//!     .build();
+//! ```
+//!
+//! ## Example Usage
+//!
+//! ```no_run
+//! use redis_cloud::client::CloudClient;
+//! use redis_cloud::subscriptions::SubscriptionHandler;
+//!
+//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = CloudClient::builder()
+//!     .api_key("key")
+//!     .api_secret_key("secret")
+//!     .build();
+//!
+//! // List all subscriptions
+//! let handler = SubscriptionHandler::new(client);
+//! let subscriptions = handler.list().await?;
+//!
+//! for sub in subscriptions {
+//!     println!("Subscription: {} ({})", sub.name, sub.id);
+//! }
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ## Pro vs Essentials
+//!
+//! Redis Cloud offers two tiers with different APIs:
+//!
+//! - **Pro** (`/subscriptions`) - Full-featured subscriptions with advanced options
+//! - **Essentials** (`/fixed/subscriptions`) - Simplified fixed plans
+//!
+//! The library provides separate handlers for each tier while sharing common types.
 
 pub mod client;
+pub mod error;
+pub mod types;
 
-#[cfg(test)]
-mod lib_tests;
-
-// Re-export client types
-pub use client::{CloudClient, CloudClientBuilder};
-
-// Flat modules
+// Core resource modules
 pub mod account;
 pub mod acl;
-pub mod api_keys;
-pub mod backup;
-pub mod billing;
 pub mod cloud_accounts;
-pub mod crdb;
-pub mod database;
-pub mod fixed;
-pub mod logs;
-pub mod metrics;
-pub mod peering;
-pub mod private_service_connect;
-pub mod region;
-pub mod sso;
-pub mod subscription;
+pub mod databases;
+pub mod subscriptions;
 pub mod tasks;
-pub mod transit_gateway;
 pub mod users;
 
-// Root-level re-exports
-pub use account::CloudAccountHandler;
-pub use acl::CloudAclHandler;
-pub use api_keys::CloudApiKeyHandler;
-pub use backup::CloudBackupHandler;
-pub use billing::CloudBillingHandler;
-pub use cloud_accounts::CloudAccountsHandler;
-pub use crdb::CloudCrdbHandler;
-pub use database::CloudDatabaseHandler;
-pub use fixed::CloudFixedHandler;
-pub use logs::CloudLogsHandler;
-pub use metrics::CloudMetricsHandler;
-pub use peering::CloudPeeringHandler;
-pub use private_service_connect::CloudPrivateServiceConnectHandler;
-pub use region::CloudRegionHandler;
-pub use sso::CloudSsoHandler;
-pub use subscription::CloudSubscriptionHandler;
-pub use tasks::CloudTaskHandler;
-pub use transit_gateway::CloudTransitGatewayHandler;
-pub use users::CloudUserHandler;
+// Connectivity modules
+pub mod cidr;
+pub mod maintenance_windows;
+pub mod peerings;
+pub mod private_service_connect;
+pub mod transit_gateways;
 
-// Re-export key types from handler modules
-pub use account::{AccountKey, AccountResponse, CloudAccount};
-pub use api_keys::{
-    ApiKey, ApiKeyAuditLogEntry, ApiKeyAuditLogsResponse, ApiKeyPermissions, ApiKeyRequest,
-    ApiKeyUsagePoint, ApiKeyUsageResponse, ApiKeysResponse,
-};
-pub use backup::{CloudBackup, CreateBackupRequest};
-pub use billing::{
-    AddPaymentMethodRequest, BillingInfo, Invoice, PaymentMethod, UpdatePaymentMethodRequest,
-};
-pub use database::{CloudDatabase, CreateDatabaseRequest, UpdateDatabaseRequest};
-pub use metrics::{CloudMetrics, Measurement, MetricValue, SubscriptionMetrics};
-pub use peering::{CloudPeering, CreatePeeringRequest};
-pub use subscription::{CloudSubscription, CreateSubscriptionRequest, UpdateSubscriptionRequest};
+// Essentials (fixed) modules
+pub mod fixed_databases;
+pub mod fixed_plans;
+pub mod fixed_subscriptions;
 
-// Additional types for backward compatibility
-pub use database::Clustering;
-pub use database::ThroughputMeasurement;
-pub use subscription::{CloudProvider, CloudProviderConfig, CloudRegion, CloudRegionConfig};
+// Utility modules
+pub mod logs;
+pub mod payment_methods;
+pub mod regions;
 
-// Re-export error types
-use thiserror::Error;
-
-#[derive(Error, Debug)]
-pub enum CloudError {
-    #[error("HTTP request failed: {0}")]
-    Request(#[from] reqwest::Error),
-
-    #[error("Authentication failed")]
-    AuthenticationFailed,
-
-    #[error("API error ({code}): {message}")]
-    ApiError { code: u16, message: String },
-
-    #[error("Connection error: {0}")]
-    ConnectionError(String),
-
-    #[error("JSON error: {0}")]
-    JsonError(#[from] serde_json::Error),
-}
-
-pub type Result<T> = std::result::Result<T, CloudError>;
-// Expose a `types` module that re-exports models, to mirror `redis-enterprise::types`.
-
-// Expose a `types` module that re-exports models, to mirror `redis-enterprise::types`.
-pub mod types;
+pub use client::CloudClient;
+pub use error::{CloudError, Result};
