@@ -1,4 +1,51 @@
-//! Subscriptions - Pro - Connectivity operations and models
+//! Network connectivity and peering operations for Pro subscriptions
+//!
+//! This module manages advanced networking features for Redis Cloud Pro subscriptions,
+//! including VPC peering, AWS Transit Gateway attachments, GCP Private Service Connect,
+//! and other cloud-native networking integrations.
+//!
+//! # Overview
+//!
+//! Connectivity features enable secure, private network connections between your
+//! Redis Cloud databases and your application infrastructure. This eliminates the
+//! need for public internet routing and provides lower latency.
+//!
+//! # Supported Connectivity Types
+//!
+//! - **VPC Peering**: Direct peering between Redis Cloud VPC and your VPC
+//! - **Transit Gateway**: AWS Transit Gateway attachments for hub-and-spoke topologies
+//! - **Private Service Connect**: GCP Private Service Connect for private endpoints
+//! - **PrivateLink**: AWS PrivateLink endpoints (coming soon)
+//!
+//! # Key Features
+//!
+//! - **VPC Peering Management**: Create, update, and delete VPC peering connections
+//! - **Transit Gateway Attachments**: Manage AWS TGW attachments and CIDR blocks
+//! - **Private Service Connect**: Configure GCP PSC endpoints and service attachments
+//! - **Multi-region Support**: Handle connectivity across different cloud regions
+//! - **Status Monitoring**: Track connection status and health
+//!
+//! # Example Usage
+//!
+//! ```no_run
+//! use redis_cloud::{CloudClient, ConnectivityHandler};
+//!
+//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = CloudClient::builder()
+//!     .api_key("your-api-key")
+//!     .api_secret("your-api-secret")
+//!     .build()?;
+//!
+//! let handler = ConnectivityHandler::new(client);
+//!
+//! // List VPC peerings for a subscription
+//! let peerings = handler.get_subscription_vpc_peerings(subscription_id).await?;
+//!
+//! // Get Transit Gateway attachments
+//! let tgw_attachments = handler.get_subscription_transit_gateways(subscription_id).await?;
+//! # Ok(())
+//! # }
+//! ```
 
 use crate::{CloudClient, Result};
 use serde::{Deserialize, Serialize};
@@ -458,7 +505,10 @@ pub struct TaskStateUpdate {
 // Handler
 // ============================================================================
 
-/// Subscriptions - Pro - Connectivity operations handler
+/// Handler for network connectivity operations
+///
+/// Manages VPC peering, Transit Gateway attachments, Private Service Connect,
+/// and other advanced networking features for Pro subscriptions.
 pub struct ConnectivityHandler {
     client: CloudClient,
 }

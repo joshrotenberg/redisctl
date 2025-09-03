@@ -252,18 +252,16 @@
 //!
 //! | Handler | Purpose | Key Operations |
 //! |---------|---------|----------------|
-//! | [`CloudSubscriptionHandler`] | Subscription management | create, list, update, delete, pricing |
-//! | [`CloudDatabaseHandler`] | Database operations | create, backup, import, metrics, resize |
-//! | [`CloudAccountHandler`] | Account information | info, users, payment methods |
-//! | [`CloudUserHandler`] | User management | create, update, delete, invite |
-//! | [`CloudBillingHandler`] | Billing & payments | invoices, payment methods, usage reports |
-//! | [`CloudBackupHandler`] | Database backups | create, restore, list, delete |
-//! | [`CloudAclHandler`] | Access control | users, roles, Redis rules |
-//! | [`CloudPeeringHandler`] | VPC peering | create, delete, list peering connections |
-//! | [`CloudSsoHandler`] | SSO/SAML | configure, test, user/group mappings |
-//! | [`CloudMetricsHandler`] | Monitoring | database and subscription metrics |
-//! | [`CloudLogsHandler`] | Audit trails | system, database, and session logs |
-//! | [`CloudTaskHandler`] | Async operations | track long-running operations |
+//! | [`SubscriptionHandler`] | Pro subscriptions | create, list, update, delete, pricing |
+//! | [`FixedSubscriptionHandler`] | Essentials subscriptions | fixed plans, create, update, delete |
+//! | [`DatabaseHandler`] | Pro databases | create, backup, import, metrics, resize |
+//! | [`FixedDatabaseHandler`] | Essentials databases | fixed capacity, backup, import |
+//! | [`AccountHandler`] | Account management | info, API keys, payment methods, SSO |
+//! | [`UserHandler`] | User management | create, update, delete, invite, roles |
+//! | [`AclHandler`] | Access control | users, roles, Redis rules, database ACLs |
+//! | [`ConnectivityHandler`] | Network connectivity | VPC peering, Transit Gateway, PSC |
+//! | [`CloudAccountHandler`] | Cloud providers | AWS, GCP, Azure account integration |
+//! | [`TaskHandler`] | Async operations | track long-running operations |
 //!
 //! ## Authentication
 //!

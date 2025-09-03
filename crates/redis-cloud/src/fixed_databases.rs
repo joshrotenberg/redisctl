@@ -1,4 +1,55 @@
-//! Databases - Essentials operations and models
+//! Database management operations for Essentials (Fixed) subscriptions
+//!
+//! This module provides database management functionality for Redis Cloud Essentials
+//! (formerly Fixed) subscriptions, which offer a simplified, cost-effective option
+//! for smaller workloads with predictable capacity requirements.
+//!
+//! # Overview
+//!
+//! Essentials databases are pre-configured Redis instances with fixed memory allocations
+//! and simplified pricing. They're ideal for development, testing, and production
+//! workloads that don't require auto-scaling or advanced clustering features.
+//!
+//! # Key Features
+//!
+//! - **Fixed Capacity**: Pre-defined memory sizes from 250MB to 12GB
+//! - **Simple Pricing**: Predictable monthly costs
+//! - **Essential Features**: Replication, persistence, and backup support
+//! - **Module Support**: Limited module availability based on plan
+//! - **Quick Setup**: Simplified configuration for faster deployment
+//!
+//! # Differences from Pro Databases
+//!
+//! - Fixed memory allocations (no auto-scaling)
+//! - Limited to single-region deployments
+//! - Simplified module selection
+//! - No clustering support
+//! - Predictable pricing model
+//!
+//! # Example Usage
+//!
+//! ```no_run
+//! use redis_cloud::{CloudClient, FixedDatabaseHandler};
+//!
+//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = CloudClient::builder()
+//!     .api_key("your-api-key")
+//!     .api_secret("your-api-secret")
+//!     .build()?;
+//!
+//! let handler = FixedDatabaseHandler::new(client);
+//!
+//! // List databases in a fixed subscription
+//! let databases = handler.get_fixed_subscription_databases(subscription_id, None, None).await?;
+//!
+//! // Create a new fixed database
+//! let database = handler.create_fixed_database(subscription_id, &create_request).await?;
+//!
+//! // Backup a fixed database
+//! let backup = handler.backup_database_1(subscription_id, database_id, &backup_request).await?;
+//! # Ok(())
+//! # }
+//! ```
 
 use crate::{CloudClient, Result};
 use serde::{Deserialize, Serialize};
@@ -692,7 +743,10 @@ pub struct FixedDatabaseUpdateRequest {
 // Handler
 // ============================================================================
 
-/// Databases - Essentials operations handler
+/// Handler for Essentials database operations
+///
+/// Manages fixed-capacity databases with simplified configuration
+/// and predictable pricing for Redis Cloud Essentials subscriptions.
 pub struct FixedDatabasesHandler {
     client: CloudClient,
 }

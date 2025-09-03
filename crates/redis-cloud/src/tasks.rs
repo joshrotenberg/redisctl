@@ -1,4 +1,59 @@
-//! Tasks operations and models
+//! Asynchronous task tracking and management
+//!
+//! This module provides functionality for tracking long-running operations in
+//! Redis Cloud. Many API operations are asynchronous and return a task ID that
+//! can be used to monitor progress and completion status.
+//!
+//! # Overview
+//!
+//! Redis Cloud uses tasks for operations that may take time to complete, such as:
+//! - Creating or deleting subscriptions
+//! - Database creation, updates, and deletion
+//! - Backup and restore operations
+//! - Import/export operations
+//! - Network configuration changes
+//!
+//! # Task Lifecycle
+//!
+//! 1. **Initiated**: Task is created and queued
+//! 2. **Processing**: Task is being executed
+//! 3. **Completed**: Task finished successfully
+//! 4. **Failed**: Task encountered an error
+//!
+//! # Key Features
+//!
+//! - **Task Status**: Check current status of any task
+//! - **Progress Tracking**: Monitor completion percentage for long operations
+//! - **Result Retrieval**: Get operation results once completed
+//! - **Error Information**: Access detailed error messages for failed tasks
+//! - **Task History**: Query historical task information
+//!
+//! # Example Usage
+//!
+//! ```no_run
+//! use redis_cloud::{CloudClient, TaskHandler};
+//!
+//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = CloudClient::builder()
+//!     .api_key("your-api-key")
+//!     .api_secret("your-api-secret")
+//!     .build()?;
+//!
+//! let handler = TaskHandler::new(client);
+//!
+//! // Get task status
+//! let task = handler.get_task_by_id("task-123".to_string()).await?;
+//!
+//! // Check if task is complete
+//! if task.status == Some("completed".to_string()) {
+//!     println!("Task completed successfully");
+//!     if let Some(response) = task.response {
+//!         println!("Result: {:?}", response);
+//!     }
+//! }
+//! # Ok(())
+//! # }
+//! ```
 
 use crate::{CloudClient, Result};
 use serde::{Deserialize, Serialize};
@@ -68,7 +123,10 @@ pub struct TaskStateUpdate {
 // Handler
 // ============================================================================
 
-/// Tasks operations handler
+/// Handler for asynchronous task operations
+///
+/// Tracks and manages long-running operations, providing status updates,
+/// progress monitoring, and result retrieval for asynchronous API calls.
 pub struct TasksHandler {
     client: CloudClient,
 }

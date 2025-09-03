@@ -1,4 +1,58 @@
-//! Databases - Pro operations and models
+//! Database management operations for Pro subscriptions
+//!
+//! This module provides comprehensive database management functionality for Redis Cloud
+//! Pro subscriptions, including creation, configuration, backup, import/export, and
+//! monitoring capabilities.
+//!
+//! # Overview
+//!
+//! Pro databases offer the full range of Redis Cloud features including high availability,
+//! auto-scaling, clustering, modules, and advanced data persistence options. They can be
+//! deployed across multiple cloud providers and regions.
+//!
+//! # Key Features
+//!
+//! - **Database Lifecycle**: Create, update, delete, and manage databases
+//! - **Backup & Restore**: Automated and on-demand backup operations
+//! - **Import/Export**: Import data from RDB files or other Redis instances
+//! - **Modules**: Support for RedisJSON, RediSearch, RedisGraph, RedisTimeSeries, RedisBloom
+//! - **High Availability**: Replication, auto-failover, and clustering support
+//! - **Monitoring**: Metrics, alerts, and performance insights
+//! - **Security**: TLS, password protection, and ACL support
+//!
+//! # Database Configuration Options
+//!
+//! - Memory limits from 250MB to 500GB+
+//! - Support for Redis OSS Cluster API
+//! - Data persistence: AOF, snapshot, or both
+//! - Data eviction policies
+//! - Replication and clustering
+//! - Custom Redis versions
+//!
+//! # Example Usage
+//!
+//! ```no_run
+//! use redis_cloud::{CloudClient, DatabaseHandler};
+//!
+//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = CloudClient::builder()
+//!     .api_key("your-api-key")
+//!     .api_secret("your-api-secret")
+//!     .build()?;
+//!
+//! let handler = DatabaseHandler::new(client);
+//!
+//! // List all databases in a subscription
+//! let databases = handler.get_subscription_databases(subscription_id, None, None).await?;
+//!
+//! // Get specific database details
+//! let database = handler.get_subscription_database_by_id(subscription_id, database_id).await?;
+//!
+//! // Create a backup
+//! let backup = handler.backup_database(subscription_id, database_id, &backup_request).await?;
+//! # Ok(())
+//! # }
+//! ```
 
 use crate::{CloudClient, Result};
 use serde::{Deserialize, Serialize};
@@ -500,7 +554,10 @@ pub struct DatabaseAlertSpec {
     pub extra: Value,
 }
 
-/// Database definition
+/// Request structure for creating a new Pro database
+///
+/// Contains all configuration options for creating a database in a Pro subscription,
+/// including memory settings, replication, persistence, modules, and networking.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DatabaseCreateRequest {
@@ -904,7 +961,10 @@ pub struct DatabaseUpdateRequest {
 // Handler
 // ============================================================================
 
-/// Databases - Pro operations handler
+/// Handler for Pro database operations
+///
+/// Manages database lifecycle, configuration, backup/restore, import/export,
+/// and monitoring for Redis Cloud Pro subscriptions.
 pub struct DatabasesHandler {
     client: CloudClient,
 }

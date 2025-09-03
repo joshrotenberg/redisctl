@@ -1,4 +1,61 @@
-//! Subscriptions - Pro operations and models
+//! Subscription management for Pro (Flexible) plans
+//!
+//! This module provides comprehensive management of Redis Cloud Pro subscriptions,
+//! which offer flexible, scalable Redis deployments with advanced features like
+//! auto-scaling, multi-region support, and Active-Active configurations.
+//!
+//! # Overview
+//!
+//! Pro subscriptions are Redis Cloud's most flexible offering, supporting everything
+//! from small development instances to large-scale production deployments with
+//! automatic scaling, clustering, and global distribution.
+//!
+//! # Key Features
+//!
+//! - **Flexible Scaling**: Auto-scaling based on usage patterns
+//! - **Multi-Region**: Deploy across multiple regions and cloud providers
+//! - **Active-Active**: Global database replication with local reads/writes
+//! - **Advanced Networking**: VPC peering, Transit Gateway, Private endpoints
+//! - **Maintenance Windows**: Configurable maintenance scheduling
+//! - **CIDR Management**: IP whitelist and security group configuration
+//! - **Custom Pricing**: Usage-based pricing with detailed cost tracking
+//!
+//! # Subscription Types
+//!
+//! - **Single-Region**: Standard deployment in one region
+//! - **Multi-Region**: Replicated across multiple regions
+//! - **Active-Active**: CRDB with conflict-free replicated data types
+//!
+//! # Example Usage
+//!
+//! ```no_run
+//! use redis_cloud::{CloudClient, SubscriptionHandler};
+//!
+//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = CloudClient::builder()
+//!     .api_key("your-api-key")
+//!     .api_secret("your-api-secret")
+//!     .build()?;
+//!
+//! let handler = SubscriptionHandler::new(client);
+//!
+//! // List all Pro subscriptions
+//! let subscriptions = handler.get_all_subscriptions().await?;
+//!
+//! // Get subscription details
+//! let subscription = handler.get_subscription_by_id(subscription_id).await?;
+//!
+//! // Update CIDR whitelist
+//! let cidr_update = handler.update_subscription_cidr_white_list(
+//!     subscription_id,
+//!     &cidr_request
+//! ).await?;
+//!
+//! // Manage maintenance windows
+//! let windows = handler.get_subscription_maintenance_windows(subscription_id).await?;
+//! # Ok(())
+//! # }
+//! ```
 
 use crate::{CloudClient, Result};
 use serde::{Deserialize, Serialize};
@@ -288,7 +345,10 @@ pub struct SubscriptionPricing {
     pub extra: Value,
 }
 
-/// Subscription create request
+/// Request structure for creating a new Pro subscription
+///
+/// Defines configuration for flexible subscriptions including cloud providers,
+/// regions, deployment type, and initial database specifications.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SubscriptionCreateRequest {
@@ -768,7 +828,10 @@ pub struct SubscriptionMaintenanceWindows {
 // Handler
 // ============================================================================
 
-/// Subscriptions - Pro operations handler
+/// Handler for Pro subscription operations
+///
+/// Manages flexible subscriptions with auto-scaling, multi-region support,
+/// Active-Active configurations, and advanced networking features.
 pub struct SubscriptionsHandler {
     client: CloudClient,
 }

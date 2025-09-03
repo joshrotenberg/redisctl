@@ -1,4 +1,44 @@
 //! Role-based Access Control (RBAC) operations and models
+//!
+//! This module provides comprehensive access control management for Redis Cloud,
+//! including ACL management for users, roles, Redis rules, and database-level
+//! access controls.
+//!
+//! # Overview
+//!
+//! The ACL module implements Redis Cloud's role-based access control system, allowing
+//! fine-grained control over who can access what resources and perform which operations.
+//! It supports both user-level and database-level access controls.
+//!
+//! # Key Features
+//!
+//! - **User ACLs**: Manage user access control lists and permissions
+//! - **Role Management**: Create and manage roles with specific permissions
+//! - **Redis Rules**: Define Redis command-level access rules
+//! - **Database ACLs**: Control access at the database level
+//! - **Rule Association**: Link users and roles to specific databases
+//!
+//! # Example Usage
+//!
+//! ```no_run
+//! use redis_cloud::{CloudClient, AclHandler};
+//!
+//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = CloudClient::builder()
+//!     .api_key("your-api-key")
+//!     .api_secret("your-api-secret")
+//!     .build()?;
+//!
+//! let handler = AclHandler::new(client);
+//!
+//! // List ACL users for a database
+//! let users = handler.get_acl_users(subscription_id, database_id).await?;
+//!
+//! // Get Redis rules for a database
+//! let rules = handler.get_redis_rules(subscription_id, database_id).await?;
+//! # Ok(())
+//! # }
+//! ```
 
 use crate::{CloudClient, Result};
 use serde::{Deserialize, Serialize};
@@ -298,7 +338,10 @@ pub struct TaskStateUpdate {
 // Handler
 // ============================================================================
 
-/// Role-based Access Control (RBAC) operations handler
+/// Handler for Role-based Access Control (RBAC) operations
+///
+/// Manages ACLs for users, roles, Redis rules, and database-level access controls.
+/// Provides fine-grained permission management for Redis Cloud resources.
 pub struct AclHandler {
     client: CloudClient,
 }
