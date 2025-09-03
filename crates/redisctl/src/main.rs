@@ -95,7 +95,7 @@ async fn execute_profile_command(
                 return Ok(());
             }
 
-            println!("{:<15} {:<12} {}", "NAME", "TYPE", "DETAILS");
+            println!("{:<15} {:<12} DETAILS", "NAME", "TYPE");
             println!("{:-<15} {:-<12} {:-<30}", "", "", "");
 
             for (name, profile) in profiles {

@@ -3,6 +3,8 @@
 //! Handles configuration loading from files, environment variables, and command-line arguments.
 //! Configuration is stored in TOML format with support for multiple named profiles.
 
+#![allow(dead_code)] // Foundation code - will be used in future PRs
+
 use anyhow::{Context, Result};
 use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
@@ -148,8 +150,8 @@ impl Config {
     pub fn get_profile(&self, name: Option<&str>) -> Option<&Profile> {
         let env_profile = std::env::var("REDISCTL_PROFILE").ok();
         let profile_name = name
-            .or_else(|| env_profile.as_deref())
-            .or_else(|| self.default_profile.as_deref())?;
+            .or(env_profile.as_deref())
+            .or(self.default_profile.as_deref())?;
 
         self.profiles.get(profile_name)
     }
@@ -159,7 +161,7 @@ impl Config {
         let env_profile = std::env::var("REDISCTL_PROFILE").ok();
         let profile_name = env_profile
             .as_deref()
-            .or_else(|| self.default_profile.as_deref())
+            .or(self.default_profile.as_deref())
             .ok_or_else(|| {
                 anyhow::anyhow!(
                     "No profile configured. Use 'redisctl profile' commands to configure."

@@ -2,6 +2,8 @@
 //!
 //! Defines structured error types using thiserror for better error handling and user experience.
 
+#![allow(dead_code)] // Foundation code - will be used in future PRs
+
 use thiserror::Error;
 
 /// Main error type for the redisctl application
