@@ -57,7 +57,7 @@ pub enum Commands {
         deployment: DeploymentType,
 
         /// HTTP method
-        #[arg(value_enum)]
+        #[arg(value_parser = parse_http_method)]
         method: HttpMethod,
 
         /// API endpoint path (e.g., /subscriptions)
@@ -90,13 +90,28 @@ pub enum Commands {
 }
 
 /// HTTP methods for raw API access
-#[derive(Debug, Clone, clap::ValueEnum)]
+#[derive(Debug, Clone)]
 pub enum HttpMethod {
     Get,
     Post,
     Put,
     Patch,
     Delete,
+}
+
+/// Parse HTTP method case-insensitively
+fn parse_http_method(s: &str) -> Result<HttpMethod, String> {
+    match s.to_lowercase().as_str() {
+        "get" => Ok(HttpMethod::Get),
+        "post" => Ok(HttpMethod::Post),
+        "put" => Ok(HttpMethod::Put),
+        "patch" => Ok(HttpMethod::Patch),
+        "delete" => Ok(HttpMethod::Delete),
+        _ => Err(format!(
+            "invalid HTTP method: {} (valid: get, post, put, patch, delete)",
+            s
+        )),
+    }
 }
 
 /// Profile management commands
