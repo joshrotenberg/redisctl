@@ -292,9 +292,15 @@ async fn execute_cloud_command(
     use cli::CloudCommands::*;
 
     match cloud_cmd {
-        Account(_) => {
-            println!("Cloud account commands are not yet implemented");
-            Ok(())
+        Account(account_cmd) => {
+            commands::cloud::handle_account_command(
+                conn_mgr,
+                cli.profile.as_deref(),
+                account_cmd,
+                cli.output,
+                cli.query.as_deref(),
+            )
+            .await
         }
 
         Subscription(sub_cmd) => {
@@ -308,9 +314,15 @@ async fn execute_cloud_command(
             .await
         }
 
-        Database(_) => {
-            println!("Cloud database commands are not yet implemented");
-            Ok(())
+        Database(db_cmd) => {
+            commands::cloud::handle_database_command(
+                conn_mgr,
+                cli.profile.as_deref(),
+                db_cmd,
+                cli.output,
+                cli.query.as_deref(),
+            )
+            .await
         }
 
         User(user_cmd) => {
@@ -323,5 +335,11 @@ async fn execute_cloud_command(
             )
             .await
         }
+
+        TestStyles => commands::cloud_v2::test_all_styles(conn_mgr, cli.profile.as_deref())
+            .await
+            .map_err(|e| RedisCtlError::ApiError {
+                message: e.to_string(),
+            }),
     }
 }
