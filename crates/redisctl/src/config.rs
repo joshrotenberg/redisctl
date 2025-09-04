@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
+use tracing::{debug, info, trace, warn};
 
 /// Main configuration structure
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
@@ -117,16 +118,23 @@ impl Profile {
 impl Config {
     /// Load configuration from the standard location
     pub fn load() -> Result<Self> {
+        debug!("Loading configuration");
         let config_path = Self::config_path()?;
+        info!("Configuration path: {:?}", config_path);
 
         if !config_path.exists() {
+            info!("No configuration file found, using defaults");
             return Ok(Config::default());
         }
 
+        debug!("Reading configuration from {:?}", config_path);
         let content = fs::read_to_string(&config_path)
             .with_context(|| format!("Failed to read config from {:?}", config_path))?;
 
+        trace!("Raw config content: {} bytes", content.len());
+
         // Expand environment variables in the config content
+        debug!("Expanding environment variables in configuration");
         let expanded_content = Self::expand_env_vars(&content).with_context(|| {
             format!(
                 "Failed to expand environment variables in config from {:?}",
@@ -134,8 +142,25 @@ impl Config {
             )
         })?;
 
-        toml::from_str(&expanded_content)
-            .with_context(|| format!("Failed to parse config from {:?}", config_path))
+        if expanded_content != content {
+            debug!("Environment variables were expanded in configuration");
+        }
+
+        debug!("Parsing TOML configuration");
+        let config: Config = toml::from_str(&expanded_content)
+            .with_context(|| format!("Failed to parse config from {:?}", config_path))?;
+
+        info!(
+            "Configuration loaded: {} profiles, default: {:?}",
+            config.profiles.len(),
+            config.default_profile
+        );
+
+        for (name, profile) in &config.profiles {
+            debug!("Profile '{}': type={:?}", name, profile.deployment_type);
+        }
+
+        Ok(config)
     }
 
     /// Save configuration to the standard location
@@ -158,29 +183,61 @@ impl Config {
 
     /// Get a profile by name, considering environment variables and defaults
     pub fn get_profile(&self, name: Option<&str>) -> Option<&Profile> {
+        debug!("Resolving profile: explicit={:?}", name);
+
         let env_profile = std::env::var("REDISCTL_PROFILE").ok();
+        if let Some(ref env_name) = env_profile {
+            debug!("Found REDISCTL_PROFILE environment variable: {}", env_name);
+        }
+
         let profile_name = name
             .or(env_profile.as_deref())
             .or(self.default_profile.as_deref())?;
 
-        self.profiles.get(profile_name)
+        info!(
+            "Selected profile: {} (source: {})",
+            profile_name,
+            if name.is_some() {
+                "explicit"
+            } else if env_profile.is_some() {
+                "environment"
+            } else {
+                "default"
+            }
+        );
+
+        let profile = self.profiles.get(profile_name);
+        if profile.is_none() {
+            warn!("Profile '{}' not found in configuration", profile_name);
+        }
+        profile
     }
 
     /// Get the active profile, returning an error if none is configured
     pub fn get_active_profile(&self) -> Result<&Profile> {
+        debug!("Getting active profile");
+
         let env_profile = std::env::var("REDISCTL_PROFILE").ok();
+        if let Some(ref env_name) = env_profile {
+            debug!("REDISCTL_PROFILE environment variable: {}", env_name);
+        }
+
         let profile_name = env_profile
             .as_deref()
             .or(self.default_profile.as_deref())
             .ok_or_else(|| {
+                warn!("No profile configured - no environment variable or default profile");
                 anyhow::anyhow!(
                     "No profile configured. Use 'redisctl profile' commands to configure."
                 )
             })?;
 
-        self.profiles
-            .get(profile_name)
-            .ok_or_else(|| anyhow::anyhow!("Profile '{}' not found", profile_name))
+        info!("Active profile: {}", profile_name);
+
+        self.profiles.get(profile_name).ok_or_else(|| {
+            warn!("Profile '{}' not found in configuration", profile_name);
+            anyhow::anyhow!("Profile '{}' not found", profile_name)
+        })
     }
 
     /// Set or update a profile
@@ -222,6 +279,8 @@ impl Config {
     /// On Linux: ~/.config/redisctl/config.toml
     /// On Windows: %APPDATA%\redis\redisctl\config.toml
     pub fn config_path() -> Result<PathBuf> {
+        trace!("Determining configuration file path");
+
         // On macOS, check for Linux-style path first for cross-platform consistency
         #[cfg(target_os = "macos")]
         {
@@ -232,19 +291,30 @@ impl Config {
                     .join("redisctl")
                     .join("config.toml");
 
+                trace!("Checking Linux-style path on macOS: {:?}", linux_style_path);
+
                 // If Linux-style config exists, use it
                 if linux_style_path.exists() {
+                    debug!(
+                        "Using existing Linux-style config path on macOS: {:?}",
+                        linux_style_path
+                    );
                     return Ok(linux_style_path);
                 }
 
                 // Also check if the config directory exists (user might have created it)
                 if linux_style_path.parent().is_some_and(|p| p.exists()) {
+                    debug!(
+                        "Using Linux-style config directory on macOS: {:?}",
+                        linux_style_path
+                    );
                     return Ok(linux_style_path);
                 }
             }
         }
 
         // Use platform-specific standard path
+        trace!("Using platform-specific configuration path");
         let proj_dirs = ProjectDirs::from("com", "redis", "redisctl")
             .context("Failed to determine config directory")?;
 

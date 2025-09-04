@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
+use tracing::{debug, error, info, trace, warn};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod cli;
@@ -35,49 +36,124 @@ async fn main() -> Result<()> {
 }
 
 fn init_tracing(verbose: u8) {
-    let filter = match verbose {
-        0 => "redisctl=warn",
-        1 => "redisctl=info",
-        2 => "redisctl=debug",
-        _ => "redisctl=trace",
+    // Check for RUST_LOG env var first, then fall back to verbosity flag
+    let filter = if std::env::var("RUST_LOG").is_ok() {
+        tracing_subscriber::EnvFilter::from_default_env()
+    } else {
+        let level = match verbose {
+            0 => "redisctl=warn,redis_cloud=warn,redis_enterprise=warn",
+            1 => "redisctl=info,redis_cloud=info,redis_enterprise=info",
+            2 => "redisctl=debug,redis_cloud=debug,redis_enterprise=debug",
+            _ => "redisctl=trace,redis_cloud=trace,redis_enterprise=trace",
+        };
+        tracing_subscriber::EnvFilter::new(level)
     };
 
     tracing_subscriber::registry()
-        .with(tracing_subscriber::EnvFilter::new(filter))
-        .with(tracing_subscriber::fmt::layer())
+        .with(filter)
+        .with(
+            tracing_subscriber::fmt::layer()
+                .with_target(true)
+                .with_thread_ids(false)
+                .with_thread_names(false)
+                .compact(),
+        )
         .init();
+
+    debug!("Tracing initialized with verbosity level: {}", verbose);
 }
 
 async fn execute_command(cli: &Cli, conn_mgr: &ConnectionManager) -> Result<(), RedisCtlError> {
-    match &cli.command {
+    // Log command execution with sanitized parameters
+    trace!("Executing command: {:?}", cli.command);
+    info!("Command: {}", format_command(&cli.command));
+
+    let start = std::time::Instant::now();
+    let result = match &cli.command {
         Commands::Version => {
+            debug!("Showing version information");
             println!("redisctl {}", env!("CARGO_PKG_VERSION"));
             Ok(())
         }
 
-        Commands::Profile(profile_cmd) => execute_profile_command(profile_cmd, conn_mgr).await,
+        Commands::Profile(profile_cmd) => {
+            debug!("Executing profile command");
+            execute_profile_command(profile_cmd, conn_mgr).await
+        }
 
         Commands::Api {
             deployment,
             method,
             path,
             data,
-        } => execute_api_command(cli, conn_mgr, deployment, method, path, data.as_deref()).await,
+        } => {
+            info!(
+                "API call: {} {} {} (deployment: {:?})",
+                method,
+                path,
+                if data.is_some() {
+                    "with data"
+                } else {
+                    "no data"
+                },
+                deployment
+            );
+            execute_api_command(cli, conn_mgr, deployment, method, path, data.as_deref()).await
+        }
 
         Commands::Cloud(_) => {
+            warn!("Cloud commands not yet implemented");
             println!("Cloud commands are not yet implemented in this version");
             Ok(())
         }
 
         Commands::Enterprise(_) => {
+            warn!("Enterprise commands not yet implemented");
             println!("Enterprise commands are not yet implemented in this version");
             Ok(())
         }
 
         Commands::Database(_) => {
+            warn!("Smart database commands not yet implemented");
             println!("Smart database commands are not yet implemented in this version");
             Ok(())
         }
+    };
+
+    let duration = start.elapsed();
+    match &result {
+        Ok(_) => info!("Command completed successfully in {:?}", duration),
+        Err(e) => error!("Command failed after {:?}: {}", duration, e),
+    }
+
+    result
+}
+
+/// Format command for human-readable logging (without sensitive data)
+fn format_command(command: &Commands) -> String {
+    match command {
+        Commands::Version => "version".to_string(),
+        Commands::Profile(cmd) => {
+            use cli::ProfileCommands::*;
+            match cmd {
+                List => "profile list".to_string(),
+                Show { name } => format!("profile show {}", name),
+                Set { name, .. } => format!("profile set {} [credentials redacted]", name),
+                Remove { name } => format!("profile remove {}", name),
+                Default { name } => format!("profile default {}", name),
+            }
+        }
+        Commands::Api {
+            deployment,
+            method,
+            path,
+            ..
+        } => {
+            format!("api {:?} {} {}", deployment, method, path)
+        }
+        Commands::Cloud(cmd) => format!("cloud {:?}", cmd),
+        Commands::Enterprise(cmd) => format!("enterprise {:?}", cmd),
+        Commands::Database(cmd) => format!("database {:?}", cmd),
     }
 }
 
@@ -89,8 +165,12 @@ async fn execute_profile_command(
 
     match profile_cmd {
         List => {
+            debug!("Listing all configured profiles");
             let profiles = conn_mgr.config.list_profiles();
+            trace!("Found {} profiles", profiles.len());
+
             if profiles.is_empty() {
+                info!("No profiles configured");
                 println!("No profiles configured.");
                 println!("Use 'redisctl profile set' to create a profile.");
                 return Ok(());

@@ -114,6 +114,18 @@ fn parse_http_method(s: &str) -> Result<HttpMethod, String> {
     }
 }
 
+impl std::fmt::Display for HttpMethod {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            HttpMethod::Get => write!(f, "GET"),
+            HttpMethod::Post => write!(f, "POST"),
+            HttpMethod::Put => write!(f, "PUT"),
+            HttpMethod::Patch => write!(f, "PATCH"),
+            HttpMethod::Delete => write!(f, "DELETE"),
+        }
+    }
+}
+
 /// Profile management commands
 #[derive(Subcommand, Debug)]
 pub enum ProfileCommands {
