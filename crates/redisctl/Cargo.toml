@@ -27,7 +27,7 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-chrono = "0.4"
+chrono = { version = "0.4", features = ["serde"] }
 rpassword = { workspace = true }
 urlencoding = "2.1"
 dialoguer = "0.11"
