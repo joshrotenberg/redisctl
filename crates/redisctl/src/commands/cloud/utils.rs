@@ -4,11 +4,12 @@ use anyhow::Context;
 use chrono::{DateTime, Utc};
 use colored::Colorize;
 use serde_json::Value;
-use std::io::IsTerminal;
 use tabled::Tabled;
 
 #[cfg(unix)]
 use pager::Pager;
+#[cfg(unix)]
+use std::io::IsTerminal;
 
 use crate::cli::OutputFormat;
 use crate::error::Result as CliResult;
