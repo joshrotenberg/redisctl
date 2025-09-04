@@ -172,15 +172,16 @@ fn format_user_status(user: &Value) -> String {
 }
 
 /// Format MFA status
+#[allow(clippy::collapsible_if)]
 fn format_mfa_status(user: &Value) -> String {
     // Check in options.mfaEnabled
-    if let Some(options) = user.get("options")
-        && let Some(mfa) = options.get("mfaEnabled").and_then(|m| m.as_bool())
-    {
-        if mfa {
-            return "✓".green().to_string();
-        } else {
-            return "✗".red().to_string();
+    if let Some(options) = user.get("options") {
+        if let Some(mfa) = options.get("mfaEnabled").and_then(|m| m.as_bool()) {
+            if mfa {
+                return "✓".green().to_string();
+            } else {
+                return "✗".red().to_string();
+            }
         }
     }
 
@@ -304,17 +305,18 @@ fn print_user_detail(data: &Value) -> CliResult<()> {
     }
 
     // Security settings
-    if let Some(options) = data.get("options")
-        && let Some(mfa) = options.get("mfaEnabled").and_then(|m| m.as_bool())
-    {
-        rows.push(DetailRow {
-            field: "MFA".to_string(),
-            value: if mfa {
-                "✓ Enabled".to_string()
-            } else {
-                "✗ Disabled".to_string()
-            },
-        });
+    #[allow(clippy::collapsible_if)]
+    if let Some(options) = data.get("options") {
+        if let Some(mfa) = options.get("mfaEnabled").and_then(|m| m.as_bool()) {
+            rows.push(DetailRow {
+                field: "MFA".to_string(),
+                value: if mfa {
+                    "✓ Enabled".to_string()
+                } else {
+                    "✗ Disabled".to_string()
+                },
+            });
+        }
     }
 
     // API access

@@ -218,13 +218,15 @@ fn format_status(user: &Value) -> String {
 }
 
 fn format_mfa(user: &Value) -> String {
-    if let Some(options) = user.get("options")
-        && let Some(mfa) = options.get("mfaEnabled").and_then(|m| m.as_bool())
-    {
-        if mfa {
-            "✓".green().to_string()
+    if let Some(options) = user.get("options") {
+        if let Some(mfa) = options.get("mfaEnabled").and_then(|m| m.as_bool()) {
+            if mfa {
+                "✓".green().to_string()
+            } else {
+                "✗".red().to_string()
+            }
         } else {
-            "✗".red().to_string()
+            "—".to_string()
         }
     } else {
         "—".to_string()
