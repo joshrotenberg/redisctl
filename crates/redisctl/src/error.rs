@@ -85,3 +85,19 @@ impl From<redis_enterprise::RestError> for RedisCtlError {
         }
     }
 }
+
+impl From<serde_json::Error> for RedisCtlError {
+    fn from(err: serde_json::Error) -> Self {
+        RedisCtlError::OutputError {
+            message: format!("JSON error: {}", err),
+        }
+    }
+}
+
+impl From<std::io::Error> for RedisCtlError {
+    fn from(err: std::io::Error) -> Self {
+        RedisCtlError::OutputError {
+            message: format!("IO error: {}", err),
+        }
+    }
+}
