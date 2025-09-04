@@ -33,8 +33,10 @@ urlencoding = "2.1"
 dialoguer = "0.11"
 colored = "2.1"
 tabled = { version = "0.17", features = ["ansi"] }
-pager = "0.16"
 terminal_size = "0.4"
+
+[target.'cfg(unix)'.dependencies]
+pager = "0.16"
 
 # Shared utility dependencies
 thiserror = { workspace = true }

@@ -3,10 +3,12 @@
 use anyhow::Context;
 use chrono::{DateTime, Utc};
 use colored::Colorize;
-use pager::Pager;
 use serde_json::Value;
 use std::io::IsTerminal;
 use tabled::Tabled;
+
+#[cfg(unix)]
+use pager::Pager;
 
 use crate::cli::OutputFormat;
 use crate::error::Result as CliResult;
@@ -47,17 +49,20 @@ pub fn extract_field(value: &Value, field: &str, default: &str) -> String {
 
 /// Output with automatic pager for long content
 pub fn output_with_pager(content: &str) {
-    let lines: Vec<&str> = content.lines().collect();
-
-    // Check if we should use a pager
-    if should_use_pager(&lines) {
-        Pager::new().setup();
+    // Check if we should use a pager (Unix only)
+    #[cfg(unix)]
+    {
+        let lines: Vec<&str> = content.lines().collect();
+        if should_use_pager(&lines) {
+            Pager::new().setup();
+        }
     }
 
     println!("{}", content);
 }
 
-/// Check if we should use a pager for output
+/// Check if we should use a pager for output (Unix only)
+#[cfg(unix)]
 fn should_use_pager(lines: &[&str]) -> bool {
     // Only page if we're in a TTY
     if !std::io::stdout().is_terminal() {
