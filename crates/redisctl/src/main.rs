@@ -64,10 +64,7 @@ async fn execute_command(cli: &Cli, conn_mgr: &ConnectionManager) -> Result<(), 
             data,
         } => execute_api_command(cli, conn_mgr, deployment, method, path, data.as_deref()).await,
 
-        Commands::Cloud(_) => {
-            println!("Cloud commands are not yet implemented in this version");
-            Ok(())
-        }
+        Commands::Cloud(cloud_cmd) => execute_cloud_command(cli, conn_mgr, cloud_cmd).await,
 
         Commands::Enterprise(_) => {
             println!("Enterprise commands are not yet implemented in this version");
@@ -206,4 +203,35 @@ async fn execute_api_command(
         output_format: cli.output,
     })
     .await
+}
+
+async fn execute_cloud_command(
+    cli: &Cli,
+    conn_mgr: &ConnectionManager,
+    cloud_cmd: &cli::CloudCommands,
+) -> Result<(), RedisCtlError> {
+    use cli::CloudCommands::*;
+
+    match cloud_cmd {
+        Account(_) => {
+            println!("Cloud account commands are not yet implemented");
+            Ok(())
+        }
+
+        Subscription(sub_cmd) => {
+            commands::cloud::handle_subscription_command(
+                conn_mgr,
+                cli.profile.as_deref(),
+                sub_cmd,
+                cli.output,
+                cli.query.as_deref(),
+            )
+            .await
+        }
+
+        Database(_) => {
+            println!("Cloud database commands are not yet implemented");
+            Ok(())
+        }
+    }
 }
