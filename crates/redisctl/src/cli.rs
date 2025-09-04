@@ -69,22 +69,23 @@ pub enum Commands {
     },
 
     /// Profile management
-    #[command(subcommand)]
+    #[command(subcommand, visible_alias = "prof", visible_alias = "pr")]
     Profile(ProfileCommands),
 
     /// Cloud-specific operations
-    #[command(subcommand)]
+    #[command(subcommand, visible_alias = "cl")]
     Cloud(CloudCommands),
 
     /// Enterprise-specific operations  
-    #[command(subcommand)]
+    #[command(subcommand, visible_alias = "ent", visible_alias = "en")]
     Enterprise(EnterpriseCommands),
 
     /// Smart commands that work with both deployments
-    #[command(subcommand)]
+    #[command(subcommand, visible_alias = "db", visible_alias = "dat")]
     Database(DatabaseCommands),
 
     /// Version information
+    #[command(visible_alias = "ver", visible_alias = "v")]
     Version,
 }
 
@@ -102,15 +103,18 @@ pub enum HttpMethod {
 #[derive(Subcommand, Debug)]
 pub enum ProfileCommands {
     /// List all configured profiles
+    #[command(visible_alias = "ls", visible_alias = "l")]
     List,
 
     /// Show details of a specific profile
+    #[command(visible_alias = "sh", visible_alias = "get")]
     Show {
         /// Profile name to show
         name: String,
     },
 
     /// Set or create a profile
+    #[command(visible_alias = "add", visible_alias = "create")]
     Set {
         /// Profile name
         name: String,
@@ -149,12 +153,14 @@ pub enum ProfileCommands {
     },
 
     /// Remove a profile
+    #[command(visible_alias = "rm", visible_alias = "del", visible_alias = "delete")]
     Remove {
         /// Profile name to remove
         name: String,
     },
 
     /// Set the default profile
+    #[command(visible_alias = "def")]
     Default {
         /// Profile name to set as default
         name: String,
