@@ -208,6 +208,14 @@ pub enum CloudCommands {
     /// Database operations  
     #[command(subcommand)]
     Database(CloudDatabaseCommands),
+
+    /// User operations
+    #[command(subcommand)]
+    User(CloudUserCommands),
+
+    /// Test table styles (temporary)
+    #[command(hide = true)]
+    TestStyles,
 }
 
 /// Enterprise-specific commands (placeholder for now)
@@ -253,17 +261,48 @@ pub enum DatabaseCommands {
 
 #[derive(Subcommand, Debug)]
 pub enum CloudAccountCommands {
-    Info,
+    /// Get account information
+    Get,
 }
 
 #[derive(Subcommand, Debug)]
 pub enum CloudSubscriptionCommands {
+    /// List all subscriptions
     List,
+
+    /// Get detailed subscription information
+    Get {
+        /// Subscription ID
+        id: u32,
+    },
 }
 
 #[derive(Subcommand, Debug)]
 pub enum CloudDatabaseCommands {
+    /// List all databases across subscriptions
+    List {
+        /// Filter by subscription ID
+        #[arg(long)]
+        subscription: Option<u32>,
+    },
+
+    /// Get detailed database information
+    Get {
+        /// Database ID (format: subscription_id:database_id for fixed, or just database_id for flexible)
+        id: String,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub enum CloudUserCommands {
+    /// List all users
     List,
+
+    /// Get detailed user information
+    Get {
+        /// User ID
+        id: u32,
+    },
 }
 
 #[derive(Subcommand, Debug)]

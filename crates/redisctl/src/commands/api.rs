@@ -157,7 +157,13 @@ async fn handle_enterprise_api(
     // Normalize path with smart v1 prefixing for Enterprise
     let normalized_path = if path.starts_with('/') {
         // Path has leading slash - check if it has version
-        if path.starts_with("/v") && path.chars().nth(2).is_some_and(|c| c.is_ascii_digit()) {
+        if path.starts_with("/v")
+            && path
+                .chars()
+                .nth(2)
+                .map(|c| c.is_ascii_digit())
+                .unwrap_or(false)
+        {
             // Already has version (e.g., /v1/cluster, /v2/bdbs)
             path
         } else if path == "/" {
@@ -169,7 +175,13 @@ async fn handle_enterprise_api(
         }
     } else {
         // No leading slash - check if it starts with version
-        if path.starts_with("v") && path.chars().nth(1).is_some_and(|c| c.is_ascii_digit()) {
+        if path.starts_with("v")
+            && path
+                .chars()
+                .nth(1)
+                .map(|c| c.is_ascii_digit())
+                .unwrap_or(false)
+        {
             // Starts with version (e.g., v1/cluster) - just add leading slash
             format!("/{}", path)
         } else {

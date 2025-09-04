@@ -303,7 +303,11 @@ impl Config {
                 }
 
                 // Also check if the config directory exists (user might have created it)
-                if linux_style_path.parent().is_some_and(|p| p.exists()) {
+                if linux_style_path
+                    .parent()
+                    .map(|p| p.exists())
+                    .unwrap_or(false)
+                {
                     debug!(
                         "Using Linux-style config directory on macOS: {:?}",
                         linux_style_path
