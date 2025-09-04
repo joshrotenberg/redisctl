@@ -5,6 +5,7 @@ use chrono::{DateTime, Utc};
 use colored::Colorize;
 use pager::Pager;
 use serde_json::Value;
+use std::io::IsTerminal;
 use tabled::Tabled;
 
 use crate::cli::OutputFormat;
@@ -59,7 +60,7 @@ pub fn output_with_pager(content: &str) {
 /// Check if we should use a pager for output
 fn should_use_pager(lines: &[&str]) -> bool {
     // Only page if we're in a TTY
-    if !atty::is(atty::Stream::Stdout) {
+    if !std::io::stdout().is_terminal() {
         return false;
     }
 
