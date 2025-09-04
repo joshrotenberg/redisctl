@@ -81,6 +81,9 @@
 //! For complete documentation and examples, see the [GitHub repository](https://github.com/joshrotenberg/redisctl).
 
 // Internal modules for CLI functionality
+pub(crate) mod cli;
+pub(crate) mod commands;
 pub(crate) mod config;
+pub(crate) mod connection;
 pub(crate) mod error;
 pub(crate) mod output;
