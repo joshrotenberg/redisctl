@@ -12,13 +12,13 @@ A unified command-line interface for managing Redis deployments across Cloud and
 `redisctl` provides a single, consistent CLI for managing both Redis Cloud and Redis Enterprise deployments. It automatically routes commands to the appropriate API based on your configuration, eliminating the need for multiple tools.
 
 ### Key Features
-- 🚀 **Unified Interface** - Single CLI for both Redis Cloud and Enterprise
-- 🔄 **Smart Routing** - Auto-detects which API to use based on profiles
-- 📦 **Complete API Coverage** - 95%+ Cloud API, 100% Enterprise API
-- 🎨 **Clean Output** - GitHub CLI-style tables with automatic paging
-- 🔐 **Profile Management** - Store multiple deployment credentials securely
-- 📊 **Flexible Output** - JSON, YAML, or table format with JMESPath queries
-- 🦀 **Rust Libraries** - Type-safe async clients for building custom tools
+- **Unified Interface** - Single CLI for both Redis Cloud and Enterprise
+- **Smart Routing** - Auto-detects which API to use based on profiles
+- **Complete API Coverage** - 95%+ Cloud API, 100% Enterprise API
+- **Clean Output** - GitHub CLI-style tables with automatic paging
+- **Profile Management** - Store multiple deployment credentials securely
+- **Flexible Output** - JSON, YAML, or table format with JMESPath queries
+- **Rust Libraries** - Type-safe async clients for building custom tools
 
 ## Installation
 
