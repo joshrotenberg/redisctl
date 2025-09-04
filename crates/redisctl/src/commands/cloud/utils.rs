@@ -12,7 +12,7 @@ use pager::Pager;
 use std::io::IsTerminal;
 
 use crate::cli::OutputFormat;
-use crate::error::Result as CliResult;
+use crate::error::{RedisCtlError, Result as CliResult};
 use crate::output::print_output;
 
 /// Row structure for vertical table display (used by get commands)
@@ -189,10 +189,18 @@ pub fn handle_output(
 pub fn print_formatted_output(data: Value, output_format: OutputFormat) -> CliResult<()> {
     match output_format {
         OutputFormat::Json => {
-            print_output(data, crate::output::OutputFormat::Json, None)?;
+            print_output(data, crate::output::OutputFormat::Json, None).map_err(|e| {
+                RedisCtlError::OutputError {
+                    message: e.to_string(),
+                }
+            })?;
         }
         OutputFormat::Yaml => {
-            print_output(data, crate::output::OutputFormat::Yaml, None)?;
+            print_output(data, crate::output::OutputFormat::Yaml, None).map_err(|e| {
+                RedisCtlError::OutputError {
+                    message: e.to_string(),
+                }
+            })?;
         }
         _ => {} // Table format handled by individual commands
     }

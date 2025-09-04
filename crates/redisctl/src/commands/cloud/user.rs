@@ -6,7 +6,7 @@ use super::utils::DetailRow;
 use super::utils::*;
 use crate::cli::{CloudUserCommands, OutputFormat};
 use crate::connection::ConnectionManager;
-use crate::error::Result as CliResult;
+use crate::error::{RedisCtlError, Result as CliResult};
 use crate::output::print_output;
 use anyhow::Context;
 use colored::Colorize;
@@ -57,10 +57,18 @@ async fn list_users(
             print_users_table(&data)?;
         }
         OutputFormat::Json => {
-            print_output(data, crate::output::OutputFormat::Json, None)?;
+            print_output(data, crate::output::OutputFormat::Json, None).map_err(|e| {
+                RedisCtlError::OutputError {
+                    message: e.to_string(),
+                }
+            })?;
         }
         OutputFormat::Yaml => {
-            print_output(data, crate::output::OutputFormat::Yaml, None)?;
+            print_output(data, crate::output::OutputFormat::Yaml, None).map_err(|e| {
+                RedisCtlError::OutputError {
+                    message: e.to_string(),
+                }
+            })?;
         }
     }
 
@@ -245,10 +253,18 @@ async fn get_user(
             print_user_detail(&data)?;
         }
         OutputFormat::Json => {
-            print_output(data, crate::output::OutputFormat::Json, None)?;
+            print_output(data, crate::output::OutputFormat::Json, None).map_err(|e| {
+                RedisCtlError::OutputError {
+                    message: e.to_string(),
+                }
+            })?;
         }
         OutputFormat::Yaml => {
-            print_output(data, crate::output::OutputFormat::Yaml, None)?;
+            print_output(data, crate::output::OutputFormat::Yaml, None).map_err(|e| {
+                RedisCtlError::OutputError {
+                    message: e.to_string(),
+                }
+            })?;
         }
     }
 

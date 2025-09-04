@@ -6,7 +6,7 @@ use super::utils::DetailRow;
 use super::utils::*;
 use crate::cli::{CloudDatabaseCommands, OutputFormat};
 use crate::connection::ConnectionManager;
-use crate::error::Result as CliResult;
+use crate::error::{RedisCtlError, Result as CliResult};
 use crate::output::print_output;
 use anyhow::Context;
 use serde_json::Value;
@@ -166,10 +166,18 @@ async fn list_databases(
             print_databases_table(&data)?;
         }
         OutputFormat::Json => {
-            print_output(data, crate::output::OutputFormat::Json, None)?;
+            print_output(data, crate::output::OutputFormat::Json, None).map_err(|e| {
+                RedisCtlError::OutputError {
+                    message: e.to_string(),
+                }
+            })?;
         }
         OutputFormat::Yaml => {
-            print_output(data, crate::output::OutputFormat::Yaml, None)?;
+            print_output(data, crate::output::OutputFormat::Yaml, None).map_err(|e| {
+                RedisCtlError::OutputError {
+                    message: e.to_string(),
+                }
+            })?;
         }
     }
 
@@ -346,10 +354,18 @@ async fn get_database(
             print_database_detail(&data)?;
         }
         OutputFormat::Json => {
-            print_output(data, crate::output::OutputFormat::Json, None)?;
+            print_output(data, crate::output::OutputFormat::Json, None).map_err(|e| {
+                RedisCtlError::OutputError {
+                    message: e.to_string(),
+                }
+            })?;
         }
         OutputFormat::Yaml => {
-            print_output(data, crate::output::OutputFormat::Yaml, None)?;
+            print_output(data, crate::output::OutputFormat::Yaml, None).map_err(|e| {
+                RedisCtlError::OutputError {
+                    message: e.to_string(),
+                }
+            })?;
         }
     }
 
