@@ -20,15 +20,15 @@ redis-cloud = { version = "0.1.2", path = "../redis-cloud" }
 redis-enterprise = { version = "0.2.0", path = "../redis-enterprise" }
 
 # CLI dependencies
-clap = { workspace = true }
-anyhow = { workspace = true }
-tokio = { workspace = true }
-tracing = { workspace = true }
-tracing-subscriber = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
+clap = { version = "4.5", features = ["derive", "env", "string"] }
+anyhow = "1.0"
+tokio = { version = "1.40", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
-rpassword = { workspace = true }
+rpassword = "7.4"
 urlencoding = "2.1"
 dialoguer = "0.11"
 colored = "2.1"
@@ -39,13 +39,13 @@ terminal_size = "0.4"
 pager = "0.16"
 
 # Shared utility dependencies
-thiserror = { workspace = true }
-serde_yaml = { workspace = true }
-comfy-table = { workspace = true }
-jmespath = { workspace = true }
-config = { workspace = true }
-toml = { workspace = true }
-directories = { workspace = true }
+thiserror = "2.0"
+serde_yaml = "0.9"
+comfy-table = "7.2"
+jmespath = "0.4"
+config = "0.15"
+toml = "0.9"
+directories = "6.0"
 shellexpand = "3.1"
 
 # Conditional dependencies for feature-gated binaries
