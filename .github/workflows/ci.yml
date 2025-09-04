@@ -37,7 +37,10 @@ jobs:
       
       - name: Fetch dependencies (Windows)
         if: runner.os == 'Windows'
-        run: cargo fetch --locked
+        run: |
+          cargo fetch --locked --manifest-path Cargo.toml
+          cargo metadata --no-deps --manifest-path Cargo.toml
+          cargo check --workspace --all-features || true
       
       - name: Check formatting
         run: cargo fmt --all -- --check
