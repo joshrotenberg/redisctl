@@ -208,6 +208,10 @@ pub enum CloudCommands {
     /// Database operations  
     #[command(subcommand)]
     Database(CloudDatabaseCommands),
+
+    /// User operations
+    #[command(subcommand)]
+    User(CloudUserCommands),
 }
 
 /// Enterprise-specific commands (placeholder for now)
@@ -263,6 +267,12 @@ pub enum CloudSubscriptionCommands {
 
 #[derive(Subcommand, Debug)]
 pub enum CloudDatabaseCommands {
+    List,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum CloudUserCommands {
+    /// List all users
     List,
 }
 

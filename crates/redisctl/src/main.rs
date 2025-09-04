@@ -312,5 +312,16 @@ async fn execute_cloud_command(
             println!("Cloud database commands are not yet implemented");
             Ok(())
         }
+
+        User(user_cmd) => {
+            commands::cloud::handle_user_command(
+                conn_mgr,
+                cli.profile.as_deref(),
+                user_cmd,
+                cli.output,
+                cli.query.as_deref(),
+            )
+            .await
+        }
     }
 }

@@ -2,7 +2,7 @@
 
 #![allow(dead_code)] // Used by binary target
 
-use crate::cli::{CloudSubscriptionCommands, OutputFormat};
+use crate::cli::{CloudSubscriptionCommands, CloudUserCommands, OutputFormat};
 use crate::connection::ConnectionManager;
 use crate::error::Result as CliResult;
 use crate::output::print_output;
@@ -292,4 +292,227 @@ fn apply_jmespath(data: &Value, query: &str) -> CliResult<Value> {
         serde_json::from_str(&json_str).context("Failed to parse JMESPath result as JSON")?;
 
     Ok(value)
+}
+
+/// Handle cloud user commands
+pub async fn handle_user_command(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
+    command: &CloudUserCommands,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> CliResult<()> {
+    match command {
+        CloudUserCommands::List => list_users(conn_mgr, profile_name, output_format, query).await,
+    }
+}
+
+/// List all cloud users with human-friendly output
+async fn list_users(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> CliResult<()> {
+    let client = conn_mgr.create_cloud_client(profile_name).await?;
+
+    // Get raw user data
+    let response = client
+        .get_raw("/users")
+        .await
+        .context("Failed to fetch users")?;
+
+    // Apply JMESPath query if provided
+    let data = if let Some(q) = query {
+        apply_jmespath(&response, q)?
+    } else {
+        response
+    };
+
+    // Format output based on requested format
+    match output_format {
+        OutputFormat::Auto | OutputFormat::Table => {
+            print_users_table(&data)?;
+        }
+        OutputFormat::Json => {
+            print_output(data, crate::output::OutputFormat::Json, None)?;
+        }
+        OutputFormat::Yaml => {
+            print_output(data, crate::output::OutputFormat::Yaml, None)?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Print users in a human-friendly table format
+fn print_users_table(data: &Value) -> CliResult<()> {
+    // Handle wrapped response with "users" field or direct array
+    let users = if let Some(users_array) = data.get("users").and_then(|u| u.as_array()) {
+        users_array.clone()
+    } else if let Value::Array(arr) = data {
+        arr.clone()
+    } else if data.is_object() {
+        vec![data.clone()]
+    } else {
+        println!("No users found");
+        return Ok(());
+    };
+
+    if users.is_empty() {
+        println!("No users found");
+        return Ok(());
+    }
+
+    let mut table = Table::new();
+    table
+        .load_preset(UTF8_FULL)
+        .apply_modifier(UTF8_ROUND_CORNERS)
+        .set_content_arrangement(ContentArrangement::Dynamic);
+
+    // Set headers for user table
+    table.set_header(vec![
+        "ID",
+        "NAME",
+        "EMAIL",
+        "ROLE",
+        "STATUS",
+        "MFA",
+        "LAST LOGIN",
+        "CREATED",
+    ]);
+
+    // Add rows
+    for user in users {
+        let id = extract_field(&user, "id", "—");
+        let name = extract_user_name(&user);
+        let email = extract_field(&user, "email", "—");
+        let role = format_role(&user);
+        let status = format_user_status(&user);
+        let mfa = format_mfa_status(&user);
+        let last_login = format_last_login(&user);
+        let created = format_date(extract_field(&user, "signUp", ""));
+
+        table.add_row(vec![
+            Cell::new(id),
+            Cell::new(name),
+            Cell::new(email),
+            Cell::new(role),
+            Cell::new(status),
+            Cell::new(mfa),
+            Cell::new(last_login),
+            Cell::new(created),
+        ]);
+    }
+
+    println!("{}", table);
+    Ok(())
+}
+
+/// Extract user name (first + last or username)
+fn extract_user_name(user: &Value) -> String {
+    let first = extract_field(user, "firstName", "");
+    let last = extract_field(user, "lastName", "");
+
+    if !first.is_empty() || !last.is_empty() {
+        format!("{} {}", first, last).trim().to_string()
+    } else {
+        extract_field(user, "name", "—")
+    }
+}
+
+/// Format user role with appropriate display
+fn format_role(user: &Value) -> String {
+    // Check for role field or roles array
+    if let Some(role) = user.get("role").and_then(|r| r.as_str()) {
+        match role.to_lowercase().as_str() {
+            "owner" => role.to_uppercase().blue().to_string(),
+            "admin" => role.capitalize().yellow().to_string(),
+            "member" | "viewer" => role.capitalize(),
+            _ => role.to_string(),
+        }
+    } else if let Some(roles) = user.get("roles").and_then(|r| r.as_array()) {
+        roles
+            .iter()
+            .filter_map(|r| r.as_str())
+            .collect::<Vec<_>>()
+            .join(", ")
+    } else {
+        "Member".to_string()
+    }
+}
+
+/// Format user status with color coding
+fn format_user_status(user: &Value) -> String {
+    let status = extract_field(user, "status", "active");
+    match status.to_lowercase().as_str() {
+        "active" => status.green().to_string(),
+        "inactive" | "disabled" => status.red().to_string(),
+        "pending" | "invited" => status.yellow().to_string(),
+        _ => status,
+    }
+}
+
+/// Format MFA status
+fn format_mfa_status(user: &Value) -> String {
+    // Check in options.mfaEnabled
+    if let Some(options) = user.get("options")
+        && let Some(mfa) = options.get("mfaEnabled").and_then(|m| m.as_bool())
+    {
+        if mfa {
+            return "✓".green().to_string();
+        } else {
+            return "✗".red().to_string();
+        }
+    }
+
+    // Fallback checks for other field names
+    if let Some(mfa) = user.get("mfaEnabled").and_then(|m| m.as_bool()) {
+        if mfa {
+            "✓".green().to_string()
+        } else {
+            "✗".red().to_string()
+        }
+    } else if let Some(mfa) = user
+        .get("twoFactorAuthentication")
+        .and_then(|m| m.as_bool())
+    {
+        if mfa {
+            "✓".green().to_string()
+        } else {
+            "✗".red().to_string()
+        }
+    } else {
+        "—".to_string()
+    }
+}
+
+/// Format last login time
+fn format_last_login(user: &Value) -> String {
+    let login_field = extract_field(user, "lastLoginTimestamp", "");
+    if login_field.is_empty() {
+        let alt_field = extract_field(user, "lastLogin", "");
+        if !alt_field.is_empty() {
+            return format_date(alt_field);
+        }
+        return "Never".dimmed().to_string();
+    }
+    format_date(login_field)
+}
+
+/// Helper to capitalize first letter
+trait Capitalize {
+    fn capitalize(&self) -> String;
+}
+
+impl Capitalize for str {
+    fn capitalize(&self) -> String {
+        let mut chars = self.chars();
+        match chars.next() {
+            None => String::new(),
+            Some(first) => {
+                first.to_uppercase().collect::<String>() + &chars.as_str().to_lowercase()
+            }
+        }
+    }
 }
