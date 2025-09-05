@@ -328,6 +328,139 @@ pub enum CloudDatabaseCommands {
         /// Database ID (format: subscription_id:database_id for fixed, or just database_id for flexible)
         id: String,
     },
+
+    /// Create a new database
+    Create {
+        /// Subscription ID
+        #[arg(long)]
+        subscription: u32,
+        /// Database configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// Update database configuration
+    Update {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+        /// Update configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// Delete a database
+    Delete {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+    },
+
+    /// Get database backup status
+    BackupStatus {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+    },
+
+    /// Trigger manual database backup
+    Backup {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+    },
+
+    /// Get database import status
+    ImportStatus {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+    },
+
+    /// Import data into database
+    Import {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+        /// Import configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// Get database certificate
+    GetCertificate {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+    },
+
+    /// Get slow query log
+    SlowLog {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+        /// Maximum number of entries to return
+        #[arg(long, default_value = "100")]
+        limit: u32,
+        /// Offset for pagination
+        #[arg(long, default_value = "0")]
+        offset: u32,
+    },
+
+    /// List database tags
+    ListTags {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+    },
+
+    /// Add a tag to database
+    AddTag {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+        /// Tag key
+        #[arg(long)]
+        key: String,
+        /// Tag value
+        #[arg(long)]
+        value: String,
+    },
+
+    /// Update database tags
+    UpdateTags {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+        /// Tags as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// Delete a tag from database
+    DeleteTag {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+        /// Tag key to delete
+        #[arg(long)]
+        key: String,
+    },
+
+    /// Flush Active-Active database
+    FlushCrdb {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+    },
+
+    /// Get Redis version upgrade status
+    UpgradeStatus {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+    },
+
+    /// Upgrade Redis version
+    UpgradeRedis {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+        /// Target Redis version
+        #[arg(long)]
+        version: String,
+    },
 }
 
 #[derive(Subcommand, Debug)]

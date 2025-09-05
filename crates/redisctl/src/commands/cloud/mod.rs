@@ -9,6 +9,7 @@
 
 pub mod account;
 pub mod database;
+pub mod database_impl;
 pub mod subscription;
 pub mod user;
 pub mod utils;
