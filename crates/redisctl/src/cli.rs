@@ -259,6 +259,47 @@ pub enum DatabaseCommands {
 pub enum CloudAccountCommands {
     /// Get account information
     Get,
+
+    /// Get payment methods configured for the account
+    GetPaymentMethods,
+
+    /// List supported regions
+    ListRegions {
+        /// Filter by cloud provider (aws, gcp, azure)
+        #[arg(long)]
+        provider: Option<String>,
+    },
+
+    /// List supported Redis modules
+    ListModules,
+
+    /// Get data persistence options
+    GetPersistenceOptions,
+
+    /// Get system logs
+    GetSystemLogs {
+        /// Maximum number of logs to return
+        #[arg(long, default_value = "100")]
+        limit: Option<u32>,
+
+        /// Offset for pagination
+        #[arg(long, default_value = "0")]
+        offset: Option<u32>,
+    },
+
+    /// Get session/audit logs
+    GetSessionLogs {
+        /// Maximum number of logs to return
+        #[arg(long, default_value = "100")]
+        limit: Option<u32>,
+
+        /// Offset for pagination
+        #[arg(long, default_value = "0")]
+        offset: Option<u32>,
+    },
+
+    /// Get search module scaling factors
+    GetSearchScaling,
 }
 
 #[derive(Subcommand, Debug)]
