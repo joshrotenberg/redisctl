@@ -12,6 +12,7 @@
 - [Installation](./cli/installation.md)
 - [Docker Testing](./cli/docker.md)
 - [Configuration](./cli/configuration.md)
+- [Environment Variables](./cli/environment-variables.md)
 - [Commands](./cli/commands.md)
 - [Output Formats](./cli/output-formats.md)
 - [Examples](./cli/examples.md)
