@@ -473,7 +473,8 @@ pub async fn get_slow_log(
             if entries.is_empty() {
                 println!("No slow log entries found");
             } else {
-                let mut table = Table::new(entries); table.with(Style::modern());
+                let mut table = Table::new(entries);
+                table.with(Style::modern());
                 output_with_pager(&table.to_string());
             }
         }
@@ -533,7 +534,8 @@ pub async fn list_tags(
             if entries.is_empty() {
                 println!("No tags found");
             } else {
-                let mut table = Table::new(entries); table.with(Style::modern());
+                let mut table = Table::new(entries);
+                table.with(Style::modern());
                 println!("{}", table);
             }
         }
@@ -635,7 +637,7 @@ pub async fn delete_tag(
     id: &str,
     key: &str,
     output_format: OutputFormat,
-    query: Option<&str>,
+    _query: Option<&str>,
 ) -> CliResult<()> {
     let (subscription_id, database_id) = parse_database_id(id)?;
     let client = conn_mgr.create_cloud_client(profile_name).await?;
