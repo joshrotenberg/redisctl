@@ -17,7 +17,7 @@
 //! - **Active-Active**: Global database replication with local reads/writes
 //! - **Advanced Networking**: VPC peering, Transit Gateway, Private endpoints
 //! - **Maintenance Windows**: Configurable maintenance scheduling
-//! - **CIDR Management**: IP whitelist and security group configuration
+//! - **CIDR Management**: IP allowlist and security group configuration
 //! - **Custom Pricing**: Usage-based pricing with detailed cost tracking
 //!
 //! # Subscription Types
@@ -240,7 +240,7 @@ pub struct DatabaseModuleSpec {
 /// Update Pro subscription
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CidrWhiteListUpdateRequest {
+pub struct CidrAllowlistUpdateRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub subscription_id: Option<i32>,
 
@@ -910,24 +910,24 @@ impl SubscriptionsHandler {
             .await
     }
 
-    /// Get Pro subscription CIDR whitelist
-    /// (Self-hosted AWS subscriptions only) Gets a Pro subscription's CIDR whitelist.
+    /// Get Pro subscription CIDR allowlist
+    /// (Self-hosted AWS subscriptions only) Gets a Pro subscription's CIDR allowlist.
     ///
     /// GET /subscriptions/{subscriptionId}/cidr
-    pub async fn get_cidr_white_list(&self, subscription_id: i32) -> Result<TaskStateUpdate> {
+    pub async fn get_cidr_allowlist(&self, subscription_id: i32) -> Result<TaskStateUpdate> {
         self.client
             .get(&format!("/subscriptions/{}/cidr", subscription_id))
             .await
     }
 
-    /// Update Pro subscription CIDR whitelist
-    /// (Self-hosted AWS subscriptions only) Updates a Pro subscription's CIDR whitelist.
+    /// Update Pro subscription CIDR allowlist
+    /// (Self-hosted AWS subscriptions only) Updates a Pro subscription's CIDR allowlist.
     ///
     /// PUT /subscriptions/{subscriptionId}/cidr
-    pub async fn update_subscription_cidr_white_list(
+    pub async fn update_subscription_cidr_allowlist(
         &self,
         subscription_id: i32,
-        request: &CidrWhiteListUpdateRequest,
+        request: &CidrAllowlistUpdateRequest,
     ) -> Result<TaskStateUpdate> {
         self.client
             .put(&format!("/subscriptions/{}/cidr", subscription_id), request)

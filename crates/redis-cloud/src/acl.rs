@@ -32,7 +32,7 @@
 //! let handler = AclHandler::new(client);
 //!
 //! // List all ACL users
-//! let users = handler.get_all_users_1().await?;
+//! let users = handler.get_all_acl_users().await?;
 //!
 //! // Get all Redis rules
 //! let rules = handler.get_all_redis_rules().await?;
@@ -443,7 +443,7 @@ impl AclHandler {
     /// Gets a list of all access control users for this account.
     ///
     /// GET /acl/users
-    pub async fn get_all_users_1(&self) -> Result<AccountACLUsers> {
+    pub async fn get_all_acl_users(&self) -> Result<AccountACLUsers> {
         self.client.get("/acl/users").await
     }
 
@@ -481,7 +481,7 @@ impl AclHandler {
     /// Updates a access control user with a different role or database password.
     ///
     /// PUT /acl/users/{aclUserId}
-    pub async fn update_user_1(
+    pub async fn update_acl_user(
         &self,
         acl_user_id: i32,
         request: &AclUserUpdateRequest,

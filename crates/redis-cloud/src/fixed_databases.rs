@@ -802,7 +802,7 @@ impl FixedDatabasesHandler {
     /// Deletes a database from an Essentials subscription.
     ///
     /// DELETE /fixed/subscriptions/{subscriptionId}/databases/{databaseId}
-    pub async fn delete_fixed_database_by_id_1(
+    pub async fn delete_fixed_database_by_id(
         &self,
         subscription_id: i32,
         database_id: i32,
@@ -821,7 +821,7 @@ impl FixedDatabasesHandler {
     /// Gets details and settings of a single database in an Essentials subscription.
     ///
     /// GET /fixed/subscriptions/{subscriptionId}/databases/{databaseId}
-    pub async fn get_subscription_database_by_id_1(
+    pub async fn get_fixed_subscription_database_by_id(
         &self,
         subscription_id: i32,
         database_id: i32,
@@ -859,7 +859,7 @@ impl FixedDatabasesHandler {
     /// Information on the latest database backup status identified by Essentials subscription Id and Essentials database Id
     ///
     /// GET /fixed/subscriptions/{subscriptionId}/databases/{databaseId}/backup
-    pub async fn get_database_backup_status_1(
+    pub async fn get_fixed_database_backup_status(
         &self,
         subscription_id: i32,
         database_id: i32,
@@ -876,7 +876,7 @@ impl FixedDatabasesHandler {
     /// Manually back up the specified Essentials database to a backup path. By default, backups will be stored in the 'periodicBackupPath' location for this database.
     ///
     /// POST /fixed/subscriptions/{subscriptionId}/databases/{databaseId}/backup
-    pub async fn backup_database_1(
+    pub async fn backup_fixed_database(
         &self,
         subscription_id: i32,
         database_id: i32,
@@ -897,7 +897,7 @@ impl FixedDatabasesHandler {
     /// Gets information on the latest import attempt for this Essentials database.
     ///
     /// GET /fixed/subscriptions/{subscriptionId}/databases/{databaseId}/import
-    pub async fn get_database_import_status_1(
+    pub async fn get_fixed_database_import_status(
         &self,
         subscription_id: i32,
         database_id: i32,
@@ -914,7 +914,7 @@ impl FixedDatabasesHandler {
     /// Imports data from an RDB file or from a different Redis database into this Essentials database. WARNING: Importing data into a database removes all existing data from the database.
     ///
     /// POST /fixed/subscriptions/{subscriptionId}/databases/{databaseId}/import
-    pub async fn import_database_1(
+    pub async fn import_fixed_database(
         &self,
         subscription_id: i32,
         database_id: i32,
@@ -935,7 +935,7 @@ impl FixedDatabasesHandler {
     /// Get slow-log for a specific database identified by Essentials subscription Id and database Id
     ///
     /// GET /fixed/subscriptions/{subscriptionId}/databases/{databaseId}/slow-log
-    pub async fn get_slow_log_1(
+    pub async fn get_fixed_database_slow_log(
         &self,
         subscription_id: i32,
         database_id: i32,
@@ -952,7 +952,11 @@ impl FixedDatabasesHandler {
     /// Gets a list of all database tags.
     ///
     /// GET /fixed/subscriptions/{subscriptionId}/databases/{databaseId}/tags
-    pub async fn get_tags_1(&self, subscription_id: i32, database_id: i32) -> Result<CloudTags> {
+    pub async fn get_fixed_database_tags(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+    ) -> Result<CloudTags> {
         self.client
             .get(&format!(
                 "/fixed/subscriptions/{}/databases/{}/tags",
@@ -965,7 +969,7 @@ impl FixedDatabasesHandler {
     /// Adds a single database tag to a database.
     ///
     /// POST /fixed/subscriptions/{subscriptionId}/databases/{databaseId}/tags
-    pub async fn create_tag_1(
+    pub async fn create_fixed_database_tag(
         &self,
         subscription_id: i32,
         database_id: i32,
@@ -986,7 +990,7 @@ impl FixedDatabasesHandler {
     /// Overwrites all tags on the database.
     ///
     /// PUT /fixed/subscriptions/{subscriptionId}/databases/{databaseId}/tags
-    pub async fn update_tags_1(
+    pub async fn update_fixed_database_tags(
         &self,
         subscription_id: i32,
         database_id: i32,
@@ -1007,7 +1011,7 @@ impl FixedDatabasesHandler {
     /// Removes the specified tag from the database.
     ///
     /// DELETE /fixed/subscriptions/{subscriptionId}/databases/{databaseId}/tags/{tagKey}
-    pub async fn delete_tag_1(
+    pub async fn delete_fixed_database_tag(
         &self,
         subscription_id: i32,
         database_id: i32,
@@ -1027,7 +1031,7 @@ impl FixedDatabasesHandler {
     /// Updates the value of the specified database tag.
     ///
     /// PUT /fixed/subscriptions/{subscriptionId}/databases/{databaseId}/tags/{tagKey}
-    pub async fn update_tag_1(
+    pub async fn update_fixed_database_tag(
         &self,
         subscription_id: i32,
         database_id: i32,

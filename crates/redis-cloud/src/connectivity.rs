@@ -957,7 +957,7 @@ impl ConnectivityHandler {
     /// (Active-Active subscriptions only) Gets the gcloud script to create the specified Private Service Connect endpoint on Google Cloud.
     ///
     /// GET /subscriptions/{subscriptionId}/regions/{regionId}/private-service-connect/{pscServiceId}/endpoints/{endpointId}/creationScripts
-    pub async fn get_active_activ_psc_service_endpoint_creation_script(
+    pub async fn get_active_active_psc_service_endpoint_creation_script(
         &self,
         subscription_id: i32,
         region_id: i32,
@@ -971,7 +971,7 @@ impl ConnectivityHandler {
     /// (Active-Active subscriptions only) Gets the gcloud script to delete the specified Private Service Connect endpoint on Google Cloud.
     ///
     /// GET /subscriptions/{subscriptionId}/regions/{regionId}/private-service-connect/{pscServiceId}/endpoints/{endpointId}/deletionScripts
-    pub async fn get_active_activ_psc_service_endpoint_deletion_script(
+    pub async fn get_active_active_psc_service_endpoint_deletion_script(
         &self,
         subscription_id: i32,
         region_id: i32,

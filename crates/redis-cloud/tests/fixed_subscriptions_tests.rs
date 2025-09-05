@@ -168,7 +168,7 @@ async fn test_get_redis_versions() {
         .unwrap();
 
     let handler = FixedSubscriptionsHandler::new(client);
-    let result = handler.get_redis_versions_1(123).await.unwrap();
+    let result = handler.get_fixed_redis_versions(123).await.unwrap();
 
     assert!(result.redis_versions.is_some());
     let versions = result.redis_versions.unwrap();
@@ -211,7 +211,7 @@ async fn test_get_all_subscriptions() {
         .unwrap();
 
     let handler = FixedSubscriptionsHandler::new(client);
-    let result = handler.get_all_subscriptions_1().await.unwrap();
+    let result = handler.get_all_fixed_subscriptions().await.unwrap();
 
     assert_eq!(result.account_id, Some(456));
     assert!(result.extra.get("subscriptions").is_some());
@@ -255,7 +255,7 @@ async fn test_create_subscription() {
         extra: serde_json::Value::Null,
     };
 
-    let result = handler.create_subscription_1(&request).await.unwrap();
+    let result = handler.create_fixed_subscription(&request).await.unwrap();
     assert_eq!(result.task_id, Some("task-create-fixed-sub".to_string()));
 }
 
@@ -284,7 +284,7 @@ async fn test_delete_subscription_by_id() {
         .unwrap();
 
     let handler = FixedSubscriptionsHandler::new(client);
-    let result = handler.delete_subscription_by_id_1(123).await.unwrap();
+    let result = handler.delete_fixed_subscription_by_id(123).await.unwrap();
 
     assert_eq!(result.task_id, Some("task-delete-fixed-sub".to_string()));
 }
@@ -317,7 +317,7 @@ async fn test_get_subscription_by_id() {
         .unwrap();
 
     let handler = FixedSubscriptionsHandler::new(client);
-    let result = handler.get_subscription_by_id_1(123).await.unwrap();
+    let result = handler.get_fixed_subscription_by_id(123).await.unwrap();
 
     assert_eq!(result.id, Some(123));
     assert_eq!(result.name, Some("Production Fixed".to_string()));
@@ -358,7 +358,10 @@ async fn test_update_subscription() {
         extra: serde_json::Value::Null,
     };
 
-    let result = handler.update_subscription_1(123, &request).await.unwrap();
+    let result = handler
+        .update_fixed_subscription(123, &request)
+        .await
+        .unwrap();
     assert_eq!(result.task_id, Some("task-update-fixed-sub".to_string()));
 }
 
@@ -382,7 +385,7 @@ async fn test_error_handling_401() {
         .unwrap();
 
     let handler = FixedSubscriptionsHandler::new(client);
-    let result = handler.get_all_subscriptions_1().await;
+    let result = handler.get_all_fixed_subscriptions().await;
 
     assert!(result.is_err());
     match result {
@@ -413,7 +416,7 @@ async fn test_error_handling_404() {
         .unwrap();
 
     let handler = FixedSubscriptionsHandler::new(client);
-    let result = handler.get_subscription_by_id_1(999).await;
+    let result = handler.get_fixed_subscription_by_id(999).await;
 
     assert!(result.is_err());
     if let Err(redis_cloud::CloudError::NotFound { message }) = result {
@@ -454,7 +457,7 @@ async fn test_error_handling_500() {
         extra: serde_json::Value::Null,
     };
 
-    let result = handler.create_subscription_1(&request).await;
+    let result = handler.create_fixed_subscription(&request).await;
 
     assert!(result.is_err());
     match result {
