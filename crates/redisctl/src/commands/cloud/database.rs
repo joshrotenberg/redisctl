@@ -48,6 +48,152 @@ pub async fn handle_database_command(
         CloudDatabaseCommands::Get { id } => {
             get_database(conn_mgr, profile_name, id, output_format, query).await
         }
+        CloudDatabaseCommands::Create { subscription, data } => {
+            super::database_impl::create_database(
+                conn_mgr,
+                profile_name,
+                *subscription,
+                data,
+                output_format,
+                query,
+            )
+            .await
+        }
+        CloudDatabaseCommands::Update { id, data } => {
+            super::database_impl::update_database(
+                conn_mgr,
+                profile_name,
+                id,
+                data,
+                output_format,
+                query,
+            )
+            .await
+        }
+        CloudDatabaseCommands::Delete { id, force } => {
+            super::database_impl::delete_database(
+                conn_mgr,
+                profile_name,
+                id,
+                *force,
+                output_format,
+                query,
+            )
+            .await
+        }
+        CloudDatabaseCommands::BackupStatus { id } => {
+            super::database_impl::get_backup_status(
+                conn_mgr,
+                profile_name,
+                id,
+                output_format,
+                query,
+            )
+            .await
+        }
+        CloudDatabaseCommands::Backup { id } => {
+            super::database_impl::backup_database(conn_mgr, profile_name, id, output_format, query)
+                .await
+        }
+        CloudDatabaseCommands::ImportStatus { id } => {
+            super::database_impl::get_import_status(
+                conn_mgr,
+                profile_name,
+                id,
+                output_format,
+                query,
+            )
+            .await
+        }
+        CloudDatabaseCommands::Import { id, data } => {
+            super::database_impl::import_database(
+                conn_mgr,
+                profile_name,
+                id,
+                data,
+                output_format,
+                query,
+            )
+            .await
+        }
+        CloudDatabaseCommands::GetCertificate { id } => {
+            super::database_impl::get_certificate(conn_mgr, profile_name, id, output_format, query)
+                .await
+        }
+        CloudDatabaseCommands::SlowLog { id, limit, offset } => {
+            super::database_impl::get_slow_log(
+                conn_mgr,
+                profile_name,
+                id,
+                *limit,
+                *offset,
+                output_format,
+                query,
+            )
+            .await
+        }
+        CloudDatabaseCommands::ListTags { id } => {
+            super::database_impl::list_tags(conn_mgr, profile_name, id, output_format, query).await
+        }
+        CloudDatabaseCommands::AddTag { id, key, value } => {
+            super::database_impl::add_tag(
+                conn_mgr,
+                profile_name,
+                id,
+                key,
+                value,
+                output_format,
+                query,
+            )
+            .await
+        }
+        CloudDatabaseCommands::UpdateTags { id, data } => {
+            super::database_impl::update_tags(
+                conn_mgr,
+                profile_name,
+                id,
+                data,
+                output_format,
+                query,
+            )
+            .await
+        }
+        CloudDatabaseCommands::DeleteTag { id, key } => {
+            super::database_impl::delete_tag(conn_mgr, profile_name, id, key, output_format, query)
+                .await
+        }
+        CloudDatabaseCommands::FlushCrdb { id, force } => {
+            super::database_impl::flush_crdb(
+                conn_mgr,
+                profile_name,
+                id,
+                *force,
+                output_format,
+                query,
+            )
+            .await
+        }
+        CloudDatabaseCommands::UpgradeStatus { id } => {
+            super::database_impl::get_upgrade_status(
+                conn_mgr,
+                profile_name,
+                id,
+                output_format,
+                query,
+            )
+            .await
+        }
+        CloudDatabaseCommands::UpgradeRedis { id, version } => {
+            super::database_impl::upgrade_redis(
+                conn_mgr,
+                profile_name,
+                id,
+                version,
+                output_format,
+                query,
+            )
+            .await
+        }
     }
 }
 
@@ -233,6 +379,33 @@ fn print_databases_table(data: &Value) -> CliResult<()> {
 
     output_with_pager(&table.to_string());
     Ok(())
+}
+
+/// Parse database ID into subscription and database IDs
+fn parse_database_id(id: &str) -> CliResult<(u32, u32)> {
+    let parts: Vec<&str> = id.split(':').collect();
+    if parts.len() != 2 {
+        return Err(RedisCtlError::InvalidInput {
+            message: format!(
+                "Invalid database ID format: {}. Expected format: subscription_id:database_id",
+                id
+            ),
+        });
+    }
+
+    let subscription_id = parts[0]
+        .parse::<u32>()
+        .map_err(|_| RedisCtlError::InvalidInput {
+            message: format!("Invalid subscription ID: {}", parts[0]),
+        })?;
+
+    let database_id = parts[1]
+        .parse::<u32>()
+        .map_err(|_| RedisCtlError::InvalidInput {
+            message: format!("Invalid database ID: {}", parts[1]),
+        })?;
+
+    Ok((subscription_id, database_id))
 }
 
 /// Format database memory
