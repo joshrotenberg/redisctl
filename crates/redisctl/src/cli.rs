@@ -80,10 +80,6 @@ pub enum Commands {
     #[command(subcommand, visible_alias = "ent", visible_alias = "en")]
     Enterprise(EnterpriseCommands),
 
-    /// Smart commands that work with both deployments
-    #[command(subcommand, visible_alias = "db", visible_alias = "dat")]
-    Database(DatabaseCommands),
-
     /// Version information
     #[command(visible_alias = "ver", visible_alias = "v")]
     Version,
@@ -228,29 +224,6 @@ pub enum EnterpriseCommands {
     /// User operations
     #[command(subcommand)]
     User(EnterpriseUserCommands),
-}
-
-/// Smart database commands that work with both deployments
-#[derive(Subcommand, Debug)]
-pub enum DatabaseCommands {
-    /// List databases
-    List,
-
-    /// Get database details
-    Get {
-        /// Database identifier
-        id: String,
-    },
-
-    /// Create a new database
-    Create {
-        /// Database name
-        name: String,
-
-        /// Additional parameters as JSON
-        #[arg(long)]
-        params: Option<String>,
-    },
 }
 
 // Placeholder command structures - will be expanded in later PRs
