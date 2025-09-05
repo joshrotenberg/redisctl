@@ -48,9 +48,8 @@ fn parse_database_id(id: &str) -> CliResult<(u32, u32)> {
 
 /// Read JSON data from string or file
 fn read_json_data(data: &str) -> CliResult<Value> {
-    let json_str = if data.starts_with('@') {
+    let json_str = if let Some(file_path) = data.strip_prefix('@') {
         // Read from file
-        let file_path = &data[1..];
         std::fs::read_to_string(file_path).map_err(|e| RedisCtlError::InvalidInput {
             message: format!("Failed to read file {}: {}", file_path, e),
         })?
