@@ -142,14 +142,8 @@ impl ConnectivityHandler {
         subscription_id: i32,
         tgw_id: &str,
     ) -> crate::Result<crate::types::TaskStateUpdate> {
-        let request = TgwAttachmentRequest {
-            tgw_id: Some(tgw_id.to_string()),
-            aws_account_id: None,
-            cidrs: None,
-            extra: serde_json::Value::Object(serde_json::Map::new()),
-        };
         self.transit_gateway
-            .create_attachment(subscription_id, &request)
+            .create_attachment_with_id(subscription_id, tgw_id)
             .await
     }
 

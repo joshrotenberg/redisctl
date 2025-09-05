@@ -14,7 +14,7 @@ async fn test_get_vpc_peering() {
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({
             "taskId": "task-get-peering",
             "commandType": "GET_VPC_PEERING",
-            "status": "completed",
+            "status": "processing-completed",
             "description": "Getting VPC peerings"
         })))
         .mount(&mock_server)
@@ -45,7 +45,7 @@ async fn test_create_vpc_peering() {
         .respond_with(ResponseTemplate::new(202).set_body_json(json!({
             "taskId": "task-create-peering",
             "commandType": "CREATE_VPC_PEERING",
-            "status": "processing",
+            "status": "processing-in-progress",
             "description": "Creating VPC peering"
         })))
         .mount(&mock_server)
@@ -81,7 +81,7 @@ async fn test_delete_vpc_peering() {
         .respond_with(ResponseTemplate::new(202).set_body_json(json!({
             "taskId": "task-delete-peering",
             "commandType": "DELETE_VPC_PEERING",
-            "status": "processing",
+            "status": "processing-in-progress",
             "description": "Deleting VPC peering"
         })))
         .mount(&mock_server)
@@ -112,7 +112,7 @@ async fn test_get_psc_service() {
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({
             "taskId": "task-get-psc",
             "commandType": "GET_PSC_SERVICE",
-            "status": "completed",
+            "status": "processing-completed",
             "description": "Getting PSC service"
         })))
         .mount(&mock_server)
@@ -143,7 +143,7 @@ async fn test_create_psc_service() {
         .respond_with(ResponseTemplate::new(202).set_body_json(json!({
             "taskId": "task-create-psc",
             "commandType": "CREATE_PSC_SERVICE",
-            "status": "processing",
+            "status": "processing-in-progress",
             "description": "Creating PSC service"
         })))
         .mount(&mock_server)
@@ -174,7 +174,7 @@ async fn test_get_tgws() {
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({
             "taskId": "task-get-tgws",
             "commandType": "GET_TGWS",
-            "status": "completed",
+            "status": "processing-completed",
             "description": "Getting TGWs"
         })))
         .mount(&mock_server)
@@ -205,7 +205,7 @@ async fn test_update_vpc_peering() {
         .respond_with(ResponseTemplate::new(202).set_body_json(json!({
             "taskId": "task-update-peering",
             "commandType": "UPDATE_VPC_PEERING",
-            "status": "processing",
+            "status": "processing-in-progress",
             "description": "Updating VPC peering"
         })))
         .mount(&mock_server)
@@ -247,7 +247,7 @@ async fn test_create_vpc_peering_gcp() {
         .respond_with(ResponseTemplate::new(202).set_body_json(json!({
             "taskId": "task-create-gcp-peering",
             "commandType": "CREATE_VPC_PEERING",
-            "status": "processing",
+            "status": "processing-in-progress",
             "description": "Creating GCP VPC peering",
             "timestamp": "2024-01-01T10:00:00Z",
             "response": {
@@ -296,7 +296,7 @@ async fn test_create_vpc_peering_azure() {
         .respond_with(ResponseTemplate::new(202).set_body_json(json!({
             "taskId": "task-create-azure-peering",
             "commandType": "CREATE_VPC_PEERING",
-            "status": "processing",
+            "status": "processing-in-progress",
             "description": "Creating Azure VNet peering"
         })))
         .mount(&mock_server)
@@ -341,7 +341,7 @@ async fn test_update_psc_service() {
         .respond_with(ResponseTemplate::new(202).set_body_json(json!({
             "taskId": "task-update-psc",
             "commandType": "UPDATE_PSC_SERVICE",
-            "status": "processing",
+            "status": "processing-in-progress",
             "description": "Updating PSC service"
         })))
         .mount(&mock_server)
@@ -384,7 +384,7 @@ async fn test_delete_psc_service() {
         .respond_with(ResponseTemplate::new(202).set_body_json(json!({
             "taskId": "task-delete-psc",
             "commandType": "DELETE_PSC_SERVICE",
-            "status": "processing",
+            "status": "processing-in-progress",
             "description": "Deleting PSC service"
         })))
         .mount(&mock_server)
@@ -415,7 +415,7 @@ async fn test_create_tgw() {
         .respond_with(ResponseTemplate::new(202).set_body_json(json!({
             "taskId": "task-create-tgw",
             "commandType": "CREATE_TGW_ATTACHMENT",
-            "status": "processing",
+            "status": "processing-in-progress",
             "description": "Creating Transit Gateway attachment",
             "timestamp": "2024-01-02T14:00:00Z"
         })))
@@ -455,7 +455,7 @@ async fn test_update_tgw() {
         .respond_with(ResponseTemplate::new(202).set_body_json(json!({
             "taskId": "task-update-tgw",
             "commandType": "UPDATE_TGW_ATTACHMENT_CIDRS",
-            "status": "processing",
+            "status": "processing-in-progress",
             "description": "Updating Transit Gateway attachment"
         })))
         .mount(&mock_server)
@@ -506,7 +506,7 @@ async fn test_delete_tgw() {
         .respond_with(ResponseTemplate::new(202).set_body_json(json!({
             "taskId": "task-delete-tgw",
             "commandType": "DELETE_TGW_ATTACHMENT",
-            "status": "processing",
+            "status": "processing-in-progress",
             "description": "Deleting Transit Gateway attachment"
         })))
         .mount(&mock_server)
@@ -537,7 +537,7 @@ async fn test_task_response_with_error() {
         .respond_with(ResponseTemplate::new(202).set_body_json(json!({
             "taskId": "task-failed-peering",
             "commandType": "CREATE_VPC_PEERING",
-            "status": "failed",
+            "status": "processing-error",
             "description": "Failed to create VPC peering",
             "response": {
                 "error": "INVALID_CIDR_RANGE"

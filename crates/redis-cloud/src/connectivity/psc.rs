@@ -129,11 +129,13 @@ impl PscHandler {
         endpoint_id: i32,
         request: &PscEndpointUpdateRequest,
     ) -> Result<TaskStateUpdate> {
+        // Use psc_service_id from request
+        let psc_service_id = request.psc_service_id;
         self.client
             .put(
                 &format!(
-                    "/subscriptions/{}/private-service-connect/endpoints/{}",
-                    subscription_id, endpoint_id
+                    "/subscriptions/{}/private-service-connect/{}/endpoints/{}",
+                    subscription_id, psc_service_id, endpoint_id
                 ),
                 request,
             )

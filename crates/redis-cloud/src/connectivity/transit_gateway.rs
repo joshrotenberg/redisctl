@@ -77,7 +77,10 @@ impl TransitGatewayHandler {
     /// Get Transit Gateway attachments
     pub async fn get_attachments(&self, subscription_id: i32) -> Result<TaskStateUpdate> {
         self.client
-            .get(&format!("/subscriptions/{}/tgw", subscription_id))
+            .get(&format!(
+                "/subscriptions/{}/transitGateways",
+                subscription_id
+            ))
             .await
     }
 
@@ -133,11 +136,36 @@ impl TransitGatewayHandler {
     ) -> Result<serde_json::Value> {
         self.client
             .delete(&format!(
-                "/subscriptions/{}/tgw/attachments/{}",
+                "/subscriptions/{}/transitGateways/{}/attachment",
                 subscription_id, attachment_id
             ))
             .await?;
         Ok(serde_json::Value::Null)
+    }
+
+    /// Create Transit Gateway attachment with tgw_id in path
+    pub async fn create_attachment_with_id(
+        &self,
+        subscription_id: i32,
+        tgw_id: &str,
+    ) -> Result<TaskStateUpdate> {
+        // Create an empty request body as the API might expect one
+        let request = TgwAttachmentRequest {
+            tgw_id: Some(tgw_id.to_string()),
+            aws_account_id: None,
+            cidrs: None,
+            extra: serde_json::Value::Object(serde_json::Map::new()),
+        };
+
+        self.client
+            .post(
+                &format!(
+                    "/subscriptions/{}/transitGateways/{}/attachment",
+                    subscription_id, tgw_id
+                ),
+                &request,
+            )
+            .await
     }
 
     /// Create Transit Gateway attachment
@@ -148,7 +176,10 @@ impl TransitGatewayHandler {
     ) -> Result<TaskStateUpdate> {
         self.client
             .post(
-                &format!("/subscriptions/{}/tgw/attachments", subscription_id),
+                &format!(
+                    "/subscriptions/{}/transitGateways/attachments",
+                    subscription_id
+                ),
                 request,
             )
             .await
@@ -164,7 +195,7 @@ impl TransitGatewayHandler {
         self.client
             .put(
                 &format!(
-                    "/subscriptions/{}/tgw/attachments/{}/cidrs",
+                    "/subscriptions/{}/transitGateways/{}/attachment",
                     subscription_id, attachment_id
                 ),
                 request,
@@ -182,7 +213,10 @@ impl TransitGatewayHandler {
         subscription_id: i32,
     ) -> Result<TaskStateUpdate> {
         self.client
-            .get(&format!("/subscriptions/{}/regions/tgw", subscription_id))
+            .get(&format!(
+                "/subscriptions/{}/regions/transitGateways",
+                subscription_id
+            ))
             .await
     }
 
