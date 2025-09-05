@@ -1,11 +1,11 @@
 [package]
 name = "redisctl"
 version = "0.2.0"
-edition = "2024"
-authors = ["Josh Rotenberg <joshrotenberg@gmail.com>"]
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/joshrotenberg/redisctl"
-homepage = "https://github.com/joshrotenberg/redisctl"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
 description = "Unified CLI for Redis Cloud and Enterprise"
 keywords = ["redis", "cli", "cloud", "enterprise", "database"]
 categories = ["command-line-utilities", "api-bindings"]
@@ -20,15 +20,15 @@ redis-cloud = { version = "0.1.2", path = "../redis-cloud" }
 redis-enterprise = { version = "0.2.0", path = "../redis-enterprise" }
 
 # CLI dependencies
-clap = { version = "4.5", features = ["derive", "env", "string"] }
-anyhow = "1.0"
-tokio = { version = "1.40", features = ["full"] }
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+clap = { workspace = true }
+anyhow = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
 chrono = { version = "0.4", features = ["serde"] }
-rpassword = "7.4"
+rpassword = { workspace = true }
 urlencoding = "2.1"
 dialoguer = "0.11"
 colored = "2.1"
@@ -39,13 +39,13 @@ terminal_size = "0.4"
 pager = "0.16"
 
 # Shared utility dependencies
-thiserror = "2.0"
-serde_yaml = "0.9"
-comfy-table = "7.2"
-jmespath = "0.4"
-config = "0.15"
-toml = "0.9"
-directories = "6.0"
+thiserror = { workspace = true }
+serde_yaml = { workspace = true }
+comfy-table = { workspace = true }
+jmespath = { workspace = true }
+config = { workspace = true }
+toml = { workspace = true }
+directories = { workspace = true }
 shellexpand = "3.1"
 
 # Conditional dependencies for feature-gated binaries
