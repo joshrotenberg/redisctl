@@ -44,6 +44,9 @@ pub struct VpcPeeringUpdateAwsRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vpc_cidrs: Option<Vec<String>>,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub command_type: Option<String>,
+
     /// Additional fields from the API
     #[serde(flatten)]
     pub extra: Value,
