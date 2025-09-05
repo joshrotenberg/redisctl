@@ -35,9 +35,6 @@ colored = "2.1"
 tabled = { version = "0.17", features = ["ansi"] }
 terminal_size = "0.4"
 
-[target.'cfg(unix)'.dependencies]
-pager = "0.16"
-
 # Shared utility dependencies
 thiserror = { workspace = true }
 serde_yaml = { workspace = true }
@@ -47,6 +44,9 @@ config = { workspace = true }
 toml = { workspace = true }
 directories = { workspace = true }
 shellexpand = "3.1"
+
+[target.'cfg(unix)'.dependencies]
+pager = "0.16"
 
 # Conditional dependencies for feature-gated binaries
 [features]
