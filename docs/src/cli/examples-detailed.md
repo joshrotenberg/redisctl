@@ -20,13 +20,13 @@ Comprehensive examples for common Redis Cloud and Enterprise operations.
 ```bash
 # Create a Redis Cloud profile
 redisctl profile set cloud-prod \
-  --deployment-type cloud \
+  --deployment cloud \
   --api-key YOUR_API_KEY \
   --api-secret YOUR_API_SECRET
 
 # Create a Redis Enterprise profile
 redisctl profile set enterprise-dev \
-  --deployment-type enterprise \
+  --deployment enterprise \
   --url https://cluster.example.com:9443 \
   --username admin@example.com \
   --password SecurePassword123
