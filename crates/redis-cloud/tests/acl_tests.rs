@@ -417,7 +417,7 @@ async fn test_get_all_users() {
         .unwrap();
 
     let handler = AclHandler::new(client);
-    let result = handler.get_all_users_1().await.unwrap();
+    let result = handler.get_all_acl_users().await.unwrap();
 
     assert_eq!(result.account_id, Some(123));
     assert!(result.links.is_some());
@@ -491,7 +491,7 @@ async fn test_update_user() {
         extra: serde_json::Value::Null,
     };
 
-    let result = handler.update_user_1(456, &request).await.unwrap();
+    let result = handler.update_acl_user(456, &request).await.unwrap();
     assert_eq!(result.task_id, Some("task-update-user-456".to_string()));
     assert_eq!(result.command_type, Some("UPDATE_USER".to_string()));
     assert_eq!(result.status, Some("processing".to_string()));

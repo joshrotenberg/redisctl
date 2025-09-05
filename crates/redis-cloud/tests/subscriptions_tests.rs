@@ -239,7 +239,7 @@ async fn test_update_subscription() {
 }
 
 #[tokio::test]
-async fn test_get_cidr_white_list() {
+async fn test_get_cidr_allowlist() {
     let mock_server = MockServer::start().await;
 
     Mock::given(method("GET"))
@@ -265,13 +265,13 @@ async fn test_get_cidr_white_list() {
         .unwrap();
 
     let handler = SubscriptionsHandler::new(client);
-    let result = handler.get_cidr_white_list(123).await.unwrap();
+    let result = handler.get_cidr_allowlist(123).await.unwrap();
 
     assert!(result.response.is_some());
 }
 
 #[tokio::test]
-async fn test_update_subscription_cidr_white_list() {
+async fn test_update_subscription_cidr_allowlist() {
     let mock_server = MockServer::start().await;
 
     Mock::given(method("PUT"))
@@ -294,7 +294,7 @@ async fn test_update_subscription_cidr_white_list() {
         .unwrap();
 
     let handler = SubscriptionsHandler::new(client);
-    let request = redis_cloud::subscriptions::CidrWhiteListUpdateRequest {
+    let request = redis_cloud::subscriptions::CidrAllowlistUpdateRequest {
         subscription_id: None,
         cidr_ips: Some(vec!["192.168.0.0/16".to_string()]),
         security_group_ids: None,
@@ -303,7 +303,7 @@ async fn test_update_subscription_cidr_white_list() {
     };
 
     let result = handler
-        .update_subscription_cidr_white_list(123, &request)
+        .update_subscription_cidr_allowlist(123, &request)
         .await
         .unwrap();
     assert_eq!(result.task_id, Some("task-update-cidr".to_string()));

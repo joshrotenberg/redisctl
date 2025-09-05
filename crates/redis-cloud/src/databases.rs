@@ -347,7 +347,7 @@ pub struct CrdbUpdatePropertiesRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub global_password: Option<String>,
 
-    /// Optional. List of source IP addresses or subnet masks to whitelist in all regions that don't set local 'sourceIp' settings. If set, Redis clients will be able to connect to this database only from within the specified source IP addresses ranges. Example: ['192.168.10.0/32', '192.168.12.0/24']
+    /// Optional. List of source IP addresses or subnet masks to allow in all regions that don't set local 'sourceIp' settings. If set, Redis clients will be able to connect to this database only from within the specified source IP addresses ranges. Example: ['192.168.10.0/32', '192.168.12.0/24']
     #[serde(skip_serializing_if = "Option::is_none")]
     pub global_source_ip: Option<Vec<String>>,
 
@@ -787,7 +787,7 @@ pub struct LocalRegionProperties {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub password: Option<String>,
 
-    /// Optional. List of source IP addresses or subnet masks to whitelist in this region. If set, Redis clients will be able to connect to the database in this region only from within the specified source IP addresses ranges, and 'globalSourceIp' will not apply to this region. Example: ['192.168.10.0/32', '192.168.12.0/24']
+    /// Optional. List of source IP addresses or subnet masks to allow in this region. If set, Redis clients will be able to connect to the database in this region only from within the specified source IP addresses ranges, and 'globalSourceIp' will not apply to this region. Example: ['192.168.10.0/32', '192.168.12.0/24']
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source_ip: Option<Vec<String>>,
 

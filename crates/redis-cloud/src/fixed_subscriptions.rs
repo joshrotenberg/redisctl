@@ -44,7 +44,7 @@
 //! let plans = handler.get_all_fixed_subscriptions_plans(None, None).await?;
 //!
 //! // Get all fixed subscriptions
-//! let subscriptions = handler.get_all_subscriptions_1().await?;
+//! let subscriptions = handler.get_all_fixed_subscriptions().await?;
 //! # Ok(())
 //! # }
 //! ```
@@ -479,7 +479,7 @@ impl FixedSubscriptionsHandler {
     /// Gets a list of all available Redis database versions for a specific Essentials subscription.
     ///
     /// GET /fixed/redis-versions
-    pub async fn get_redis_versions_1(&self, subscription_id: i32) -> Result<RedisVersions> {
+    pub async fn get_fixed_redis_versions(&self, subscription_id: i32) -> Result<RedisVersions> {
         let mut query = Vec::new();
         query.push(format!("subscriptionId={}", subscription_id));
         let query_string = if query.is_empty() {
@@ -496,7 +496,7 @@ impl FixedSubscriptionsHandler {
     /// Gets a list of all Essentials subscriptions in the current account.
     ///
     /// GET /fixed/subscriptions
-    pub async fn get_all_subscriptions_1(&self) -> Result<FixedSubscriptions> {
+    pub async fn get_all_fixed_subscriptions(&self) -> Result<FixedSubscriptions> {
         self.client.get("/fixed/subscriptions").await
     }
 
@@ -504,7 +504,7 @@ impl FixedSubscriptionsHandler {
     /// Creates a new Essentials subscription.
     ///
     /// POST /fixed/subscriptions
-    pub async fn create_subscription_1(
+    pub async fn create_fixed_subscription(
         &self,
         request: &FixedSubscriptionCreateRequest,
     ) -> Result<TaskStateUpdate> {
@@ -515,7 +515,7 @@ impl FixedSubscriptionsHandler {
     /// Deletes the specified Essentials subscription. All databases in the subscription must be deleted before deleting it.
     ///
     /// DELETE /fixed/subscriptions/{subscriptionId}
-    pub async fn delete_subscription_by_id_1(
+    pub async fn delete_fixed_subscription_by_id(
         &self,
         subscription_id: i32,
     ) -> Result<TaskStateUpdate> {
@@ -530,7 +530,7 @@ impl FixedSubscriptionsHandler {
     /// Gets information on the specified Essentials subscription.
     ///
     /// GET /fixed/subscriptions/{subscriptionId}
-    pub async fn get_subscription_by_id_1(
+    pub async fn get_fixed_subscription_by_id(
         &self,
         subscription_id: i32,
     ) -> Result<FixedSubscription> {
@@ -543,7 +543,7 @@ impl FixedSubscriptionsHandler {
     /// Updates the specified Essentials subscription.
     ///
     /// PUT /fixed/subscriptions/{subscriptionId}
-    pub async fn update_subscription_1(
+    pub async fn update_fixed_subscription(
         &self,
         subscription_id: i32,
         request: &FixedSubscriptionUpdateRequest,
