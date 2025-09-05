@@ -189,4 +189,26 @@ impl ConnectivityHandler {
             )
             .await
     }
+
+    // Additional backward compatibility methods
+    pub async fn update_psc_service_endpoint(
+        &self,
+        subscription_id: i32,
+        endpoint_id: i32,
+        request: &PscEndpointUpdateRequest,
+    ) -> crate::Result<crate::types::TaskStateUpdate> {
+        self.psc
+            .update_endpoint(subscription_id, endpoint_id, request)
+            .await
+    }
+
+    pub async fn update_tgw_attachment_cidrs(
+        &self,
+        subscription_id: i32,
+        attachment_id: &str,
+        request: &TgwUpdateCidrsRequest,
+    ) -> crate::Result<crate::types::TaskStateUpdate> {
+        self.update_tgw_cidrs(subscription_id, attachment_id, request)
+            .await
+    }
 }
