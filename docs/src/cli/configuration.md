@@ -117,13 +117,13 @@ redisctl profile list
 ```bash
 # Create or update a Redis Cloud profile
 redisctl profile set my-cloud \
-  --deployment-type cloud \
+  --deployment cloud \
   --api-key "your-api-key" \
   --api-secret "your-api-secret"
 
 # Create or update a Redis Enterprise profile
 redisctl profile set my-enterprise \
-  --deployment-type enterprise \
+  --deployment enterprise \
   --url "https://cluster.example.com:9443" \
   --username "admin@cluster.local" \
   --password "secure-password" \
@@ -348,7 +348,7 @@ mkdir -p ~/.config/redisctl
 touch ~/.config/redisctl/config.toml
 
 # Or let redisctl create it
-redisctl profile set default --deployment-type cloud
+redisctl profile set default --deployment cloud
 ```
 
 ### Permission Denied
