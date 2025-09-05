@@ -826,11 +826,11 @@ pub struct SubscriptionMaintenanceWindows {
 ///
 /// Manages flexible subscriptions with auto-scaling, multi-region support,
 /// Active-Active configurations, and advanced networking features.
-pub struct SubscriptionsHandler {
+pub struct SubscriptionHandler {
     client: CloudClient,
 }
 
-impl SubscriptionsHandler {
+impl SubscriptionHandler {
     /// Create a new handler
     pub fn new(client: CloudClient) -> Self {
         Self { client }

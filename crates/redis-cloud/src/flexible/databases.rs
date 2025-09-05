@@ -962,11 +962,11 @@ pub struct DatabaseUpdateRequest {
 ///
 /// Manages database lifecycle, configuration, backup/restore, import/export,
 /// and monitoring for Redis Cloud Pro subscriptions.
-pub struct DatabasesHandler {
+pub struct DatabaseHandler {
     client: CloudClient,
 }
 
-impl DatabasesHandler {
+impl DatabaseHandler {
     /// Create a new handler
     pub fn new(client: CloudClient) -> Self {
         Self { client }

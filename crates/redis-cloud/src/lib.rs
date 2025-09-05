@@ -26,7 +26,7 @@
 //!         .api_secret("your-api-secret")
 //!         .build()?;
 //!
-//!     // List all databases  
+//!     // List all databases
 //!     let db_handler = DatabaseHandler::new(client.clone());
 //!     let databases = db_handler.get_subscription_databases(123, None, None).await?;
 //!     println!("Found databases: {:?}", databases);
@@ -292,10 +292,8 @@ pub mod account;
 pub mod acl;
 pub mod cloud_accounts;
 pub mod connectivity;
-pub mod databases;
-pub mod fixed_databases;
-pub mod fixed_subscriptions;
-pub mod subscriptions;
+pub mod fixed;
+pub mod flexible;
 pub mod tasks;
 pub mod users;
 
@@ -303,11 +301,28 @@ pub mod users;
 pub use account::AccountHandler;
 pub use acl::AclHandler;
 pub use cloud_accounts::CloudAccountsHandler as CloudAccountHandler;
+
+// Connectivity handlers
+pub use connectivity::psc::PscHandler;
+pub use connectivity::transit_gateway::TransitGatewayHandler;
+pub use connectivity::vpc_peering::VpcPeeringHandler;
+// Legacy connectivity export for backward compatibility
 pub use connectivity::ConnectivityHandler;
-pub use databases::DatabasesHandler as DatabaseHandler;
-pub use fixed_databases::FixedDatabasesHandler as FixedDatabaseHandler;
-pub use fixed_subscriptions::FixedSubscriptionsHandler as FixedSubscriptionHandler;
-pub use subscriptions::SubscriptionsHandler as SubscriptionHandler;
+
+// Fixed plan handlers
+pub use fixed::databases::FixedDatabaseHandler;
+pub use fixed::subscriptions::FixedSubscriptionHandler;
+// Legacy exports for backward compatibility
+pub use fixed::databases::FixedDatabaseHandler as FixedDatabasesHandler;
+pub use fixed::subscriptions::FixedSubscriptionHandler as FixedSubscriptionsHandler;
+
+// Flexible plan handlers (pay-as-you-go)
+pub use flexible::databases::DatabaseHandler;
+pub use flexible::subscriptions::SubscriptionHandler;
+// Legacy exports for backward compatibility
+pub use flexible::databases::DatabaseHandler as DatabasesHandler;
+pub use flexible::subscriptions::SubscriptionHandler as SubscriptionsHandler;
+
 pub use tasks::TasksHandler as TaskHandler;
 pub use users::UsersHandler as UserHandler;
 
