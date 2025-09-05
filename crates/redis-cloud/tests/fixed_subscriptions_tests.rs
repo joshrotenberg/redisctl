@@ -1,4 +1,4 @@
-use redis_cloud::{CloudClient, fixed_subscriptions::FixedSubscriptionsHandler};
+use redis_cloud::{CloudClient, FixedSubscriptionsHandler};
 use serde_json::json;
 use wiremock::matchers::{header, method, path, query_param};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -42,10 +42,7 @@ async fn test_get_all_fixed_subscriptions_plans() {
         .unwrap();
 
     let handler = FixedSubscriptionsHandler::new(client);
-    let result = handler
-        .get_all_fixed_subscriptions_plans(None, None)
-        .await
-        .unwrap();
+    let result = handler.get_all_fixed_subscriptions_plans().await.unwrap();
 
     // Check that the extra field contains the expected plans
     assert!(result.extra.get("plans").is_some());

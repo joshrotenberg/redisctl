@@ -167,10 +167,7 @@ async fn test_fixed_database_update() {
         extra: serde_json::Value::Null,
     };
 
-    let result = handler
-        .fixed_database_by_id(123, 456, &request)
-        .await
-        .unwrap();
+    let result = handler.update(123, 456, &request).await.unwrap();
     assert_eq!(result.task_id, Some("task-update-fixed-db".to_string()));
 }
 

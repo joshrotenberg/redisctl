@@ -40,7 +40,7 @@
 //! let handler = FixedDatabaseHandler::new(client);
 //!
 //! // Example: List databases in a fixed subscription (ID 123)
-//! let databases = handler.get_fixed_subscription_databases(123, None, None).await?;
+//! let databases = handler.list(123, None, None).await?;
 //! # Ok(())
 //! # }
 //! ```
@@ -741,11 +741,11 @@ pub struct FixedDatabaseUpdateRequest {
 ///
 /// Manages fixed-capacity databases with simplified configuration
 /// and predictable pricing for Redis Cloud Essentials subscriptions.
-pub struct FixedDatabasesHandler {
+pub struct FixedDatabaseHandler {
     client: CloudClient,
 }
 
-impl FixedDatabasesHandler {
+impl FixedDatabaseHandler {
     /// Create a new handler
     pub fn new(client: CloudClient) -> Self {
         Self { client }
@@ -755,7 +755,7 @@ impl FixedDatabasesHandler {
     /// Gets a list of all databases in the specified Essentials subscription.
     ///
     /// GET /fixed/subscriptions/{subscriptionId}/databases
-    pub async fn get_fixed_subscription_databases(
+    pub async fn list(
         &self,
         subscription_id: i32,
         offset: Option<i32>,
@@ -785,7 +785,7 @@ impl FixedDatabasesHandler {
     /// Creates a new database in the specified Essentials subscription.
     ///
     /// POST /fixed/subscriptions/{subscriptionId}/databases
-    pub async fn create_fixed_database(
+    pub async fn create(
         &self,
         subscription_id: i32,
         request: &FixedDatabaseCreateRequest,
@@ -802,7 +802,7 @@ impl FixedDatabasesHandler {
     /// Deletes a database from an Essentials subscription.
     ///
     /// DELETE /fixed/subscriptions/{subscriptionId}/databases/{databaseId}
-    pub async fn delete_fixed_database_by_id(
+    pub async fn delete_by_id(
         &self,
         subscription_id: i32,
         database_id: i32,
@@ -821,11 +821,7 @@ impl FixedDatabasesHandler {
     /// Gets details and settings of a single database in an Essentials subscription.
     ///
     /// GET /fixed/subscriptions/{subscriptionId}/databases/{databaseId}
-    pub async fn get_fixed_subscription_database_by_id(
-        &self,
-        subscription_id: i32,
-        database_id: i32,
-    ) -> Result<FixedDatabase> {
+    pub async fn get_by_id(&self, subscription_id: i32, database_id: i32) -> Result<FixedDatabase> {
         self.client
             .get(&format!(
                 "/fixed/subscriptions/{}/databases/{}",
@@ -838,7 +834,7 @@ impl FixedDatabasesHandler {
     /// Updates the specified Essentials database.
     ///
     /// PUT /fixed/subscriptions/{subscriptionId}/databases/{databaseId}
-    pub async fn fixed_database_by_id(
+    pub async fn update(
         &self,
         subscription_id: i32,
         database_id: i32,
@@ -859,7 +855,7 @@ impl FixedDatabasesHandler {
     /// Information on the latest database backup status identified by Essentials subscription Id and Essentials database Id
     ///
     /// GET /fixed/subscriptions/{subscriptionId}/databases/{databaseId}/backup
-    pub async fn get_fixed_database_backup_status(
+    pub async fn get_backup_status(
         &self,
         subscription_id: i32,
         database_id: i32,
@@ -876,7 +872,7 @@ impl FixedDatabasesHandler {
     /// Manually back up the specified Essentials database to a backup path. By default, backups will be stored in the 'periodicBackupPath' location for this database.
     ///
     /// POST /fixed/subscriptions/{subscriptionId}/databases/{databaseId}/backup
-    pub async fn backup_fixed_database(
+    pub async fn backup(
         &self,
         subscription_id: i32,
         database_id: i32,
@@ -897,7 +893,7 @@ impl FixedDatabasesHandler {
     /// Gets information on the latest import attempt for this Essentials database.
     ///
     /// GET /fixed/subscriptions/{subscriptionId}/databases/{databaseId}/import
-    pub async fn get_fixed_database_import_status(
+    pub async fn get_import_status(
         &self,
         subscription_id: i32,
         database_id: i32,
@@ -914,7 +910,7 @@ impl FixedDatabasesHandler {
     /// Imports data from an RDB file or from a different Redis database into this Essentials database. WARNING: Importing data into a database removes all existing data from the database.
     ///
     /// POST /fixed/subscriptions/{subscriptionId}/databases/{databaseId}/import
-    pub async fn import_fixed_database(
+    pub async fn import(
         &self,
         subscription_id: i32,
         database_id: i32,
@@ -935,7 +931,7 @@ impl FixedDatabasesHandler {
     /// Get slow-log for a specific database identified by Essentials subscription Id and database Id
     ///
     /// GET /fixed/subscriptions/{subscriptionId}/databases/{databaseId}/slow-log
-    pub async fn get_fixed_database_slow_log(
+    pub async fn get_slow_log(
         &self,
         subscription_id: i32,
         database_id: i32,
@@ -952,11 +948,7 @@ impl FixedDatabasesHandler {
     /// Gets a list of all database tags.
     ///
     /// GET /fixed/subscriptions/{subscriptionId}/databases/{databaseId}/tags
-    pub async fn get_fixed_database_tags(
-        &self,
-        subscription_id: i32,
-        database_id: i32,
-    ) -> Result<CloudTags> {
+    pub async fn get_tags(&self, subscription_id: i32, database_id: i32) -> Result<CloudTags> {
         self.client
             .get(&format!(
                 "/fixed/subscriptions/{}/databases/{}/tags",
@@ -969,7 +961,7 @@ impl FixedDatabasesHandler {
     /// Adds a single database tag to a database.
     ///
     /// POST /fixed/subscriptions/{subscriptionId}/databases/{databaseId}/tags
-    pub async fn create_fixed_database_tag(
+    pub async fn create_tag(
         &self,
         subscription_id: i32,
         database_id: i32,
@@ -990,7 +982,7 @@ impl FixedDatabasesHandler {
     /// Overwrites all tags on the database.
     ///
     /// PUT /fixed/subscriptions/{subscriptionId}/databases/{databaseId}/tags
-    pub async fn update_fixed_database_tags(
+    pub async fn update_tags(
         &self,
         subscription_id: i32,
         database_id: i32,
@@ -1011,7 +1003,7 @@ impl FixedDatabasesHandler {
     /// Removes the specified tag from the database.
     ///
     /// DELETE /fixed/subscriptions/{subscriptionId}/databases/{databaseId}/tags/{tagKey}
-    pub async fn delete_fixed_database_tag(
+    pub async fn delete_tag(
         &self,
         subscription_id: i32,
         database_id: i32,
@@ -1031,7 +1023,7 @@ impl FixedDatabasesHandler {
     /// Updates the value of the specified database tag.
     ///
     /// PUT /fixed/subscriptions/{subscriptionId}/databases/{databaseId}/tags/{tagKey}
-    pub async fn update_fixed_database_tag(
+    pub async fn update_tag(
         &self,
         subscription_id: i32,
         database_id: i32,
@@ -1047,5 +1039,124 @@ impl FixedDatabasesHandler {
                 request,
             )
             .await
+    }
+
+    // ========================================================================
+    // Backward compatibility wrapper methods
+    // ========================================================================
+
+    /// Create fixed database (backward compatibility)
+    pub async fn create_fixed_database(
+        &self,
+        subscription_id: i32,
+        request: &FixedDatabaseCreateRequest,
+    ) -> Result<TaskStateUpdate> {
+        self.create(subscription_id, request).await
+    }
+
+    /// Get fixed database (backward compatibility)
+    pub async fn get_fixed_database(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+    ) -> Result<TaskStateUpdate> {
+        self.get_by_id(subscription_id, database_id)
+            .await
+            .map(|db| serde_json::from_value(serde_json::json!(db)).unwrap())
+    }
+
+    /// Update fixed database (backward compatibility)
+    pub async fn update_fixed_database(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+        request: &FixedDatabaseUpdateRequest,
+    ) -> Result<TaskStateUpdate> {
+        self.update(subscription_id, database_id, request).await
+    }
+
+    /// Delete fixed database (backward compatibility)
+    pub async fn delete_fixed_database(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+    ) -> Result<TaskStateUpdate> {
+        self.delete_by_id(subscription_id, database_id).await
+    }
+
+    /// Backup fixed database (backward compatibility)
+    pub async fn backup_fixed_database(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+        request: &FixedDatabaseBackupRequest,
+    ) -> Result<TaskStateUpdate> {
+        self.backup(subscription_id, database_id, request).await
+    }
+
+    /// Get fixed subscription databases (backward compatibility)
+    pub async fn get_fixed_subscription_databases(
+        &self,
+        subscription_id: i32,
+        offset: Option<i32>,
+        limit: Option<i32>,
+    ) -> Result<AccountFixedSubscriptionDatabases> {
+        self.list(subscription_id, offset, limit).await
+    }
+
+    /// Get fixed database by id (backward compatibility)
+    pub async fn fixed_database_by_id(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+    ) -> Result<FixedDatabase> {
+        self.get_by_id(subscription_id, database_id).await
+    }
+
+    /// Get fixed subscription database by id (backward compatibility)
+    pub async fn get_fixed_subscription_database_by_id(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+    ) -> Result<FixedDatabase> {
+        self.get_by_id(subscription_id, database_id).await
+    }
+
+    /// Delete fixed database by id (backward compatibility)
+    pub async fn delete_fixed_database_by_id(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+    ) -> Result<TaskStateUpdate> {
+        self.delete_by_id(subscription_id, database_id).await
+    }
+
+    /// Import fixed database (backward compatibility)
+    pub async fn import_fixed_database(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+        request: &FixedDatabaseImportRequest,
+    ) -> Result<TaskStateUpdate> {
+        self.import(subscription_id, database_id, request).await
+    }
+
+    /// Create fixed database tag (backward compatibility)
+    pub async fn create_fixed_database_tag(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+        request: &DatabaseTagCreateRequest,
+    ) -> Result<CloudTag> {
+        self.create_tag(subscription_id, database_id, request).await
+    }
+
+    /// Get fixed database tags (backward compatibility)
+    pub async fn get_fixed_database_tags(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+    ) -> Result<CloudTags> {
+        self.get_tags(subscription_id, database_id).await
     }
 }
