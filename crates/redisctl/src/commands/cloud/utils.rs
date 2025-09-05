@@ -7,8 +7,6 @@ use serde_json::Value;
 use tabled::Tabled;
 
 #[cfg(unix)]
-use pager::Pager;
-#[cfg(unix)]
 use std::io::IsTerminal;
 
 use crate::cli::OutputFormat;
@@ -53,9 +51,42 @@ pub fn output_with_pager(content: &str) {
     // Check if we should use a pager (Unix only)
     #[cfg(unix)]
     {
+        use std::io::Write;
+        use std::process::{Command, Stdio};
+
         let lines: Vec<&str> = content.lines().collect();
         if should_use_pager(&lines) {
-            Pager::new().setup();
+            // Get pager command from environment or use default
+            let pager_cmd = std::env::var("PAGER").unwrap_or_else(|_| "less -R".to_string());
+
+            // Split pager command into program and args
+            let mut parts = pager_cmd.split_whitespace();
+            let program = parts.next().unwrap_or("less");
+            let args: Vec<&str> = parts.collect();
+
+            // Try to spawn pager process
+            match Command::new(program)
+                .args(&args)
+                .stdin(Stdio::piped())
+                .spawn()
+            {
+                Ok(mut child) => {
+                    // Write content to pager's stdin
+                    if let Some(mut stdin) = child.stdin.take() {
+                        let _ = stdin.write_all(content.as_bytes());
+                        let _ = stdin.flush();
+                        // Close stdin to signal EOF to pager
+                        drop(stdin);
+                    }
+
+                    // Wait for pager to finish
+                    let _ = child.wait();
+                    return;
+                }
+                Err(_) => {
+                    // If pager fails to spawn, fall through to regular println
+                }
+            }
         }
     }
 
