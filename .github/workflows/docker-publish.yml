@@ -19,7 +19,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -56,11 +56,9 @@ jobs:
             VERSION="${{ github.event.release.tag_name }}"
             VERSION="${VERSION#redisctl-v}"
             echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
-            echo "DOCKERFILE=./Dockerfile" >> $GITHUB_OUTPUT
             echo "PLATFORMS=linux/amd64,linux/arm64" >> $GITHUB_OUTPUT
           else
             echo "VERSION=dev" >> $GITHUB_OUTPUT
-            echo "DOCKERFILE=./Dockerfile.dev" >> $GITHUB_OUTPUT
             echo "PLATFORMS=linux/amd64,linux/arm64" >> $GITHUB_OUTPUT
           fi
 
@@ -68,7 +66,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ${{ steps.build-params.outputs.DOCKERFILE }}
+          file: ./Dockerfile
           platforms: ${{ steps.build-params.outputs.PLATFORMS }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
