@@ -108,12 +108,6 @@ async fn execute_command(cli: &Cli, conn_mgr: &ConnectionManager) -> Result<(), 
             println!("Enterprise commands are not yet implemented in this version");
             Ok(())
         }
-
-        Commands::Database(_) => {
-            warn!("Smart database commands not yet implemented");
-            println!("Smart database commands are not yet implemented in this version");
-            Ok(())
-        }
     };
 
     let duration = start.elapsed();
@@ -149,7 +143,6 @@ fn format_command(command: &Commands) -> String {
         }
         Commands::Cloud(cmd) => format!("cloud {:?}", cmd),
         Commands::Enterprise(cmd) => format!("enterprise {:?}", cmd),
-        Commands::Database(cmd) => format!("database {:?}", cmd),
     }
 }
 
