@@ -297,6 +297,12 @@ pub mod flexible;
 pub mod tasks;
 pub mod users;
 
+// Backward compatibility module aliases
+pub use fixed::databases as fixed_databases;
+pub use fixed::subscriptions as fixed_subscriptions;
+pub use flexible::databases;
+pub use flexible::subscriptions;
+
 // Re-export handlers with standard naming
 pub use account::AccountHandler;
 pub use acl::AclHandler;

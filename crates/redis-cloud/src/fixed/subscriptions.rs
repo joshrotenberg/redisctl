@@ -546,4 +546,37 @@ impl FixedSubscriptionHandler {
             )
             .await
     }
+
+    // ========================================================================
+    // Backward compatibility wrapper methods
+    // ========================================================================
+
+    /// Create fixed subscription (backward compatibility)
+    pub async fn create_fixed_subscription(
+        &self,
+        request: &FixedSubscriptionCreateRequest,
+    ) -> Result<TaskStateUpdate> {
+        self.create(request).await
+    }
+
+    /// Get fixed subscription (backward compatibility)
+    pub async fn get_fixed_subscription(&self, subscription_id: i32) -> Result<TaskStateUpdate> {
+        self.get_by_id(subscription_id)
+            .await
+            .map(|sub| serde_json::from_value(serde_json::json!(sub)).unwrap())
+    }
+
+    /// Update fixed subscription (backward compatibility)
+    pub async fn update_fixed_subscription(
+        &self,
+        subscription_id: i32,
+        request: &FixedSubscriptionUpdateRequest,
+    ) -> Result<TaskStateUpdate> {
+        self.update(subscription_id, request).await
+    }
+
+    /// Delete fixed subscription (backward compatibility)
+    pub async fn delete_fixed_subscription(&self, subscription_id: i32) -> Result<TaskStateUpdate> {
+        self.delete_by_id(subscription_id).await
+    }
 }

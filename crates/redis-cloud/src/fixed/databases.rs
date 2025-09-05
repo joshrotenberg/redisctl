@@ -1040,4 +1040,123 @@ impl FixedDatabaseHandler {
             )
             .await
     }
+
+    // ========================================================================
+    // Backward compatibility wrapper methods
+    // ========================================================================
+
+    /// Create fixed database (backward compatibility)
+    pub async fn create_fixed_database(
+        &self,
+        subscription_id: i32,
+        request: &FixedDatabaseCreateRequest,
+    ) -> Result<TaskStateUpdate> {
+        self.create(subscription_id, request).await
+    }
+
+    /// Get fixed database (backward compatibility)
+    pub async fn get_fixed_database(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+    ) -> Result<TaskStateUpdate> {
+        self.get_by_id(subscription_id, database_id)
+            .await
+            .map(|db| serde_json::from_value(serde_json::json!(db)).unwrap())
+    }
+
+    /// Update fixed database (backward compatibility)
+    pub async fn update_fixed_database(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+        request: &FixedDatabaseUpdateRequest,
+    ) -> Result<TaskStateUpdate> {
+        self.update(subscription_id, database_id, request).await
+    }
+
+    /// Delete fixed database (backward compatibility)
+    pub async fn delete_fixed_database(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+    ) -> Result<TaskStateUpdate> {
+        self.delete_by_id(subscription_id, database_id).await
+    }
+
+    /// Backup fixed database (backward compatibility)
+    pub async fn backup_fixed_database(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+        request: &FixedDatabaseBackupRequest,
+    ) -> Result<TaskStateUpdate> {
+        self.backup(subscription_id, database_id, request).await
+    }
+
+    /// Get fixed subscription databases (backward compatibility)
+    pub async fn get_fixed_subscription_databases(
+        &self,
+        subscription_id: i32,
+        offset: Option<i32>,
+        limit: Option<i32>,
+    ) -> Result<AccountFixedSubscriptionDatabases> {
+        self.list(subscription_id, offset, limit).await
+    }
+
+    /// Get fixed database by id (backward compatibility)
+    pub async fn fixed_database_by_id(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+    ) -> Result<FixedDatabase> {
+        self.get_by_id(subscription_id, database_id).await
+    }
+
+    /// Get fixed subscription database by id (backward compatibility)
+    pub async fn get_fixed_subscription_database_by_id(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+    ) -> Result<FixedDatabase> {
+        self.get_by_id(subscription_id, database_id).await
+    }
+
+    /// Delete fixed database by id (backward compatibility)
+    pub async fn delete_fixed_database_by_id(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+    ) -> Result<TaskStateUpdate> {
+        self.delete_by_id(subscription_id, database_id).await
+    }
+
+    /// Import fixed database (backward compatibility)
+    pub async fn import_fixed_database(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+        request: &FixedDatabaseImportRequest,
+    ) -> Result<TaskStateUpdate> {
+        self.import(subscription_id, database_id, request).await
+    }
+
+    /// Create fixed database tag (backward compatibility)
+    pub async fn create_fixed_database_tag(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+        request: &DatabaseTagCreateRequest,
+    ) -> Result<CloudTag> {
+        self.create_tag(subscription_id, database_id, request).await
+    }
+
+    /// Get fixed database tags (backward compatibility)
+    pub async fn get_fixed_database_tags(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+    ) -> Result<CloudTags> {
+        self.get_tags(subscription_id, database_id).await
+    }
 }
