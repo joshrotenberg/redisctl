@@ -55,7 +55,25 @@ pub fn output_with_pager(content: &str) {
     {
         let lines: Vec<&str> = content.lines().collect();
         if should_use_pager(&lines) {
+            // Use environment variable to control pager behavior
+            // This avoids the file descriptor issue with tokio
+            unsafe {
+                std::env::set_var(
+                    "PAGER",
+                    std::env::var("PAGER").unwrap_or_else(|_| "less -R".to_string()),
+                );
+            }
+
+            // Set up pager
             Pager::new().setup();
+
+            // Print content and flush
+            print!("{}", content);
+            use std::io::{self, Write};
+            let _ = io::stdout().flush();
+
+            // The pager will handle the output from here
+            return;
         }
     }
 
