@@ -1,5 +1,0 @@
-# Profile Get Command
-
-```
-```
-
