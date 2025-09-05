@@ -10,7 +10,7 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum RedisCtlError {
     #[error("Configuration error: {0}")]
-    Config(#[from] anyhow::Error),
+    Config(String),
 
     #[error("Profile '{name}' not found")]
     ProfileNotFound { name: String },
@@ -99,5 +99,11 @@ impl From<std::io::Error> for RedisCtlError {
         RedisCtlError::OutputError {
             message: format!("IO error: {}", err),
         }
+    }
+}
+
+impl From<anyhow::Error> for RedisCtlError {
+    fn from(err: anyhow::Error) -> Self {
+        RedisCtlError::Config(err.to_string())
     }
 }

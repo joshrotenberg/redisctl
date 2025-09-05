@@ -1,11 +1,11 @@
 [package]
 name = "redisctl"
 version = "0.2.0"
-edition.workspace = true
-authors.workspace = true
-license.workspace = true
-repository.workspace = true
-homepage.workspace = true
+edition = "2024"
+authors = ["Josh Rotenberg <joshrotenberg@gmail.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/joshrotenberg/redisctl"
+homepage = "https://github.com/joshrotenberg/redisctl"
 description = "Unified CLI for Redis Cloud and Enterprise"
 keywords = ["redis", "cli", "cloud", "enterprise", "database"]
 categories = ["command-line-utilities", "api-bindings"]
