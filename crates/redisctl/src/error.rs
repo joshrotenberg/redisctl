@@ -10,7 +10,7 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum RedisCtlError {
     #[error("Configuration error: {0}")]
-    Config(#[from] anyhow::Error),
+    Config(String),
 
     #[error("Profile '{name}' not found")]
     ProfileNotFound { name: String },
@@ -83,5 +83,27 @@ impl From<redis_enterprise::RestError> for RedisCtlError {
                 message: err.to_string(),
             },
         }
+    }
+}
+
+impl From<serde_json::Error> for RedisCtlError {
+    fn from(err: serde_json::Error) -> Self {
+        RedisCtlError::OutputError {
+            message: format!("JSON error: {}", err),
+        }
+    }
+}
+
+impl From<std::io::Error> for RedisCtlError {
+    fn from(err: std::io::Error) -> Self {
+        RedisCtlError::OutputError {
+            message: format!("IO error: {}", err),
+        }
+    }
+}
+
+impl From<anyhow::Error> for RedisCtlError {
+    fn from(err: anyhow::Error) -> Self {
+        RedisCtlError::Config(err.to_string())
     }
 }

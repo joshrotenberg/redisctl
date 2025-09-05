@@ -27,11 +27,13 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-chrono = "0.4"
+chrono = { version = "0.4", features = ["serde"] }
 rpassword = { workspace = true }
 urlencoding = "2.1"
 dialoguer = "0.11"
 colored = "2.1"
+tabled = { version = "0.17", features = ["ansi"] }
+terminal_size = "0.4"
 
 # Shared utility dependencies
 thiserror = { workspace = true }
@@ -42,6 +44,9 @@ config = { workspace = true }
 toml = { workspace = true }
 directories = { workspace = true }
 shellexpand = "3.1"
+
+[target.'cfg(unix)'.dependencies]
+pager = "0.16"
 
 # Conditional dependencies for feature-gated binaries
 [features]
