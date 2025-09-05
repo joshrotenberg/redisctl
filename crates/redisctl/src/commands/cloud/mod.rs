@@ -2,7 +2,7 @@
 //!
 //! This module contains all cloud-specific command handlers organized into submodules:
 //! - `account`: Account management commands
-//! - `subscription`: Subscription management commands  
+//! - `subscription`: Subscription management commands
 //! - `user`: User management commands
 //! - `database`: Database management commands
 //! - `utils`: Shared utilities and helper functions

@@ -76,7 +76,7 @@ pub enum Commands {
     #[command(subcommand, visible_alias = "cl")]
     Cloud(CloudCommands),
 
-    /// Enterprise-specific operations  
+    /// Enterprise-specific operations
     #[command(subcommand, visible_alias = "ent", visible_alias = "en")]
     Enterprise(EnterpriseCommands),
 
@@ -154,7 +154,7 @@ pub enum ProfileCommands {
         #[arg(long, required_if_eq("deployment", "cloud"))]
         api_key: Option<String>,
 
-        /// API secret (for Cloud profiles)  
+        /// API secret (for Cloud profiles)
         #[arg(long, required_if_eq("deployment", "cloud"))]
         api_secret: Option<String>,
 
@@ -205,17 +205,13 @@ pub enum CloudCommands {
     #[command(subcommand)]
     Subscription(CloudSubscriptionCommands),
 
-    /// Database operations  
+    /// Database operations
     #[command(subcommand)]
     Database(CloudDatabaseCommands),
 
     /// User operations
     #[command(subcommand)]
     User(CloudUserCommands),
-
-    /// Test table styles (temporary)
-    #[command(hide = true)]
-    TestStyles,
 }
 
 /// Enterprise-specific commands (placeholder for now)

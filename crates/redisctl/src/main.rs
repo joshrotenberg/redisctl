@@ -335,11 +335,5 @@ async fn execute_cloud_command(
             )
             .await
         }
-
-        TestStyles => commands::cloud_v2::test_all_styles(conn_mgr, cli.profile.as_deref())
-            .await
-            .map_err(|e| RedisCtlError::ApiError {
-                message: e.to_string(),
-            }),
     }
 }
