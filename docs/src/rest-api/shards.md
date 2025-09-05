@@ -1,1 +1,0 @@
-# Shard Endpoints
