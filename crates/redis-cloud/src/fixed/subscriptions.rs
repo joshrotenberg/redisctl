@@ -605,4 +605,25 @@ impl FixedSubscriptionHandler {
     pub async fn get_fixed_redis_versions(&self, subscription_id: i32) -> Result<RedisVersions> {
         self.get_redis_versions(subscription_id).await
     }
+
+    /// Get all fixed subscriptions (backward compatibility)
+    pub async fn get_all_fixed_subscriptions(&self) -> Result<FixedSubscriptions> {
+        self.list().await
+    }
+
+    /// Delete fixed subscription by id (backward compatibility)
+    pub async fn delete_fixed_subscription_by_id(
+        &self,
+        subscription_id: i32,
+    ) -> Result<TaskStateUpdate> {
+        self.delete_by_id(subscription_id).await
+    }
+
+    /// Get fixed subscription by id (backward compatibility)
+    pub async fn get_fixed_subscription_by_id(
+        &self,
+        subscription_id: i32,
+    ) -> Result<FixedSubscription> {
+        self.get_by_id(subscription_id).await
+    }
 }
