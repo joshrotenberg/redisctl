@@ -51,8 +51,7 @@ impl PscHandler {
 
     /// Delete Private Service Connect service
     pub async fn delete_service(&self, subscription_id: i32) -> Result<serde_json::Value> {
-        let _response = self
-            .client
+        self.client
             .delete(&format!(
                 "/subscriptions/{}/private-service-connect",
                 subscription_id
@@ -114,8 +113,7 @@ impl PscHandler {
         subscription_id: i32,
         endpoint_id: i32,
     ) -> Result<serde_json::Value> {
-        let _response = self
-            .client
+        self.client
             .delete(&format!(
                 "/subscriptions/{}/private-service-connect/endpoints/{}",
                 subscription_id, endpoint_id
@@ -179,8 +177,7 @@ impl PscHandler {
         &self,
         subscription_id: i32,
     ) -> Result<serde_json::Value> {
-        let _response = self
-            .client
+        self.client
             .delete(&format!(
                 "/subscriptions/{}/regions/private-service-connect",
                 subscription_id
@@ -252,8 +249,7 @@ impl PscHandler {
         region_id: i32,
         endpoint_id: i32,
     ) -> Result<serde_json::Value> {
-        let _response = self
-            .client
+        self.client
             .delete(&format!(
                 "/subscriptions/{}/regions/{}/private-service-connect/endpoints/{}",
                 subscription_id, region_id, endpoint_id

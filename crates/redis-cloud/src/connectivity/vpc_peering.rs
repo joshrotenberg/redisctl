@@ -93,8 +93,7 @@ impl VpcPeeringHandler {
 
     /// Delete VPC peering
     pub async fn delete(&self, subscription_id: i32, peering_id: i32) -> Result<serde_json::Value> {
-        let _response = self
-            .client
+        self.client
             .delete(&format!(
                 "/subscriptions/{}/peering/{}",
                 subscription_id, peering_id
@@ -149,8 +148,7 @@ impl VpcPeeringHandler {
         subscription_id: i32,
         peering_id: i32,
     ) -> Result<serde_json::Value> {
-        let _response = self
-            .client
+        self.client
             .delete(&format!(
                 "/subscriptions/{}/peerings/{}",
                 subscription_id, peering_id

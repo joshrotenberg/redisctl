@@ -37,10 +37,12 @@ pub use vpc_peering::{
 // For backward compatibility, provide a unified handler
 use crate::CloudClient;
 
-/// Unified connectivity handler (deprecated - use specific handlers instead)
-#[deprecated(
-    note = "Use specific handlers: VpcPeeringHandler, PscHandler, or TransitGatewayHandler"
-)]
+/// Unified connectivity handler - provides backward compatibility
+///
+/// Consider using the specific handlers directly:
+/// - `VpcPeeringHandler` for VPC peering operations
+/// - `PscHandler` for Private Service Connect operations
+/// - `TransitGatewayHandler` for Transit Gateway operations
 pub struct ConnectivityHandler {
     pub vpc_peering: VpcPeeringHandler,
     pub psc: PscHandler,

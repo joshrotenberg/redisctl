@@ -131,8 +131,7 @@ impl TransitGatewayHandler {
         subscription_id: i32,
         attachment_id: String,
     ) -> Result<serde_json::Value> {
-        let _response = self
-            .client
+        self.client
             .delete(&format!(
                 "/subscriptions/{}/tgw/attachments/{}",
                 subscription_id, attachment_id
@@ -243,8 +242,7 @@ impl TransitGatewayHandler {
         region_id: i32,
         attachment_id: String,
     ) -> Result<serde_json::Value> {
-        let _response = self
-            .client
+        self.client
             .delete(&format!(
                 "/subscriptions/{}/regions/{}/tgw/attachments/{}",
                 subscription_id, region_id, attachment_id
