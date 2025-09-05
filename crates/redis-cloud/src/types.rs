@@ -45,7 +45,7 @@ pub struct TaskStateUpdate {
 }
 
 /// TaskStatus enum - Part of TaskStateUpdate schema
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum TaskStatus {
     Initialized,
