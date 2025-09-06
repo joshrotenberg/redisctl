@@ -419,12 +419,148 @@ pub enum PscCommands {
     },
 }
 
-/// TGW Commands (placeholder)
+/// Transit Gateway (TGW) Commands
 #[derive(Subcommand, Debug)]
 pub enum TgwCommands {
-    /// Placeholder
-    #[command(hide = true)]
-    Placeholder,
+    // Standard TGW Attachment operations
+    /// List TGW attachments
+    #[command(name = "attachments-list")]
+    AttachmentsList {
+        /// Subscription ID
+        subscription_id: i32,
+    },
+    /// Create TGW attachment
+    #[command(name = "attachment-create")]
+    AttachmentCreate {
+        /// Subscription ID
+        subscription_id: i32,
+        /// JSON file with attachment configuration (use @filename or - for stdin)
+        file: String,
+    },
+    /// Create TGW attachment with ID in path
+    #[command(name = "attachment-create-with-id")]
+    AttachmentCreateWithId {
+        /// Subscription ID
+        subscription_id: i32,
+        /// Transit Gateway ID
+        tgw_id: String,
+    },
+    /// Update TGW attachment CIDRs
+    #[command(name = "attachment-update")]
+    AttachmentUpdate {
+        /// Subscription ID
+        subscription_id: i32,
+        /// Attachment ID
+        attachment_id: String,
+        /// JSON file with CIDR configuration (use @filename or - for stdin)
+        file: String,
+    },
+    /// Delete TGW attachment
+    #[command(name = "attachment-delete")]
+    AttachmentDelete {
+        /// Subscription ID
+        subscription_id: i32,
+        /// Attachment ID
+        attachment_id: String,
+        /// Skip confirmation prompt
+        #[arg(short, long)]
+        yes: bool,
+    },
+
+    // Standard TGW Invitation operations
+    /// List TGW resource share invitations
+    #[command(name = "invitations-list")]
+    InvitationsList {
+        /// Subscription ID
+        subscription_id: i32,
+    },
+    /// Accept TGW resource share invitation
+    #[command(name = "invitation-accept")]
+    InvitationAccept {
+        /// Subscription ID
+        subscription_id: i32,
+        /// Invitation ID
+        invitation_id: String,
+    },
+    /// Reject TGW resource share invitation
+    #[command(name = "invitation-reject")]
+    InvitationReject {
+        /// Subscription ID
+        subscription_id: i32,
+        /// Invitation ID
+        invitation_id: String,
+    },
+
+    // Active-Active TGW Attachment operations
+    /// List Active-Active TGW attachments
+    #[command(name = "aa-attachments-list")]
+    AaAttachmentsList {
+        /// Subscription ID
+        subscription_id: i32,
+    },
+    /// Create Active-Active TGW attachment
+    #[command(name = "aa-attachment-create")]
+    AaAttachmentCreate {
+        /// Subscription ID
+        subscription_id: i32,
+        /// Region ID
+        region_id: i32,
+        /// JSON file with attachment configuration (use @filename or - for stdin)
+        file: String,
+    },
+    /// Update Active-Active TGW attachment CIDRs
+    #[command(name = "aa-attachment-update")]
+    AaAttachmentUpdate {
+        /// Subscription ID
+        subscription_id: i32,
+        /// Region ID
+        region_id: i32,
+        /// Attachment ID
+        attachment_id: String,
+        /// JSON file with CIDR configuration (use @filename or - for stdin)
+        file: String,
+    },
+    /// Delete Active-Active TGW attachment
+    #[command(name = "aa-attachment-delete")]
+    AaAttachmentDelete {
+        /// Subscription ID
+        subscription_id: i32,
+        /// Region ID
+        region_id: i32,
+        /// Attachment ID
+        attachment_id: String,
+        /// Skip confirmation prompt
+        #[arg(short, long)]
+        yes: bool,
+    },
+
+    // Active-Active TGW Invitation operations
+    /// List Active-Active TGW resource share invitations
+    #[command(name = "aa-invitations-list")]
+    AaInvitationsList {
+        /// Subscription ID
+        subscription_id: i32,
+    },
+    /// Accept Active-Active TGW resource share invitation
+    #[command(name = "aa-invitation-accept")]
+    AaInvitationAccept {
+        /// Subscription ID
+        subscription_id: i32,
+        /// Region ID
+        region_id: i32,
+        /// Invitation ID
+        invitation_id: String,
+    },
+    /// Reject Active-Active TGW resource share invitation
+    #[command(name = "aa-invitation-reject")]
+    AaInvitationReject {
+        /// Subscription ID
+        subscription_id: i32,
+        /// Region ID
+        region_id: i32,
+        /// Invitation ID
+        invitation_id: String,
+    },
 }
 
 /// Cloud Task Commands
