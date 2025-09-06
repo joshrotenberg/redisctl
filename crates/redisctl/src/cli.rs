@@ -190,6 +190,41 @@ pub enum ProfileCommands {
     },
 }
 
+/// Cloud Provider Account Commands
+#[derive(Subcommand, Debug)]
+pub enum CloudProviderAccountCommands {
+    /// List all cloud provider accounts
+    List,
+    /// Get cloud provider account details
+    Get {
+        /// Cloud account ID
+        account_id: i32,
+    },
+    /// Create a new cloud provider account
+    Create {
+        /// JSON file containing the cloud account configuration
+        /// For GCP, this should be the service account JSON file
+        /// Use @filename to read from file
+        file: String,
+    },
+    /// Update a cloud provider account
+    Update {
+        /// Cloud account ID
+        account_id: i32,
+        /// JSON file containing updated cloud account configuration
+        /// Use @filename to read from file
+        file: String,
+    },
+    /// Delete a cloud provider account
+    Delete {
+        /// Cloud account ID
+        account_id: i32,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+    },
+}
+
 /// Cloud-specific commands (placeholder for now)
 #[derive(Subcommand, Debug)]
 pub enum CloudCommands {
@@ -212,6 +247,9 @@ pub enum CloudCommands {
     /// ACL (Access Control List) operations
     #[command(subcommand)]
     Acl(CloudAclCommands),
+    /// Cloud provider account operations
+    #[command(subcommand, name = "provider-account")]
+    ProviderAccount(CloudProviderAccountCommands),
 }
 
 /// Enterprise-specific commands (placeholder for now)

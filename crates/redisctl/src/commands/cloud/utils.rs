@@ -3,7 +3,9 @@
 use anyhow::Context;
 use chrono::{DateTime, Utc};
 use colored::Colorize;
+use redis_cloud::CloudClient;
 use serde_json::Value;
+use std::fs;
 use std::io::{self, Write};
 use tabled::Tabled;
 
@@ -11,6 +13,7 @@ use tabled::Tabled;
 use std::io::IsTerminal;
 
 use crate::cli::OutputFormat;
+use crate::config::Profile;
 use crate::error::{RedisCtlError, Result as CliResult};
 use crate::output::print_output;
 
@@ -248,4 +251,42 @@ pub fn confirm_action(message: &str) -> CliResult<bool> {
     io::stdin().read_line(&mut input)?;
 
     Ok(input.trim().eq_ignore_ascii_case("y") || input.trim().eq_ignore_ascii_case("yes"))
+}
+
+/// Create a raw cloud client from profile
+pub async fn create_cloud_client_raw(profile: &Profile) -> CliResult<CloudClient> {
+    match &profile.credentials {
+        crate::config::ProfileCredentials::Cloud {
+            api_key,
+            api_secret,
+            api_url,
+        } => {
+            let client = redis_cloud::client::CloudClientBuilder::new()
+                .api_key(api_key.clone())
+                .api_secret(api_secret.clone())
+                .base_url(api_url.clone())
+                .build()
+                .map_err(|e| {
+                    RedisCtlError::Configuration(format!("Failed to create cloud client: {}", e))
+                })?;
+            Ok(client)
+        }
+        _ => Err(RedisCtlError::Configuration(
+            "Profile is not configured for Cloud deployment".to_string(),
+        )),
+    }
+}
+
+/// Read file input, supporting @filename notation
+pub fn read_file_input(input: &str) -> CliResult<String> {
+    if let Some(filename) = input.strip_prefix('@') {
+        fs::read_to_string(filename)
+            .with_context(|| format!("Failed to read file: {}", filename))
+            .map_err(|e| RedisCtlError::FileError {
+                path: filename.to_string(),
+                message: e.to_string(),
+            })
+    } else {
+        Ok(input.to_string())
+    }
 }

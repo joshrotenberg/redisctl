@@ -414,5 +414,15 @@ async fn execute_cloud_command(
             )
             .await
         }
+        ProviderAccount(provider_account_cmd) => {
+            commands::cloud::cloud_account::handle_cloud_account_command(
+                conn_mgr,
+                cli.profile.as_deref(),
+                provider_account_cmd,
+                cli.output,
+                cli.query.as_deref(),
+            )
+            .await
+        }
     }
 }
