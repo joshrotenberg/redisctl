@@ -224,6 +224,9 @@ pub enum EnterpriseCommands {
     /// User operations
     #[command(subcommand)]
     User(EnterpriseUserCommands),
+    /// Active-Active database (CRDB) operations
+    #[command(subcommand)]
+    Crdb(EnterpriseCrdbCommands),
 }
 
 // Placeholder command structures - will be expanded in later PRs
@@ -556,4 +559,188 @@ pub enum EnterpriseDatabaseCommands {
 #[derive(Subcommand, Debug)]
 pub enum EnterpriseUserCommands {
     List,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum EnterpriseCrdbCommands {
+    /// List all Active-Active databases
+    List,
+
+    /// Get CRDB details
+    Get {
+        /// CRDB ID
+        id: u32,
+    },
+
+    /// Create a new CRDB
+    Create {
+        /// CRDB configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// Update CRDB configuration
+    Update {
+        /// CRDB ID
+        id: u32,
+        /// Update configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// Delete a CRDB
+    Delete {
+        /// CRDB ID
+        id: u32,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+    },
+
+    /// Get participating clusters
+    GetClusters {
+        /// CRDB ID
+        id: u32,
+    },
+
+    /// Add cluster to CRDB
+    AddCluster {
+        /// CRDB ID
+        id: u32,
+        /// Cluster configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// Remove cluster from CRDB
+    RemoveCluster {
+        /// CRDB ID
+        id: u32,
+        /// Cluster ID to remove
+        #[arg(long)]
+        cluster_id: u32,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+    },
+
+    /// Get CRDB instances
+    GetInstances {
+        /// CRDB ID
+        id: u32,
+    },
+
+    /// Get specific CRDB instance
+    GetInstance {
+        /// CRDB ID
+        crdb_id: u32,
+        /// Instance ID
+        instance_id: u32,
+    },
+
+    /// Update CRDB instance
+    UpdateInstance {
+        /// CRDB ID
+        crdb_id: u32,
+        /// Instance ID
+        instance_id: u32,
+        /// Instance configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// Flush instance data
+    FlushInstance {
+        /// CRDB ID
+        crdb_id: u32,
+        /// Instance ID
+        instance_id: u32,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+    },
+
+    /// Get replication status
+    ReplicationStatus {
+        /// CRDB ID
+        id: u32,
+    },
+
+    /// Get replication lag
+    ReplicationLag {
+        /// CRDB ID
+        id: u32,
+    },
+
+    /// Force synchronization
+    ForceSync {
+        /// CRDB ID
+        id: u32,
+        /// Source cluster ID
+        #[arg(long)]
+        source_cluster: u32,
+    },
+
+    /// Pause replication
+    PauseReplication {
+        /// CRDB ID
+        id: u32,
+    },
+
+    /// Resume replication
+    ResumeReplication {
+        /// CRDB ID
+        id: u32,
+    },
+
+    /// Get CRDB tasks
+    GetTasks {
+        /// CRDB ID
+        id: u32,
+    },
+
+    /// Get specific task details
+    GetTask {
+        /// CRDB ID
+        crdb_id: u32,
+        /// Task ID
+        task_id: String,
+    },
+
+    /// Retry failed task
+    RetryTask {
+        /// CRDB ID
+        crdb_id: u32,
+        /// Task ID
+        task_id: String,
+    },
+
+    /// Cancel running task
+    CancelTask {
+        /// CRDB ID
+        crdb_id: u32,
+        /// Task ID
+        task_id: String,
+    },
+
+    /// Get CRDB statistics
+    Stats {
+        /// CRDB ID
+        id: u32,
+    },
+
+    /// Get CRDB metrics
+    Metrics {
+        /// CRDB ID
+        id: u32,
+        /// Time interval (e.g., "1h", "24h")
+        #[arg(long)]
+        interval: Option<String>,
+    },
+
+    /// Run health check
+    HealthCheck {
+        /// CRDB ID
+        id: u32,
+    },
 }

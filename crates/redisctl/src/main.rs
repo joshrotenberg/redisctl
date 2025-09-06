@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
-use tracing::{debug, error, info, trace, warn};
+use tracing::{debug, error, info, trace};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod cli;
@@ -103,10 +103,15 @@ async fn execute_command(cli: &Cli, conn_mgr: &ConnectionManager) -> Result<(), 
 
         Commands::Cloud(cloud_cmd) => execute_cloud_command(cli, conn_mgr, cloud_cmd).await,
 
-        Commands::Enterprise(_) => {
-            warn!("Enterprise commands not yet implemented");
-            println!("Enterprise commands are not yet implemented in this version");
-            Ok(())
+        Commands::Enterprise(enterprise_cmd) => {
+            execute_enterprise_command(
+                enterprise_cmd,
+                &conn_mgr,
+                cli.profile.as_deref(),
+                cli.output,
+                cli.query.as_deref(),
+            )
+            .await
         }
     };
 
@@ -143,6 +148,35 @@ fn format_command(command: &Commands) -> String {
         }
         Commands::Cloud(cmd) => format!("cloud {:?}", cmd),
         Commands::Enterprise(cmd) => format!("enterprise {:?}", cmd),
+    }
+}
+
+async fn execute_enterprise_command(
+    enterprise_cmd: &cli::EnterpriseCommands,
+    conn_mgr: &ConnectionManager,
+    profile: Option<&str>,
+    output: cli::OutputFormat,
+    query: Option<&str>,
+) -> Result<(), RedisCtlError> {
+    use cli::EnterpriseCommands::*;
+
+    match enterprise_cmd {
+        Cluster(_) => {
+            println!("Cluster commands not yet implemented");
+            Ok(())
+        }
+        Database(_) => {
+            println!("Database commands not yet implemented");
+            Ok(())
+        }
+        User(_) => {
+            println!("User commands not yet implemented");
+            Ok(())
+        }
+        Crdb(crdb_cmd) => {
+            commands::enterprise::handle_crdb_command(conn_mgr, profile, crdb_cmd, output, query)
+                .await
+        }
     }
 }
 
