@@ -10,6 +10,7 @@ use crate::cli::{CloudSubscriptionCommands, OutputFormat};
 use crate::connection::ConnectionManager;
 use crate::error::Result as CliResult;
 
+use super::subscription_impl;
 use super::utils::*;
 
 /// Subscription row for clean table display
@@ -47,6 +48,114 @@ pub async fn handle_subscription_command(
         }
         CloudSubscriptionCommands::Get { id } => {
             get_subscription(conn_mgr, profile_name, *id, output_format, query).await
+        }
+        CloudSubscriptionCommands::Create { data } => {
+            subscription_impl::create_subscription(
+                conn_mgr,
+                profile_name,
+                data,
+                output_format,
+                query,
+            )
+            .await
+        }
+        CloudSubscriptionCommands::Update { id, data } => {
+            subscription_impl::update_subscription(
+                conn_mgr,
+                profile_name,
+                *id,
+                data,
+                output_format,
+                query,
+            )
+            .await
+        }
+        CloudSubscriptionCommands::Delete { id, force } => {
+            subscription_impl::delete_subscription(
+                conn_mgr,
+                profile_name,
+                *id,
+                *force,
+                output_format,
+                query,
+            )
+            .await
+        }
+        CloudSubscriptionCommands::RedisVersions { subscription } => {
+            subscription_impl::get_redis_versions(
+                conn_mgr,
+                profile_name,
+                *subscription,
+                output_format,
+                query,
+            )
+            .await
+        }
+        CloudSubscriptionCommands::GetPricing { id } => {
+            subscription_impl::get_pricing(conn_mgr, profile_name, *id, output_format, query).await
+        }
+        CloudSubscriptionCommands::GetCidrAllowlist { id } => {
+            subscription_impl::get_cidr_allowlist(conn_mgr, profile_name, *id, output_format, query)
+                .await
+        }
+        CloudSubscriptionCommands::UpdateCidrAllowlist { id, cidrs } => {
+            subscription_impl::update_cidr_allowlist(
+                conn_mgr,
+                profile_name,
+                *id,
+                cidrs,
+                output_format,
+                query,
+            )
+            .await
+        }
+        CloudSubscriptionCommands::GetMaintenanceWindows { id } => {
+            subscription_impl::get_maintenance_windows(
+                conn_mgr,
+                profile_name,
+                *id,
+                output_format,
+                query,
+            )
+            .await
+        }
+        CloudSubscriptionCommands::UpdateMaintenanceWindows { id, data } => {
+            subscription_impl::update_maintenance_windows(
+                conn_mgr,
+                profile_name,
+                *id,
+                data,
+                output_format,
+                query,
+            )
+            .await
+        }
+        CloudSubscriptionCommands::ListAaRegions { id } => {
+            subscription_impl::list_aa_regions(conn_mgr, profile_name, *id, output_format, query)
+                .await
+        }
+        CloudSubscriptionCommands::AddAaRegion { id, data } => {
+            subscription_impl::add_aa_region(
+                conn_mgr,
+                profile_name,
+                *id,
+                data,
+                output_format,
+                query,
+            )
+            .await
+        }
+        CloudSubscriptionCommands::DeleteAaRegions { id, regions, force } => {
+            subscription_impl::delete_aa_regions(
+                conn_mgr,
+                profile_name,
+                *id,
+                regions,
+                *force,
+                output_format,
+                query,
+            )
+            .await
         }
     }
 }

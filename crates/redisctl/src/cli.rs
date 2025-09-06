@@ -285,6 +285,101 @@ pub enum CloudSubscriptionCommands {
         /// Subscription ID
         id: u32,
     },
+
+    /// Create a new subscription
+    Create {
+        /// Subscription configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// Update subscription configuration
+    Update {
+        /// Subscription ID
+        id: u32,
+        /// Update configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// Delete a subscription
+    Delete {
+        /// Subscription ID
+        id: u32,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+    },
+
+    /// Get available Redis versions
+    RedisVersions {
+        /// Filter by subscription ID (optional)
+        #[arg(long)]
+        subscription: Option<u32>,
+    },
+
+    /// Get subscription pricing information
+    GetPricing {
+        /// Subscription ID
+        id: u32,
+    },
+
+    /// Get CIDR allowlist
+    GetCidrAllowlist {
+        /// Subscription ID
+        id: u32,
+    },
+
+    /// Update CIDR allowlist
+    UpdateCidrAllowlist {
+        /// Subscription ID
+        id: u32,
+        /// CIDR blocks as JSON array or @file.json
+        #[arg(long)]
+        cidrs: String,
+    },
+
+    /// Get maintenance windows
+    GetMaintenanceWindows {
+        /// Subscription ID
+        id: u32,
+    },
+
+    /// Update maintenance windows
+    UpdateMaintenanceWindows {
+        /// Subscription ID
+        id: u32,
+        /// Maintenance windows configuration as JSON or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// List Active-Active regions
+    ListAaRegions {
+        /// Subscription ID
+        id: u32,
+    },
+
+    /// Add region to Active-Active subscription
+    AddAaRegion {
+        /// Subscription ID
+        id: u32,
+        /// Region configuration as JSON or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// Delete regions from Active-Active subscription
+    DeleteAaRegions {
+        /// Subscription ID
+        id: u32,
+        /// Regions to delete as JSON array or @file.json
+        #[arg(long)]
+        regions: String,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+    },
 }
 
 #[derive(Subcommand, Debug)]
