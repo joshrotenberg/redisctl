@@ -565,7 +565,139 @@ pub enum CloudUserCommands {
 
 #[derive(Subcommand, Debug)]
 pub enum EnterpriseClusterCommands {
-    Info,
+    /// Get cluster configuration
+    Get,
+
+    /// Update cluster configuration
+    Update {
+        /// Cluster configuration data (JSON file or inline)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: String,
+    },
+
+    /// Get cluster policies
+    #[command(name = "get-policy")]
+    GetPolicy,
+
+    /// Update cluster policies
+    #[command(name = "update-policy")]
+    UpdatePolicy {
+        /// Policy data (JSON file or inline)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: String,
+    },
+
+    /// Get license information
+    #[command(name = "get-license")]
+    GetLicense,
+
+    /// Update license
+    #[command(name = "update-license")]
+    UpdateLicense {
+        /// License key file or content
+        #[arg(long, value_name = "FILE|KEY")]
+        license: String,
+    },
+
+    /// Bootstrap new cluster
+    Bootstrap {
+        /// Bootstrap configuration (JSON file or inline)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: String,
+    },
+
+    /// Join node to cluster
+    Join {
+        /// Join configuration (JSON file or inline)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: String,
+    },
+
+    /// Recover cluster
+    Recover {
+        /// Recovery configuration (JSON file or inline)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: String,
+    },
+
+    /// Reset cluster (dangerous!)
+    Reset {
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+    },
+
+    /// Get cluster statistics
+    Stats,
+
+    /// Get cluster metrics
+    Metrics {
+        /// Time interval (e.g., "1h", "5m")
+        #[arg(long)]
+        interval: Option<String>,
+    },
+
+    /// Get active alerts
+    Alerts,
+
+    /// Get cluster events
+    Events {
+        /// Maximum number of events to return
+        #[arg(long, default_value = "100")]
+        limit: Option<u32>,
+    },
+
+    /// Get audit log
+    #[command(name = "audit-log")]
+    AuditLog {
+        /// From date (e.g., "2024-01-01")
+        #[arg(long)]
+        from: Option<String>,
+    },
+
+    /// Enable maintenance mode
+    #[command(name = "maintenance-mode-enable")]
+    MaintenanceModeEnable,
+
+    /// Disable maintenance mode
+    #[command(name = "maintenance-mode-disable")]
+    MaintenanceModeDisable,
+
+    /// Collect debug information
+    #[command(name = "debug-info")]
+    DebugInfo,
+
+    /// Check cluster health status
+    #[command(name = "check-status")]
+    CheckStatus,
+
+    /// Get cluster certificates
+    #[command(name = "get-certificates")]
+    GetCertificates,
+
+    /// Update certificates
+    #[command(name = "update-certificates")]
+    UpdateCertificates {
+        /// Certificate data (JSON file or inline)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: String,
+    },
+
+    /// Rotate certificates
+    #[command(name = "rotate-certificates")]
+    RotateCertificates,
+
+    /// Get OCSP configuration
+    #[command(name = "get-ocsp")]
+    GetOcsp,
+
+    /// Update OCSP configuration
+    #[command(name = "update-ocsp")]
+    UpdateOcsp {
+        /// OCSP configuration data (JSON file or inline)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: String,
+    },
 }
 
 #[derive(Subcommand, Debug)]
