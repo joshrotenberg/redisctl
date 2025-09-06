@@ -47,6 +47,9 @@ pub enum RedisCtlError {
     #[error("Connection error: {message}")]
     ConnectionError { message: String },
 
+    #[error("Timeout: {message}")]
+    Timeout { message: String },
+
     #[error("Output formatting error: {message}")]
     OutputError { message: String },
 }

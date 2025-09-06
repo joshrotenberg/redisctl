@@ -424,5 +424,15 @@ async fn execute_cloud_command(
             )
             .await
         }
+        Task(task_cmd) => {
+            commands::cloud::task::handle_task_command(
+                conn_mgr,
+                cli.profile.as_deref(),
+                task_cmd,
+                cli.output,
+                cli.query.as_deref(),
+            )
+            .await
+        }
     }
 }

@@ -190,6 +190,38 @@ pub enum ProfileCommands {
     },
 }
 
+/// Cloud Task Commands
+#[derive(Subcommand, Debug)]
+pub enum CloudTaskCommands {
+    /// Get task status and details
+    Get {
+        /// Task ID (UUID format)
+        id: String,
+    },
+    /// Wait for task to complete
+    Wait {
+        /// Task ID (UUID format)
+        id: String,
+        /// Maximum time to wait in seconds
+        #[arg(long, default_value = "300")]
+        timeout: u64,
+        /// Polling interval in seconds
+        #[arg(long, default_value = "2")]
+        interval: u64,
+    },
+    /// Poll task status with live updates
+    Poll {
+        /// Task ID (UUID format)
+        id: String,
+        /// Polling interval in seconds
+        #[arg(long, default_value = "2")]
+        interval: u64,
+        /// Maximum number of polls (0 = unlimited)
+        #[arg(long, default_value = "0")]
+        max_polls: u64,
+    },
+}
+
 /// Cloud Provider Account Commands
 #[derive(Subcommand, Debug)]
 pub enum CloudProviderAccountCommands {
@@ -250,6 +282,9 @@ pub enum CloudCommands {
     /// Cloud provider account operations
     #[command(subcommand, name = "provider-account")]
     ProviderAccount(CloudProviderAccountCommands),
+    /// Task operations
+    #[command(subcommand)]
+    Task(CloudTaskCommands),
 }
 
 /// Enterprise-specific commands (placeholder for now)

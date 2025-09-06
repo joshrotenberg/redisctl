@@ -16,6 +16,7 @@ pub mod database;
 pub mod database_impl;
 pub mod subscription;
 pub mod subscription_impl;
+pub mod task;
 pub mod user;
 pub mod utils;
 

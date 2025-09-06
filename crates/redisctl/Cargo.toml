@@ -34,6 +34,7 @@ dialoguer = "0.11"
 colored = "2.1"
 tabled = { version = "0.17", features = ["ansi"] }
 terminal_size = "0.4"
+indicatif = "0.17"
 
 # Shared utility dependencies
 thiserror = { workspace = true }
