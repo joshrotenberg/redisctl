@@ -2,6 +2,7 @@
 
 #![allow(dead_code)]
 
+pub mod psc;
 pub mod vpc_peering;
 
 use crate::cli::{CloudConnectivityCommands, OutputFormat};
@@ -27,9 +28,8 @@ pub async fn handle_connectivity_command(
             )
             .await
         }
-        CloudConnectivityCommands::Psc(_) => {
-            eprintln!("PSC commands not yet implemented (Issue #177)");
-            Ok(())
+        CloudConnectivityCommands::Psc(psc_cmd) => {
+            psc::handle_psc_command(conn_mgr, profile_name, psc_cmd, output_format, query).await
         }
         CloudConnectivityCommands::Tgw(_) => {
             eprintln!("Transit Gateway commands not yet implemented (Issue #178)");

@@ -287,12 +287,136 @@ pub enum VpcPeeringCommands {
     },
 }
 
-/// PSC Commands (placeholder)
+/// Private Service Connect (PSC) Commands
 #[derive(Subcommand, Debug)]
 pub enum PscCommands {
-    /// Placeholder
-    #[command(hide = true)]
-    Placeholder,
+    // Standard PSC Service operations
+    /// Get PSC service details
+    #[command(name = "service-get")]
+    ServiceGet {
+        /// Subscription ID
+        subscription_id: i32,
+    },
+    /// Create PSC service
+    #[command(name = "service-create")]
+    ServiceCreate {
+        /// Subscription ID
+        subscription_id: i32,
+    },
+    /// Delete PSC service
+    #[command(name = "service-delete")]
+    ServiceDelete {
+        /// Subscription ID
+        subscription_id: i32,
+        /// Skip confirmation prompt
+        #[arg(short, long)]
+        yes: bool,
+    },
+
+    // Standard PSC Endpoint operations
+    /// List PSC endpoints
+    #[command(name = "endpoints-list")]
+    EndpointsList {
+        /// Subscription ID
+        subscription_id: i32,
+    },
+    /// Create PSC endpoint
+    #[command(name = "endpoint-create")]
+    EndpointCreate {
+        /// Subscription ID
+        subscription_id: i32,
+        /// JSON file with endpoint configuration (use @filename or - for stdin)
+        file: String,
+    },
+    /// Update PSC endpoint
+    #[command(name = "endpoint-update")]
+    EndpointUpdate {
+        /// Subscription ID
+        subscription_id: i32,
+        /// Endpoint ID
+        endpoint_id: i32,
+        /// JSON file with endpoint configuration (use @filename or - for stdin)
+        file: String,
+    },
+    /// Delete PSC endpoint
+    #[command(name = "endpoint-delete")]
+    EndpointDelete {
+        /// Subscription ID
+        subscription_id: i32,
+        /// Endpoint ID
+        endpoint_id: i32,
+        /// Skip confirmation prompt
+        #[arg(short, long)]
+        yes: bool,
+    },
+    /// Get PSC endpoint creation script
+    #[command(name = "endpoint-creation-script")]
+    EndpointCreationScript {
+        /// Subscription ID
+        subscription_id: i32,
+        /// Endpoint ID
+        endpoint_id: i32,
+    },
+    /// Get PSC endpoint deletion script
+    #[command(name = "endpoint-deletion-script")]
+    EndpointDeletionScript {
+        /// Subscription ID
+        subscription_id: i32,
+        /// Endpoint ID
+        endpoint_id: i32,
+    },
+
+    // Active-Active PSC Service operations
+    /// Get Active-Active PSC service details
+    #[command(name = "aa-service-get")]
+    AaServiceGet {
+        /// Subscription ID
+        subscription_id: i32,
+    },
+    /// Create Active-Active PSC service
+    #[command(name = "aa-service-create")]
+    AaServiceCreate {
+        /// Subscription ID
+        subscription_id: i32,
+    },
+    /// Delete Active-Active PSC service
+    #[command(name = "aa-service-delete")]
+    AaServiceDelete {
+        /// Subscription ID
+        subscription_id: i32,
+        /// Skip confirmation prompt
+        #[arg(short, long)]
+        yes: bool,
+    },
+
+    // Active-Active PSC Endpoint operations
+    /// List Active-Active PSC endpoints
+    #[command(name = "aa-endpoints-list")]
+    AaEndpointsList {
+        /// Subscription ID
+        subscription_id: i32,
+    },
+    /// Create Active-Active PSC endpoint
+    #[command(name = "aa-endpoint-create")]
+    AaEndpointCreate {
+        /// Subscription ID
+        subscription_id: i32,
+        /// JSON file with endpoint configuration (use @filename or - for stdin)
+        file: String,
+    },
+    /// Delete Active-Active PSC endpoint
+    #[command(name = "aa-endpoint-delete")]
+    AaEndpointDelete {
+        /// Subscription ID
+        subscription_id: i32,
+        /// Region ID
+        region_id: i32,
+        /// Endpoint ID
+        endpoint_id: i32,
+        /// Skip confirmation prompt
+        #[arg(short, long)]
+        yes: bool,
+    },
 }
 
 /// TGW Commands (placeholder)
