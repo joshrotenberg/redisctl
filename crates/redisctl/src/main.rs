@@ -161,9 +161,15 @@ async fn execute_enterprise_command(
     use cli::EnterpriseCommands::*;
 
     match enterprise_cmd {
-        Cluster(_) => {
-            println!("Cluster commands not yet implemented");
-            Ok(())
+        Cluster(cluster_cmd) => {
+            commands::enterprise::cluster::handle_cluster_command(
+                conn_mgr,
+                profile,
+                cluster_cmd,
+                output,
+                query,
+            )
+            .await
         }
         Database(db_cmd) => {
             commands::enterprise::database::handle_database_command(
