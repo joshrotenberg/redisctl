@@ -228,6 +228,22 @@ pub enum EnterpriseCommands {
     /// User operations
     #[command(subcommand)]
     User(EnterpriseUserCommands),
+
+    /// Role operations
+    #[command(subcommand)]
+    Role(EnterpriseRoleCommands),
+
+    /// ACL operations
+    #[command(subcommand)]
+    Acl(EnterpriseAclCommands),
+
+    /// LDAP integration
+    #[command(subcommand)]
+    Ldap(EnterpriseLdapCommands),
+
+    /// Authentication & sessions
+    #[command(subcommand)]
+    Auth(EnterpriseAuthCommands),
 }
 
 // Placeholder command structures - will be expanded in later PRs
@@ -887,5 +903,232 @@ pub enum EnterpriseNodeCommands {
 
 #[derive(Subcommand, Debug)]
 pub enum EnterpriseUserCommands {
+    /// List all users
     List,
+
+    /// Get user details
+    Get {
+        /// User ID
+        id: u32,
+    },
+
+    /// Create new user
+    Create {
+        /// User data (JSON file or inline)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: String,
+    },
+
+    /// Update user
+    Update {
+        /// User ID
+        id: u32,
+        /// Update data (JSON file or inline)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: String,
+    },
+
+    /// Delete user
+    Delete {
+        /// User ID
+        id: u32,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+    },
+
+    /// Reset user password
+    #[command(name = "reset-password")]
+    ResetPassword {
+        /// User ID
+        id: u32,
+        /// New password (will prompt if not provided)
+        #[arg(long)]
+        password: Option<String>,
+    },
+
+    /// Get user's roles
+    #[command(name = "get-roles")]
+    GetRoles {
+        /// User ID
+        #[arg(name = "user-id")]
+        user_id: u32,
+    },
+
+    /// Assign role to user
+    #[command(name = "assign-role")]
+    AssignRole {
+        /// User ID
+        #[arg(name = "user-id")]
+        user_id: u32,
+        /// Role ID to assign
+        #[arg(long)]
+        role: u32,
+    },
+
+    /// Remove role from user
+    #[command(name = "remove-role")]
+    RemoveRole {
+        /// User ID
+        #[arg(name = "user-id")]
+        user_id: u32,
+        /// Role ID to remove
+        #[arg(long)]
+        role: u32,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub enum EnterpriseRoleCommands {
+    /// List all roles
+    List,
+
+    /// Get role details
+    Get {
+        /// Role ID
+        id: u32,
+    },
+
+    /// Create custom role
+    Create {
+        /// Role data (JSON file or inline)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: String,
+    },
+
+    /// Update role
+    Update {
+        /// Role ID
+        id: u32,
+        /// Update data (JSON file or inline)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: String,
+    },
+
+    /// Delete custom role
+    Delete {
+        /// Role ID
+        id: u32,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+    },
+
+    /// Get role permissions
+    #[command(name = "get-permissions")]
+    GetPermissions {
+        /// Role ID
+        id: u32,
+    },
+
+    /// Get users with specific role
+    #[command(name = "get-users")]
+    GetUsers {
+        /// Role ID
+        #[arg(name = "role-id")]
+        role_id: u32,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub enum EnterpriseAclCommands {
+    /// List all ACLs
+    List,
+
+    /// Get ACL details
+    Get {
+        /// ACL ID
+        id: u32,
+    },
+
+    /// Create ACL
+    Create {
+        /// ACL data (JSON file or inline)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: String,
+    },
+
+    /// Update ACL
+    Update {
+        /// ACL ID
+        id: u32,
+        /// Update data (JSON file or inline)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: String,
+    },
+
+    /// Delete ACL
+    Delete {
+        /// ACL ID
+        id: u32,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+    },
+
+    /// Test ACL permissions
+    Test {
+        /// User ID
+        #[arg(long)]
+        user: u32,
+        /// Redis command to test
+        #[arg(long)]
+        command: String,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub enum EnterpriseLdapCommands {
+    /// Get LDAP configuration
+    #[command(name = "get-config")]
+    GetConfig,
+
+    /// Update LDAP configuration
+    #[command(name = "update-config")]
+    UpdateConfig {
+        /// LDAP config data (JSON file or inline)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: String,
+    },
+
+    /// Test LDAP connection
+    #[command(name = "test-connection")]
+    TestConnection,
+
+    /// Sync users from LDAP
+    Sync,
+
+    /// Get LDAP role mappings
+    #[command(name = "get-mappings")]
+    GetMappings,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum EnterpriseAuthCommands {
+    /// Test authentication
+    Test {
+        /// Username/email to test
+        #[arg(long)]
+        user: String,
+    },
+
+    /// List active sessions
+    #[command(name = "session-list")]
+    SessionList,
+
+    /// Revoke session
+    #[command(name = "session-revoke")]
+    SessionRevoke {
+        /// Session ID
+        #[arg(name = "session-id")]
+        session_id: String,
+    },
+
+    /// Revoke all user sessions
+    #[command(name = "session-revoke-all")]
+    SessionRevokeAll {
+        /// User ID
+        #[arg(long)]
+        user: u32,
+    },
 }
