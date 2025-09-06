@@ -177,9 +177,35 @@ async fn execute_enterprise_command(
             )
             .await
         }
-        User(_) => {
-            println!("User commands not yet implemented");
-            Ok(())
+        User(user_cmd) => {
+            commands::enterprise::rbac::handle_user_command(
+                conn_mgr, profile, user_cmd, output, query,
+            )
+            .await
+        }
+        Role(role_cmd) => {
+            commands::enterprise::rbac::handle_role_command(
+                conn_mgr, profile, role_cmd, output, query,
+            )
+            .await
+        }
+        Acl(acl_cmd) => {
+            commands::enterprise::rbac::handle_acl_command(
+                conn_mgr, profile, acl_cmd, output, query,
+            )
+            .await
+        }
+        Ldap(ldap_cmd) => {
+            commands::enterprise::rbac::handle_ldap_command(
+                conn_mgr, profile, ldap_cmd, output, query,
+            )
+            .await
+        }
+        Auth(auth_cmd) => {
+            commands::enterprise::rbac::handle_auth_command(
+                conn_mgr, profile, auth_cmd, output, query,
+            )
+            .await
         }
     }
 }
