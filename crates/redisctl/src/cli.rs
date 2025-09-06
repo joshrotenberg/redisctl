@@ -715,6 +715,65 @@ pub enum CloudFixedDatabaseCommands {
     },
 }
 
+/// Cloud Fixed Subscription Commands
+#[derive(Subcommand, Debug)]
+pub enum CloudFixedSubscriptionCommands {
+    /// List all available fixed subscription plans
+    #[command(name = "list-plans")]
+    ListPlans {
+        /// Filter by cloud provider (AWS, GCP, Azure)
+        #[arg(long)]
+        provider: Option<String>,
+    },
+    /// Get plans for a specific subscription
+    #[command(name = "get-plans")]
+    GetPlans {
+        /// Subscription ID
+        #[arg(long)]
+        subscription: i32,
+    },
+    /// Get details of a specific plan
+    #[command(name = "get-plan")]
+    GetPlan {
+        /// Plan ID
+        id: i32,
+    },
+    /// List all fixed subscriptions
+    List,
+    /// Get details of a fixed subscription
+    Get {
+        /// Subscription ID
+        id: i32,
+    },
+    /// Create a new fixed subscription
+    Create {
+        /// JSON file with subscription configuration (use @filename or - for stdin)
+        file: String,
+    },
+    /// Update fixed subscription
+    Update {
+        /// Subscription ID
+        id: i32,
+        /// JSON file with update configuration (use @filename or - for stdin)
+        file: String,
+    },
+    /// Delete a fixed subscription
+    Delete {
+        /// Subscription ID
+        id: i32,
+        /// Skip confirmation prompt
+        #[arg(short, long)]
+        yes: bool,
+    },
+    /// Get available Redis versions for fixed subscription
+    #[command(name = "redis-versions")]
+    RedisVersions {
+        /// Subscription ID
+        #[arg(long)]
+        subscription: i32,
+    },
+}
+
 /// Cloud Provider Account Commands
 #[derive(Subcommand, Debug)]
 pub enum CloudProviderAccountCommands {
@@ -784,6 +843,9 @@ pub enum CloudCommands {
     /// Fixed database operations
     #[command(subcommand, name = "fixed-database")]
     FixedDatabase(CloudFixedDatabaseCommands),
+    /// Fixed subscription operations
+    #[command(subcommand, name = "fixed-subscription")]
+    FixedSubscription(CloudFixedSubscriptionCommands),
 }
 
 /// Enterprise-specific commands (placeholder for now)

@@ -16,6 +16,7 @@ pub mod connectivity;
 pub mod database;
 pub mod database_impl;
 pub mod fixed_database;
+pub mod fixed_subscription;
 pub mod subscription;
 pub mod subscription_impl;
 pub mod task;

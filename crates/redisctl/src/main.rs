@@ -454,5 +454,15 @@ async fn execute_cloud_command(
             )
             .await
         }
+        FixedSubscription(fixed_sub_cmd) => {
+            commands::cloud::fixed_subscription::handle_fixed_subscription_command(
+                conn_mgr,
+                cli.profile.as_deref(),
+                fixed_sub_cmd,
+                cli.output,
+                cli.query.as_deref(),
+            )
+            .await
+        }
     }
 }
