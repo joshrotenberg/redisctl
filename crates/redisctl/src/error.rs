@@ -11,6 +11,8 @@ use thiserror::Error;
 pub enum RedisCtlError {
     #[error("Configuration error: {0}")]
     Config(String),
+    #[error("Configuration error: {0}")]
+    Configuration(String),
 
     #[error("Profile '{name}' not found")]
     ProfileNotFound { name: String },
@@ -39,6 +41,8 @@ pub enum RedisCtlError {
 
     #[error("Command not supported for deployment type '{deployment_type}'")]
     UnsupportedDeploymentType { deployment_type: String },
+    #[error("File error for '{path}': {message}")]
+    FileError { path: String, message: String },
 
     #[error("Connection error: {message}")]
     ConnectionError { message: String },
