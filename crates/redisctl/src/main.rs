@@ -444,5 +444,15 @@ async fn execute_cloud_command(
             )
             .await
         }
+        FixedDatabase(fixed_db_cmd) => {
+            commands::cloud::fixed_database::handle_fixed_database_command(
+                conn_mgr,
+                cli.profile.as_deref(),
+                fixed_db_cmd,
+                cli.output,
+                cli.query.as_deref(),
+            )
+            .await
+        }
     }
 }
