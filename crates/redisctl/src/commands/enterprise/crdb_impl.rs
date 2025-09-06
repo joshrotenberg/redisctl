@@ -571,14 +571,17 @@ pub async fn update_cluster_in_crdb(
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
-    
+
     let update_data = read_json_data(data).context("Failed to parse update data")?;
-    
+
     let result = client
-        .put_raw(&format!("/v1/crdbs/{}/participating_clusters/{}", id, cluster_id), update_data)
+        .put_raw(
+            &format!("/v1/crdbs/{}/participating_clusters/{}", id, cluster_id),
+            update_data,
+        )
         .await
         .context("Failed to update cluster configuration")?;
-    
+
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
     Ok(())
@@ -593,18 +596,18 @@ pub async fn get_conflicts(
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
-    
+
     let url = if let Some(limit) = limit {
         format!("/v1/crdbs/{}/conflicts?limit={}", id, limit)
     } else {
         format!("/v1/crdbs/{}/conflicts", id)
     };
-    
+
     let result = client
         .get_raw(&url)
         .await
         .context("Failed to get conflicts")?;
-    
+
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
     Ok(())
@@ -618,12 +621,12 @@ pub async fn get_conflict_policy(
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
-    
+
     let result = client
         .get_raw(&format!("/v1/crdbs/{}/conflict_policy", id))
         .await
         .context("Failed to get conflict policy")?;
-    
+
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
     Ok(())
@@ -638,14 +641,14 @@ pub async fn update_conflict_policy(
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
-    
+
     let policy_data = read_json_data(data).context("Failed to parse policy data")?;
-    
+
     let result = client
         .put_raw(&format!("/v1/crdbs/{}/conflict_policy", id), policy_data)
         .await
         .context("Failed to update conflict policy")?;
-    
+
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
     Ok(())
@@ -661,16 +664,19 @@ pub async fn resolve_conflict(
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
-    
+
     let resolution_data = serde_json::json!({
         "resolution": resolution
     });
-    
+
     let result = client
-        .post_raw(&format!("/v1/crdbs/{}/conflicts/{}/resolve", id, conflict_id), resolution_data)
+        .post_raw(
+            &format!("/v1/crdbs/{}/conflicts/{}/resolve", id, conflict_id),
+            resolution_data,
+        )
         .await
         .context("Failed to resolve conflict")?;
-    
+
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
     Ok(())
@@ -684,12 +690,12 @@ pub async fn get_crdb_connections(
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
-    
+
     let result = client
         .get_raw(&format!("/v1/crdbs/{}/connections", id))
         .await
         .context("Failed to get CRDB connections")?;
-    
+
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
     Ok(())
@@ -703,12 +709,12 @@ pub async fn get_crdb_throughput(
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
-    
+
     let result = client
         .get_raw(&format!("/v1/crdbs/{}/throughput", id))
         .await
         .context("Failed to get CRDB throughput")?;
-    
+
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
     Ok(())
@@ -723,14 +729,14 @@ pub async fn backup_crdb(
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
-    
+
     let backup_data = read_json_data(data).context("Failed to parse backup data")?;
-    
+
     let result = client
         .post_raw(&format!("/v1/crdbs/{}/backup", id), backup_data)
         .await
         .context("Failed to create CRDB backup")?;
-    
+
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
     Ok(())
@@ -745,14 +751,14 @@ pub async fn restore_crdb(
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
-    
+
     let restore_data = read_json_data(data).context("Failed to parse restore data")?;
-    
+
     let result = client
         .post_raw(&format!("/v1/crdbs/{}/restore", id), restore_data)
         .await
         .context("Failed to restore CRDB")?;
-    
+
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
     Ok(())
@@ -766,12 +772,12 @@ pub async fn get_crdb_backups(
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
-    
+
     let result = client
         .get_raw(&format!("/v1/crdbs/{}/backups", id))
         .await
         .context("Failed to get CRDB backups")?;
-    
+
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
     Ok(())
@@ -786,14 +792,14 @@ pub async fn export_crdb(
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
-    
+
     let export_data = read_json_data(data).context("Failed to parse export data")?;
-    
+
     let result = client
         .post_raw(&format!("/v1/crdbs/{}/export", id), export_data)
         .await
         .context("Failed to export CRDB data")?;
-    
+
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
     Ok(())
