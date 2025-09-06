@@ -8,6 +8,8 @@
 //! - `utils`: Shared utilities and helper functions
 
 pub mod account;
+pub mod acl;
+pub mod acl_impl;
 pub mod database;
 pub mod database_impl;
 pub mod subscription;

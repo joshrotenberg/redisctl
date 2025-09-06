@@ -404,5 +404,15 @@ async fn execute_cloud_command(
             )
             .await
         }
+        Acl(acl_cmd) => {
+            commands::cloud::acl::handle_acl_command(
+                conn_mgr,
+                cli.profile.as_deref(),
+                acl_cmd,
+                cli.output,
+                cli.query.as_deref(),
+            )
+            .await
+        }
     }
 }
