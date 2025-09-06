@@ -213,6 +213,12 @@ async fn execute_enterprise_command(
             )
             .await
         }
+        Crdb(crdb_cmd) => {
+            commands::enterprise::crdb::handle_crdb_command(
+                conn_mgr, profile, crdb_cmd, output, query,
+            )
+            .await
+        }
     }
 }
 
