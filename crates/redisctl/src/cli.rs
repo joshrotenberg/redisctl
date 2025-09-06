@@ -550,7 +550,159 @@ pub enum EnterpriseClusterCommands {
 
 #[derive(Subcommand, Debug)]
 pub enum EnterpriseDatabaseCommands {
+    /// List all databases
     List,
+
+    /// Get database details
+    Get {
+        /// Database ID
+        id: u32,
+    },
+
+    /// Create a new database
+    Create {
+        /// Database configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+        /// Perform a dry run without creating the database
+        #[arg(long)]
+        dry_run: bool,
+    },
+
+    /// Update database configuration
+    Update {
+        /// Database ID
+        id: u32,
+        /// Update configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// Delete a database
+    Delete {
+        /// Database ID
+        id: u32,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+    },
+
+    /// Export database
+    Export {
+        /// Database ID
+        id: u32,
+        /// Export configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// Import to database
+    Import {
+        /// Database ID
+        id: u32,
+        /// Import configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// Trigger database backup
+    Backup {
+        /// Database ID
+        id: u32,
+    },
+
+    /// Restore database
+    Restore {
+        /// Database ID
+        id: u32,
+        /// Restore configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// Flush database data
+    Flush {
+        /// Database ID
+        id: u32,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+    },
+
+    /// Get database shards info
+    GetShards {
+        /// Database ID
+        id: u32,
+    },
+
+    /// Update sharding configuration
+    UpdateShards {
+        /// Database ID
+        id: u32,
+        /// Shards configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// Get enabled modules
+    GetModules {
+        /// Database ID
+        id: u32,
+    },
+
+    /// Update modules configuration
+    UpdateModules {
+        /// Database ID
+        id: u32,
+        /// Modules configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// Get ACL configuration
+    GetAcl {
+        /// Database ID
+        id: u32,
+    },
+
+    /// Update ACL configuration
+    UpdateAcl {
+        /// Database ID
+        id: u32,
+        /// ACL configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// Get database statistics
+    Stats {
+        /// Database ID
+        id: u32,
+    },
+
+    /// Get database metrics
+    Metrics {
+        /// Database ID
+        id: u32,
+        /// Time interval (e.g., "1h", "24h")
+        #[arg(long)]
+        interval: Option<String>,
+    },
+
+    /// Get slow query log
+    Slowlog {
+        /// Database ID
+        id: u32,
+        /// Limit number of entries
+        #[arg(long)]
+        limit: Option<u32>,
+    },
+
+    /// Get connected clients
+    ClientList {
+        /// Database ID
+        id: u32,
+    },
 }
 
 #[derive(Subcommand, Debug)]
