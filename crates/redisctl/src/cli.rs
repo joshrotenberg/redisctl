@@ -244,6 +244,10 @@ pub enum EnterpriseCommands {
     /// Authentication & sessions
     #[command(subcommand)]
     Auth(EnterpriseAuthCommands),
+
+    /// Active-Active database (CRDB) operations
+    #[command(subcommand)]
+    Crdb(EnterpriseCrdbCommands),
 }
 
 // Placeholder command structures - will be expanded in later PRs
@@ -1262,5 +1266,324 @@ pub enum EnterpriseAuthCommands {
         /// User ID
         #[arg(long)]
         user: u32,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub enum EnterpriseCrdbCommands {
+    // CRDB Lifecycle Management
+    /// List all Active-Active databases
+    List,
+
+    /// Get CRDB details
+    Get {
+        /// CRDB ID
+        id: u32,
+    },
+
+    /// Create Active-Active database
+    Create {
+        /// CRDB configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// Update CRDB configuration
+    Update {
+        /// CRDB ID
+        id: u32,
+        /// Update configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// Delete CRDB
+    Delete {
+        /// CRDB ID
+        id: u32,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+    },
+
+    // Participating Clusters Management
+    /// Get participating clusters
+    #[command(name = "get-clusters")]
+    GetClusters {
+        /// CRDB ID
+        id: u32,
+    },
+
+    /// Add cluster to CRDB
+    #[command(name = "add-cluster")]
+    AddCluster {
+        /// CRDB ID
+        id: u32,
+        /// Cluster configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// Remove cluster from CRDB
+    #[command(name = "remove-cluster")]
+    RemoveCluster {
+        /// CRDB ID
+        id: u32,
+        /// Cluster ID to remove
+        #[arg(long)]
+        cluster: u32,
+    },
+
+    /// Update cluster configuration in CRDB
+    #[command(name = "update-cluster")]
+    UpdateCluster {
+        /// CRDB ID
+        id: u32,
+        /// Cluster ID to update
+        #[arg(long)]
+        cluster: u32,
+        /// Update configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    // Instance Management
+    /// Get all CRDB instances
+    #[command(name = "get-instances")]
+    GetInstances {
+        /// CRDB ID
+        id: u32,
+    },
+
+    /// Get specific CRDB instance
+    #[command(name = "get-instance")]
+    GetInstance {
+        /// CRDB ID
+        #[arg(name = "crdb-id")]
+        crdb_id: u32,
+        /// Instance ID
+        #[arg(long)]
+        instance: u32,
+    },
+
+    /// Update CRDB instance
+    #[command(name = "update-instance")]
+    UpdateInstance {
+        /// CRDB ID
+        #[arg(name = "crdb-id")]
+        crdb_id: u32,
+        /// Instance ID
+        #[arg(long)]
+        instance: u32,
+        /// Update configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// Flush CRDB instance data
+    #[command(name = "flush-instance")]
+    FlushInstance {
+        /// CRDB ID
+        #[arg(name = "crdb-id")]
+        crdb_id: u32,
+        /// Instance ID
+        #[arg(long)]
+        instance: u32,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+    },
+
+    // Replication & Sync
+    /// Get replication status
+    #[command(name = "get-replication-status")]
+    GetReplicationStatus {
+        /// CRDB ID
+        id: u32,
+    },
+
+    /// Get replication lag metrics
+    #[command(name = "get-lag")]
+    GetLag {
+        /// CRDB ID
+        id: u32,
+    },
+
+    /// Force synchronization
+    #[command(name = "force-sync")]
+    ForceSync {
+        /// CRDB ID
+        id: u32,
+        /// Source cluster ID
+        #[arg(long)]
+        source: u32,
+    },
+
+    /// Pause replication
+    #[command(name = "pause-replication")]
+    PauseReplication {
+        /// CRDB ID
+        id: u32,
+    },
+
+    /// Resume replication
+    #[command(name = "resume-replication")]
+    ResumeReplication {
+        /// CRDB ID
+        id: u32,
+    },
+
+    // Conflict Resolution
+    /// Get conflict history
+    #[command(name = "get-conflicts")]
+    GetConflicts {
+        /// CRDB ID
+        id: u32,
+        /// Maximum number of conflicts to return
+        #[arg(long)]
+        limit: Option<u32>,
+    },
+
+    /// Get conflict resolution policy
+    #[command(name = "get-conflict-policy")]
+    GetConflictPolicy {
+        /// CRDB ID
+        id: u32,
+    },
+
+    /// Update conflict resolution policy
+    #[command(name = "update-conflict-policy")]
+    UpdateConflictPolicy {
+        /// CRDB ID
+        id: u32,
+        /// Policy configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// Manually resolve conflict
+    #[command(name = "resolve-conflict")]
+    ResolveConflict {
+        /// CRDB ID
+        id: u32,
+        /// Conflict ID
+        #[arg(long)]
+        conflict: String,
+        /// Resolution method
+        #[arg(long)]
+        resolution: String,
+    },
+
+    // Tasks & Jobs
+    /// Get CRDB tasks
+    #[command(name = "get-tasks")]
+    GetTasks {
+        /// CRDB ID
+        id: u32,
+    },
+
+    /// Get specific task details
+    #[command(name = "get-task")]
+    GetTask {
+        /// CRDB ID
+        #[arg(name = "crdb-id")]
+        crdb_id: u32,
+        /// Task ID
+        #[arg(long)]
+        task: String,
+    },
+
+    /// Retry failed task
+    #[command(name = "retry-task")]
+    RetryTask {
+        /// CRDB ID
+        #[arg(name = "crdb-id")]
+        crdb_id: u32,
+        /// Task ID
+        #[arg(long)]
+        task: String,
+    },
+
+    /// Cancel running task
+    #[command(name = "cancel-task")]
+    CancelTask {
+        /// CRDB ID
+        #[arg(name = "crdb-id")]
+        crdb_id: u32,
+        /// Task ID
+        #[arg(long)]
+        task: String,
+    },
+
+    // Monitoring & Metrics
+    /// Get CRDB statistics
+    Stats {
+        /// CRDB ID
+        id: u32,
+    },
+
+    /// Get CRDB metrics
+    Metrics {
+        /// CRDB ID
+        id: u32,
+        /// Time interval (e.g., "1h", "24h")
+        #[arg(long)]
+        interval: Option<String>,
+    },
+
+    /// Get connection details per instance
+    #[command(name = "get-connections")]
+    GetConnections {
+        /// CRDB ID
+        id: u32,
+    },
+
+    /// Get throughput metrics
+    #[command(name = "get-throughput")]
+    GetThroughput {
+        /// CRDB ID
+        id: u32,
+    },
+
+    /// Run health check
+    #[command(name = "health-check")]
+    HealthCheck {
+        /// CRDB ID
+        id: u32,
+    },
+
+    // Backup & Recovery
+    /// Create CRDB backup
+    Backup {
+        /// CRDB ID
+        id: u32,
+        /// Backup configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// Restore CRDB
+    Restore {
+        /// CRDB ID
+        id: u32,
+        /// Restore configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
+    },
+
+    /// List available backups
+    #[command(name = "get-backups")]
+    GetBackups {
+        /// CRDB ID
+        id: u32,
+    },
+
+    /// Export CRDB data
+    Export {
+        /// CRDB ID
+        id: u32,
+        /// Export configuration as JSON string or @file.json
+        #[arg(long)]
+        data: String,
     },
 }
