@@ -434,5 +434,15 @@ async fn execute_cloud_command(
             )
             .await
         }
+        Connectivity(connectivity_cmd) => {
+            commands::cloud::connectivity::handle_connectivity_command(
+                conn_mgr,
+                cli.profile.as_deref(),
+                connectivity_cmd,
+                cli.output,
+                cli.query.as_deref(),
+            )
+            .await
+        }
     }
 }

@@ -12,6 +12,7 @@ pub mod acl;
 pub mod acl_impl;
 pub mod cloud_account;
 pub mod cloud_account_impl;
+pub mod connectivity;
 pub mod database;
 pub mod database_impl;
 pub mod subscription;
@@ -23,6 +24,8 @@ pub mod utils;
 // Re-export all handler functions for backward compatibility
 #[allow(unused_imports)]
 pub use account::handle_account_command;
+#[allow(unused_imports)]
+pub use connectivity::handle_connectivity_command;
 #[allow(unused_imports)]
 pub use database::handle_database_command;
 #[allow(unused_imports)]

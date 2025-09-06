@@ -190,6 +190,119 @@ pub enum ProfileCommands {
     },
 }
 
+/// Cloud Connectivity Commands
+#[derive(Subcommand, Debug)]
+pub enum CloudConnectivityCommands {
+    /// VPC Peering operations
+    #[command(subcommand, name = "vpc-peering")]
+    VpcPeering(VpcPeeringCommands),
+    /// Private Service Connect operations
+    #[command(subcommand, name = "psc")]
+    Psc(PscCommands),
+    /// Transit Gateway operations
+    #[command(subcommand, name = "tgw")]
+    Tgw(TgwCommands),
+}
+
+/// VPC Peering Commands
+#[derive(Subcommand, Debug)]
+pub enum VpcPeeringCommands {
+    /// Get VPC peering details
+    Get {
+        /// Subscription ID
+        #[arg(long)]
+        subscription: i32,
+    },
+    /// Create VPC peering
+    Create {
+        /// Subscription ID
+        #[arg(long)]
+        subscription: i32,
+        /// Configuration JSON file or string (use @filename for file)
+        data: String,
+    },
+    /// Update VPC peering
+    Update {
+        /// Subscription ID
+        #[arg(long)]
+        subscription: i32,
+        /// Peering ID
+        #[arg(long)]
+        peering_id: i32,
+        /// Configuration JSON file or string (use @filename for file)
+        data: String,
+    },
+    /// Delete VPC peering
+    Delete {
+        /// Subscription ID
+        #[arg(long)]
+        subscription: i32,
+        /// Peering ID
+        #[arg(long)]
+        peering_id: i32,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+    },
+    /// List Active-Active VPC peerings
+    #[command(name = "list-aa")]
+    ListActiveActive {
+        /// Subscription ID
+        #[arg(long)]
+        subscription: i32,
+    },
+    /// Create Active-Active VPC peering
+    #[command(name = "create-aa")]
+    CreateActiveActive {
+        /// Subscription ID
+        #[arg(long)]
+        subscription: i32,
+        /// Configuration JSON file or string (use @filename for file)
+        data: String,
+    },
+    /// Update Active-Active VPC peering
+    #[command(name = "update-aa")]
+    UpdateActiveActive {
+        /// Subscription ID
+        #[arg(long)]
+        subscription: i32,
+        /// Peering ID
+        #[arg(long)]
+        peering_id: i32,
+        /// Configuration JSON file or string (use @filename for file)
+        data: String,
+    },
+    /// Delete Active-Active VPC peering
+    #[command(name = "delete-aa")]
+    DeleteActiveActive {
+        /// Subscription ID
+        #[arg(long)]
+        subscription: i32,
+        /// Peering ID
+        #[arg(long)]
+        peering_id: i32,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+    },
+}
+
+/// PSC Commands (placeholder)
+#[derive(Subcommand, Debug)]
+pub enum PscCommands {
+    /// Placeholder
+    #[command(hide = true)]
+    Placeholder,
+}
+
+/// TGW Commands (placeholder)
+#[derive(Subcommand, Debug)]
+pub enum TgwCommands {
+    /// Placeholder
+    #[command(hide = true)]
+    Placeholder,
+}
+
 /// Cloud Task Commands
 #[derive(Subcommand, Debug)]
 pub enum CloudTaskCommands {
@@ -285,6 +398,9 @@ pub enum CloudCommands {
     /// Task operations
     #[command(subcommand)]
     Task(CloudTaskCommands),
+    /// Network connectivity operations (VPC, PSC, TGW)
+    #[command(subcommand)]
+    Connectivity(CloudConnectivityCommands),
 }
 
 /// Enterprise-specific commands (placeholder for now)
