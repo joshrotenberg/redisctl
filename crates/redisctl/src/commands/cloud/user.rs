@@ -26,6 +26,29 @@ pub async fn handle_user_command(
         CloudUserCommands::Get { id } => {
             get_user(conn_mgr, profile_name, *id, output_format, query).await
         }
+        CloudUserCommands::Update {
+            id,
+            name,
+            role,
+            alerts_email,
+            alerts_sms,
+        } => {
+            update_user(
+                conn_mgr,
+                profile_name,
+                *id,
+                name.as_deref(),
+                role.as_deref(),
+                *alerts_email,
+                *alerts_sms,
+                output_format,
+                query,
+            )
+            .await
+        }
+        CloudUserCommands::Delete { id, force } => {
+            delete_user(conn_mgr, profile_name, *id, *force, output_format, query).await
+        }
     }
 }
 
@@ -408,4 +431,137 @@ impl Capitalize for str {
             }
         }
     }
+}
+
+/// Update user information
+#[allow(clippy::too_many_arguments)]
+async fn update_user(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
+    user_id: u32,
+    name: Option<&str>,
+    role: Option<&str>,
+    alerts_email: Option<bool>,
+    alerts_sms: Option<bool>,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> CliResult<()> {
+    let client = conn_mgr.create_cloud_client(profile_name).await?;
+
+    // Build update payload with only specified fields
+    let mut payload = serde_json::json!({});
+
+    if let Some(name) = name {
+        // Try to split name into first and last
+        let parts: Vec<&str> = name.split_whitespace().collect();
+        if parts.len() >= 2 {
+            payload["firstName"] = serde_json::json!(parts[0]);
+            payload["lastName"] = serde_json::json!(parts[1..].join(" "));
+        } else {
+            payload["firstName"] = serde_json::json!(name);
+        }
+    }
+
+    if let Some(role) = role {
+        // Validate role
+        let valid_roles = ["owner", "manager", "viewer", "billing_admin"];
+        if !valid_roles.contains(&role.to_lowercase().as_str()) {
+            return Err(RedisCtlError::InvalidInput {
+                message: format!(
+                    "Invalid role '{}'. Valid roles are: owner, manager, viewer, billing_admin",
+                    role
+                ),
+            });
+        }
+        payload["role"] = serde_json::json!(role.to_lowercase());
+    }
+
+    // Handle alert settings
+    if alerts_email.is_some() || alerts_sms.is_some() {
+        let mut alerts = serde_json::json!({});
+        if let Some(email) = alerts_email {
+            alerts["emailEnabled"] = serde_json::json!(email);
+        }
+        if let Some(sms) = alerts_sms {
+            alerts["smsEnabled"] = serde_json::json!(sms);
+        }
+        payload["alertSettings"] = alerts;
+    }
+
+    if payload.as_object().unwrap().is_empty() {
+        return Err(RedisCtlError::InvalidInput {
+            message: "No fields to update. Please specify at least one field to update."
+                .to_string(),
+        });
+    }
+
+    // Send update request
+    let response = client
+        .put_raw(&format!("/users/{}", user_id), payload)
+        .await
+        .context("Failed to update user")?;
+
+    let data = if let Some(q) = query {
+        apply_jmespath(&response, q)?
+    } else {
+        response
+    };
+
+    match output_format {
+        OutputFormat::Auto | OutputFormat::Table => {
+            println!("User {} updated successfully", user_id);
+            print_user_detail(&data)?;
+        }
+        OutputFormat::Json => {
+            print_output(data, crate::output::OutputFormat::Json, None).map_err(|e| {
+                RedisCtlError::OutputError {
+                    message: e.to_string(),
+                }
+            })?;
+        }
+        OutputFormat::Yaml => {
+            print_output(data, crate::output::OutputFormat::Yaml, None).map_err(|e| {
+                RedisCtlError::OutputError {
+                    message: e.to_string(),
+                }
+            })?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Delete a user
+async fn delete_user(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
+    user_id: u32,
+    force: bool,
+    _output_format: OutputFormat,
+    _query: Option<&str>,
+) -> CliResult<()> {
+    // Confirm deletion unless forced
+    if !force {
+        print!("Are you sure you want to delete user {}? [y/N]: ", user_id);
+        std::io::Write::flush(&mut std::io::stdout())?;
+
+        let mut input = String::new();
+        std::io::stdin().read_line(&mut input)?;
+
+        if !input.trim().eq_ignore_ascii_case("y") && !input.trim().eq_ignore_ascii_case("yes") {
+            println!("Operation cancelled");
+            return Ok(());
+        }
+    }
+
+    let client = conn_mgr.create_cloud_client(profile_name).await?;
+
+    // Send delete request
+    client
+        .delete_raw(&format!("/users/{}", user_id))
+        .await
+        .context("Failed to delete user")?;
+
+    println!("User {} deleted successfully", user_id);
+    Ok(())
 }

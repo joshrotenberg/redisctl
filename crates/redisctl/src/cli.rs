@@ -607,6 +607,33 @@ pub enum CloudUserCommands {
         /// User ID
         id: u32,
     },
+
+    /// Update user information
+    Update {
+        /// User ID
+        id: u32,
+        /// New name for the user
+        #[arg(long)]
+        name: Option<String>,
+        /// New role for the user (owner, manager, viewer, billing_admin)
+        #[arg(long)]
+        role: Option<String>,
+        /// Enable/disable email alerts
+        #[arg(long)]
+        alerts_email: Option<bool>,
+        /// Enable/disable SMS alerts
+        #[arg(long)]
+        alerts_sms: Option<bool>,
+    },
+
+    /// Delete a user
+    Delete {
+        /// User ID
+        id: u32,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+    },
 }
 
 #[derive(Subcommand, Debug)]
