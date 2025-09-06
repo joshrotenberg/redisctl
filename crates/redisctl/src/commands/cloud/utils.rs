@@ -4,6 +4,7 @@ use anyhow::Context;
 use chrono::{DateTime, Utc};
 use colored::Colorize;
 use serde_json::Value;
+use std::io::{self, Write};
 use tabled::Tabled;
 
 #[cfg(unix)]
@@ -236,4 +237,15 @@ pub fn print_formatted_output(data: Value, output_format: OutputFormat) -> CliRe
         _ => {} // Table format handled by individual commands
     }
     Ok(())
+}
+
+/// Prompts the user for confirmation
+pub fn confirm_action(message: &str) -> CliResult<bool> {
+    print!("Are you sure you want to {}? [y/N]: ", message);
+    io::stdout().flush()?;
+
+    let mut input = String::new();
+    io::stdin().read_line(&mut input)?;
+
+    Ok(input.trim().eq_ignore_ascii_case("y") || input.trim().eq_ignore_ascii_case("yes"))
 }

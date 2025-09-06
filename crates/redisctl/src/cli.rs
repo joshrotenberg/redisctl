@@ -208,6 +208,10 @@ pub enum CloudCommands {
     /// User operations
     #[command(subcommand)]
     User(CloudUserCommands),
+
+    /// ACL (Access Control List) operations
+    #[command(subcommand)]
+    Acl(CloudAclCommands),
 }
 
 /// Enterprise-specific commands (placeholder for now)
@@ -564,6 +568,139 @@ pub enum CloudUserCommands {
     Get {
         /// User ID
         id: u32,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub enum CloudAclCommands {
+    // Redis ACL Rules
+    /// List all Redis ACL rules
+    #[command(name = "list-redis-rules")]
+    ListRedisRules,
+
+    /// Create a new Redis ACL rule
+    #[command(name = "create-redis-rule")]
+    CreateRedisRule {
+        /// Rule name
+        #[arg(long)]
+        name: String,
+        /// Redis ACL rule (e.g., "+@read")
+        #[arg(long)]
+        rule: String,
+    },
+
+    /// Update an existing Redis ACL rule
+    #[command(name = "update-redis-rule")]
+    UpdateRedisRule {
+        /// Rule ID
+        id: i32,
+        /// New rule name
+        #[arg(long)]
+        name: Option<String>,
+        /// New Redis ACL rule
+        #[arg(long)]
+        rule: Option<String>,
+    },
+
+    /// Delete a Redis ACL rule
+    #[command(name = "delete-redis-rule")]
+    DeleteRedisRule {
+        /// Rule ID
+        id: i32,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+    },
+
+    // ACL Roles
+    /// List all ACL roles
+    #[command(name = "list-roles")]
+    ListRoles,
+
+    /// Create a new ACL role
+    #[command(name = "create-role")]
+    CreateRole {
+        /// Role name
+        #[arg(long)]
+        name: String,
+        /// Redis rules (JSON array or single rule ID)
+        #[arg(long, value_name = "JSON|ID")]
+        redis_rules: String,
+    },
+
+    /// Update an existing ACL role
+    #[command(name = "update-role")]
+    UpdateRole {
+        /// Role ID
+        id: i32,
+        /// New role name
+        #[arg(long)]
+        name: Option<String>,
+        /// New Redis rules (JSON array or single rule ID)
+        #[arg(long, value_name = "JSON|ID")]
+        redis_rules: Option<String>,
+    },
+
+    /// Delete an ACL role
+    #[command(name = "delete-role")]
+    DeleteRole {
+        /// Role ID
+        id: i32,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+    },
+
+    // ACL Users
+    /// List all ACL users
+    #[command(name = "list-acl-users")]
+    ListAclUsers,
+
+    /// Get ACL user details
+    #[command(name = "get-acl-user")]
+    GetAclUser {
+        /// ACL user ID
+        id: i32,
+    },
+
+    /// Create a new ACL user
+    #[command(name = "create-acl-user")]
+    CreateAclUser {
+        /// Username
+        #[arg(long)]
+        name: String,
+        /// Role name
+        #[arg(long)]
+        role: String,
+        /// Password
+        #[arg(long)]
+        password: String,
+    },
+
+    /// Update an ACL user
+    #[command(name = "update-acl-user")]
+    UpdateAclUser {
+        /// ACL user ID
+        id: i32,
+        /// New username
+        #[arg(long)]
+        name: Option<String>,
+        /// New role name
+        #[arg(long)]
+        role: Option<String>,
+        /// New password
+        #[arg(long)]
+        password: Option<String>,
+    },
+
+    /// Delete an ACL user
+    #[command(name = "delete-acl-user")]
+    DeleteAclUser {
+        /// ACL user ID
+        id: i32,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
     },
 }
 
