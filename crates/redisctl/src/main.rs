@@ -171,6 +171,12 @@ async fn execute_enterprise_command(
             )
             .await
         }
+        Node(node_cmd) => {
+            commands::enterprise::node::handle_node_command(
+                conn_mgr, profile, node_cmd, output, query,
+            )
+            .await
+        }
         User(_) => {
             println!("User commands not yet implemented");
             Ok(())

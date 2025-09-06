@@ -221,6 +221,10 @@ pub enum EnterpriseCommands {
     #[command(subcommand)]
     Database(EnterpriseDatabaseCommands),
 
+    /// Node operations
+    #[command(subcommand)]
+    Node(EnterpriseNodeCommands),
+
     /// User operations
     #[command(subcommand)]
     User(EnterpriseUserCommands),
@@ -701,6 +705,182 @@ pub enum EnterpriseDatabaseCommands {
     /// Get connected clients
     ClientList {
         /// Database ID
+        id: u32,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub enum EnterpriseNodeCommands {
+    /// List all nodes in cluster
+    List,
+
+    /// Get node details
+    Get {
+        /// Node ID
+        id: u32,
+    },
+
+    /// Add node to cluster
+    Add {
+        /// Node configuration (JSON file or inline)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: String,
+    },
+
+    /// Remove node from cluster
+    Remove {
+        /// Node ID
+        id: u32,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+    },
+
+    /// Update node configuration
+    Update {
+        /// Node ID
+        id: u32,
+        /// Update data (JSON file or inline)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: String,
+    },
+
+    /// Get node status
+    Status {
+        /// Node ID
+        id: u32,
+    },
+
+    /// Get node statistics
+    Stats {
+        /// Node ID
+        id: u32,
+    },
+
+    /// Get node metrics
+    Metrics {
+        /// Node ID
+        id: u32,
+        /// Time interval (e.g., "1h", "5m")
+        #[arg(long)]
+        interval: Option<String>,
+    },
+
+    /// Run health check on node
+    Check {
+        /// Node ID
+        id: u32,
+    },
+
+    /// Get node-specific alerts
+    Alerts {
+        /// Node ID
+        id: u32,
+    },
+
+    /// Put node in maintenance mode
+    #[command(name = "maintenance-enable")]
+    MaintenanceEnable {
+        /// Node ID
+        id: u32,
+    },
+
+    /// Remove node from maintenance mode
+    #[command(name = "maintenance-disable")]
+    MaintenanceDisable {
+        /// Node ID
+        id: u32,
+    },
+
+    /// Rebalance shards on node
+    Rebalance {
+        /// Node ID
+        id: u32,
+    },
+
+    /// Drain node before removal
+    Drain {
+        /// Node ID
+        id: u32,
+    },
+
+    /// Restart node services
+    Restart {
+        /// Node ID
+        id: u32,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+    },
+
+    /// Get node configuration
+    #[command(name = "get-config")]
+    GetConfig {
+        /// Node ID
+        id: u32,
+    },
+
+    /// Update node configuration
+    #[command(name = "update-config")]
+    UpdateConfig {
+        /// Node ID
+        id: u32,
+        /// Configuration data (JSON file or inline)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: String,
+    },
+
+    /// Get rack awareness configuration
+    #[command(name = "get-rack")]
+    GetRack {
+        /// Node ID
+        id: u32,
+    },
+
+    /// Set rack ID
+    #[command(name = "set-rack")]
+    SetRack {
+        /// Node ID
+        id: u32,
+        /// Rack identifier
+        #[arg(long)]
+        rack: String,
+    },
+
+    /// Get node role
+    #[command(name = "get-role")]
+    GetRole {
+        /// Node ID
+        id: u32,
+    },
+
+    /// Get resource utilization
+    Resources {
+        /// Node ID
+        id: u32,
+    },
+
+    /// Get memory usage details
+    Memory {
+        /// Node ID
+        id: u32,
+    },
+
+    /// Get CPU usage details
+    Cpu {
+        /// Node ID
+        id: u32,
+    },
+
+    /// Get storage usage details
+    Storage {
+        /// Node ID
+        id: u32,
+    },
+
+    /// Get network statistics
+    Network {
+        /// Node ID
         id: u32,
     },
 }
