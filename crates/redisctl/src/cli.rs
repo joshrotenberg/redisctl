@@ -595,6 +595,126 @@ pub enum CloudTaskCommands {
     },
 }
 
+/// Cloud Fixed Database Commands
+#[derive(Subcommand, Debug)]
+pub enum CloudFixedDatabaseCommands {
+    /// List all databases in a fixed subscription
+    List {
+        /// Subscription ID
+        subscription_id: i32,
+    },
+    /// Get details of a specific fixed database
+    Get {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+    },
+    /// Create a new database in a fixed subscription
+    Create {
+        /// Subscription ID
+        subscription_id: i32,
+        /// JSON file with database configuration (use @filename or - for stdin)
+        file: String,
+    },
+    /// Update fixed database configuration
+    Update {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+        /// JSON file with update configuration (use @filename or - for stdin)
+        file: String,
+    },
+    /// Delete a fixed database
+    Delete {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+        /// Skip confirmation prompt
+        #[arg(short, long)]
+        yes: bool,
+    },
+    /// Get backup status for fixed database
+    #[command(name = "backup-status")]
+    BackupStatus {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+    },
+    /// Trigger manual backup
+    Backup {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+    },
+    /// Get import status
+    #[command(name = "import-status")]
+    ImportStatus {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+    },
+    /// Import data into fixed database
+    Import {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+        /// JSON file with import configuration (use @filename or - for stdin)
+        file: String,
+    },
+    /// View slow query log
+    #[command(name = "slow-log")]
+    SlowLog {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+        /// Maximum number of entries to return
+        #[arg(long)]
+        limit: Option<i32>,
+        /// Number of entries to skip
+        #[arg(long)]
+        offset: Option<i32>,
+    },
+    /// List tags for fixed database
+    #[command(name = "list-tags")]
+    ListTags {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+    },
+    /// Add a tag
+    #[command(name = "add-tag")]
+    AddTag {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+        /// Tag key
+        #[arg(long)]
+        key: String,
+        /// Tag value
+        #[arg(long)]
+        value: String,
+    },
+    /// Update all tags
+    #[command(name = "update-tags")]
+    UpdateTags {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+        /// JSON file with tags (use @filename or - for stdin)
+        file: String,
+    },
+    /// Update specific tag
+    #[command(name = "update-tag")]
+    UpdateTag {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+        /// Tag key
+        #[arg(long)]
+        key: String,
+        /// Tag value
+        #[arg(long)]
+        value: String,
+    },
+    /// Delete a tag
+    #[command(name = "delete-tag")]
+    DeleteTag {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+        /// Tag key
+        #[arg(long)]
+        key: String,
+    },
+}
+
 /// Cloud Provider Account Commands
 #[derive(Subcommand, Debug)]
 pub enum CloudProviderAccountCommands {
@@ -661,6 +781,9 @@ pub enum CloudCommands {
     /// Network connectivity operations (VPC, PSC, TGW)
     #[command(subcommand)]
     Connectivity(CloudConnectivityCommands),
+    /// Fixed database operations
+    #[command(subcommand, name = "fixed-database")]
+    FixedDatabase(CloudFixedDatabaseCommands),
 }
 
 /// Enterprise-specific commands (placeholder for now)
