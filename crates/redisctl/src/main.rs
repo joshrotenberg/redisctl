@@ -106,7 +106,7 @@ async fn execute_command(cli: &Cli, conn_mgr: &ConnectionManager) -> Result<(), 
         Commands::Enterprise(enterprise_cmd) => {
             execute_enterprise_command(
                 enterprise_cmd,
-                &conn_mgr,
+                conn_mgr,
                 cli.profile.as_deref(),
                 cli.output,
                 cli.query.as_deref(),
@@ -166,8 +166,10 @@ async fn execute_enterprise_command(
             Ok(())
         }
         Database(db_cmd) => {
-            commands::enterprise::handle_database_command(conn_mgr, profile, db_cmd, output, query)
-                .await
+            commands::enterprise::database::handle_database_command(
+                conn_mgr, profile, db_cmd, output, query,
+            )
+            .await
         }
         User(_) => {
             println!("User commands not yet implemented");
