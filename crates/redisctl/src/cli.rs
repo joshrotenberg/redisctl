@@ -858,6 +858,9 @@ pub enum CloudProviderAccountCommands {
         /// For GCP, this should be the service account JSON file
         /// Use @filename to read from file
         file: String,
+        /// Async operation arguments
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Update a cloud provider account
     Update {
@@ -866,6 +869,9 @@ pub enum CloudProviderAccountCommands {
         /// JSON file containing updated cloud account configuration
         /// Use @filename to read from file
         file: String,
+        /// Async operation arguments
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Delete a cloud provider account
     Delete {
@@ -874,6 +880,9 @@ pub enum CloudProviderAccountCommands {
         /// Skip confirmation prompt
         #[arg(long)]
         force: bool,
+        /// Async operation arguments
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 }
 
@@ -1321,6 +1330,9 @@ pub enum CloudUserCommands {
         /// Skip confirmation prompt
         #[arg(long)]
         force: bool,
+        /// Async operation arguments
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 }
 

@@ -2,6 +2,7 @@
 
 #![allow(dead_code)] // Used by binary target
 
+use super::async_utils::{AsyncOperationArgs, handle_async_response};
 use super::utils::DetailRow;
 use super::utils::*;
 use crate::cli::{CloudUserCommands, OutputFormat};
@@ -46,8 +47,21 @@ pub async fn handle_user_command(
             )
             .await
         }
-        CloudUserCommands::Delete { id, force } => {
-            delete_user(conn_mgr, profile_name, *id, *force, output_format, query).await
+        CloudUserCommands::Delete {
+            id,
+            force,
+            async_ops,
+        } => {
+            delete_user(
+                conn_mgr,
+                profile_name,
+                *id,
+                *force,
+                async_ops,
+                output_format,
+                query,
+            )
+            .await
         }
     }
 }
@@ -537,8 +551,9 @@ async fn delete_user(
     profile_name: Option<&str>,
     user_id: u32,
     force: bool,
-    _output_format: OutputFormat,
-    _query: Option<&str>,
+    async_ops: &AsyncOperationArgs,
+    output_format: OutputFormat,
+    query: Option<&str>,
 ) -> CliResult<()> {
     // Confirm deletion unless forced
     if !force {
@@ -557,11 +572,19 @@ async fn delete_user(
     let client = conn_mgr.create_cloud_client(profile_name).await?;
 
     // Send delete request
-    client
+    let response = client
         .delete_raw(&format!("/users/{}", user_id))
         .await
         .context("Failed to delete user")?;
 
-    println!("User {} deleted successfully", user_id);
-    Ok(())
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        response,
+        async_ops,
+        output_format,
+        query,
+        "user deletion",
+    )
+    .await
 }
