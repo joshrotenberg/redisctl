@@ -4,7 +4,7 @@ use crate::cli::{CloudAclCommands, OutputFormat};
 use crate::connection::ConnectionManager;
 use crate::error::Result as CliResult;
 
-use super::acl_impl;
+use super::acl_impl::{self, AclOperationParams};
 
 pub async fn handle_acl_command(
     conn_mgr: &ConnectionManager,
@@ -18,60 +18,96 @@ pub async fn handle_acl_command(
         CloudAclCommands::ListRedisRules => {
             acl_impl::list_redis_rules(conn_mgr, profile_name, output_format, query).await
         }
-        CloudAclCommands::CreateRedisRule { name, rule } => {
-            acl_impl::create_redis_rule(conn_mgr, profile_name, name, rule, output_format, query)
-                .await
-        }
-        CloudAclCommands::UpdateRedisRule { id, name, rule } => {
-            acl_impl::update_redis_rule(
+        CloudAclCommands::CreateRedisRule {
+            name,
+            rule,
+            async_ops,
+        } => {
+            let params = AclOperationParams {
                 conn_mgr,
                 profile_name,
-                *id,
-                name.as_deref(),
-                rule.as_deref(),
+                async_ops,
                 output_format,
                 query,
-            )
-            .await
+            };
+            acl_impl::create_redis_rule(&params, name, rule).await
         }
-        CloudAclCommands::DeleteRedisRule { id, force } => {
-            acl_impl::delete_redis_rule(conn_mgr, profile_name, *id, *force, output_format, query)
-                .await
+        CloudAclCommands::UpdateRedisRule {
+            id,
+            name,
+            rule,
+            async_ops,
+        } => {
+            let params = AclOperationParams {
+                conn_mgr,
+                profile_name,
+                async_ops,
+                output_format,
+                query,
+            };
+            acl_impl::update_redis_rule(&params, *id, name.as_deref(), rule.as_deref()).await
+        }
+        CloudAclCommands::DeleteRedisRule {
+            id,
+            force,
+            async_ops,
+        } => {
+            let params = AclOperationParams {
+                conn_mgr,
+                profile_name,
+                async_ops,
+                output_format,
+                query,
+            };
+            acl_impl::delete_redis_rule(&params, *id, *force).await
         }
 
         // ACL Roles
         CloudAclCommands::ListRoles => {
             acl_impl::list_roles(conn_mgr, profile_name, output_format, query).await
         }
-        CloudAclCommands::CreateRole { name, redis_rules } => {
-            acl_impl::create_role(
+        CloudAclCommands::CreateRole {
+            name,
+            redis_rules,
+            async_ops,
+        } => {
+            let params = AclOperationParams {
                 conn_mgr,
                 profile_name,
-                name,
-                redis_rules,
+                async_ops,
                 output_format,
                 query,
-            )
-            .await
+            };
+            acl_impl::create_role(&params, name, redis_rules).await
         }
         CloudAclCommands::UpdateRole {
             id,
             name,
             redis_rules,
+            async_ops,
         } => {
-            acl_impl::update_role(
+            let params = AclOperationParams {
                 conn_mgr,
                 profile_name,
-                *id,
-                name.as_deref(),
-                redis_rules.as_deref(),
+                async_ops,
                 output_format,
                 query,
-            )
-            .await
+            };
+            acl_impl::update_role(&params, *id, name.as_deref(), redis_rules.as_deref()).await
         }
-        CloudAclCommands::DeleteRole { id, force } => {
-            acl_impl::delete_role(conn_mgr, profile_name, *id, *force, output_format, query).await
+        CloudAclCommands::DeleteRole {
+            id,
+            force,
+            async_ops,
+        } => {
+            let params = AclOperationParams {
+                conn_mgr,
+                profile_name,
+                async_ops,
+                output_format,
+                query,
+            };
+            acl_impl::delete_role(&params, *id, *force).await
         }
 
         // ACL Users
@@ -85,39 +121,53 @@ pub async fn handle_acl_command(
             name,
             role,
             password,
+            async_ops,
         } => {
-            acl_impl::create_acl_user(
+            let params = AclOperationParams {
                 conn_mgr,
                 profile_name,
-                name,
-                role,
-                password,
+                async_ops,
                 output_format,
                 query,
-            )
-            .await
+            };
+            acl_impl::create_acl_user(&params, name, role, password).await
         }
         CloudAclCommands::UpdateAclUser {
             id,
             name,
             role,
             password,
+            async_ops,
         } => {
-            acl_impl::update_acl_user(
+            let params = AclOperationParams {
                 conn_mgr,
                 profile_name,
+                async_ops,
+                output_format,
+                query,
+            };
+            acl_impl::update_acl_user(
+                &params,
                 *id,
                 name.as_deref(),
                 role.as_deref(),
                 password.as_deref(),
-                output_format,
-                query,
             )
             .await
         }
-        CloudAclCommands::DeleteAclUser { id, force } => {
-            acl_impl::delete_acl_user(conn_mgr, profile_name, *id, *force, output_format, query)
-                .await
+        CloudAclCommands::DeleteAclUser {
+            id,
+            force,
+            async_ops,
+        } => {
+            let params = AclOperationParams {
+                conn_mgr,
+                profile_name,
+                async_ops,
+                output_format,
+                query,
+            };
+            acl_impl::delete_acl_user(&params, *id, *force).await
         }
     }
 }
