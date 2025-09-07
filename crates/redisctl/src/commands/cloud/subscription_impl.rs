@@ -1,5 +1,6 @@
 //! Implementation of additional subscription commands
 
+use super::async_utils::{AsyncOperationArgs, handle_async_response};
 use super::utils::*;
 use crate::cli::OutputFormat;
 use crate::connection::ConnectionManager;
@@ -41,6 +42,7 @@ pub async fn create_subscription(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     data: &str,
+    async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
@@ -52,26 +54,16 @@ pub async fn create_subscription(
         .await
         .context("Failed to create subscription")?;
 
-    let result = if let Some(q) = query {
-        apply_jmespath(&response, q)?
-    } else {
-        response
-    };
-
-    match output_format {
-        OutputFormat::Table => {
-            println!("Subscription created successfully");
-            if let Some(task_id) = result.get("taskId") {
-                println!("Task ID: {}", task_id);
-            }
-            if let Some(sub_id) = result.get("resourceId") {
-                println!("Subscription ID: {}", sub_id);
-            }
-        }
-        _ => print_json_or_yaml(result, output_format)?,
-    }
-
-    Ok(())
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        response,
+        async_ops,
+        output_format,
+        query,
+        "Subscription created successfully",
+    )
+    .await
 }
 
 /// Update subscription configuration
@@ -80,6 +72,7 @@ pub async fn update_subscription(
     profile_name: Option<&str>,
     id: u32,
     data: &str,
+    async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
@@ -91,23 +84,16 @@ pub async fn update_subscription(
         .await
         .context("Failed to update subscription")?;
 
-    let result = if let Some(q) = query {
-        apply_jmespath(&response, q)?
-    } else {
-        response
-    };
-
-    match output_format {
-        OutputFormat::Table => {
-            println!("Subscription updated successfully");
-            if let Some(task_id) = result.get("taskId") {
-                println!("Task ID: {}", task_id);
-            }
-        }
-        _ => print_json_or_yaml(result, output_format)?,
-    }
-
-    Ok(())
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        response,
+        async_ops,
+        output_format,
+        query,
+        "Subscription updated successfully",
+    )
+    .await
 }
 
 /// Delete a subscription
@@ -116,6 +102,7 @@ pub async fn delete_subscription(
     profile_name: Option<&str>,
     id: u32,
     force: bool,
+    async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
@@ -143,23 +130,16 @@ pub async fn delete_subscription(
         .await
         .context("Failed to delete subscription")?;
 
-    let result = if let Some(q) = query {
-        apply_jmespath(&response, q)?
-    } else {
-        response
-    };
-
-    match output_format {
-        OutputFormat::Table => {
-            println!("Subscription deletion initiated");
-            if let Some(task_id) = result.get("taskId") {
-                println!("Task ID: {}", task_id);
-            }
-        }
-        _ => print_json_or_yaml(result, output_format)?,
-    }
-
-    Ok(())
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        response,
+        async_ops,
+        output_format,
+        query,
+        "Subscription deletion initiated",
+    )
+    .await
 }
 
 /// Redis version info for table display

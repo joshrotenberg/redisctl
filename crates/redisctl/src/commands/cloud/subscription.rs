@@ -49,33 +49,44 @@ pub async fn handle_subscription_command(
         CloudSubscriptionCommands::Get { id } => {
             get_subscription(conn_mgr, profile_name, *id, output_format, query).await
         }
-        CloudSubscriptionCommands::Create { data } => {
+        CloudSubscriptionCommands::Create { data, async_ops } => {
             subscription_impl::create_subscription(
                 conn_mgr,
                 profile_name,
                 data,
+                async_ops,
                 output_format,
                 query,
             )
             .await
         }
-        CloudSubscriptionCommands::Update { id, data } => {
+        CloudSubscriptionCommands::Update {
+            id,
+            data,
+            async_ops,
+        } => {
             subscription_impl::update_subscription(
                 conn_mgr,
                 profile_name,
                 *id,
                 data,
+                async_ops,
                 output_format,
                 query,
             )
             .await
         }
-        CloudSubscriptionCommands::Delete { id, force } => {
+        CloudSubscriptionCommands::Delete {
+            id,
+            force,
+            async_ops,
+        } => {
             subscription_impl::delete_subscription(
                 conn_mgr,
                 profile_name,
                 *id,
                 *force,
+                async_ops,
                 output_format,
                 query,
             )
