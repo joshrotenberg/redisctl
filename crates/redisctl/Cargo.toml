@@ -16,8 +16,8 @@ name = "redisctl"
 path = "src/main.rs"
 
 [dependencies]
-redis-cloud = { version = "0.1.2", path = "../redis-cloud" }
-redis-enterprise = { version = "0.2.0", path = "../redis-enterprise" }
+redis-cloud = { path = "../redis-cloud" }
+redis-enterprise = { path = "../redis-enterprise" }
 
 # CLI dependencies
 clap = { workspace = true }
