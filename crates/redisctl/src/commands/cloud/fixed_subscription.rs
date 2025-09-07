@@ -3,6 +3,7 @@
 #![allow(dead_code)]
 
 use crate::cli::{CloudFixedSubscriptionCommands, OutputFormat};
+use crate::commands::cloud::async_utils::handle_async_response;
 use crate::commands::cloud::utils::{
     confirm_action, handle_output, print_formatted_output, read_file_input,
 };
@@ -117,7 +118,7 @@ pub async fn handle_fixed_subscription_command(
             Ok(())
         }
 
-        CloudFixedSubscriptionCommands::Create { file } => {
+        CloudFixedSubscriptionCommands::Create { file, async_ops } => {
             let json_string = read_file_input(file)?;
             let request: FixedSubscriptionCreateRequest =
                 serde_json::from_str(&json_string).context("Invalid subscription configuration")?;
@@ -127,26 +128,26 @@ pub async fn handle_fixed_subscription_command(
                 .await
                 .context("Failed to create fixed subscription")?;
 
-            // Check if response contains a task ID
             let json_result =
                 serde_json::to_value(&result).context("Failed to serialize response")?;
-            if let Some(task_id) = json_result.get("taskId").and_then(|v| v.as_str()) {
-                eprintln!(
-                    "Fixed subscription creation initiated. Task ID: {}",
-                    task_id
-                );
-                eprintln!(
-                    "Use 'redisctl cloud task wait {}' to monitor progress",
-                    task_id
-                );
-            }
 
-            let data = handle_output(json_result, output_format, query)?;
-            print_formatted_output(data, output_format)?;
-            Ok(())
+            handle_async_response(
+                conn_mgr,
+                profile_name,
+                json_result,
+                async_ops,
+                output_format,
+                query,
+                "Fixed subscription created successfully",
+            )
+            .await
         }
 
-        CloudFixedSubscriptionCommands::Update { id, file } => {
+        CloudFixedSubscriptionCommands::Update {
+            id,
+            file,
+            async_ops,
+        } => {
             let json_string = read_file_input(file)?;
             let request: FixedSubscriptionUpdateRequest =
                 serde_json::from_str(&json_string).context("Invalid update configuration")?;
@@ -156,23 +157,22 @@ pub async fn handle_fixed_subscription_command(
                 .await
                 .context("Failed to update fixed subscription")?;
 
-            // Check if response contains a task ID
             let json_result =
                 serde_json::to_value(&result).context("Failed to serialize response")?;
-            if let Some(task_id) = json_result.get("taskId").and_then(|v| v.as_str()) {
-                eprintln!("Fixed subscription update initiated. Task ID: {}", task_id);
-                eprintln!(
-                    "Use 'redisctl cloud task wait {}' to monitor progress",
-                    task_id
-                );
-            }
 
-            let data = handle_output(json_result, output_format, query)?;
-            print_formatted_output(data, output_format)?;
-            Ok(())
+            handle_async_response(
+                conn_mgr,
+                profile_name,
+                json_result,
+                async_ops,
+                output_format,
+                query,
+                "Fixed subscription updated successfully",
+            )
+            .await
         }
 
-        CloudFixedSubscriptionCommands::Delete { id, yes } => {
+        CloudFixedSubscriptionCommands::Delete { id, yes, async_ops } => {
             if !yes {
                 let prompt = format!("Delete fixed subscription {}?", id);
                 if !confirm_action(&prompt)? {
@@ -186,25 +186,19 @@ pub async fn handle_fixed_subscription_command(
                 .await
                 .context("Failed to delete fixed subscription")?;
 
-            // Check if response contains a task ID
             let json_result =
                 serde_json::to_value(&result).context("Failed to serialize response")?;
-            if let Some(task_id) = json_result.get("taskId").and_then(|v| v.as_str()) {
-                eprintln!(
-                    "Fixed subscription deletion initiated. Task ID: {}",
-                    task_id
-                );
-                eprintln!(
-                    "Use 'redisctl cloud task wait {}' to monitor progress",
-                    task_id
-                );
-            } else {
-                eprintln!("Fixed subscription deleted successfully");
-            }
 
-            let data = handle_output(json_result, output_format, query)?;
-            print_formatted_output(data, output_format)?;
-            Ok(())
+            handle_async_response(
+                conn_mgr,
+                profile_name,
+                json_result,
+                async_ops,
+                output_format,
+                query,
+                "Fixed subscription deleted successfully",
+            )
+            .await
         }
 
         CloudFixedSubscriptionCommands::RedisVersions { subscription } => {

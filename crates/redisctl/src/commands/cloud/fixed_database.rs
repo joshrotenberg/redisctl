@@ -3,6 +3,7 @@
 #![allow(dead_code)]
 
 use crate::cli::{CloudFixedDatabaseCommands, OutputFormat};
+use crate::commands::cloud::async_utils::handle_async_response;
 use crate::commands::cloud::utils::{
     confirm_action, handle_output, print_formatted_output, read_file_input,
 };
@@ -83,6 +84,7 @@ pub async fn handle_fixed_database_command(
         CloudFixedDatabaseCommands::Create {
             subscription_id,
             file,
+            async_ops,
         } => {
             let json_string = read_file_input(file)?;
             let request: FixedDatabaseCreateRequest =
@@ -93,23 +95,26 @@ pub async fn handle_fixed_database_command(
                 .await
                 .context("Failed to create fixed database")?;
 
-            // Check if response contains a task ID
             let json_result =
                 serde_json::to_value(&result).context("Failed to serialize response")?;
-            if let Some(task_id) = json_result.get("taskId").and_then(|v| v.as_str()) {
-                eprintln!("Fixed database creation initiated. Task ID: {}", task_id);
-                eprintln!(
-                    "Use 'redisctl cloud task wait {}' to monitor progress",
-                    task_id
-                );
-            }
 
-            let data = handle_output(json_result, output_format, query)?;
-            print_formatted_output(data, output_format)?;
-            Ok(())
+            handle_async_response(
+                conn_mgr,
+                profile_name,
+                json_result,
+                async_ops,
+                output_format,
+                query,
+                "Fixed database created successfully",
+            )
+            .await
         }
 
-        CloudFixedDatabaseCommands::Update { id, file } => {
+        CloudFixedDatabaseCommands::Update {
+            id,
+            file,
+            async_ops,
+        } => {
             let (subscription_id, database_id) = parse_fixed_database_id(id)?;
             let json_string = read_file_input(file)?;
             let request: FixedDatabaseUpdateRequest =
@@ -120,23 +125,22 @@ pub async fn handle_fixed_database_command(
                 .await
                 .context("Failed to update fixed database")?;
 
-            // Check if response contains a task ID
             let json_result =
                 serde_json::to_value(&result).context("Failed to serialize response")?;
-            if let Some(task_id) = json_result.get("taskId").and_then(|v| v.as_str()) {
-                eprintln!("Fixed database update initiated. Task ID: {}", task_id);
-                eprintln!(
-                    "Use 'redisctl cloud task wait {}' to monitor progress",
-                    task_id
-                );
-            }
 
-            let data = handle_output(json_result, output_format, query)?;
-            print_formatted_output(data, output_format)?;
-            Ok(())
+            handle_async_response(
+                conn_mgr,
+                profile_name,
+                json_result,
+                async_ops,
+                output_format,
+                query,
+                "Fixed database updated successfully",
+            )
+            .await
         }
 
-        CloudFixedDatabaseCommands::Delete { id, yes } => {
+        CloudFixedDatabaseCommands::Delete { id, yes, async_ops } => {
             let (subscription_id, database_id) = parse_fixed_database_id(id)?;
 
             if !yes {
@@ -152,22 +156,19 @@ pub async fn handle_fixed_database_command(
                 .await
                 .context("Failed to delete fixed database")?;
 
-            // Check if response contains a task ID
             let json_result =
                 serde_json::to_value(&result).context("Failed to serialize response")?;
-            if let Some(task_id) = json_result.get("taskId").and_then(|v| v.as_str()) {
-                eprintln!("Fixed database deletion initiated. Task ID: {}", task_id);
-                eprintln!(
-                    "Use 'redisctl cloud task wait {}' to monitor progress",
-                    task_id
-                );
-            } else {
-                eprintln!("Fixed database deleted successfully");
-            }
 
-            let data = handle_output(json_result, output_format, query)?;
-            print_formatted_output(data, output_format)?;
-            Ok(())
+            handle_async_response(
+                conn_mgr,
+                profile_name,
+                json_result,
+                async_ops,
+                output_format,
+                query,
+                "Fixed database deleted successfully",
+            )
+            .await
         }
 
         CloudFixedDatabaseCommands::BackupStatus { id } => {
@@ -184,7 +185,7 @@ pub async fn handle_fixed_database_command(
             Ok(())
         }
 
-        CloudFixedDatabaseCommands::Backup { id } => {
+        CloudFixedDatabaseCommands::Backup { id, async_ops } => {
             let (subscription_id, database_id) = parse_fixed_database_id(id)?;
 
             // Create a minimal backup request - most fields are optional
@@ -201,20 +202,19 @@ pub async fn handle_fixed_database_command(
                 .await
                 .context("Failed to initiate backup")?;
 
-            // Check if response contains a task ID
             let json_result =
                 serde_json::to_value(&result).context("Failed to serialize response")?;
-            if let Some(task_id) = json_result.get("taskId").and_then(|v| v.as_str()) {
-                eprintln!("Backup initiated. Task ID: {}", task_id);
-                eprintln!(
-                    "Use 'redisctl cloud task wait {}' to monitor progress",
-                    task_id
-                );
-            }
 
-            let data = handle_output(json_result, output_format, query)?;
-            print_formatted_output(data, output_format)?;
-            Ok(())
+            handle_async_response(
+                conn_mgr,
+                profile_name,
+                json_result,
+                async_ops,
+                output_format,
+                query,
+                "Backup initiated successfully",
+            )
+            .await
         }
 
         CloudFixedDatabaseCommands::ImportStatus { id } => {
@@ -231,7 +231,11 @@ pub async fn handle_fixed_database_command(
             Ok(())
         }
 
-        CloudFixedDatabaseCommands::Import { id, file } => {
+        CloudFixedDatabaseCommands::Import {
+            id,
+            file,
+            async_ops,
+        } => {
             let (subscription_id, database_id) = parse_fixed_database_id(id)?;
             let json_string = read_file_input(file)?;
             let request: FixedDatabaseImportRequest =
@@ -242,20 +246,19 @@ pub async fn handle_fixed_database_command(
                 .await
                 .context("Failed to initiate import")?;
 
-            // Check if response contains a task ID
             let json_result =
                 serde_json::to_value(&result).context("Failed to serialize response")?;
-            if let Some(task_id) = json_result.get("taskId").and_then(|v| v.as_str()) {
-                eprintln!("Import initiated. Task ID: {}", task_id);
-                eprintln!(
-                    "Use 'redisctl cloud task wait {}' to monitor progress",
-                    task_id
-                );
-            }
 
-            let data = handle_output(json_result, output_format, query)?;
-            print_formatted_output(data, output_format)?;
-            Ok(())
+            handle_async_response(
+                conn_mgr,
+                profile_name,
+                json_result,
+                async_ops,
+                output_format,
+                query,
+                "Import initiated successfully",
+            )
+            .await
         }
 
         CloudFixedDatabaseCommands::SlowLog {

@@ -614,6 +614,9 @@ pub enum CloudFixedDatabaseCommands {
         subscription_id: i32,
         /// JSON file with database configuration (use @filename or - for stdin)
         file: String,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Update fixed database configuration
     Update {
@@ -621,6 +624,9 @@ pub enum CloudFixedDatabaseCommands {
         id: String,
         /// JSON file with update configuration (use @filename or - for stdin)
         file: String,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Delete a fixed database
     Delete {
@@ -629,6 +635,9 @@ pub enum CloudFixedDatabaseCommands {
         /// Skip confirmation prompt
         #[arg(short, long)]
         yes: bool,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Get backup status for fixed database
     #[command(name = "backup-status")]
@@ -640,6 +649,9 @@ pub enum CloudFixedDatabaseCommands {
     Backup {
         /// Database ID (format: subscription_id:database_id)
         id: String,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Get import status
     #[command(name = "import-status")]
@@ -653,6 +665,9 @@ pub enum CloudFixedDatabaseCommands {
         id: String,
         /// JSON file with import configuration (use @filename or - for stdin)
         file: String,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// View slow query log
     #[command(name = "slow-log")]
@@ -749,6 +764,9 @@ pub enum CloudFixedSubscriptionCommands {
     Create {
         /// JSON file with subscription configuration (use @filename or - for stdin)
         file: String,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Update fixed subscription
     Update {
@@ -756,6 +774,9 @@ pub enum CloudFixedSubscriptionCommands {
         id: i32,
         /// JSON file with update configuration (use @filename or - for stdin)
         file: String,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Delete a fixed subscription
     Delete {
@@ -764,6 +785,9 @@ pub enum CloudFixedSubscriptionCommands {
         /// Skip confirmation prompt
         #[arg(short, long)]
         yes: bool,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Get available Redis versions for fixed subscription
     #[command(name = "redis-versions")]
