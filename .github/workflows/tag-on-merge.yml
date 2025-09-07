@@ -1,0 +1,49 @@
+name: Tag on Merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version from branch name
+        id: version
+        run: |
+          branch_name="${{ github.event.pull_request.head.ref }}"
+          version="${branch_name#release/}"
+          echo "Version extracted: $version"
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      - name: Create and push tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          tag_name="${{ steps.version.outputs.version }}"
+
+          # Create annotated tag with release notes from PR body
+          git tag -a "$tag_name" -m "Release $tag_name" -m "${{ github.event.pull_request.body }}"
+          git push origin "$tag_name"
+
+          echo "✅ Created and pushed tag: $tag_name"
+
+      - name: Trigger release workflow
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: release-tagged
+          client-payload: '{"tag": "${{ steps.version.outputs.version }}"}'

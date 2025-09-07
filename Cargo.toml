@@ -78,3 +78,5 @@ debug = true
 inherits = "release"
 lto = "thin"
 
+# Config for 'cargo dist'
+# Moved to dist-workspace.toml

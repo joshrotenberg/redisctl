@@ -1,0 +1,136 @@
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      pre_release:
+        description: 'Pre-release tag (e.g., alpha, beta, rc)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install git-cliff
+        run: cargo install git-cliff
+
+      - name: Determine new version
+        id: version
+        run: |
+          current_version=$(grep '^version =' Cargo.toml | head -1 | cut -d'"' -f2)
+          echo "Current version: $current_version"
+
+          IFS='.' read -r major minor patch <<< "$current_version"
+
+          case "${{ github.event.inputs.bump }}" in
+            major)
+              major=$((major + 1))
+              minor=0
+              patch=0
+              ;;
+            minor)
+              minor=$((minor + 1))
+              patch=0
+              ;;
+            patch)
+              patch=$((patch + 1))
+              ;;
+          esac
+
+          new_version="$major.$minor.$patch"
+
+          if [ -n "${{ github.event.inputs.pre_release }}" ]; then
+            new_version="$new_version-${{ github.event.inputs.pre_release }}"
+          fi
+
+          echo "New version: $new_version"
+          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+          echo "current_version=$current_version" >> $GITHUB_OUTPUT
+
+      - name: Update version in Cargo.toml files
+        run: |
+          # Update workspace version
+          sed -i 's/^version = ".*"/version = "${{ steps.version.outputs.new_version }}"/' Cargo.toml
+
+          # Update crate versions
+          for crate in crates/*/Cargo.toml; do
+            sed -i 's/^version = ".*"/version = "${{ steps.version.outputs.new_version }}"/' "$crate"
+          done
+
+          # Update internal dependencies
+          find . -name "Cargo.toml" -exec sed -i \
+            -e 's/redis-cloud = { version = ".*"/redis-cloud = { version = "${{ steps.version.outputs.new_version }}"/' \
+            -e 's/redis-enterprise = { version = ".*"/redis-enterprise = { version = "${{ steps.version.outputs.new_version }}"/' \
+            {} \;
+
+      - name: Generate changelog
+        run: |
+          git-cliff --config cliff.toml \
+            --tag v${{ steps.version.outputs.new_version }} \
+            --unreleased \
+            --output CHANGELOG.md
+
+      - name: Update Cargo.lock
+        run: cargo update -w
+
+      - name: Create release branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          branch_name="release/v${{ steps.version.outputs.new_version }}"
+          git checkout -b "$branch_name"
+
+          git add -A
+          git commit -m "chore: prepare release v${{ steps.version.outputs.new_version }}"
+          git push origin "$branch_name"
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: release/v${{ steps.version.outputs.new_version }}
+          title: "Release v${{ steps.version.outputs.new_version }}"
+          body: |
+            ## 🚀 Release v${{ steps.version.outputs.new_version }}
+
+            This PR prepares the release of version ${{ steps.version.outputs.new_version }}.
+
+            ### Changes
+            - Version bumped from ${{ steps.version.outputs.current_version }} to ${{ steps.version.outputs.new_version }}
+            - Updated CHANGELOG.md with latest changes
+            - Updated Cargo.lock
+
+            ### Next Steps
+            1. Review the changes
+            2. Merge this PR to trigger the release
+            3. The tag-on-merge workflow will create the release tag
+            4. The release workflow will build and publish artifacts
+
+            ---
+            *This PR was automatically created by the prepare-release workflow.*
+          labels: |
+            release
+            automated
