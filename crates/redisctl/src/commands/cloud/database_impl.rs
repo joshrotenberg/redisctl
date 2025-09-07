@@ -1,5 +1,6 @@
 //! Implementation of additional database commands
 
+use super::async_utils::{AsyncOperationArgs, handle_async_response};
 use super::utils::*;
 use crate::cli::OutputFormat;
 use crate::connection::ConnectionManager;
@@ -69,6 +70,7 @@ pub async fn create_database(
     profile_name: Option<&str>,
     subscription_id: u32,
     data: &str,
+    async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
@@ -83,23 +85,16 @@ pub async fn create_database(
         .await
         .context("Failed to create database")?;
 
-    let result = if let Some(q) = query {
-        apply_jmespath(&response, q)?
-    } else {
-        response
-    };
-
-    match output_format {
-        OutputFormat::Table => {
-            println!("Database created successfully");
-            if let Some(task_id) = result.get("taskId") {
-                println!("Task ID: {}", task_id);
-            }
-        }
-        _ => print_json_or_yaml(result, output_format)?,
-    }
-
-    Ok(())
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        response,
+        async_ops,
+        output_format,
+        query,
+        "Database created successfully",
+    )
+    .await
 }
 
 /// Update database configuration
@@ -108,6 +103,7 @@ pub async fn update_database(
     profile_name: Option<&str>,
     id: &str,
     data: &str,
+    async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
@@ -126,23 +122,16 @@ pub async fn update_database(
         .await
         .context("Failed to update database")?;
 
-    let result = if let Some(q) = query {
-        apply_jmespath(&response, q)?
-    } else {
-        response
-    };
-
-    match output_format {
-        OutputFormat::Table => {
-            println!("Database updated successfully");
-            if let Some(task_id) = result.get("taskId") {
-                println!("Task ID: {}", task_id);
-            }
-        }
-        _ => print_json_or_yaml(result, output_format)?,
-    }
-
-    Ok(())
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        response,
+        async_ops,
+        output_format,
+        query,
+        "Database updated successfully",
+    )
+    .await
 }
 
 /// Delete a database
@@ -151,6 +140,7 @@ pub async fn delete_database(
     profile_name: Option<&str>,
     id: &str,
     force: bool,
+    async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
@@ -183,23 +173,16 @@ pub async fn delete_database(
         .await
         .context("Failed to delete database")?;
 
-    let result = if let Some(q) = query {
-        apply_jmespath(&response, q)?
-    } else {
-        response
-    };
-
-    match output_format {
-        OutputFormat::Table => {
-            println!("Database deletion initiated");
-            if let Some(task_id) = result.get("taskId") {
-                println!("Task ID: {}", task_id);
-            }
-        }
-        _ => print_json_or_yaml(result, output_format)?,
-    }
-
-    Ok(())
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        response,
+        async_ops,
+        output_format,
+        query,
+        "Database deletion initiated",
+    )
+    .await
 }
 
 /// Get database backup status
@@ -253,6 +236,7 @@ pub async fn backup_database(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: &str,
+    async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
@@ -270,23 +254,16 @@ pub async fn backup_database(
         .await
         .context("Failed to trigger backup")?;
 
-    let result = if let Some(q) = query {
-        apply_jmespath(&response, q)?
-    } else {
-        response
-    };
-
-    match output_format {
-        OutputFormat::Table => {
-            println!("Backup initiated successfully");
-            if let Some(task_id) = result.get("taskId") {
-                println!("Task ID: {}", task_id);
-            }
-        }
-        _ => print_json_or_yaml(result, output_format)?,
-    }
-
-    Ok(())
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        response,
+        async_ops,
+        output_format,
+        query,
+        "Backup initiated successfully",
+    )
+    .await
 }
 
 /// Get database import status
@@ -338,6 +315,7 @@ pub async fn import_database(
     profile_name: Option<&str>,
     id: &str,
     data: &str,
+    async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
@@ -356,23 +334,16 @@ pub async fn import_database(
         .await
         .context("Failed to start import")?;
 
-    let result = if let Some(q) = query {
-        apply_jmespath(&response, q)?
-    } else {
-        response
-    };
-
-    match output_format {
-        OutputFormat::Table => {
-            println!("Import initiated successfully");
-            if let Some(task_id) = result.get("taskId") {
-                println!("Task ID: {}", task_id);
-            }
-        }
-        _ => print_json_or_yaml(result, output_format)?,
-    }
-
-    Ok(())
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        response,
+        async_ops,
+        output_format,
+        query,
+        "Import initiated successfully",
+    )
+    .await
 }
 
 /// Get database certificate
