@@ -953,6 +953,9 @@ pub enum CloudSubscriptionCommands {
         /// Subscription configuration as JSON string or @file.json
         #[arg(long)]
         data: String,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 
     /// Update subscription configuration
@@ -962,6 +965,9 @@ pub enum CloudSubscriptionCommands {
         /// Update configuration as JSON string or @file.json
         #[arg(long)]
         data: String,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 
     /// Delete a subscription
@@ -971,6 +977,9 @@ pub enum CloudSubscriptionCommands {
         /// Skip confirmation prompt
         #[arg(long)]
         force: bool,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 
     /// Get available Redis versions
