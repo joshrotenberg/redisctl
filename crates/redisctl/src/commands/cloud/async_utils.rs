@@ -63,25 +63,25 @@ pub async fn handle_async_response(
     };
 
     // If we have a task ID and should wait
-    if let Some(task_id) = task_id {
-        if async_ops.wait {
-            // Wait for the task to complete
-            wait_for_task(
-                conn_mgr,
-                profile_name,
-                task_id,
-                async_ops.wait_timeout,
-                async_ops.wait_interval,
-                output_format,
-            )
-            .await?;
+    if let Some(task_id) = task_id
+        && async_ops.wait
+    {
+        // Wait for the task to complete
+        wait_for_task(
+            conn_mgr,
+            profile_name,
+            task_id,
+            async_ops.wait_timeout,
+            async_ops.wait_interval,
+            output_format,
+        )
+        .await?;
 
-            // Print success message for table format
-            if matches!(output_format, OutputFormat::Table) {
-                println!("{}", success_message);
-            }
-            return Ok(());
+        // Print success message for table format
+        if matches!(output_format, OutputFormat::Table) {
+            println!("{}", success_message);
         }
+        return Ok(());
     }
 
     // Normal output without waiting
