@@ -37,6 +37,8 @@ pub async fn handle_tgw_command(
             async_ops,
         } => {
             create_attachment(
+                conn_mgr,
+                profile_name,
                 &client,
                 *subscription_id,
                 file,
@@ -243,9 +245,12 @@ async fn list_attachments(
 }
 
 async fn create_attachment(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
     client: &CloudClient,
     subscription_id: i32,
     file: &str,
+    async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
@@ -259,25 +264,25 @@ async fn create_attachment(
         .await
         .context("Failed to create TGW attachment")?;
 
-    // Convert response to JSON and check for task ID
     let json_response = serde_json::to_value(&response).context("Failed to serialize response")?;
-    if let Some(task_id) = json_response.get("taskId").and_then(|v| v.as_str()) {
-        eprintln!("TGW attachment creation initiated. Task ID: {}", task_id);
-        eprintln!(
-            "Use 'redisctl cloud task wait {}' to monitor progress",
-            task_id
-        );
-    }
 
-    let data = handle_output(json_response, output_format, query)?;
-    print_formatted_output(data, output_format)?;
-    Ok(())
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        json_response,
+        async_ops,
+        output_format,
+        query,
+        "TGW attachment created successfully",
+    )
+    .await
 }
 
 async fn create_attachment_with_id(
     client: &CloudClient,
     subscription_id: i32,
     tgw_id: &str,
+    async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
@@ -307,6 +312,7 @@ async fn update_attachment_cidrs(
     subscription_id: i32,
     attachment_id: &str,
     file: &str,
+    async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
@@ -340,6 +346,9 @@ async fn delete_attachment(
     subscription_id: i32,
     attachment_id: &str,
     yes: bool,
+    async_ops: &AsyncOperationArgs,
+    output_format: OutputFormat,
+    query: Option<&str>,
 ) -> CliResult<()> {
     if !yes {
         let prompt = format!(
@@ -454,6 +463,7 @@ async fn create_attachment_aa(
     subscription_id: i32,
     region_id: i32,
     file: &str,
+    async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
@@ -491,6 +501,7 @@ async fn update_attachment_cidrs_aa(
     region_id: i32,
     attachment_id: &str,
     file: &str,
+    async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
@@ -533,6 +544,9 @@ async fn delete_attachment_aa(
     region_id: i32,
     attachment_id: &str,
     yes: bool,
+    async_ops: &AsyncOperationArgs,
+    output_format: OutputFormat,
+    query: Option<&str>,
 ) -> CliResult<()> {
     if !yes {
         let prompt = format!(

@@ -284,13 +284,23 @@ async fn delete_service(
     }
 
     let handler = PscHandler::new(client.clone());
-    handler
+    let response = handler
         .delete_service(subscription_id)
         .await
         .context("Failed to delete PSC service")?;
 
-    eprintln!("PSC service deleted successfully");
-    Ok(())
+    let json_response = serde_json::to_value(&response).context("Failed to serialize response")?;
+
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        json_response,
+        async_ops,
+        output_format,
+        query,
+        "PSC service deleted successfully",
+    )
+    .await
 }
 
 // ============================================================================
@@ -338,19 +348,18 @@ async fn create_endpoint(
         .await
         .context("Failed to create PSC endpoint")?;
 
-    // Convert response to JSON and check for task ID
     let json_response = serde_json::to_value(&response).context("Failed to serialize response")?;
-    if let Some(task_id) = json_response.get("taskId").and_then(|v| v.as_str()) {
-        eprintln!("PSC endpoint creation initiated. Task ID: {}", task_id);
-        eprintln!(
-            "Use 'redisctl cloud task wait {}' to monitor progress",
-            task_id
-        );
-    }
 
-    let data = handle_output(json_response, output_format, query)?;
-    print_formatted_output(data, output_format)?;
-    Ok(())
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        json_response,
+        async_ops,
+        output_format,
+        query,
+        "PSC endpoint created successfully",
+    )
+    .await
 }
 
 async fn update_endpoint(
@@ -378,19 +387,18 @@ async fn update_endpoint(
         .await
         .context("Failed to update PSC endpoint")?;
 
-    // Convert response to JSON and check for task ID
     let json_response = serde_json::to_value(&response).context("Failed to serialize response")?;
-    if let Some(task_id) = json_response.get("taskId").and_then(|v| v.as_str()) {
-        eprintln!("PSC endpoint update initiated. Task ID: {}", task_id);
-        eprintln!(
-            "Use 'redisctl cloud task wait {}' to monitor progress",
-            task_id
-        );
-    }
 
-    let data = handle_output(json_response, output_format, query)?;
-    print_formatted_output(data, output_format)?;
-    Ok(())
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        json_response,
+        async_ops,
+        output_format,
+        query,
+        "PSC endpoint updated successfully",
+    )
+    .await
 }
 
 async fn delete_endpoint(
@@ -416,13 +424,23 @@ async fn delete_endpoint(
     }
 
     let handler = PscHandler::new(client.clone());
-    handler
+    let response = handler
         .delete_endpoint(subscription_id, endpoint_id)
         .await
         .context("Failed to delete PSC endpoint")?;
 
-    eprintln!("PSC endpoint deleted successfully");
-    Ok(())
+    let json_response = serde_json::to_value(&response).context("Failed to serialize response")?;
+
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        json_response,
+        async_ops,
+        output_format,
+        query,
+        "PSC endpoint deleted successfully",
+    )
+    .await
 }
 
 async fn get_endpoint_creation_script(
@@ -494,22 +512,18 @@ async fn create_service_aa(
         .await
         .context("Failed to create Active-Active PSC service")?;
 
-    // Convert response to JSON and check for task ID
     let json_response = serde_json::to_value(&response).context("Failed to serialize response")?;
-    if let Some(task_id) = json_response.get("taskId").and_then(|v| v.as_str()) {
-        eprintln!(
-            "Active-Active PSC service creation initiated. Task ID: {}",
-            task_id
-        );
-        eprintln!(
-            "Use 'redisctl cloud task wait {}' to monitor progress",
-            task_id
-        );
-    }
 
-    let data = handle_output(json_response, output_format, query)?;
-    print_formatted_output(data, output_format)?;
-    Ok(())
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        json_response,
+        async_ops,
+        output_format,
+        query,
+        "Active-Active PSC service created successfully",
+    )
+    .await
 }
 
 async fn delete_service_aa(
@@ -534,13 +548,23 @@ async fn delete_service_aa(
     }
 
     let handler = PscHandler::new(client.clone());
-    handler
+    let response = handler
         .delete_service_active_active(subscription_id)
         .await
         .context("Failed to delete Active-Active PSC service")?;
 
-    eprintln!("Active-Active PSC service deleted successfully");
-    Ok(())
+    let json_response = serde_json::to_value(&response).context("Failed to serialize response")?;
+
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        json_response,
+        async_ops,
+        output_format,
+        query,
+        "Active-Active PSC service deleted successfully",
+    )
+    .await
 }
 
 // ============================================================================
@@ -588,22 +612,18 @@ async fn create_endpoint_aa(
         .await
         .context("Failed to create Active-Active PSC endpoint")?;
 
-    // Convert response to JSON and check for task ID
     let json_response = serde_json::to_value(&response).context("Failed to serialize response")?;
-    if let Some(task_id) = json_response.get("taskId").and_then(|v| v.as_str()) {
-        eprintln!(
-            "Active-Active PSC endpoint creation initiated. Task ID: {}",
-            task_id
-        );
-        eprintln!(
-            "Use 'redisctl cloud task wait {}' to monitor progress",
-            task_id
-        );
-    }
 
-    let data = handle_output(json_response, output_format, query)?;
-    print_formatted_output(data, output_format)?;
-    Ok(())
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        json_response,
+        async_ops,
+        output_format,
+        query,
+        "Active-Active PSC endpoint created successfully",
+    )
+    .await
 }
 
 async fn delete_endpoint_aa(
@@ -630,11 +650,21 @@ async fn delete_endpoint_aa(
     }
 
     let handler = PscHandler::new(client.clone());
-    handler
+    let response = handler
         .delete_endpoint_active_active(subscription_id, region_id, endpoint_id)
         .await
         .context("Failed to delete Active-Active PSC endpoint")?;
 
-    eprintln!("Active-Active PSC endpoint deleted successfully");
-    Ok(())
+    let json_response = serde_json::to_value(&response).context("Failed to serialize response")?;
+
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        json_response,
+        async_ops,
+        output_format,
+        query,
+        "Active-Active PSC endpoint deleted successfully",
+    )
+    .await
 }
