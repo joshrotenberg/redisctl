@@ -2,77 +2,168 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.2.0] - 2025-09-07
 
-## [Unreleased]
+### Cleanup
 
-### Added
+- Remove test styles command and legacy code ([0d220c9](https://github.com/joshrotenberg/redisctl/commit/0d220c962416f6e225f7cadbe8db4c3df9c6e182))
 
-#### Comprehensive Async Operation Support (#175-#201)
-- **Database Operations** - Added `--wait` flag support for all database operations including create, update, delete, import, backup, and migrate commands
-- **Subscription Management** - Full async support for regular and fixed subscription operations with progress tracking
-- **Active-Active Databases** - Complete async operation support for CRDB create, update, and delete operations
-- **Network Connectivity** - Implemented `--wait` flags for:
-  - VPC Peering operations (regular and Active-Active)
-  - Private Service Connect (PSC) operations (regular and Active-Active)
-  - Transit Gateway (TGW) operations including attach/detach (regular and Active-Active)
-- **ACL Management** - Added async support for all 9 ACL commands:
-  - Redis ACL Rules (create, update, delete)
-  - ACL Roles (create, update, delete)
-  - ACL Users (create, update, delete)
-- **User Management** - Added `--wait` flag support for user deletion operations
-- **Provider Accounts** - Full async support for cloud provider account operations (create, update, delete)
-- **Fixed Plans** - Implemented async operations for fixed databases and fixed subscriptions
+### ⚙️ Miscellaneous Tasks
 
-#### Wait Flag Options
-- `--wait` - Wait for operation to complete with default 600s timeout
-- `--wait-timeout <seconds>` - Configurable timeout duration for long operations
-- `--wait-interval <seconds>` - Customizable polling interval (default: 10s)
+- Rename colliding examples to avoid filename collision\n\n- redis-cloud: basic.rs -> basic_cloud.rs (README + comment updated)\n- redis-enterprise: basic.rs -> basic_enterprise.rs (README + comment updated) ([b0bcdaa](https://github.com/joshrotenberg/redisctl/commit/b0bcdaa2de5467f43c6377e980c5b2f320715160))
+- Run tests on commit and push; install pre-push hook\n\n- .pre-commit-config.yaml: add stages for clippy/tests; add --workspace\n- scripts/install-hooks.sh: install pre-commit and pre-push hooks; update messages ([4c92b03](https://github.com/joshrotenberg/redisctl/commit/4c92b0326c85cae334cbf5a8dc02983e8ff3b8bf))
+- Update lock file after dependency changes ([06a1f9d](https://github.com/joshrotenberg/redisctl/commit/06a1f9dfcd9573e0c37131c3290ea8a425ba1403))
+- Remove unused scripts, Docker Compose testing, and pre-commit hooks ([804c358](https://github.com/joshrotenberg/redisctl/commit/804c3580d170ed68d82349f19e4f4ac825f3f958))
 
-### Changed
+### ⚡ Features
 
-#### Code Organization Improvements
-- **Parameter Grouping** - Introduced parameter structs to avoid `too_many_arguments` clippy warnings:
-  - `AsyncOperationArgs` for async operation parameters
-  - `ConnectivityOperationParams` for network connectivity operations
-  - `CloudAccountOperationParams` for provider account operations
-  - `AclOperationParams` for ACL management operations
-- **Module Consolidation** - Reorganized connectivity commands under unified module structure
-- **Centralized Async Handling** - All async operations now use the centralized `handle_async_response` function for consistency
+- Improve redis-enterprise crate documentation and examples ([ae3caa9](https://github.com/joshrotenberg/redisctl/commit/ae3caa913d3b64e0e34f221ecbefee56be05010f))
+- Add all missing Enterprise CLI commands ([2e79b91](https://github.com/joshrotenberg/redisctl/commit/2e79b9171e6a3c7804a9cd4129233763de1d6cc4))
+- Implement all remaining TODO handlers ([3feb559](https://github.com/joshrotenberg/redisctl/commit/3feb5596def60a20c94b390a0fac9750b78c2a28))
+- Add typed interfaces for all action and stats methods ([57333ec](https://github.com/joshrotenberg/redisctl/commit/57333ecf5051a8e215f3a4a4bb54862c3471de14))
+- Add missing API endpoints and coverage tool ([e33f7a7](https://github.com/joshrotenberg/redisctl/commit/e33f7a7eef99161ae963b288b83c3147ba3d4824))
+- Add scoped Enterprise API coverage checker and contributor guide\n\n- Scope coverage to /v1 and /v2 (exclude legacy v0)\n- Parse local REST routing table for authoritative endpoints\n- Report per-category gaps to drive 100% coverage plan\n- Add AGENTS.md contributor guide ([eb6cfa8](https://github.com/joshrotenberg/redisctl/commit/eb6cfa8a867316f71d48508703b35f12d33ce440))
+- Add v1/v2 sub-handlers for Actions and Modules; expose typed versioned accessors ([8b745ff](https://github.com/joshrotenberg/redisctl/commit/8b745ff0a0e26cbe12b9861e90ba8e1eb92e01cf))
+- Type API keys, tasks, region, SSO, cloud accounts, CRDB, PSC, and Transit Gateway; remove handler-level _raw; update CLI and coverage script ([4e393d2](https://github.com/joshrotenberg/redisctl/commit/4e393d2e599c5ddce349b8afa4cfd0a45f2dd607))
+- Align API Keys, CRDB remove_region, PSC regional update tests with typed handler behavior; relax request types in handlers for API Keys (accept Value) ([75f9a72](https://github.com/joshrotenberg/redisctl/commit/75f9a7264421ad3f90111085d12471482599c8bd))
+- Finish typed API coverage phases 1–4; remove temporary raw helpers\n\n- Migrate tests to typed APIs (logs, SSO, billing, users, ACL, regions, metrics, CRDB, TGW, PSC)\n- Add typed request models for Transit Gateway and Private Service Connect\n- Make subscription metrics typed (SubscriptionMetrics)\n- Remove temporary raw ACL helpers and pre-existing Fixed raw helpers\n- Expand Region models to match API schema\n- Update handlers to return envelopes where required (taskId flows)\n- Add AGENTS.md and docs/redis-cloud-typed-coverage-plan.md; update PR template plan checklist ([49e7ebf](https://github.com/joshrotenberg/redisctl/commit/49e7ebfa41491791d117241d6f5c69fa5804d2e6))
+- Add typed EndpointInfo for database endpoints ([ef86f87](https://github.com/joshrotenberg/redisctl/commit/ef86f872a9b0e4005b4295fea409569000de0550))
+- Complete OpenAPI spec implementation with comprehensive test suite ([6ba3459](https://github.com/joshrotenberg/redisctl/commit/6ba3459297c29f3e7369d337145f3c076254dd21))
+- Implement CLI modernization foundation ([7656afd](https://github.com/joshrotenberg/redisctl/commit/7656afd68092e6bd2e7a5f7fc85abf66bbe077d5))
+- Implement Phase 2 raw API layer with JMESPath support ([b9f746a](https://github.com/joshrotenberg/redisctl/commit/b9f746aaded3e8062fc718496ad3b3e00a337b23))
+- Add Linux-style config path support on macOS ([e28668a](https://github.com/joshrotenberg/redisctl/commit/e28668acee336e0e0fe9ce4f8577e5d3e870a475))
+- Add environment variable expansion support ([b5e7642](https://github.com/joshrotenberg/redisctl/commit/b5e76423f1997850f3bcc2a830c70699d7696463))
+- Add command aliases for common shortcuts ([47e2b73](https://github.com/joshrotenberg/redisctl/commit/47e2b73e9755b7c1a92a7df0b372f6ec35652323))
+- Add comprehensive tracing support (Phase 1) ([46b1e39](https://github.com/joshrotenberg/redisctl/commit/46b1e39ab30726a73a2f420514c3856d06937914))
+- Implement clean table output and modular structure ([e7ee135](https://github.com/joshrotenberg/redisctl/commit/e7ee1358c0dada70d237b0028d32f6f8a4ef15d7))
+- Add missing account commands ([750328e](https://github.com/joshrotenberg/redisctl/commit/750328e9553ae960ab64dcec6bb07afc8a3ac1af))
+- Add comprehensive database commands ([043e18c](https://github.com/joshrotenberg/redisctl/commit/043e18c77c61c6dbf7c8ceca4b0e205fee1f7651))
+- Implement missing subscription commands ([896b052](https://github.com/joshrotenberg/redisctl/commit/896b052a94b54beaaf6da057365601ac93124aa3))
+- Implement comprehensive database commands ([ad0fc00](https://github.com/joshrotenberg/redisctl/commit/ad0fc002ec69b36c2d3f6f500b30d5eec4d989b8))
+- Implement comprehensive node management commands ([575a4e3](https://github.com/joshrotenberg/redisctl/commit/575a4e362ad7d55fa6a3e41c77f321394e59523b))
+- Implement comprehensive RBAC management commands ([fc823d9](https://github.com/joshrotenberg/redisctl/commit/fc823d9521a2a3364bd19b5c709e6b0021bbedbc))
+- Implement comprehensive cluster management commands ([eb21466](https://github.com/joshrotenberg/redisctl/commit/eb214665d3c8aef29fcaeff4598a83adef48f20e))
+- Implement comprehensive Active-Active (CRDB) management commands ([2fd561b](https://github.com/joshrotenberg/redisctl/commit/2fd561b86d21c49c6f931dfbf0d04f5e00629c25))
+- Implement ACL commands ([a75b739](https://github.com/joshrotenberg/redisctl/commit/a75b7394d5e11b0ea7398b54085837f3688346ee))
+- Implement cloud provider account commands ([80ed742](https://github.com/joshrotenberg/redisctl/commit/80ed742b60c6aa925b518df7265ac74caf0a9768))
+- Add missing user commands (update and delete) ([aaa1765](https://github.com/joshrotenberg/redisctl/commit/aaa1765295fd03f34e866bf414d300b9896f6efd))
+- Implement task commands ([4065795](https://github.com/joshrotenberg/redisctl/commit/40657952dfdfb9bcc5edf041573e4de184e4df12))
+- Implement VPC Peering connectivity commands ([ba1cb79](https://github.com/joshrotenberg/redisctl/commit/ba1cb7973cbd9d5e43203f1ad00fb89112ac161d))
+- Implement Private Service Connect (PSC) commands ([deb5bb9](https://github.com/joshrotenberg/redisctl/commit/deb5bb9bfffcce9ab5ab4277a5aa548f982b0c6d))
+- Implement Transit Gateway (TGW) commands ([bb22c1a](https://github.com/joshrotenberg/redisctl/commit/bb22c1a3135efa1ddc67d89455d2a361853d796d))
+- Implement fixed database commands ([a407029](https://github.com/joshrotenberg/redisctl/commit/a40702918ab11146c2e88e2de81a1f0f4bec0874))
+- Implement fixed subscription commands ([d456d97](https://github.com/joshrotenberg/redisctl/commit/d456d97e946c145ac8a8a0a9cf45115bd27a7ac3))
+- Add --wait flag to async database operations ([19e9c8b](https://github.com/joshrotenberg/redisctl/commit/19e9c8b0a9ecbf0be494d40b24fb939c78d8fa37))
+- Add --wait flag to subscription commands ([fe0f587](https://github.com/joshrotenberg/redisctl/commit/fe0f587e648864a53a37010a7d54c725a32d6d67))
+- Add --wait flag support for fixed database and subscription commands ([2b3260d](https://github.com/joshrotenberg/redisctl/commit/2b3260d362d0697eda9b9dc3b25409033480f3ee))
+- Add --wait flag support for connectivity commands (WIP) ([ab5a636](https://github.com/joshrotenberg/redisctl/commit/ab5a636538cc1c35caef30cc8fc3643397639fd0))
+- Complete --wait flag implementation for connectivity commands ([2b8c0b2](https://github.com/joshrotenberg/redisctl/commit/2b8c0b235257b96fb8ccac0a0451396899e303a4))
+- Add --wait flag support for Cloud user and provider account operations ([9599964](https://github.com/joshrotenberg/redisctl/commit/959996400fbd99255497eb78a5c1588afce54ab6))
+- Add --wait flag support for Cloud ACL commands ([1d652e8](https://github.com/joshrotenberg/redisctl/commit/1d652e879a2874dd7a0d01eb1f856bdb0f2e4c1a))
+- Implement comprehensive release automation system ([8514042](https://github.com/joshrotenberg/redisctl/commit/851404276c0b833e49c1b621b4bc3892df4f6f44))
 
-### Fixed
-- Fixed clippy warnings for functions with too many arguments
-- Improved error handling for async operations with better context
-- Enhanced progress indicators with animated spinners
-- Fixed task ID extraction from various API response formats
+### 🎨 Styling
 
-### Documentation
-- Comprehensive README update with all new async operation examples
-- Updated CLAUDE.md with architectural changes and patterns
-- Created FEATURES.md documenting all async operations in detail
-- Added usage examples for all new `--wait` flag operations
+- Rustfmt bdb handler changes for new endpoints ([442e278](https://github.com/joshrotenberg/redisctl/commit/442e278175c74d58490f068b5e59132e8da401e9))
+- Apply rustfmt and tidy tests; all new Cluster/Node endpoints covered by basic tests ([a335506](https://github.com/joshrotenberg/redisctl/commit/a33550608a4f7ba60b9cd3b27c6c33c8531ed32e))
+- Format code for Enterprise API coverage changes ([3edb474](https://github.com/joshrotenberg/redisctl/commit/3edb474bfb621404ca98e8f8a991f730e1e81823))
+- Fix clippy doc comment lint after raw removal ([5a14686](https://github.com/joshrotenberg/redisctl/commit/5a14686b87b91753d204ccccb3b35658101e6f26))
+- Apply cargo fmt across workspace ([5093f26](https://github.com/joshrotenberg/redisctl/commit/5093f26844a5f310a1e1d341d70997e0655def23))
 
-## [0.2.0] - Previous Release
+### 🐛 Bug Fixes
 
-### Added
-- Basic Cloud API support
-- Enterprise API support
-- Profile management system
-- Multiple output formats (JSON, YAML, Table)
-- JMESPath query filtering
+- Correct cargo-dist workflow tag pattern ([84f97cb](https://github.com/joshrotenberg/redisctl/commit/84f97cbe4a7801ba3d21f4ec3b924a026360764e))
+- Add allow-dirty to cargo-dist config ([4808936](https://github.com/joshrotenberg/redisctl/commit/480893675fa3329ca14707cedd461b18cc502fb3))
+- Complete release automation configuration ([4d8d5f1](https://github.com/joshrotenberg/redisctl/commit/4d8d5f1f2ecb6ef73b380a1bce2bb3805351d06c))
+- Add allow-dirty to cargo-dist config for CI ([bddb68e](https://github.com/joshrotenberg/redisctl/commit/bddb68e561705744199e2c279f63762d2cda69f0))
+- Remove mdbook-lint from documentation workflow ([a3098e3](https://github.com/joshrotenberg/redisctl/commit/a3098e3a679de61b1a23337510669891f17aca3e))
+- Enable multi-platform Docker builds for main branch ([707dcad](https://github.com/joshrotenberg/redisctl/commit/707dcad213085ac829b1ba3cdca9cf172d5c489a))
+- Resolve API type inconsistencies in redis-enterprise crate ([703f402](https://github.com/joshrotenberg/redisctl/commit/703f40292ff688d05dddcd2f669eb30fd0097423))
+- Handler naming inconsistencies and user request types ([7ae0fab](https://github.com/joshrotenberg/redisctl/commit/7ae0fabcff799d98b47649d46c52c7a2bd2fb25c))
+- Standardize redis-cloud handler naming for consistency ([7019fc4](https://github.com/joshrotenberg/redisctl/commit/7019fc45b8616fa5bf0a82279938ba4397e18c33))
+- Use raw methods for Cloud ACL and User commands ([6e92648](https://github.com/joshrotenberg/redisctl/commit/6e92648d3af50865772156b0b2322321d4fc2515))
+- Add missing model files and update tests for typed interfaces ([fac8475](https://github.com/joshrotenberg/redisctl/commit/fac847568727197eafa530ac62ae404b72533565))
+- Fix remaining test to use _raw method ([4ec54e1](https://github.com/joshrotenberg/redisctl/commit/4ec54e1a13a228df79a1ec390ca5cdac17b1f953))
+- Update billing tests to use raw JSON values ([5daa010](https://github.com/joshrotenberg/redisctl/commit/5daa0106265ef624ee6c5336e7093162b12b0620))
+- Align typed requests with wiremock expectations and skip serializing None\n\n- Add serde(skip_serializing_if) to optional fields in ACL request models\n- list_redis_rules accepts envelope or array\n- Adjust validation-error test to use typed payload and mock body\n- This addresses failing tests: user_create, role_create, redis_rule_create, create_validation_error ([cf0db56](https://github.com/joshrotenberg/redisctl/commit/cf0db568e7a25241da126a09a2303204613e9618))
+- Do not serialize is_active when true for typed create requests\n\n- Add serde(skip_serializing_if) for is_active in CreateRedisRuleRequest and CreateDatabaseAclRequest\n- Define helper is_true() to allow skipping true values\n- Allows Wiremock body_json to match requests that omit is_active ([537cf5a](https://github.com/joshrotenberg/redisctl/commit/537cf5af43838f29c1baf058e1093fcfa6a1c6b7))
+- Include is_active in CreateDatabaseAclRequest to satisfy body_json match in tests ([55ce056](https://github.com/joshrotenberg/redisctl/commit/55ce0560b73b667c0f2e710b1a806608d1a242e1))
+- Align models/handlers with API responses to unbreak tests ([d8ace5c](https://github.com/joshrotenberg/redisctl/commit/d8ace5c3d4c9844bc31b5a39288ba11090cc9372))
+- Complete struct definitions for all model types ([c4edbc9](https://github.com/joshrotenberg/redisctl/commit/c4edbc903da39341c0b606e9aaba8cb5a534f434))
+- Fix peering struct and ignore unverified API tests ([3065b08](https://github.com/joshrotenberg/redisctl/commit/3065b0874da1cd265f148ae13224347a9c45aa3a))
+- Fix doc test compilation errors ([070b557](https://github.com/joshrotenberg/redisctl/commit/070b55738dccb9677b88dce2203b012e02a654a7))
+- Clean up clippy warnings in foundation code ([fff4993](https://github.com/joshrotenberg/redisctl/commit/fff499308c025f8c39c6a081dd6e9bef27bf0459))
+- Update tracing-subscriber to fix security vulnerability ([540e799](https://github.com/joshrotenberg/redisctl/commit/540e7998a0a79dcb2d8b7575de01e837594f85a3))
+- Resolve clippy unused code warnings ([7e4c944](https://github.com/joshrotenberg/redisctl/commit/7e4c944e3b2fc704de39249e36b038897459380c))
+- Make BaseDirs import conditional for macOS only ([f1dc417](https://github.com/joshrotenberg/redisctl/commit/f1dc417b6f1fa29ce0279f34e441e8912eba3935))
+- Make HTTP methods case-insensitive ([88fdff6](https://github.com/joshrotenberg/redisctl/commit/88fdff695fd94131f97bf6f7651fcc14576a8f88))
+- Add explicit cargo fetch for Windows ([47a455f](https://github.com/joshrotenberg/redisctl/commit/47a455fbd9f78db1454920078696602444e6694e))
+- Improve Windows dependency resolution ([9a467cd](https://github.com/joshrotenberg/redisctl/commit/9a467cdcebfabf87721882761e93c552b1897071))
+- Use explicit versions instead of workspace inheritance ([3d354a9](https://github.com/joshrotenberg/redisctl/commit/3d354a9a3cfc8c1852cdf263f69b3b801b0bdc3d))
+- Add missing From implementations for error types ([922efec](https://github.com/joshrotenberg/redisctl/commit/922efec2c6a75e4901ecbd2368763a4122793cd2))
+- Remove all workspace inheritance for Windows CI ([5efade5](https://github.com/joshrotenberg/redisctl/commit/5efade5a784bd09f7654874d2f2288e30cb9bf2a))
+- Add shellexpand to workspace deps as workaround ([97a56d6](https://github.com/joshrotenberg/redisctl/commit/97a56d6eeb163812652350266504ed602cfa7142))
+- Revert to workspace dependencies ([2534e88](https://github.com/joshrotenberg/redisctl/commit/2534e880368c2b8d9588ec0bdad0fb1cb45404d9))
+- Move dependencies before target-specific section ([15a731b](https://github.com/joshrotenberg/redisctl/commit/15a731b60160989ed2fffb33ddc3a3f1627c9b16))
+- Remove deprecation attributes and fix clippy warnings ([e842562](https://github.com/joshrotenberg/redisctl/commit/e84256260ebfca2c0544ebc65e066510af47491d))
+- Add missing command_type field to VpcPeeringUpdateAwsRequest ([3f70b4e](https://github.com/joshrotenberg/redisctl/commit/3f70b4e55c3171e5e17119e61bdbdf92ff94cd42))
+- Add backward compatibility module aliases and wrapper methods ([dcee122](https://github.com/joshrotenberg/redisctl/commit/dcee1228ba8fb7b6a33cbc312208dd3daf1e4585))
+- Add more backward compatibility methods and fix test imports ([b3e49e1](https://github.com/joshrotenberg/redisctl/commit/b3e49e18bcf20ffc9d734d68d7cf7b2ddce62002))
+- Add remaining backward compatibility methods for fixed subscriptions ([7bd7def](https://github.com/joshrotenberg/redisctl/commit/7bd7def096b64751aa2adbffef9c6deca6275da9))
+- Correct API endpoint paths for connectivity modules ([df3c766](https://github.com/joshrotenberg/redisctl/commit/df3c7664f123b7c0a484e899f2dd47767646d720))
+- Correct --deployment-type to --deployment in documentation ([fd02ceb](https://github.com/joshrotenberg/redisctl/commit/fd02cebfe3b59f0107708ad0335a64b5b57679b8))
+- Prevent tokio panic when exiting pager ([aeeb960](https://github.com/joshrotenberg/redisctl/commit/aeeb960d9f5db9f08704ddacc3808a0efd883026))
+- Replace pager crate with direct process spawning to avoid tokio conflict ([9a90939](https://github.com/joshrotenberg/redisctl/commit/9a90939ef9a87394993ab032720d0125eb2e7974))
+- Resolve unused variable warning in delete_tag ([f211265](https://github.com/joshrotenberg/redisctl/commit/f211265bd807ca374d3410bfbfd219d0501dc315))
+- Resolve clippy warning about manual strip ([d8586f5](https://github.com/joshrotenberg/redisctl/commit/d8586f5aeb40117482b1694cf2d6b5bd459939cd))
+- Resolve clippy warnings for strict mode ([308e91a](https://github.com/joshrotenberg/redisctl/commit/308e91a45266fa1674ace8f15b1a6fe966e03e96))
+- Fmt ([b856fdf](https://github.com/joshrotenberg/redisctl/commit/b856fdfe3f813d9dc95a0a3bdef36b4a0a652a92))
+- Address clippy warning about collapsible if statement ([222379a](https://github.com/joshrotenberg/redisctl/commit/222379a78b1bfcc85ec2142a2d732a326774ed40))
+- Resolve clippy too_many_arguments warnings in connectivity modules ([f492337](https://github.com/joshrotenberg/redisctl/commit/f4923374b87167beab464392505ae285165b3a23))
+- Remove internal dependency version updates from prepare-release workflow ([#204](https://github.com/joshrotenberg/redisctl/issues/204)) ([e99dcb0](https://github.com/joshrotenberg/redisctl/commit/e99dcb0911cb3051e920c05562b456a28a351e05))
+- Remove version constraints from workspace path dependencies ([#205](https://github.com/joshrotenberg/redisctl/issues/205)) ([e94466f](https://github.com/joshrotenberg/redisctl/commit/e94466fa714b1fea2ad7a193b4f7a37f349d1231))
 
-### Changed
-- Improved error handling
-- Better configuration management
+### 📚 Documentation
 
-### Fixed
-- Various bug fixes and improvements
+- Add contributing guide and update installation docs ([5893261](https://github.com/joshrotenberg/redisctl/commit/5893261a7d5fbabfa2cf26dfcfde4245a1b63b08))
+- Improve lib and module overviews; fix clippy doc warnings ([9fd5b2c](https://github.com/joshrotenberg/redisctl/commit/9fd5b2cb77ffc8e0f36863026feffb49181fb887))
+- Update examples to flat modules; fix ACL typed handling\n\n- examples: import via redis_cloud::database::CloudDatabaseHandler\n- acl: list_redis_rules handles envelope or array\n- models: add serde defaults for is_active fields to support typed deserialization in tests ([07fa4f9](https://github.com/joshrotenberg/redisctl/commit/07fa4f9cf2a3bf3c184638677bfa29ddb20bf396))
+- Add short primers for redis-cloud and redis-enterprise; link to rustdocs ([4ef23ca](https://github.com/joshrotenberg/redisctl/commit/4ef23ca07982b2df1dd06036fd5b3e1e47df0b1e))
+- Sync Cloud/Enterprise crate docs on docs/library-primers branch ([156a42f](https://github.com/joshrotenberg/redisctl/commit/156a42fd41b8d30fb228e16e147948dcc424770f))
+- Comprehensive rustdoc improvements ([ce6e438](https://github.com/joshrotenberg/redisctl/commit/ce6e438d5e44da8e5b0536b5661c1531798ac16a))
+- Add comprehensive documentation ([1bfaec9](https://github.com/joshrotenberg/redisctl/commit/1bfaec97af62c9230fd8de28f89625d9fb1f8fd5))
+- Comprehensive CLI modernization plan with restart guide ([c85cad5](https://github.com/joshrotenberg/redisctl/commit/c85cad5816e6c2576deecd14a850540e7fb6d1b6))
+- Streamline README and add test coverage audit ([cc269bc](https://github.com/joshrotenberg/redisctl/commit/cc269bca8d3f170b10d7ca4649e64e579d84e525))
+- Remove emojis from documentation ([5de65b9](https://github.com/joshrotenberg/redisctl/commit/5de65b9d76504712dffd4a8b5c0c29ce52db63c6))
+- Add comprehensive profile configuration documentation ([0cad619](https://github.com/joshrotenberg/redisctl/commit/0cad619e6b847ddc42b971bed11750457c347c22))
+- Complete documentation restructure and simplification ([a7e0c02](https://github.com/joshrotenberg/redisctl/commit/a7e0c0270a32fbfb95bd72d9bac602f0b0c0fdbe))
+- Comprehensive documentation update for async operations ([1f29f97](https://github.com/joshrotenberg/redisctl/commit/1f29f97cdb83a7ee6e0f08476897f87255b8f29a))
 
-## [0.1.0] - Initial Release
+### 🚜 Refactor
 
-### Added
-- Initial implementation
-- Basic command structure
-- Authentication support
-- Raw API access
+- Use get() instead of info() for CloudAccountHandler consistency ([18e2136](https://github.com/joshrotenberg/redisctl/commit/18e2136ce2669206f6bd2b6e2feced91308473fd))
+- Remove redundant top-level handler wrapper modules; re-export handlers directly from handlers::* in lib.rs to avoid duplication ([08f5a54](https://github.com/joshrotenberg/redisctl/commit/08f5a543706c6237231588fb792a185b5887a8b6))
+- Add flat module shims and types re-export for parity with redis-enterprise ([d9a81d9](https://github.com/joshrotenberg/redisctl/commit/d9a81d9dc2a4a54204b4a44c3e89b14fb7b2f8ea))
+- Flatten src/handlers/ to flat modules for parity with redis-enterprise\n\n- Move all handler modules to src/\n- Update lib.rs to expose flat modules and re-export handlers at root\n- Remove handlers/mod.rs ([bb8cd0a](https://github.com/joshrotenberg/redisctl/commit/bb8cd0adad7b2fc51dd39dd26f11b02610ff0388))
+- Unify structure with flat module organization ([e959141](https://github.com/joshrotenberg/redisctl/commit/e959141cd515c41eb31e5501f7cc64485e8d90ec))
+- Remove duplicate _raw methods and improve type safety ([e9743ac](https://github.com/joshrotenberg/redisctl/commit/e9743ac76ce3fffabb29b48f781e0bee55fefd20))
+- Remove 'typed' designation from comments ([fe26b69](https://github.com/joshrotenberg/redisctl/commit/fe26b69c49e13c50b02e5a253c6f69a2fc6117b9))
+- Remove all remaining 'typed' designations from comments ([302bd23](https://github.com/joshrotenberg/redisctl/commit/302bd23b4384d09a8ee8901f54d092c8dccca9c4))
+- Prepare for incremental OpenAPI implementation ([3e434c4](https://github.com/joshrotenberg/redisctl/commit/3e434c45661caed38a216c5510e929a53701179a))
+- [**breaking**] Fix naming inconsistencies and typos (closes #124, #125) ([6f0d45e](https://github.com/joshrotenberg/redisctl/commit/6f0d45edef8f395b4f18fba3445228660da795ec))
+- [**breaking**] Reorganize modules into fixed/flexible structure ([e250326](https://github.com/joshrotenberg/redisctl/commit/e250326960ed15e1c4109de4a3e95b7939173dda))
+- Remove smart command placeholders ([a7fab2b](https://github.com/joshrotenberg/redisctl/commit/a7fab2bffe58908e81ca2485d1e2220839ffdc39))
+- Reorganize documentation - README as quick overview, detailed docs in mdBook ([793194c](https://github.com/joshrotenberg/redisctl/commit/793194c0ecc6f779d561c6a2d894d43388f90105))
+
+### 🧪 Testing
+
+- Begin aligning handlers with wrapper responses; adjust tasks handler to return TaskList; PSC handler extracts nested fields ([3af10c5](https://github.com/joshrotenberg/redisctl/commit/3af10c533779e5b9b731eeca2af9c3fe02f75a76))
+- Adapt PSC and Tasks tests to typed handlers by wrapping typed results to original shapes where needed ([01aa2fd](https://github.com/joshrotenberg/redisctl/commit/01aa2fdc2be348fb0378fe9e10f01a9c71ada5a7))
+- Adapt SSO, Cloud Accounts, CRDB tests to typed handler returns by wrapping typed results into prior JSON shapes; relax delete message asserts ([c4d1ebb](https://github.com/joshrotenberg/redisctl/commit/c4d1ebb86e10f4e922e04aab03fb947b2a706830))
+- Add comprehensive test coverage for account, acl, and cloud_accounts handlers ([8d5d07c](https://github.com/joshrotenberg/redisctl/commit/8d5d07c02ba952983c8ef0a2077c3879000b6b25))
+- Add comprehensive test coverage for connectivity, databases, and fixed_databases handlers ([811a96d](https://github.com/joshrotenberg/redisctl/commit/811a96d7f177cd4f7c4e6ed3c24a845937f15627))
+- Add comprehensive tests for remaining handlers ([23d5190](https://github.com/joshrotenberg/redisctl/commit/23d5190444947ac2f739e6375ff25840728948e4))
+- Add comprehensive tests for remaining Enterprise handlers ([2fdb8e4](https://github.com/joshrotenberg/redisctl/commit/2fdb8e4a07c09aac010c4ca046bc11de711f1b0a))
+- Fix integration tests for module reorganization ([b1d78e7](https://github.com/joshrotenberg/redisctl/commit/b1d78e73292b4d3b2ca71d4c8034b3d986ea729c))
+
+<!-- generated by git-cliff -->
