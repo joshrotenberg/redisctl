@@ -3,6 +3,7 @@
 #![allow(dead_code)]
 
 use crate::cli::{OutputFormat, VpcPeeringCommands};
+use crate::commands::cloud::async_utils::{AsyncOperationArgs, handle_async_response};
 use crate::commands::cloud::utils::{
     confirm_action, handle_output, print_formatted_output, read_file_input,
 };
@@ -27,19 +28,37 @@ pub async fn handle_vpc_peering_command(
         VpcPeeringCommands::Get { subscription } => {
             handle_get(&client, *subscription, output_format, query).await
         }
-        VpcPeeringCommands::Create { subscription, data } => {
-            handle_create(&client, *subscription, data, output_format, query).await
+        VpcPeeringCommands::Create {
+            subscription,
+            data,
+            async_ops,
+        } => {
+            handle_create(
+                conn_mgr,
+                profile_name,
+                &client,
+                *subscription,
+                data,
+                async_ops,
+                output_format,
+                query,
+            )
+            .await
         }
         VpcPeeringCommands::Update {
             subscription,
             peering_id,
             data,
+            async_ops,
         } => {
             handle_update(
+                conn_mgr,
+                profile_name,
                 &client,
                 *subscription,
                 *peering_id,
                 data,
+                async_ops,
                 output_format,
                 query,
             )
@@ -49,23 +68,55 @@ pub async fn handle_vpc_peering_command(
             subscription,
             peering_id,
             force,
-        } => handle_delete(&client, *subscription, *peering_id, *force).await,
+            async_ops,
+        } => {
+            handle_delete(
+                conn_mgr,
+                profile_name,
+                &client,
+                *subscription,
+                *peering_id,
+                *force,
+                async_ops,
+                output_format,
+                query,
+            )
+            .await
+        }
         VpcPeeringCommands::ListActiveActive { subscription } => {
             handle_list_active_active(&client, *subscription, output_format, query).await
         }
-        VpcPeeringCommands::CreateActiveActive { subscription, data } => {
-            handle_create_active_active(&client, *subscription, data, output_format, query).await
+        VpcPeeringCommands::CreateActiveActive {
+            subscription,
+            data,
+            async_ops,
+        } => {
+            handle_create_active_active(
+                conn_mgr,
+                profile_name,
+                &client,
+                *subscription,
+                data,
+                async_ops,
+                output_format,
+                query,
+            )
+            .await
         }
         VpcPeeringCommands::UpdateActiveActive {
             subscription,
             peering_id,
             data,
+            async_ops,
         } => {
             handle_update_active_active(
+                conn_mgr,
+                profile_name,
                 &client,
                 *subscription,
                 *peering_id,
                 data,
+                async_ops,
                 output_format,
                 query,
             )
@@ -75,7 +126,21 @@ pub async fn handle_vpc_peering_command(
             subscription,
             peering_id,
             force,
-        } => handle_delete_active_active(&client, *subscription, *peering_id, *force).await,
+            async_ops,
+        } => {
+            handle_delete_active_active(
+                conn_mgr,
+                profile_name,
+                &client,
+                *subscription,
+                *peering_id,
+                *force,
+                async_ops,
+                output_format,
+                query,
+            )
+            .await
+        }
     }
 }
 
@@ -104,9 +169,12 @@ async fn handle_get(
 
 /// Create VPC peering
 async fn handle_create(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
     client: &CloudClient,
     subscription_id: i32,
     data: &str,
+    async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
@@ -121,27 +189,27 @@ async fn handle_create(
         .await
         .context("Failed to create VPC peering")?;
 
-    let data = handle_output(result, output_format, query)?;
-
-    // Check if response contains a task ID
-    if let Some(task_id) = data.get("taskId").and_then(|t| t.as_str()) {
-        println!("VPC peering creation initiated. Task ID: {}", task_id);
-        println!(
-            "Use 'redisctl cloud task wait {}' to monitor progress",
-            task_id
-        );
-    }
-
-    print_formatted_output(data, output_format)?;
-    Ok(())
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        result,
+        async_ops,
+        output_format,
+        query,
+        "VPC peering created successfully",
+    )
+    .await
 }
 
 /// Update VPC peering
 async fn handle_update(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
     client: &CloudClient,
     subscription_id: i32,
     peering_id: i32,
     data: &str,
+    async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
@@ -159,26 +227,29 @@ async fn handle_update(
         .await
         .context("Failed to update VPC peering")?;
 
-    let data = handle_output(result, output_format, query)?;
-
-    if let Some(task_id) = data.get("taskId").and_then(|t| t.as_str()) {
-        println!("VPC peering update initiated. Task ID: {}", task_id);
-        println!(
-            "Use 'redisctl cloud task wait {}' to monitor progress",
-            task_id
-        );
-    }
-
-    print_formatted_output(data, output_format)?;
-    Ok(())
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        result,
+        async_ops,
+        output_format,
+        query,
+        "VPC peering updated successfully",
+    )
+    .await
 }
 
 /// Delete VPC peering
 async fn handle_delete(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
     client: &CloudClient,
     subscription_id: i32,
     peering_id: i32,
     force: bool,
+    async_ops: &AsyncOperationArgs,
+    output_format: OutputFormat,
+    query: Option<&str>,
 ) -> CliResult<()> {
     if !force {
         let confirmed = confirm_action(&format!(
@@ -199,18 +270,16 @@ async fn handle_delete(
         .await
         .context("Failed to delete VPC peering")?;
 
-    // Check for task ID in response
-    if let Some(task_id) = result.get("taskId").and_then(|t| t.as_str()) {
-        println!("VPC peering deletion initiated. Task ID: {}", task_id);
-        println!(
-            "Use 'redisctl cloud task wait {}' to monitor progress",
-            task_id
-        );
-    } else {
-        println!("VPC peering {} deleted successfully", peering_id);
-    }
-
-    Ok(())
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        result,
+        async_ops,
+        output_format,
+        query,
+        "VPC peering deleted successfully",
+    )
+    .await
 }
 
 /// List Active-Active VPC peerings
@@ -241,9 +310,12 @@ async fn handle_list_active_active(
 
 /// Create Active-Active VPC peering
 async fn handle_create_active_active(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
     client: &CloudClient,
     subscription_id: i32,
     data: &str,
+    async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
@@ -261,29 +333,27 @@ async fn handle_create_active_active(
         .await
         .context("Failed to create Active-Active VPC peering")?;
 
-    let data = handle_output(result, output_format, query)?;
-
-    if let Some(task_id) = data.get("taskId").and_then(|t| t.as_str()) {
-        println!(
-            "Active-Active VPC peering creation initiated. Task ID: {}",
-            task_id
-        );
-        println!(
-            "Use 'redisctl cloud task wait {}' to monitor progress",
-            task_id
-        );
-    }
-
-    print_formatted_output(data, output_format)?;
-    Ok(())
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        result,
+        async_ops,
+        output_format,
+        query,
+        "Active-Active VPC peering created successfully",
+    )
+    .await
 }
 
 /// Update Active-Active VPC peering
 async fn handle_update_active_active(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
     client: &CloudClient,
     subscription_id: i32,
     peering_id: i32,
     data: &str,
+    async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
@@ -301,29 +371,29 @@ async fn handle_update_active_active(
         .await
         .context("Failed to update Active-Active VPC peering")?;
 
-    let data = handle_output(result, output_format, query)?;
-
-    if let Some(task_id) = data.get("taskId").and_then(|t| t.as_str()) {
-        println!(
-            "Active-Active VPC peering update initiated. Task ID: {}",
-            task_id
-        );
-        println!(
-            "Use 'redisctl cloud task wait {}' to monitor progress",
-            task_id
-        );
-    }
-
-    print_formatted_output(data, output_format)?;
-    Ok(())
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        result,
+        async_ops,
+        output_format,
+        query,
+        "Active-Active VPC peering updated successfully",
+    )
+    .await
 }
 
 /// Delete Active-Active VPC peering
 async fn handle_delete_active_active(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
     client: &CloudClient,
     subscription_id: i32,
     peering_id: i32,
     force: bool,
+    async_ops: &AsyncOperationArgs,
+    output_format: OutputFormat,
+    query: Option<&str>,
 ) -> CliResult<()> {
     if !force {
         let confirmed = confirm_action(&format!(
@@ -344,23 +414,16 @@ async fn handle_delete_active_active(
         .await
         .context("Failed to delete Active-Active VPC peering")?;
 
-    if let Some(task_id) = result.get("taskId").and_then(|t| t.as_str()) {
-        println!(
-            "Active-Active VPC peering deletion initiated. Task ID: {}",
-            task_id
-        );
-        println!(
-            "Use 'redisctl cloud task wait {}' to monitor progress",
-            task_id
-        );
-    } else {
-        println!(
-            "Active-Active VPC peering {} deleted successfully",
-            peering_id
-        );
-    }
-
-    Ok(())
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        result,
+        async_ops,
+        output_format,
+        query,
+        "Active-Active VPC peering deleted successfully",
+    )
+    .await
 }
 
 /// Print VPC peering details in table format

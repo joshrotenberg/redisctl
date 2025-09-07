@@ -3,6 +3,7 @@
 #![allow(dead_code)]
 
 use crate::cli::{OutputFormat, PscCommands};
+use crate::commands::cloud::async_utils::{AsyncOperationArgs, handle_async_response};
 use crate::commands::cloud::utils::{
     confirm_action, handle_output, print_formatted_output, read_file_input,
 };
@@ -30,13 +31,38 @@ pub async fn handle_psc_command(
         PscCommands::ServiceGet { subscription_id } => {
             get_service(&client, *subscription_id, output_format, query).await
         }
-        PscCommands::ServiceCreate { subscription_id } => {
-            create_service(&client, *subscription_id, output_format, query).await
+        PscCommands::ServiceCreate {
+            subscription_id,
+            async_ops,
+        } => {
+            create_service(
+                conn_mgr,
+                profile_name,
+                &client,
+                *subscription_id,
+                async_ops,
+                output_format,
+                query,
+            )
+            .await
         }
         PscCommands::ServiceDelete {
             subscription_id,
             yes,
-        } => delete_service(&client, *subscription_id, *yes).await,
+            async_ops,
+        } => {
+            delete_service(
+                conn_mgr,
+                profile_name,
+                &client,
+                *subscription_id,
+                *yes,
+                async_ops,
+                output_format,
+                query,
+            )
+            .await
+        }
 
         // Standard PSC Endpoint operations
         PscCommands::EndpointsList { subscription_id } => {
@@ -45,17 +71,34 @@ pub async fn handle_psc_command(
         PscCommands::EndpointCreate {
             subscription_id,
             file,
-        } => create_endpoint(&client, *subscription_id, file, output_format, query).await,
+            async_ops,
+        } => {
+            create_endpoint(
+                conn_mgr,
+                profile_name,
+                &client,
+                *subscription_id,
+                file,
+                async_ops,
+                output_format,
+                query,
+            )
+            .await
+        }
         PscCommands::EndpointUpdate {
             subscription_id,
             endpoint_id,
             file,
+            async_ops,
         } => {
             update_endpoint(
+                conn_mgr,
+                profile_name,
                 &client,
                 *subscription_id,
                 *endpoint_id,
                 file,
+                async_ops,
                 output_format,
                 query,
             )
@@ -65,7 +108,21 @@ pub async fn handle_psc_command(
             subscription_id,
             endpoint_id,
             yes,
-        } => delete_endpoint(&client, *subscription_id, *endpoint_id, *yes).await,
+            async_ops,
+        } => {
+            delete_endpoint(
+                conn_mgr,
+                profile_name,
+                &client,
+                *subscription_id,
+                *endpoint_id,
+                *yes,
+                async_ops,
+                output_format,
+                query,
+            )
+            .await
+        }
         PscCommands::EndpointCreationScript {
             subscription_id,
             endpoint_id,
@@ -79,13 +136,38 @@ pub async fn handle_psc_command(
         PscCommands::AaServiceGet { subscription_id } => {
             get_service_aa(&client, *subscription_id, output_format, query).await
         }
-        PscCommands::AaServiceCreate { subscription_id } => {
-            create_service_aa(&client, *subscription_id, output_format, query).await
+        PscCommands::AaServiceCreate {
+            subscription_id,
+            async_ops,
+        } => {
+            create_service_aa(
+                conn_mgr,
+                profile_name,
+                &client,
+                *subscription_id,
+                async_ops,
+                output_format,
+                query,
+            )
+            .await
         }
         PscCommands::AaServiceDelete {
             subscription_id,
             yes,
-        } => delete_service_aa(&client, *subscription_id, *yes).await,
+            async_ops,
+        } => {
+            delete_service_aa(
+                conn_mgr,
+                profile_name,
+                &client,
+                *subscription_id,
+                *yes,
+                async_ops,
+                output_format,
+                query,
+            )
+            .await
+        }
 
         // Active-Active PSC Endpoint operations
         PscCommands::AaEndpointsList { subscription_id } => {
@@ -94,13 +176,41 @@ pub async fn handle_psc_command(
         PscCommands::AaEndpointCreate {
             subscription_id,
             file,
-        } => create_endpoint_aa(&client, *subscription_id, file, output_format, query).await,
+            async_ops,
+        } => {
+            create_endpoint_aa(
+                conn_mgr,
+                profile_name,
+                &client,
+                *subscription_id,
+                file,
+                async_ops,
+                output_format,
+                query,
+            )
+            .await
+        }
         PscCommands::AaEndpointDelete {
             subscription_id,
             region_id,
             endpoint_id,
             yes,
-        } => delete_endpoint_aa(&client, *subscription_id, *region_id, *endpoint_id, *yes).await,
+            async_ops,
+        } => {
+            delete_endpoint_aa(
+                conn_mgr,
+                profile_name,
+                &client,
+                *subscription_id,
+                *region_id,
+                *endpoint_id,
+                *yes,
+                async_ops,
+                output_format,
+                query,
+            )
+            .await
+        }
     }
 }
 
@@ -127,8 +237,11 @@ async fn get_service(
 }
 
 async fn create_service(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
     client: &CloudClient,
     subscription_id: i32,
+    async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
@@ -138,22 +251,30 @@ async fn create_service(
         .await
         .context("Failed to create PSC service")?;
 
-    // Convert response to JSON and check for task ID
     let json_response = serde_json::to_value(&response).context("Failed to serialize response")?;
-    if let Some(task_id) = json_response.get("taskId").and_then(|v| v.as_str()) {
-        eprintln!("PSC service creation initiated. Task ID: {}", task_id);
-        eprintln!(
-            "Use 'redisctl cloud task wait {}' to monitor progress",
-            task_id
-        );
-    }
 
-    let data = handle_output(json_response, output_format, query)?;
-    print_formatted_output(data, output_format)?;
-    Ok(())
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        json_response,
+        async_ops,
+        output_format,
+        query,
+        "PSC service created successfully",
+    )
+    .await
 }
 
-async fn delete_service(client: &CloudClient, subscription_id: i32, yes: bool) -> CliResult<()> {
+async fn delete_service(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
+    client: &CloudClient,
+    subscription_id: i32,
+    yes: bool,
+    async_ops: &AsyncOperationArgs,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> CliResult<()> {
     if !yes {
         let prompt = format!("Delete PSC service for subscription {}?", subscription_id);
         if !confirm_action(&prompt)? {
@@ -195,9 +316,12 @@ async fn get_endpoints(
 }
 
 async fn create_endpoint(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
     client: &CloudClient,
     subscription_id: i32,
     file: &str,
+    async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
@@ -230,10 +354,13 @@ async fn create_endpoint(
 }
 
 async fn update_endpoint(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
     client: &CloudClient,
     subscription_id: i32,
     endpoint_id: i32,
     file: &str,
+    async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
@@ -267,10 +394,15 @@ async fn update_endpoint(
 }
 
 async fn delete_endpoint(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
     client: &CloudClient,
     subscription_id: i32,
     endpoint_id: i32,
     yes: bool,
+    async_ops: &AsyncOperationArgs,
+    output_format: OutputFormat,
+    query: Option<&str>,
 ) -> CliResult<()> {
     if !yes {
         let prompt = format!(
@@ -348,8 +480,11 @@ async fn get_service_aa(
 }
 
 async fn create_service_aa(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
     client: &CloudClient,
     subscription_id: i32,
+    async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
@@ -377,7 +512,16 @@ async fn create_service_aa(
     Ok(())
 }
 
-async fn delete_service_aa(client: &CloudClient, subscription_id: i32, yes: bool) -> CliResult<()> {
+async fn delete_service_aa(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
+    client: &CloudClient,
+    subscription_id: i32,
+    yes: bool,
+    async_ops: &AsyncOperationArgs,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> CliResult<()> {
     if !yes {
         let prompt = format!(
             "Delete Active-Active PSC service for subscription {}?",
@@ -422,9 +566,12 @@ async fn get_endpoints_aa(
 }
 
 async fn create_endpoint_aa(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
     client: &CloudClient,
     subscription_id: i32,
     file: &str,
+    async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
@@ -460,11 +607,16 @@ async fn create_endpoint_aa(
 }
 
 async fn delete_endpoint_aa(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
     client: &CloudClient,
     subscription_id: i32,
     region_id: i32,
     endpoint_id: i32,
     yes: bool,
+    async_ops: &AsyncOperationArgs,
+    output_format: OutputFormat,
+    query: Option<&str>,
 ) -> CliResult<()> {
     if !yes {
         let prompt = format!(

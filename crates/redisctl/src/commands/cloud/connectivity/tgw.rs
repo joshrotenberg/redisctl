@@ -3,6 +3,7 @@
 #![allow(dead_code)]
 
 use crate::cli::{OutputFormat, TgwCommands};
+use crate::commands::cloud::async_utils::{AsyncOperationArgs, handle_async_response};
 use crate::commands::cloud::utils::{
     confirm_action, handle_output, print_formatted_output, read_file_input,
 };
@@ -33,23 +34,45 @@ pub async fn handle_tgw_command(
         TgwCommands::AttachmentCreate {
             subscription_id,
             file,
-        } => create_attachment(&client, *subscription_id, file, output_format, query).await,
+            async_ops,
+        } => {
+            create_attachment(
+                &client,
+                *subscription_id,
+                file,
+                async_ops,
+                output_format,
+                query,
+            )
+            .await
+        }
         TgwCommands::AttachmentCreateWithId {
             subscription_id,
             tgw_id,
+            async_ops,
         } => {
-            create_attachment_with_id(&client, *subscription_id, tgw_id, output_format, query).await
+            create_attachment_with_id(
+                &client,
+                *subscription_id,
+                tgw_id,
+                async_ops,
+                output_format,
+                query,
+            )
+            .await
         }
         TgwCommands::AttachmentUpdate {
             subscription_id,
             attachment_id,
             file,
+            async_ops,
         } => {
             update_attachment_cidrs(
                 &client,
                 *subscription_id,
                 attachment_id,
                 file,
+                async_ops,
                 output_format,
                 query,
             )
@@ -59,7 +82,19 @@ pub async fn handle_tgw_command(
             subscription_id,
             attachment_id,
             yes,
-        } => delete_attachment(&client, *subscription_id, attachment_id, *yes).await,
+            async_ops,
+        } => {
+            delete_attachment(
+                &client,
+                *subscription_id,
+                attachment_id,
+                *yes,
+                async_ops,
+                output_format,
+                query,
+            )
+            .await
+        }
         TgwCommands::InvitationsList { subscription_id } => {
             list_invitations(&client, *subscription_id, output_format, query).await
         }
@@ -98,12 +133,14 @@ pub async fn handle_tgw_command(
             subscription_id,
             region_id,
             file,
+            async_ops,
         } => {
             create_attachment_aa(
                 &client,
                 *subscription_id,
                 *region_id,
                 file,
+                async_ops,
                 output_format,
                 query,
             )
@@ -114,6 +151,7 @@ pub async fn handle_tgw_command(
             region_id,
             attachment_id,
             file,
+            async_ops,
         } => {
             update_attachment_cidrs_aa(
                 &client,
@@ -121,6 +159,7 @@ pub async fn handle_tgw_command(
                 *region_id,
                 attachment_id,
                 file,
+                async_ops,
                 output_format,
                 query,
             )
@@ -131,7 +170,20 @@ pub async fn handle_tgw_command(
             region_id,
             attachment_id,
             yes,
-        } => delete_attachment_aa(&client, *subscription_id, *region_id, attachment_id, *yes).await,
+            async_ops,
+        } => {
+            delete_attachment_aa(
+                &client,
+                *subscription_id,
+                *region_id,
+                attachment_id,
+                *yes,
+                async_ops,
+                output_format,
+                query,
+            )
+            .await
+        }
         TgwCommands::AaInvitationsList { subscription_id } => {
             list_invitations_aa(&client, *subscription_id, output_format, query).await
         }
