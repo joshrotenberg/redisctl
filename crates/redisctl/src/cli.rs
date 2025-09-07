@@ -1352,6 +1352,9 @@ pub enum CloudAclCommands {
         /// Redis ACL rule (e.g., "+@read")
         #[arg(long)]
         rule: String,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 
     /// Update an existing Redis ACL rule
@@ -1365,6 +1368,9 @@ pub enum CloudAclCommands {
         /// New Redis ACL rule
         #[arg(long)]
         rule: Option<String>,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 
     /// Delete a Redis ACL rule
@@ -1375,6 +1381,9 @@ pub enum CloudAclCommands {
         /// Skip confirmation prompt
         #[arg(long)]
         force: bool,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 
     // ACL Roles
@@ -1391,6 +1400,9 @@ pub enum CloudAclCommands {
         /// Redis rules (JSON array or single rule ID)
         #[arg(long, value_name = "JSON|ID")]
         redis_rules: String,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 
     /// Update an existing ACL role
@@ -1404,6 +1416,9 @@ pub enum CloudAclCommands {
         /// New Redis rules (JSON array or single rule ID)
         #[arg(long, value_name = "JSON|ID")]
         redis_rules: Option<String>,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 
     /// Delete an ACL role
@@ -1414,6 +1429,9 @@ pub enum CloudAclCommands {
         /// Skip confirmation prompt
         #[arg(long)]
         force: bool,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 
     // ACL Users
@@ -1440,6 +1458,9 @@ pub enum CloudAclCommands {
         /// Password
         #[arg(long)]
         password: String,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 
     /// Update an ACL user
@@ -1456,6 +1477,9 @@ pub enum CloudAclCommands {
         /// New password
         #[arg(long)]
         password: Option<String>,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 
     /// Delete an ACL user
@@ -1466,6 +1490,9 @@ pub enum CloudAclCommands {
         /// Skip confirmation prompt
         #[arg(long)]
         force: bool,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 }
 
