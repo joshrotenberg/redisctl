@@ -1,15 +1,27 @@
 #![allow(dead_code)]
 
 use crate::cli::OutputFormat;
+use crate::commands::cloud::async_utils::{AsyncOperationArgs, handle_async_response};
 use crate::commands::cloud::utils::{
     confirm_action, handle_output, print_formatted_output, read_file_input,
 };
+use crate::connection::ConnectionManager;
 use crate::error::Result as CliResult;
 
 use anyhow::Context;
 use comfy_table::{Cell, Color, Table};
 use redis_cloud::CloudClient;
 use serde_json::{Value, json};
+
+/// Parameters for cloud account operations that support async operations
+pub struct CloudAccountOperationParams<'a> {
+    pub conn_mgr: &'a ConnectionManager,
+    pub profile_name: Option<&'a str>,
+    pub client: &'a CloudClient,
+    pub async_ops: &'a AsyncOperationArgs,
+    pub output_format: OutputFormat,
+    pub query: Option<&'a str>,
+}
 
 pub async fn handle_list(
     client: &CloudClient,
@@ -107,12 +119,7 @@ pub async fn handle_get(
     Ok(())
 }
 
-pub async fn handle_create(
-    client: &CloudClient,
-    file: &str,
-    output_format: OutputFormat,
-    query: Option<&str>,
-) -> CliResult<()> {
+pub async fn handle_create(params: &CloudAccountOperationParams<'_>, file: &str) -> CliResult<()> {
     let content = read_file_input(file)?;
     let mut payload: Value =
         serde_json::from_str(&content).context("Failed to parse JSON from file")?;
@@ -175,38 +182,56 @@ pub async fn handle_create(
         }
     }
 
-    let result = client
+    let response = params
+        .client
         .post_raw("/cloud-accounts", payload)
         .await
         .context("Failed to create cloud account")?;
 
-    let data = handle_output(result, output_format, query)?;
-    print_formatted_output(data, output_format)?;
-    Ok(())
+    handle_async_response(
+        params.conn_mgr,
+        params.profile_name,
+        response,
+        params.async_ops,
+        params.output_format,
+        params.query,
+        "cloud account creation",
+    )
+    .await
 }
 
 pub async fn handle_update(
-    client: &CloudClient,
+    params: &CloudAccountOperationParams<'_>,
     account_id: i32,
     file: &str,
-    output_format: OutputFormat,
-    query: Option<&str>,
 ) -> CliResult<()> {
     let content = read_file_input(file)?;
     let payload: Value =
         serde_json::from_str(&content).context("Failed to parse JSON from file")?;
 
-    let result = client
+    let response = params
+        .client
         .put_raw(&format!("/cloud-accounts/{}", account_id), payload)
         .await
         .context("Failed to update cloud account")?;
 
-    let data = handle_output(result, output_format, query)?;
-    print_formatted_output(data, output_format)?;
-    Ok(())
+    handle_async_response(
+        params.conn_mgr,
+        params.profile_name,
+        response,
+        params.async_ops,
+        params.output_format,
+        params.query,
+        "cloud account update",
+    )
+    .await
 }
 
-pub async fn handle_delete(client: &CloudClient, account_id: i32, force: bool) -> CliResult<()> {
+pub async fn handle_delete(
+    params: &CloudAccountOperationParams<'_>,
+    account_id: i32,
+    force: bool,
+) -> CliResult<()> {
     if !force {
         let confirmed = confirm_action(&format!("delete cloud account {}", account_id))?;
         if !confirmed {
@@ -215,11 +240,20 @@ pub async fn handle_delete(client: &CloudClient, account_id: i32, force: bool) -
         }
     }
 
-    client
+    let response = params
+        .client
         .delete_raw(&format!("/cloud-accounts/{}", account_id))
         .await
         .context("Failed to delete cloud account")?;
 
-    println!("Cloud account {} deleted successfully", account_id);
-    Ok(())
+    handle_async_response(
+        params.conn_mgr,
+        params.profile_name,
+        response,
+        params.async_ops,
+        params.output_format,
+        params.query,
+        "cloud account deletion",
+    )
+    .await
 }

@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use crate::cli::{CloudProviderAccountCommands, OutputFormat};
-use crate::commands::cloud::cloud_account_impl;
+use crate::commands::cloud::cloud_account_impl::{self, CloudAccountOperationParams};
 use crate::commands::cloud::utils::create_cloud_client_raw;
 use crate::connection::ConnectionManager;
 use crate::error::Result as CliResult;
@@ -23,15 +23,46 @@ pub async fn handle_cloud_account_command(
         CloudProviderAccountCommands::Get { account_id } => {
             cloud_account_impl::handle_get(&client, *account_id, output_format, query).await
         }
-        CloudProviderAccountCommands::Create { file } => {
-            cloud_account_impl::handle_create(&client, file, output_format, query).await
+        CloudProviderAccountCommands::Create { file, async_ops } => {
+            let params = CloudAccountOperationParams {
+                conn_mgr,
+                profile_name,
+                client: &client,
+                async_ops,
+                output_format,
+                query,
+            };
+            cloud_account_impl::handle_create(&params, file).await
         }
-        CloudProviderAccountCommands::Update { account_id, file } => {
-            cloud_account_impl::handle_update(&client, *account_id, file, output_format, query)
-                .await
+        CloudProviderAccountCommands::Update {
+            account_id,
+            file,
+            async_ops,
+        } => {
+            let params = CloudAccountOperationParams {
+                conn_mgr,
+                profile_name,
+                client: &client,
+                async_ops,
+                output_format,
+                query,
+            };
+            cloud_account_impl::handle_update(&params, *account_id, file).await
         }
-        CloudProviderAccountCommands::Delete { account_id, force } => {
-            cloud_account_impl::handle_delete(&client, *account_id, *force).await
+        CloudProviderAccountCommands::Delete {
+            account_id,
+            force,
+            async_ops,
+        } => {
+            let params = CloudAccountOperationParams {
+                conn_mgr,
+                profile_name,
+                client: &client,
+                async_ops,
+                output_format,
+                query,
+            };
+            cloud_account_impl::handle_delete(&params, *account_id, *force).await
         }
     }
 }
