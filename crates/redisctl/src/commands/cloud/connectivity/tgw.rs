@@ -2,7 +2,9 @@
 
 #![allow(dead_code)]
 
+use super::ConnectivityOperationParams;
 use crate::cli::{OutputFormat, TgwCommands};
+use crate::commands::cloud::async_utils::handle_async_response;
 use crate::commands::cloud::utils::{
     confirm_action, handle_output, print_formatted_output, read_file_input,
 };
@@ -33,33 +35,69 @@ pub async fn handle_tgw_command(
         TgwCommands::AttachmentCreate {
             subscription_id,
             file,
-        } => create_attachment(&client, *subscription_id, file, output_format, query).await,
+            async_ops,
+        } => {
+            let params = ConnectivityOperationParams {
+                conn_mgr,
+                profile_name,
+                client: &client,
+                subscription_id: *subscription_id,
+                async_ops,
+                output_format,
+                query,
+            };
+            create_attachment(&params, file).await
+        }
         TgwCommands::AttachmentCreateWithId {
             subscription_id,
             tgw_id,
+            async_ops,
         } => {
-            create_attachment_with_id(&client, *subscription_id, tgw_id, output_format, query).await
+            let params = ConnectivityOperationParams {
+                conn_mgr,
+                profile_name,
+                client: &client,
+                subscription_id: *subscription_id,
+                async_ops,
+                output_format,
+                query,
+            };
+            create_attachment_with_id(&params, tgw_id).await
         }
         TgwCommands::AttachmentUpdate {
             subscription_id,
             attachment_id,
             file,
+            async_ops,
         } => {
-            update_attachment_cidrs(
-                &client,
-                *subscription_id,
-                attachment_id,
-                file,
+            let params = ConnectivityOperationParams {
+                conn_mgr,
+                profile_name,
+                client: &client,
+                subscription_id: *subscription_id,
+                async_ops,
                 output_format,
                 query,
-            )
-            .await
+            };
+            update_attachment_cidrs(&params, attachment_id, file).await
         }
         TgwCommands::AttachmentDelete {
             subscription_id,
             attachment_id,
             yes,
-        } => delete_attachment(&client, *subscription_id, attachment_id, *yes).await,
+            async_ops,
+        } => {
+            let params = ConnectivityOperationParams {
+                conn_mgr,
+                profile_name,
+                client: &client,
+                subscription_id: *subscription_id,
+                async_ops,
+                output_format,
+                query,
+            };
+            delete_attachment(&params, attachment_id, *yes).await
+        }
         TgwCommands::InvitationsList { subscription_id } => {
             list_invitations(&client, *subscription_id, output_format, query).await
         }
@@ -98,40 +136,55 @@ pub async fn handle_tgw_command(
             subscription_id,
             region_id,
             file,
+            async_ops,
         } => {
-            create_attachment_aa(
-                &client,
-                *subscription_id,
-                *region_id,
-                file,
+            let params = ConnectivityOperationParams {
+                conn_mgr,
+                profile_name,
+                client: &client,
+                subscription_id: *subscription_id,
+                async_ops,
                 output_format,
                 query,
-            )
-            .await
+            };
+            create_attachment_aa(&params, *region_id, file).await
         }
         TgwCommands::AaAttachmentUpdate {
             subscription_id,
             region_id,
             attachment_id,
             file,
+            async_ops,
         } => {
-            update_attachment_cidrs_aa(
-                &client,
-                *subscription_id,
-                *region_id,
-                attachment_id,
-                file,
+            let params = ConnectivityOperationParams {
+                conn_mgr,
+                profile_name,
+                client: &client,
+                subscription_id: *subscription_id,
+                async_ops,
                 output_format,
                 query,
-            )
-            .await
+            };
+            update_attachment_cidrs_aa(&params, *region_id, attachment_id, file).await
         }
         TgwCommands::AaAttachmentDelete {
             subscription_id,
             region_id,
             attachment_id,
             yes,
-        } => delete_attachment_aa(&client, *subscription_id, *region_id, attachment_id, *yes).await,
+            async_ops,
+        } => {
+            let params = ConnectivityOperationParams {
+                conn_mgr,
+                profile_name,
+                client: &client,
+                subscription_id: *subscription_id,
+                async_ops,
+                output_format,
+                query,
+            };
+            delete_attachment_aa(&params, *region_id, attachment_id, *yes).await
+        }
         TgwCommands::AaInvitationsList { subscription_id } => {
             list_invitations_aa(&client, *subscription_id, output_format, query).await
         }
@@ -190,109 +243,93 @@ async fn list_attachments(
     Ok(())
 }
 
-async fn create_attachment(
-    client: &CloudClient,
-    subscription_id: i32,
-    file: &str,
-    output_format: OutputFormat,
-    query: Option<&str>,
-) -> CliResult<()> {
+async fn create_attachment(params: &ConnectivityOperationParams<'_>, file: &str) -> CliResult<()> {
     let json_string = read_file_input(file)?;
     let request: TgwAttachmentRequest =
         serde_json::from_str(&json_string).context("Invalid TGW attachment configuration")?;
 
-    let handler = TransitGatewayHandler::new(client.clone());
+    let handler = TransitGatewayHandler::new(params.client.clone());
     let response = handler
-        .create_attachment(subscription_id, &request)
+        .create_attachment(params.subscription_id, &request)
         .await
         .context("Failed to create TGW attachment")?;
 
-    // Convert response to JSON and check for task ID
     let json_response = serde_json::to_value(&response).context("Failed to serialize response")?;
-    if let Some(task_id) = json_response.get("taskId").and_then(|v| v.as_str()) {
-        eprintln!("TGW attachment creation initiated. Task ID: {}", task_id);
-        eprintln!(
-            "Use 'redisctl cloud task wait {}' to monitor progress",
-            task_id
-        );
-    }
 
-    let data = handle_output(json_response, output_format, query)?;
-    print_formatted_output(data, output_format)?;
-    Ok(())
+    handle_async_response(
+        params.conn_mgr,
+        params.profile_name,
+        json_response,
+        params.async_ops,
+        params.output_format,
+        params.query,
+        "TGW attachment created successfully",
+    )
+    .await
 }
 
 async fn create_attachment_with_id(
-    client: &CloudClient,
-    subscription_id: i32,
+    params: &ConnectivityOperationParams<'_>,
     tgw_id: &str,
-    output_format: OutputFormat,
-    query: Option<&str>,
 ) -> CliResult<()> {
-    let handler = TransitGatewayHandler::new(client.clone());
+    let handler = TransitGatewayHandler::new(params.client.clone());
     let response = handler
-        .create_attachment_with_id(subscription_id, tgw_id)
+        .create_attachment_with_id(params.subscription_id, tgw_id)
         .await
         .context("Failed to create TGW attachment")?;
 
-    // Convert response to JSON and check for task ID
     let json_response = serde_json::to_value(&response).context("Failed to serialize response")?;
-    if let Some(task_id) = json_response.get("taskId").and_then(|v| v.as_str()) {
-        eprintln!("TGW attachment creation initiated. Task ID: {}", task_id);
-        eprintln!(
-            "Use 'redisctl cloud task wait {}' to monitor progress",
-            task_id
-        );
-    }
 
-    let data = handle_output(json_response, output_format, query)?;
-    print_formatted_output(data, output_format)?;
-    Ok(())
+    handle_async_response(
+        params.conn_mgr,
+        params.profile_name,
+        json_response,
+        params.async_ops,
+        params.output_format,
+        params.query,
+        "TGW attachment created successfully",
+    )
+    .await
 }
 
 async fn update_attachment_cidrs(
-    client: &CloudClient,
-    subscription_id: i32,
+    params: &ConnectivityOperationParams<'_>,
     attachment_id: &str,
     file: &str,
-    output_format: OutputFormat,
-    query: Option<&str>,
 ) -> CliResult<()> {
     let json_string = read_file_input(file)?;
     let request: TgwAttachmentRequest = serde_json::from_str(&json_string)
         .context("Invalid TGW attachment update configuration")?;
 
-    let handler = TransitGatewayHandler::new(client.clone());
+    let handler = TransitGatewayHandler::new(params.client.clone());
     let response = handler
-        .update_attachment_cidrs(subscription_id, attachment_id.to_string(), &request)
+        .update_attachment_cidrs(params.subscription_id, attachment_id.to_string(), &request)
         .await
         .context("Failed to update TGW attachment CIDRs")?;
 
-    // Convert response to JSON and check for task ID
     let json_response = serde_json::to_value(&response).context("Failed to serialize response")?;
-    if let Some(task_id) = json_response.get("taskId").and_then(|v| v.as_str()) {
-        eprintln!("TGW attachment update initiated. Task ID: {}", task_id);
-        eprintln!(
-            "Use 'redisctl cloud task wait {}' to monitor progress",
-            task_id
-        );
-    }
 
-    let data = handle_output(json_response, output_format, query)?;
-    print_formatted_output(data, output_format)?;
-    Ok(())
+    handle_async_response(
+        params.conn_mgr,
+        params.profile_name,
+        json_response,
+        params.async_ops,
+        params.output_format,
+        params.query,
+        "TGW attachment updated successfully",
+    )
+    .await
 }
 
 async fn delete_attachment(
-    client: &CloudClient,
-    subscription_id: i32,
+    params: &ConnectivityOperationParams<'_>,
     attachment_id: &str,
     yes: bool,
 ) -> CliResult<()> {
     if !yes {
         let prompt = format!(
             "Delete TGW attachment {} for subscription {}?",
-            attachment_id, subscription_id
+            attachment_id, params.subscription_id
         );
         if !confirm_action(&prompt)? {
             eprintln!("Operation cancelled");
@@ -300,9 +337,9 @@ async fn delete_attachment(
         }
     }
 
-    let handler = TransitGatewayHandler::new(client.clone());
+    let handler = TransitGatewayHandler::new(params.client.clone());
     handler
-        .delete_attachment(subscription_id, attachment_id.to_string())
+        .delete_attachment(params.subscription_id, attachment_id.to_string())
         .await
         .context("Failed to delete TGW attachment")?;
 
@@ -398,58 +435,48 @@ async fn list_attachments_aa(
 }
 
 async fn create_attachment_aa(
-    client: &CloudClient,
-    subscription_id: i32,
+    params: &ConnectivityOperationParams<'_>,
     region_id: i32,
     file: &str,
-    output_format: OutputFormat,
-    query: Option<&str>,
 ) -> CliResult<()> {
     let json_string = read_file_input(file)?;
     let request: TgwAttachmentRequest = serde_json::from_str(&json_string)
         .context("Invalid Active-Active TGW attachment configuration")?;
 
-    let handler = TransitGatewayHandler::new(client.clone());
+    let handler = TransitGatewayHandler::new(params.client.clone());
     let response = handler
-        .create_attachment_active_active(subscription_id, region_id, &request)
+        .create_attachment_active_active(params.subscription_id, region_id, &request)
         .await
         .context("Failed to create Active-Active TGW attachment")?;
 
-    // Convert response to JSON and check for task ID
     let json_response = serde_json::to_value(&response).context("Failed to serialize response")?;
-    if let Some(task_id) = json_response.get("taskId").and_then(|v| v.as_str()) {
-        eprintln!(
-            "Active-Active TGW attachment creation initiated. Task ID: {}",
-            task_id
-        );
-        eprintln!(
-            "Use 'redisctl cloud task wait {}' to monitor progress",
-            task_id
-        );
-    }
 
-    let data = handle_output(json_response, output_format, query)?;
-    print_formatted_output(data, output_format)?;
-    Ok(())
+    handle_async_response(
+        params.conn_mgr,
+        params.profile_name,
+        json_response,
+        params.async_ops,
+        params.output_format,
+        params.query,
+        "Active-Active TGW attachment created successfully",
+    )
+    .await
 }
 
 async fn update_attachment_cidrs_aa(
-    client: &CloudClient,
-    subscription_id: i32,
+    params: &ConnectivityOperationParams<'_>,
     region_id: i32,
     attachment_id: &str,
     file: &str,
-    output_format: OutputFormat,
-    query: Option<&str>,
 ) -> CliResult<()> {
     let json_string = read_file_input(file)?;
     let request: TgwAttachmentRequest = serde_json::from_str(&json_string)
         .context("Invalid Active-Active TGW attachment update configuration")?;
 
-    let handler = TransitGatewayHandler::new(client.clone());
+    let handler = TransitGatewayHandler::new(params.client.clone());
     let response = handler
         .update_attachment_cidrs_active_active(
-            subscription_id,
+            params.subscription_id,
             region_id,
             attachment_id.to_string(),
             &request,
@@ -457,27 +484,22 @@ async fn update_attachment_cidrs_aa(
         .await
         .context("Failed to update Active-Active TGW attachment CIDRs")?;
 
-    // Convert response to JSON and check for task ID
     let json_response = serde_json::to_value(&response).context("Failed to serialize response")?;
-    if let Some(task_id) = json_response.get("taskId").and_then(|v| v.as_str()) {
-        eprintln!(
-            "Active-Active TGW attachment update initiated. Task ID: {}",
-            task_id
-        );
-        eprintln!(
-            "Use 'redisctl cloud task wait {}' to monitor progress",
-            task_id
-        );
-    }
 
-    let data = handle_output(json_response, output_format, query)?;
-    print_formatted_output(data, output_format)?;
-    Ok(())
+    handle_async_response(
+        params.conn_mgr,
+        params.profile_name,
+        json_response,
+        params.async_ops,
+        params.output_format,
+        params.query,
+        "Active-Active TGW attachment updated successfully",
+    )
+    .await
 }
 
 async fn delete_attachment_aa(
-    client: &CloudClient,
-    subscription_id: i32,
+    params: &ConnectivityOperationParams<'_>,
     region_id: i32,
     attachment_id: &str,
     yes: bool,
@@ -485,7 +507,7 @@ async fn delete_attachment_aa(
     if !yes {
         let prompt = format!(
             "Delete Active-Active TGW attachment {} in region {} for subscription {}?",
-            attachment_id, region_id, subscription_id
+            attachment_id, region_id, params.subscription_id
         );
         if !confirm_action(&prompt)? {
             eprintln!("Operation cancelled");
@@ -493,9 +515,13 @@ async fn delete_attachment_aa(
         }
     }
 
-    let handler = TransitGatewayHandler::new(client.clone());
+    let handler = TransitGatewayHandler::new(params.client.clone());
     handler
-        .delete_attachment_active_active(subscription_id, region_id, attachment_id.to_string())
+        .delete_attachment_active_active(
+            params.subscription_id,
+            region_id,
+            attachment_id.to_string(),
+        )
         .await
         .context("Failed to delete Active-Active TGW attachment")?;
 

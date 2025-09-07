@@ -2,7 +2,9 @@
 
 #![allow(dead_code)]
 
+use super::ConnectivityOperationParams;
 use crate::cli::{OutputFormat, PscCommands};
+use crate::commands::cloud::async_utils::handle_async_response;
 use crate::commands::cloud::utils::{
     confirm_action, handle_output, print_formatted_output, read_file_input,
 };
@@ -30,13 +32,37 @@ pub async fn handle_psc_command(
         PscCommands::ServiceGet { subscription_id } => {
             get_service(&client, *subscription_id, output_format, query).await
         }
-        PscCommands::ServiceCreate { subscription_id } => {
-            create_service(&client, *subscription_id, output_format, query).await
+        PscCommands::ServiceCreate {
+            subscription_id,
+            async_ops,
+        } => {
+            let params = ConnectivityOperationParams {
+                conn_mgr,
+                profile_name,
+                client: &client,
+                subscription_id: *subscription_id,
+                async_ops,
+                output_format,
+                query,
+            };
+            create_service(&params).await
         }
         PscCommands::ServiceDelete {
             subscription_id,
             yes,
-        } => delete_service(&client, *subscription_id, *yes).await,
+            async_ops,
+        } => {
+            let params = ConnectivityOperationParams {
+                conn_mgr,
+                profile_name,
+                client: &client,
+                subscription_id: *subscription_id,
+                async_ops,
+                output_format,
+                query,
+            };
+            delete_service(&params, *yes).await
+        }
 
         // Standard PSC Endpoint operations
         PscCommands::EndpointsList { subscription_id } => {
@@ -45,27 +71,53 @@ pub async fn handle_psc_command(
         PscCommands::EndpointCreate {
             subscription_id,
             file,
-        } => create_endpoint(&client, *subscription_id, file, output_format, query).await,
+            async_ops,
+        } => {
+            let params = ConnectivityOperationParams {
+                conn_mgr,
+                profile_name,
+                client: &client,
+                subscription_id: *subscription_id,
+                async_ops,
+                output_format,
+                query,
+            };
+            create_endpoint(&params, file).await
+        }
         PscCommands::EndpointUpdate {
             subscription_id,
             endpoint_id,
             file,
+            async_ops,
         } => {
-            update_endpoint(
-                &client,
-                *subscription_id,
-                *endpoint_id,
-                file,
+            let params = ConnectivityOperationParams {
+                conn_mgr,
+                profile_name,
+                client: &client,
+                subscription_id: *subscription_id,
+                async_ops,
                 output_format,
                 query,
-            )
-            .await
+            };
+            update_endpoint(&params, *endpoint_id, file).await
         }
         PscCommands::EndpointDelete {
             subscription_id,
             endpoint_id,
             yes,
-        } => delete_endpoint(&client, *subscription_id, *endpoint_id, *yes).await,
+            async_ops,
+        } => {
+            let params = ConnectivityOperationParams {
+                conn_mgr,
+                profile_name,
+                client: &client,
+                subscription_id: *subscription_id,
+                async_ops,
+                output_format,
+                query,
+            };
+            delete_endpoint(&params, *endpoint_id, *yes).await
+        }
         PscCommands::EndpointCreationScript {
             subscription_id,
             endpoint_id,
@@ -79,13 +131,37 @@ pub async fn handle_psc_command(
         PscCommands::AaServiceGet { subscription_id } => {
             get_service_aa(&client, *subscription_id, output_format, query).await
         }
-        PscCommands::AaServiceCreate { subscription_id } => {
-            create_service_aa(&client, *subscription_id, output_format, query).await
+        PscCommands::AaServiceCreate {
+            subscription_id,
+            async_ops,
+        } => {
+            let params = ConnectivityOperationParams {
+                conn_mgr,
+                profile_name,
+                client: &client,
+                subscription_id: *subscription_id,
+                async_ops,
+                output_format,
+                query,
+            };
+            create_service_aa(&params).await
         }
         PscCommands::AaServiceDelete {
             subscription_id,
             yes,
-        } => delete_service_aa(&client, *subscription_id, *yes).await,
+            async_ops,
+        } => {
+            let params = ConnectivityOperationParams {
+                conn_mgr,
+                profile_name,
+                client: &client,
+                subscription_id: *subscription_id,
+                async_ops,
+                output_format,
+                query,
+            };
+            delete_service_aa(&params, *yes).await
+        }
 
         // Active-Active PSC Endpoint operations
         PscCommands::AaEndpointsList { subscription_id } => {
@@ -94,13 +170,37 @@ pub async fn handle_psc_command(
         PscCommands::AaEndpointCreate {
             subscription_id,
             file,
-        } => create_endpoint_aa(&client, *subscription_id, file, output_format, query).await,
+            async_ops,
+        } => {
+            let params = ConnectivityOperationParams {
+                conn_mgr,
+                profile_name,
+                client: &client,
+                subscription_id: *subscription_id,
+                async_ops,
+                output_format,
+                query,
+            };
+            create_endpoint_aa(&params, file).await
+        }
         PscCommands::AaEndpointDelete {
             subscription_id,
             region_id,
             endpoint_id,
             yes,
-        } => delete_endpoint_aa(&client, *subscription_id, *region_id, *endpoint_id, *yes).await,
+            async_ops,
+        } => {
+            let params = ConnectivityOperationParams {
+                conn_mgr,
+                profile_name,
+                client: &client,
+                subscription_id: *subscription_id,
+                async_ops,
+                output_format,
+                query,
+            };
+            delete_endpoint_aa(&params, *region_id, *endpoint_id, *yes).await
+        }
     }
 }
 
@@ -126,50 +226,57 @@ async fn get_service(
     Ok(())
 }
 
-async fn create_service(
-    client: &CloudClient,
-    subscription_id: i32,
-    output_format: OutputFormat,
-    query: Option<&str>,
-) -> CliResult<()> {
-    let handler = PscHandler::new(client.clone());
+async fn create_service(params: &ConnectivityOperationParams<'_>) -> CliResult<()> {
+    let handler = PscHandler::new(params.client.clone());
     let response = handler
-        .create_service(subscription_id)
+        .create_service(params.subscription_id)
         .await
         .context("Failed to create PSC service")?;
 
-    // Convert response to JSON and check for task ID
     let json_response = serde_json::to_value(&response).context("Failed to serialize response")?;
-    if let Some(task_id) = json_response.get("taskId").and_then(|v| v.as_str()) {
-        eprintln!("PSC service creation initiated. Task ID: {}", task_id);
-        eprintln!(
-            "Use 'redisctl cloud task wait {}' to monitor progress",
-            task_id
-        );
-    }
 
-    let data = handle_output(json_response, output_format, query)?;
-    print_formatted_output(data, output_format)?;
-    Ok(())
+    handle_async_response(
+        params.conn_mgr,
+        params.profile_name,
+        json_response,
+        params.async_ops,
+        params.output_format,
+        params.query,
+        "PSC service created successfully",
+    )
+    .await
 }
 
-async fn delete_service(client: &CloudClient, subscription_id: i32, yes: bool) -> CliResult<()> {
+async fn delete_service(params: &ConnectivityOperationParams<'_>, yes: bool) -> CliResult<()> {
     if !yes {
-        let prompt = format!("Delete PSC service for subscription {}?", subscription_id);
+        let prompt = format!(
+            "Delete PSC service for subscription {}?",
+            params.subscription_id
+        );
         if !confirm_action(&prompt)? {
             eprintln!("Operation cancelled");
             return Ok(());
         }
     }
 
-    let handler = PscHandler::new(client.clone());
-    handler
-        .delete_service(subscription_id)
+    let handler = PscHandler::new(params.client.clone());
+    let response = handler
+        .delete_service(params.subscription_id)
         .await
         .context("Failed to delete PSC service")?;
 
-    eprintln!("PSC service deleted successfully");
-    Ok(())
+    let json_response = serde_json::to_value(&response).context("Failed to serialize response")?;
+
+    handle_async_response(
+        params.conn_mgr,
+        params.profile_name,
+        json_response,
+        params.async_ops,
+        params.output_format,
+        params.query,
+        "PSC service deleted successfully",
+    )
+    .await
 }
 
 // ============================================================================
@@ -194,88 +301,76 @@ async fn get_endpoints(
     Ok(())
 }
 
-async fn create_endpoint(
-    client: &CloudClient,
-    subscription_id: i32,
-    file: &str,
-    output_format: OutputFormat,
-    query: Option<&str>,
-) -> CliResult<()> {
+async fn create_endpoint(params: &ConnectivityOperationParams<'_>, file: &str) -> CliResult<()> {
     let json_string = read_file_input(file)?;
     let mut request: PscEndpointUpdateRequest =
         serde_json::from_str(&json_string).context("Invalid PSC endpoint configuration")?;
 
     // Ensure subscription_id is set
-    request.subscription_id = subscription_id;
+    request.subscription_id = params.subscription_id;
 
-    let handler = PscHandler::new(client.clone());
+    let handler = PscHandler::new(params.client.clone());
     let response = handler
-        .create_endpoint(subscription_id, &request)
+        .create_endpoint(params.subscription_id, &request)
         .await
         .context("Failed to create PSC endpoint")?;
 
-    // Convert response to JSON and check for task ID
     let json_response = serde_json::to_value(&response).context("Failed to serialize response")?;
-    if let Some(task_id) = json_response.get("taskId").and_then(|v| v.as_str()) {
-        eprintln!("PSC endpoint creation initiated. Task ID: {}", task_id);
-        eprintln!(
-            "Use 'redisctl cloud task wait {}' to monitor progress",
-            task_id
-        );
-    }
 
-    let data = handle_output(json_response, output_format, query)?;
-    print_formatted_output(data, output_format)?;
-    Ok(())
+    handle_async_response(
+        params.conn_mgr,
+        params.profile_name,
+        json_response,
+        params.async_ops,
+        params.output_format,
+        params.query,
+        "PSC endpoint created successfully",
+    )
+    .await
 }
 
 async fn update_endpoint(
-    client: &CloudClient,
-    subscription_id: i32,
+    params: &ConnectivityOperationParams<'_>,
     endpoint_id: i32,
     file: &str,
-    output_format: OutputFormat,
-    query: Option<&str>,
 ) -> CliResult<()> {
     let json_string = read_file_input(file)?;
     let mut request: PscEndpointUpdateRequest =
         serde_json::from_str(&json_string).context("Invalid PSC endpoint configuration")?;
 
     // Ensure IDs are set
-    request.subscription_id = subscription_id;
+    request.subscription_id = params.subscription_id;
     request.endpoint_id = endpoint_id;
 
-    let handler = PscHandler::new(client.clone());
+    let handler = PscHandler::new(params.client.clone());
     let response = handler
-        .update_endpoint(subscription_id, endpoint_id, &request)
+        .update_endpoint(params.subscription_id, endpoint_id, &request)
         .await
         .context("Failed to update PSC endpoint")?;
 
-    // Convert response to JSON and check for task ID
     let json_response = serde_json::to_value(&response).context("Failed to serialize response")?;
-    if let Some(task_id) = json_response.get("taskId").and_then(|v| v.as_str()) {
-        eprintln!("PSC endpoint update initiated. Task ID: {}", task_id);
-        eprintln!(
-            "Use 'redisctl cloud task wait {}' to monitor progress",
-            task_id
-        );
-    }
 
-    let data = handle_output(json_response, output_format, query)?;
-    print_formatted_output(data, output_format)?;
-    Ok(())
+    handle_async_response(
+        params.conn_mgr,
+        params.profile_name,
+        json_response,
+        params.async_ops,
+        params.output_format,
+        params.query,
+        "PSC endpoint updated successfully",
+    )
+    .await
 }
 
 async fn delete_endpoint(
-    client: &CloudClient,
-    subscription_id: i32,
+    params: &ConnectivityOperationParams<'_>,
     endpoint_id: i32,
     yes: bool,
 ) -> CliResult<()> {
     if !yes {
         let prompt = format!(
             "Delete PSC endpoint {} for subscription {}?",
-            endpoint_id, subscription_id
+            endpoint_id, params.subscription_id
         );
         if !confirm_action(&prompt)? {
             eprintln!("Operation cancelled");
@@ -283,14 +378,24 @@ async fn delete_endpoint(
         }
     }
 
-    let handler = PscHandler::new(client.clone());
-    handler
-        .delete_endpoint(subscription_id, endpoint_id)
+    let handler = PscHandler::new(params.client.clone());
+    let response = handler
+        .delete_endpoint(params.subscription_id, endpoint_id)
         .await
         .context("Failed to delete PSC endpoint")?;
 
-    eprintln!("PSC endpoint deleted successfully");
-    Ok(())
+    let json_response = serde_json::to_value(&response).context("Failed to serialize response")?;
+
+    handle_async_response(
+        params.conn_mgr,
+        params.profile_name,
+        json_response,
+        params.async_ops,
+        params.output_format,
+        params.query,
+        "PSC endpoint deleted successfully",
+    )
+    .await
 }
 
 async fn get_endpoint_creation_script(
@@ -347,41 +452,32 @@ async fn get_service_aa(
     Ok(())
 }
 
-async fn create_service_aa(
-    client: &CloudClient,
-    subscription_id: i32,
-    output_format: OutputFormat,
-    query: Option<&str>,
-) -> CliResult<()> {
-    let handler = PscHandler::new(client.clone());
+async fn create_service_aa(params: &ConnectivityOperationParams<'_>) -> CliResult<()> {
+    let handler = PscHandler::new(params.client.clone());
     let response = handler
-        .create_service_active_active(subscription_id)
+        .create_service_active_active(params.subscription_id)
         .await
         .context("Failed to create Active-Active PSC service")?;
 
-    // Convert response to JSON and check for task ID
     let json_response = serde_json::to_value(&response).context("Failed to serialize response")?;
-    if let Some(task_id) = json_response.get("taskId").and_then(|v| v.as_str()) {
-        eprintln!(
-            "Active-Active PSC service creation initiated. Task ID: {}",
-            task_id
-        );
-        eprintln!(
-            "Use 'redisctl cloud task wait {}' to monitor progress",
-            task_id
-        );
-    }
 
-    let data = handle_output(json_response, output_format, query)?;
-    print_formatted_output(data, output_format)?;
-    Ok(())
+    handle_async_response(
+        params.conn_mgr,
+        params.profile_name,
+        json_response,
+        params.async_ops,
+        params.output_format,
+        params.query,
+        "Active-Active PSC service created successfully",
+    )
+    .await
 }
 
-async fn delete_service_aa(client: &CloudClient, subscription_id: i32, yes: bool) -> CliResult<()> {
+async fn delete_service_aa(params: &ConnectivityOperationParams<'_>, yes: bool) -> CliResult<()> {
     if !yes {
         let prompt = format!(
             "Delete Active-Active PSC service for subscription {}?",
-            subscription_id
+            params.subscription_id
         );
         if !confirm_action(&prompt)? {
             eprintln!("Operation cancelled");
@@ -389,14 +485,24 @@ async fn delete_service_aa(client: &CloudClient, subscription_id: i32, yes: bool
         }
     }
 
-    let handler = PscHandler::new(client.clone());
-    handler
-        .delete_service_active_active(subscription_id)
+    let handler = PscHandler::new(params.client.clone());
+    let response = handler
+        .delete_service_active_active(params.subscription_id)
         .await
         .context("Failed to delete Active-Active PSC service")?;
 
-    eprintln!("Active-Active PSC service deleted successfully");
-    Ok(())
+    let json_response = serde_json::to_value(&response).context("Failed to serialize response")?;
+
+    handle_async_response(
+        params.conn_mgr,
+        params.profile_name,
+        json_response,
+        params.async_ops,
+        params.output_format,
+        params.query,
+        "Active-Active PSC service deleted successfully",
+    )
+    .await
 }
 
 // ============================================================================
@@ -421,47 +527,36 @@ async fn get_endpoints_aa(
     Ok(())
 }
 
-async fn create_endpoint_aa(
-    client: &CloudClient,
-    subscription_id: i32,
-    file: &str,
-    output_format: OutputFormat,
-    query: Option<&str>,
-) -> CliResult<()> {
+async fn create_endpoint_aa(params: &ConnectivityOperationParams<'_>, file: &str) -> CliResult<()> {
     let json_string = read_file_input(file)?;
     let mut request: PscEndpointUpdateRequest = serde_json::from_str(&json_string)
         .context("Invalid Active-Active PSC endpoint configuration")?;
 
     // Ensure subscription_id is set
-    request.subscription_id = subscription_id;
+    request.subscription_id = params.subscription_id;
 
-    let handler = PscHandler::new(client.clone());
+    let handler = PscHandler::new(params.client.clone());
     let response = handler
-        .create_endpoint_active_active(subscription_id, &request)
+        .create_endpoint_active_active(params.subscription_id, &request)
         .await
         .context("Failed to create Active-Active PSC endpoint")?;
 
-    // Convert response to JSON and check for task ID
     let json_response = serde_json::to_value(&response).context("Failed to serialize response")?;
-    if let Some(task_id) = json_response.get("taskId").and_then(|v| v.as_str()) {
-        eprintln!(
-            "Active-Active PSC endpoint creation initiated. Task ID: {}",
-            task_id
-        );
-        eprintln!(
-            "Use 'redisctl cloud task wait {}' to monitor progress",
-            task_id
-        );
-    }
 
-    let data = handle_output(json_response, output_format, query)?;
-    print_formatted_output(data, output_format)?;
-    Ok(())
+    handle_async_response(
+        params.conn_mgr,
+        params.profile_name,
+        json_response,
+        params.async_ops,
+        params.output_format,
+        params.query,
+        "Active-Active PSC endpoint created successfully",
+    )
+    .await
 }
 
 async fn delete_endpoint_aa(
-    client: &CloudClient,
-    subscription_id: i32,
+    params: &ConnectivityOperationParams<'_>,
     region_id: i32,
     endpoint_id: i32,
     yes: bool,
@@ -469,7 +564,7 @@ async fn delete_endpoint_aa(
     if !yes {
         let prompt = format!(
             "Delete Active-Active PSC endpoint {} in region {} for subscription {}?",
-            endpoint_id, region_id, subscription_id
+            endpoint_id, region_id, params.subscription_id
         );
         if !confirm_action(&prompt)? {
             eprintln!("Operation cancelled");
@@ -477,12 +572,22 @@ async fn delete_endpoint_aa(
         }
     }
 
-    let handler = PscHandler::new(client.clone());
-    handler
-        .delete_endpoint_active_active(subscription_id, region_id, endpoint_id)
+    let handler = PscHandler::new(params.client.clone());
+    let response = handler
+        .delete_endpoint_active_active(params.subscription_id, region_id, endpoint_id)
         .await
         .context("Failed to delete Active-Active PSC endpoint")?;
 
-    eprintln!("Active-Active PSC endpoint deleted successfully");
-    Ok(())
+    let json_response = serde_json::to_value(&response).context("Failed to serialize response")?;
+
+    handle_async_response(
+        params.conn_mgr,
+        params.profile_name,
+        json_response,
+        params.async_ops,
+        params.output_format,
+        params.query,
+        "Active-Active PSC endpoint deleted successfully",
+    )
+    .await
 }

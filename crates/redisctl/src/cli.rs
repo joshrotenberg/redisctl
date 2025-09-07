@@ -220,6 +220,8 @@ pub enum VpcPeeringCommands {
         subscription: i32,
         /// Configuration JSON file or string (use @filename for file)
         data: String,
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Update VPC peering
     Update {
@@ -231,6 +233,8 @@ pub enum VpcPeeringCommands {
         peering_id: i32,
         /// Configuration JSON file or string (use @filename for file)
         data: String,
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Delete VPC peering
     Delete {
@@ -243,6 +247,8 @@ pub enum VpcPeeringCommands {
         /// Skip confirmation prompt
         #[arg(long)]
         force: bool,
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// List Active-Active VPC peerings
     #[command(name = "list-aa")]
@@ -259,6 +265,8 @@ pub enum VpcPeeringCommands {
         subscription: i32,
         /// Configuration JSON file or string (use @filename for file)
         data: String,
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Update Active-Active VPC peering
     #[command(name = "update-aa")]
@@ -271,6 +279,8 @@ pub enum VpcPeeringCommands {
         peering_id: i32,
         /// Configuration JSON file or string (use @filename for file)
         data: String,
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Delete Active-Active VPC peering
     #[command(name = "delete-aa")]
@@ -284,6 +294,8 @@ pub enum VpcPeeringCommands {
         /// Skip confirmation prompt
         #[arg(long)]
         force: bool,
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 }
 
@@ -302,6 +314,8 @@ pub enum PscCommands {
     ServiceCreate {
         /// Subscription ID
         subscription_id: i32,
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Delete PSC service
     #[command(name = "service-delete")]
@@ -311,6 +325,8 @@ pub enum PscCommands {
         /// Skip confirmation prompt
         #[arg(short, long)]
         yes: bool,
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 
     // Standard PSC Endpoint operations
@@ -327,6 +343,8 @@ pub enum PscCommands {
         subscription_id: i32,
         /// JSON file with endpoint configuration (use @filename or - for stdin)
         file: String,
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Update PSC endpoint
     #[command(name = "endpoint-update")]
@@ -337,6 +355,8 @@ pub enum PscCommands {
         endpoint_id: i32,
         /// JSON file with endpoint configuration (use @filename or - for stdin)
         file: String,
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Delete PSC endpoint
     #[command(name = "endpoint-delete")]
@@ -348,6 +368,8 @@ pub enum PscCommands {
         /// Skip confirmation prompt
         #[arg(short, long)]
         yes: bool,
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Get PSC endpoint creation script
     #[command(name = "endpoint-creation-script")]
@@ -378,6 +400,8 @@ pub enum PscCommands {
     AaServiceCreate {
         /// Subscription ID
         subscription_id: i32,
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Delete Active-Active PSC service
     #[command(name = "aa-service-delete")]
@@ -387,6 +411,8 @@ pub enum PscCommands {
         /// Skip confirmation prompt
         #[arg(short, long)]
         yes: bool,
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 
     // Active-Active PSC Endpoint operations
@@ -403,6 +429,8 @@ pub enum PscCommands {
         subscription_id: i32,
         /// JSON file with endpoint configuration (use @filename or - for stdin)
         file: String,
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Delete Active-Active PSC endpoint
     #[command(name = "aa-endpoint-delete")]
@@ -416,6 +444,8 @@ pub enum PscCommands {
         /// Skip confirmation prompt
         #[arg(short, long)]
         yes: bool,
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 }
 
@@ -436,6 +466,8 @@ pub enum TgwCommands {
         subscription_id: i32,
         /// JSON file with attachment configuration (use @filename or - for stdin)
         file: String,
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Create TGW attachment with ID in path
     #[command(name = "attachment-create-with-id")]
@@ -444,6 +476,8 @@ pub enum TgwCommands {
         subscription_id: i32,
         /// Transit Gateway ID
         tgw_id: String,
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Update TGW attachment CIDRs
     #[command(name = "attachment-update")]
@@ -454,6 +488,8 @@ pub enum TgwCommands {
         attachment_id: String,
         /// JSON file with CIDR configuration (use @filename or - for stdin)
         file: String,
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Delete TGW attachment
     #[command(name = "attachment-delete")]
@@ -465,6 +501,8 @@ pub enum TgwCommands {
         /// Skip confirmation prompt
         #[arg(short, long)]
         yes: bool,
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 
     // Standard TGW Invitation operations
@@ -507,6 +545,8 @@ pub enum TgwCommands {
         region_id: i32,
         /// JSON file with attachment configuration (use @filename or - for stdin)
         file: String,
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Update Active-Active TGW attachment CIDRs
     #[command(name = "aa-attachment-update")]
@@ -519,6 +559,8 @@ pub enum TgwCommands {
         attachment_id: String,
         /// JSON file with CIDR configuration (use @filename or - for stdin)
         file: String,
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Delete Active-Active TGW attachment
     #[command(name = "aa-attachment-delete")]
@@ -532,6 +574,8 @@ pub enum TgwCommands {
         /// Skip confirmation prompt
         #[arg(short, long)]
         yes: bool,
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 
     // Active-Active TGW Invitation operations
