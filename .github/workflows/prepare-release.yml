@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       bump:
-        description: 'Version bump type'
+        description: "Version bump type"
         required: true
         type: choice
         options:
@@ -12,7 +12,7 @@ on:
           - minor
           - major
       pre_release:
-        description: 'Pre-release tag (e.g., alpha, beta, rc)'
+        description: "Pre-release tag (e.g., alpha, beta, rc)"
         required: false
         type: string
 
@@ -79,11 +79,7 @@ jobs:
             sed -i 's/^version = ".*"/version = "${{ steps.version.outputs.new_version }}"/' "$crate"
           done
 
-          # Update internal dependencies
-          find . -name "Cargo.toml" -exec sed -i \
-            -e 's/redis-cloud = { version = ".*"/redis-cloud = { version = "${{ steps.version.outputs.new_version }}"/' \
-            -e 's/redis-enterprise = { version = ".*"/redis-enterprise = { version = "${{ steps.version.outputs.new_version }}"/' \
-            {} \;
+          # Note: Internal dependencies use path references in workspace, no need to update versions
 
       - name: Generate changelog
         run: |
