@@ -48,34 +48,49 @@ pub async fn handle_database_command(
         CloudDatabaseCommands::Get { id } => {
             get_database(conn_mgr, profile_name, id, output_format, query).await
         }
-        CloudDatabaseCommands::Create { subscription, data } => {
+        CloudDatabaseCommands::Create {
+            subscription,
+            data,
+            async_ops,
+        } => {
             super::database_impl::create_database(
                 conn_mgr,
                 profile_name,
                 *subscription,
                 data,
+                async_ops,
                 output_format,
                 query,
             )
             .await
         }
-        CloudDatabaseCommands::Update { id, data } => {
+        CloudDatabaseCommands::Update {
+            id,
+            data,
+            async_ops,
+        } => {
             super::database_impl::update_database(
                 conn_mgr,
                 profile_name,
                 id,
                 data,
+                async_ops,
                 output_format,
                 query,
             )
             .await
         }
-        CloudDatabaseCommands::Delete { id, force } => {
+        CloudDatabaseCommands::Delete {
+            id,
+            force,
+            async_ops,
+        } => {
             super::database_impl::delete_database(
                 conn_mgr,
                 profile_name,
                 id,
                 *force,
+                async_ops,
                 output_format,
                 query,
             )
@@ -91,9 +106,16 @@ pub async fn handle_database_command(
             )
             .await
         }
-        CloudDatabaseCommands::Backup { id } => {
-            super::database_impl::backup_database(conn_mgr, profile_name, id, output_format, query)
-                .await
+        CloudDatabaseCommands::Backup { id, async_ops } => {
+            super::database_impl::backup_database(
+                conn_mgr,
+                profile_name,
+                id,
+                async_ops,
+                output_format,
+                query,
+            )
+            .await
         }
         CloudDatabaseCommands::ImportStatus { id } => {
             super::database_impl::get_import_status(
@@ -105,12 +127,17 @@ pub async fn handle_database_command(
             )
             .await
         }
-        CloudDatabaseCommands::Import { id, data } => {
+        CloudDatabaseCommands::Import {
+            id,
+            data,
+            async_ops,
+        } => {
             super::database_impl::import_database(
                 conn_mgr,
                 profile_name,
                 id,
                 data,
+                async_ops,
                 output_format,
                 query,
             )

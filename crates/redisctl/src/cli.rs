@@ -1067,6 +1067,9 @@ pub enum CloudDatabaseCommands {
         /// Database configuration as JSON string or @file.json
         #[arg(long)]
         data: String,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 
     /// Update database configuration
@@ -1076,6 +1079,9 @@ pub enum CloudDatabaseCommands {
         /// Update configuration as JSON string or @file.json
         #[arg(long)]
         data: String,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 
     /// Delete a database
@@ -1085,6 +1091,9 @@ pub enum CloudDatabaseCommands {
         /// Skip confirmation prompt
         #[arg(long)]
         force: bool,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 
     /// Get database backup status
@@ -1097,6 +1106,9 @@ pub enum CloudDatabaseCommands {
     Backup {
         /// Database ID (format: subscription_id:database_id)
         id: String,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 
     /// Get database import status
@@ -1112,6 +1124,9 @@ pub enum CloudDatabaseCommands {
         /// Import configuration as JSON string or @file.json
         #[arg(long)]
         data: String,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 
     /// Get database certificate
