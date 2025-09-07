@@ -2,8 +2,9 @@
 
 #![allow(dead_code)]
 
+use super::ConnectivityOperationParams;
 use crate::cli::{OutputFormat, VpcPeeringCommands};
-use crate::commands::cloud::async_utils::{AsyncOperationArgs, handle_async_response};
+use crate::commands::cloud::async_utils::handle_async_response;
 use crate::commands::cloud::utils::{
     confirm_action, handle_output, print_formatted_output, read_file_input,
 };
@@ -33,17 +34,16 @@ pub async fn handle_vpc_peering_command(
             data,
             async_ops,
         } => {
-            handle_create(
+            let params = ConnectivityOperationParams {
                 conn_mgr,
                 profile_name,
-                &client,
-                *subscription,
-                data,
+                client: &client,
+                subscription_id: *subscription,
                 async_ops,
                 output_format,
                 query,
-            )
-            .await
+            };
+            handle_create(&params, data).await
         }
         VpcPeeringCommands::Update {
             subscription,
@@ -51,18 +51,16 @@ pub async fn handle_vpc_peering_command(
             data,
             async_ops,
         } => {
-            handle_update(
+            let params = ConnectivityOperationParams {
                 conn_mgr,
                 profile_name,
-                &client,
-                *subscription,
-                *peering_id,
-                data,
+                client: &client,
+                subscription_id: *subscription,
                 async_ops,
                 output_format,
                 query,
-            )
-            .await
+            };
+            handle_update(&params, *peering_id, data).await
         }
         VpcPeeringCommands::Delete {
             subscription,
@@ -70,18 +68,16 @@ pub async fn handle_vpc_peering_command(
             force,
             async_ops,
         } => {
-            handle_delete(
+            let params = ConnectivityOperationParams {
                 conn_mgr,
                 profile_name,
-                &client,
-                *subscription,
-                *peering_id,
-                *force,
+                client: &client,
+                subscription_id: *subscription,
                 async_ops,
                 output_format,
                 query,
-            )
-            .await
+            };
+            handle_delete(&params, *peering_id, *force).await
         }
         VpcPeeringCommands::ListActiveActive { subscription } => {
             handle_list_active_active(&client, *subscription, output_format, query).await
@@ -91,17 +87,16 @@ pub async fn handle_vpc_peering_command(
             data,
             async_ops,
         } => {
-            handle_create_active_active(
+            let params = ConnectivityOperationParams {
                 conn_mgr,
                 profile_name,
-                &client,
-                *subscription,
-                data,
+                client: &client,
+                subscription_id: *subscription,
                 async_ops,
                 output_format,
                 query,
-            )
-            .await
+            };
+            handle_create_active_active(&params, data).await
         }
         VpcPeeringCommands::UpdateActiveActive {
             subscription,
@@ -109,18 +104,16 @@ pub async fn handle_vpc_peering_command(
             data,
             async_ops,
         } => {
-            handle_update_active_active(
+            let params = ConnectivityOperationParams {
                 conn_mgr,
                 profile_name,
-                &client,
-                *subscription,
-                *peering_id,
-                data,
+                client: &client,
+                subscription_id: *subscription,
                 async_ops,
                 output_format,
                 query,
-            )
-            .await
+            };
+            handle_update_active_active(&params, *peering_id, data).await
         }
         VpcPeeringCommands::DeleteActiveActive {
             subscription,
@@ -128,18 +121,16 @@ pub async fn handle_vpc_peering_command(
             force,
             async_ops,
         } => {
-            handle_delete_active_active(
+            let params = ConnectivityOperationParams {
                 conn_mgr,
                 profile_name,
-                &client,
-                *subscription,
-                *peering_id,
-                *force,
+                client: &client,
+                subscription_id: *subscription,
                 async_ops,
                 output_format,
                 query,
-            )
-            .await
+            };
+            handle_delete_active_active(&params, *peering_id, *force).await
         }
     }
 }
@@ -168,34 +159,26 @@ async fn handle_get(
 }
 
 /// Create VPC peering
-async fn handle_create(
-    conn_mgr: &ConnectionManager,
-    profile_name: Option<&str>,
-    client: &CloudClient,
-    subscription_id: i32,
-    data: &str,
-    async_ops: &AsyncOperationArgs,
-    output_format: OutputFormat,
-    query: Option<&str>,
-) -> CliResult<()> {
+async fn handle_create(params: &ConnectivityOperationParams<'_>, data: &str) -> CliResult<()> {
     let content = read_file_input(data)?;
     let payload: Value = serde_json::from_str(&content).context("Failed to parse JSON input")?;
 
-    let result = client
+    let result = params
+        .client
         .post_raw(
-            &format!("/subscriptions/{}/peerings/vpc", subscription_id),
+            &format!("/subscriptions/{}/peerings/vpc", params.subscription_id),
             payload,
         )
         .await
         .context("Failed to create VPC peering")?;
 
     handle_async_response(
-        conn_mgr,
-        profile_name,
+        params.conn_mgr,
+        params.profile_name,
         result,
-        async_ops,
-        output_format,
-        query,
+        params.async_ops,
+        params.output_format,
+        params.query,
         "VPC peering created successfully",
     )
     .await
@@ -203,24 +186,19 @@ async fn handle_create(
 
 /// Update VPC peering
 async fn handle_update(
-    conn_mgr: &ConnectionManager,
-    profile_name: Option<&str>,
-    client: &CloudClient,
-    subscription_id: i32,
+    params: &ConnectivityOperationParams<'_>,
     peering_id: i32,
     data: &str,
-    async_ops: &AsyncOperationArgs,
-    output_format: OutputFormat,
-    query: Option<&str>,
 ) -> CliResult<()> {
     let content = read_file_input(data)?;
     let payload: Value = serde_json::from_str(&content).context("Failed to parse JSON input")?;
 
-    let result = client
+    let result = params
+        .client
         .put_raw(
             &format!(
                 "/subscriptions/{}/peerings/vpc/{}",
-                subscription_id, peering_id
+                params.subscription_id, peering_id
             ),
             payload,
         )
@@ -228,12 +206,12 @@ async fn handle_update(
         .context("Failed to update VPC peering")?;
 
     handle_async_response(
-        conn_mgr,
-        profile_name,
+        params.conn_mgr,
+        params.profile_name,
         result,
-        async_ops,
-        output_format,
-        query,
+        params.async_ops,
+        params.output_format,
+        params.query,
         "VPC peering updated successfully",
     )
     .await
@@ -241,20 +219,14 @@ async fn handle_update(
 
 /// Delete VPC peering
 async fn handle_delete(
-    conn_mgr: &ConnectionManager,
-    profile_name: Option<&str>,
-    client: &CloudClient,
-    subscription_id: i32,
+    params: &ConnectivityOperationParams<'_>,
     peering_id: i32,
     force: bool,
-    async_ops: &AsyncOperationArgs,
-    output_format: OutputFormat,
-    query: Option<&str>,
 ) -> CliResult<()> {
     if !force {
         let confirmed = confirm_action(&format!(
             "delete VPC peering {} for subscription {}",
-            peering_id, subscription_id
+            peering_id, params.subscription_id
         ))?;
         if !confirmed {
             println!("Operation cancelled");
@@ -262,21 +234,22 @@ async fn handle_delete(
         }
     }
 
-    let result = client
+    let result = params
+        .client
         .delete_raw(&format!(
             "/subscriptions/{}/peerings/vpc/{}",
-            subscription_id, peering_id
+            params.subscription_id, peering_id
         ))
         .await
         .context("Failed to delete VPC peering")?;
 
     handle_async_response(
-        conn_mgr,
-        profile_name,
+        params.conn_mgr,
+        params.profile_name,
         result,
-        async_ops,
-        output_format,
-        query,
+        params.async_ops,
+        params.output_format,
+        params.query,
         "VPC peering deleted successfully",
     )
     .await
@@ -310,23 +283,18 @@ async fn handle_list_active_active(
 
 /// Create Active-Active VPC peering
 async fn handle_create_active_active(
-    conn_mgr: &ConnectionManager,
-    profile_name: Option<&str>,
-    client: &CloudClient,
-    subscription_id: i32,
+    params: &ConnectivityOperationParams<'_>,
     data: &str,
-    async_ops: &AsyncOperationArgs,
-    output_format: OutputFormat,
-    query: Option<&str>,
 ) -> CliResult<()> {
     let content = read_file_input(data)?;
     let payload: Value = serde_json::from_str(&content).context("Failed to parse JSON input")?;
 
-    let result = client
+    let result = params
+        .client
         .post_raw(
             &format!(
                 "/subscriptions/{}/peerings/vpc/active-active",
-                subscription_id
+                params.subscription_id
             ),
             payload,
         )
@@ -334,12 +302,12 @@ async fn handle_create_active_active(
         .context("Failed to create Active-Active VPC peering")?;
 
     handle_async_response(
-        conn_mgr,
-        profile_name,
+        params.conn_mgr,
+        params.profile_name,
         result,
-        async_ops,
-        output_format,
-        query,
+        params.async_ops,
+        params.output_format,
+        params.query,
         "Active-Active VPC peering created successfully",
     )
     .await
@@ -347,24 +315,19 @@ async fn handle_create_active_active(
 
 /// Update Active-Active VPC peering
 async fn handle_update_active_active(
-    conn_mgr: &ConnectionManager,
-    profile_name: Option<&str>,
-    client: &CloudClient,
-    subscription_id: i32,
+    params: &ConnectivityOperationParams<'_>,
     peering_id: i32,
     data: &str,
-    async_ops: &AsyncOperationArgs,
-    output_format: OutputFormat,
-    query: Option<&str>,
 ) -> CliResult<()> {
     let content = read_file_input(data)?;
     let payload: Value = serde_json::from_str(&content).context("Failed to parse JSON input")?;
 
-    let result = client
+    let result = params
+        .client
         .put_raw(
             &format!(
                 "/subscriptions/{}/peerings/vpc/active-active/{}",
-                subscription_id, peering_id
+                params.subscription_id, peering_id
             ),
             payload,
         )
@@ -372,12 +335,12 @@ async fn handle_update_active_active(
         .context("Failed to update Active-Active VPC peering")?;
 
     handle_async_response(
-        conn_mgr,
-        profile_name,
+        params.conn_mgr,
+        params.profile_name,
         result,
-        async_ops,
-        output_format,
-        query,
+        params.async_ops,
+        params.output_format,
+        params.query,
         "Active-Active VPC peering updated successfully",
     )
     .await
@@ -385,20 +348,14 @@ async fn handle_update_active_active(
 
 /// Delete Active-Active VPC peering
 async fn handle_delete_active_active(
-    conn_mgr: &ConnectionManager,
-    profile_name: Option<&str>,
-    client: &CloudClient,
-    subscription_id: i32,
+    params: &ConnectivityOperationParams<'_>,
     peering_id: i32,
     force: bool,
-    async_ops: &AsyncOperationArgs,
-    output_format: OutputFormat,
-    query: Option<&str>,
 ) -> CliResult<()> {
     if !force {
         let confirmed = confirm_action(&format!(
             "delete Active-Active VPC peering {} for subscription {}",
-            peering_id, subscription_id
+            peering_id, params.subscription_id
         ))?;
         if !confirmed {
             println!("Operation cancelled");
@@ -406,21 +363,22 @@ async fn handle_delete_active_active(
         }
     }
 
-    let result = client
+    let result = params
+        .client
         .delete_raw(&format!(
             "/subscriptions/{}/peerings/vpc/active-active/{}",
-            subscription_id, peering_id
+            params.subscription_id, peering_id
         ))
         .await
         .context("Failed to delete Active-Active VPC peering")?;
 
     handle_async_response(
-        conn_mgr,
-        profile_name,
+        params.conn_mgr,
+        params.profile_name,
         result,
-        async_ops,
-        output_format,
-        query,
+        params.async_ops,
+        params.output_format,
+        params.query,
         "Active-Active VPC peering deleted successfully",
     )
     .await
