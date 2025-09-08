@@ -145,7 +145,7 @@ Please be respectful and constructive in all interactions.
 We use a manual release workflow with semantic versioning:
 
 1. **Trigger Release Workflow**
-   - Go to Actions → "Cargo Release" workflow
+   - Go to Actions → "Manual Release" workflow
    - Click "Run workflow"
    - Select version bump type (patch/minor/major)
    - Optionally run in dry-run mode first
