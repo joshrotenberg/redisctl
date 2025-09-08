@@ -1,0 +1,17 @@
+[workspace]
+# Single version for all packages - no independent versioning
+# This ensures all three crates share the same version number
+git_tag_name = "v{{ version }}"
+git_release_enable = false  # Let cargo-dist handle GitHub releases
+publish = true  # Publish to crates.io
+changelog_update = false  # Use git-cliff instead for changelog
+
+# Publish order: libraries first, then CLI
+[[package]]
+name = "redis-cloud"
+
+[[package]]
+name = "redis-enterprise"
+
+[[package]]
+name = "redisctl"

@@ -16,6 +16,25 @@ repository = "https://github.com/joshrotenberg/redisctl"
 homepage = "https://github.com/joshrotenberg/redisctl"
 documentation = "https://docs.rs/redisctl"
 
+# Config for 'dist'
+[workspace.metadata.dist]
+# The preferred dist version to use in CI (Cargo.toml SemVer syntax)
+cargo-dist-version = "0.29.0"
+# CI backends to support
+ci = "github"
+# The installers to generate for each app
+installers = ["shell", "powershell"]
+# Target platforms to build apps for (Rust target-triple syntax)
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl", "x86_64-pc-windows-msvc"]
+# Which actions to run on pull requests
+pr-run-mode = "plan"
+# Whether dist should create a Github Release or use an existing draft
+create-release = true
+# Path that installers should place binaries in
+install-path = "CARGO_HOME"
+# Whether to install an updater program
+install-updater = false
+
 [workspace.dependencies]
 # Core dependencies
 anyhow = "1.0"
@@ -72,3 +91,8 @@ panic = "abort"
 [profile.dev]
 opt-level = 0
 debug = true
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
