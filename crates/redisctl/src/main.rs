@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Parser;
 use tracing::{debug, error, info, trace};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -325,8 +325,177 @@ async fn execute_profile_command(
             None => Err(RedisCtlError::ProfileNotFound { name: name.clone() }),
         },
 
-        _ => {
-            println!("Profile management commands (set, remove, default) are not yet implemented");
+        Set {
+            name,
+            deployment,
+            api_key,
+            api_secret,
+            api_url,
+            url,
+            username,
+            password,
+            insecure,
+        } => {
+            debug!("Setting profile: {}", name);
+
+            // Check if profile already exists
+            if conn_mgr.config.profiles.contains_key(name) {
+                // Ask for confirmation before overwriting
+                println!("Profile '{}' already exists.", name);
+                print!("Do you want to overwrite it? (y/N): ");
+                use std::io::{self, Write};
+                io::stdout().flush().unwrap();
+
+                let mut input = String::new();
+                io::stdin().read_line(&mut input).unwrap();
+                let input = input.trim().to_lowercase();
+
+                if input != "y" && input != "yes" {
+                    println!("Profile update cancelled.");
+                    return Ok(());
+                }
+            }
+
+            // Create the profile based on deployment type
+            let profile = match deployment {
+                config::DeploymentType::Cloud => {
+                    let api_key = api_key
+                        .clone()
+                        .ok_or_else(|| anyhow::anyhow!("API key is required for Cloud profiles"))?;
+                    let api_secret = api_secret.clone().ok_or_else(|| {
+                        anyhow::anyhow!("API secret is required for Cloud profiles")
+                    })?;
+
+                    config::Profile {
+                        deployment_type: config::DeploymentType::Cloud,
+                        credentials: config::ProfileCredentials::Cloud {
+                            api_key: api_key.clone(),
+                            api_secret: api_secret.clone(),
+                            api_url: api_url.clone(),
+                        },
+                    }
+                }
+                config::DeploymentType::Enterprise => {
+                    let url = url.clone().ok_or_else(|| {
+                        anyhow::anyhow!("URL is required for Enterprise profiles")
+                    })?;
+                    let username = username.clone().ok_or_else(|| {
+                        anyhow::anyhow!("Username is required for Enterprise profiles")
+                    })?;
+
+                    // Prompt for password if not provided
+                    let password = match password {
+                        Some(p) => Some(p.clone()),
+                        None => {
+                            let pass = rpassword::prompt_password("Enter password: ")
+                                .context("Failed to read password")?;
+                            Some(pass)
+                        }
+                    };
+
+                    config::Profile {
+                        deployment_type: config::DeploymentType::Enterprise,
+                        credentials: config::ProfileCredentials::Enterprise {
+                            url: url.clone(),
+                            username: username.clone(),
+                            password,
+                            insecure: *insecure,
+                        },
+                    }
+                }
+            };
+
+            // Update the configuration
+            let mut config = conn_mgr.config.clone();
+            config.profiles.insert(name.clone(), profile);
+
+            // Save the configuration
+            config.save().context("Failed to save configuration")?;
+
+            println!("Profile '{}' saved successfully.", name);
+
+            // Ask if this should be the default profile
+            if config.default_profile.is_none() || config.profiles.len() == 1 {
+                print!("Set '{}' as the default profile? (Y/n): ", name);
+                use std::io::{self, Write};
+                io::stdout().flush().unwrap();
+
+                let mut input = String::new();
+                io::stdin().read_line(&mut input).unwrap();
+                let input = input.trim().to_lowercase();
+
+                if input.is_empty() || input == "y" || input == "yes" {
+                    config.default_profile = Some(name.clone());
+                    config.save().context("Failed to save default profile")?;
+                    println!("Profile '{}' set as default.", name);
+                }
+            }
+
+            Ok(())
+        }
+        Remove { name } => {
+            debug!("Removing profile: {}", name);
+
+            // Check if profile exists
+            if !conn_mgr.config.profiles.contains_key(name) {
+                return Err(RedisCtlError::ProfileNotFound { name: name.clone() });
+            }
+
+            // Check if it's the default profile
+            let is_default = conn_mgr.config.default_profile.as_ref() == Some(name);
+            if is_default {
+                println!("Warning: '{}' is the default profile.", name);
+            }
+
+            // Ask for confirmation
+            print!(
+                "Are you sure you want to remove profile '{}'? (y/N): ",
+                name
+            );
+            use std::io::{self, Write};
+            io::stdout().flush().unwrap();
+
+            let mut input = String::new();
+            io::stdin().read_line(&mut input).unwrap();
+            let input = input.trim().to_lowercase();
+
+            if input != "y" && input != "yes" {
+                println!("Profile removal cancelled.");
+                return Ok(());
+            }
+
+            // Remove the profile
+            let mut config = conn_mgr.config.clone();
+            config.profiles.remove(name);
+
+            // Clear default if this was the default profile
+            if is_default {
+                config.default_profile = None;
+                println!("Default profile cleared.");
+            }
+
+            // Save the configuration
+            config.save().context("Failed to save configuration")?;
+
+            println!("Profile '{}' removed successfully.", name);
+            Ok(())
+        }
+        Default { name } => {
+            debug!("Setting default profile: {}", name);
+
+            // Check if profile exists
+            if !conn_mgr.config.profiles.contains_key(name) {
+                return Err(RedisCtlError::ProfileNotFound { name: name.clone() });
+            }
+
+            // Update the configuration
+            let mut config = conn_mgr.config.clone();
+            config.default_profile = Some(name.clone());
+
+            // Save the configuration
+            config.save().context("Failed to save configuration")?;
+
+            println!("Default profile set to '{}'.", name);
             Ok(())
         }
     }
