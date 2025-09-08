@@ -142,14 +142,25 @@ Please be respectful and constructive in all interactions.
 
 ## Release Process
 
-We use automated releases with semantic versioning:
+We use a manual release workflow with semantic versioning:
 
-1. **Conventional commits** determine version bumps
-2. **release-plz** creates release PRs automatically
-3. **cargo-dist** builds binaries for all platforms
-4. **Docker images** are published automatically
+1. **Trigger Release Workflow**
+   - Go to Actions → "Cargo Release" workflow
+   - Click "Run workflow"
+   - Select version bump type (patch/minor/major)
+   - Optionally run in dry-run mode first
 
-See [Release Process Documentation](docs/RELEASE_PROCESS.md) for details.
+2. **Automated Steps**
+   - Updates all crate versions in workspace
+   - Creates git commit and tag
+   - Publishes to crates.io
+   - Triggers binary builds via cargo-dist
+   - Publishes Docker images
+
+3. **Version Management**
+   - All workspace crates are versioned in lockstep
+   - Tags follow format: `v{major}.{minor}.{patch}`
+   - Conventional commits guide version selection
 
 ## Getting Help
 

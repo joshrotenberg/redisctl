@@ -1,0 +1,24 @@
+# Cargo Release Configuration
+
+# Don't push/publish by default - let CI handle it
+[workspace]
+allow-branch = ["main"]
+sign-commit = false
+sign-tag = false
+push = true
+publish = true
+verify = true
+owners = []
+
+# Version bump configuration
+pre-release-commit-message = "chore: release v{{version}}"
+tag-message = "Release v{{version}}"
+tag-name = "v{{version}}"
+consolidate-commits = true
+consolidate-pushes = true
+
+# Don't create GitHub releases - cargo-dist will handle that
+release = false
+
+# Dependencies between crates
+dependent-version = "upgrade"
