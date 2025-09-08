@@ -1,0 +1,41 @@
+# Cargo Release Configuration
+
+# Workspace-level configuration
+[workspace]
+# Only allow releases from main branch
+allow-branch = ["main"]
+
+# Don't sign commits/tags (GitHub Actions doesn't have GPG)
+sign-commit = false
+sign-tag = false
+
+# Push and publish settings
+push = false  # We'll push manually after success
+publish = true
+verify = true
+
+# Shared version for all workspace members
+shared-version = true
+
+# Version bump configuration
+pre-release-commit-message = "chore: release v{{version}}"
+tag-message = "Release v{{version}}"
+tag-name = "v{{version}}"
+consolidate-commits = true
+consolidate-pushes = true
+
+# Don't create GitHub releases - cargo-dist will handle that
+release = false
+
+# Dependencies between crates - automatically upgrade
+dependent-version = "upgrade"
+
+# Package-specific configuration (all use workspace defaults)
+[[package]]
+name = "redis-cloud"
+
+[[package]]
+name = "redis-enterprise"
+
+[[package]]
+name = "redisctl"

@@ -1,0 +1,182 @@
+name: Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version bump type"
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
+      dry_run:
+        description: "Dry run (do not publish)"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global init.defaultBranch main
+          git config --global push.autoSetupRemote true
+
+      - name: Install tools
+        run: |
+          cargo install cargo-release
+          cargo install git-cliff || echo "git-cliff installation failed, will skip changelog"
+
+      - name: Dry Run Release
+        if: inputs.dry_run
+        run: |
+          echo "Running dry run for ${{ inputs.version }} version bump..."
+          cargo release version ${{ inputs.version }} --execute --no-confirm --verbose
+          cargo release replace --execute --no-confirm --verbose
+          cargo release hook --execute --no-confirm --verbose
+          echo "Dry run complete - no changes were pushed"
+
+      - name: Get New Version
+        if: ${{ !inputs.dry_run }}
+        id: version
+        run: |
+          # More robust version extraction
+          OUTPUT=$(cargo release version ${{ inputs.version }} --verbose 2>&1)
+          echo "Raw output:"
+          echo "$OUTPUT"
+
+          # Try multiple patterns to extract version
+          NEW_VERSION=$(echo "$OUTPUT" | grep -E "^Upgrading" | head -1 | sed 's/.*to //' | sed 's/[[:space:]]*$//')
+
+          if [ -z "$NEW_VERSION" ]; then
+            # Try alternative pattern
+            NEW_VERSION=$(echo "$OUTPUT" | grep -E "would be upgraded to" | head -1 | sed 's/.*to //' | sed 's/[[:space:]]*$//')
+          fi
+
+          if [ -z "$NEW_VERSION" ]; then
+            echo "ERROR: Could not determine new version from output:"
+            echo "$OUTPUT"
+            exit 1
+          fi
+
+          echo "Detected new version: $NEW_VERSION"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Generate Changelog
+        if: ${{ !inputs.dry_run }}
+        run: |
+          NEW_VERSION="${{ steps.version.outputs.version }}"
+
+          # Check if git-cliff is available
+          if command -v git-cliff &> /dev/null; then
+            echo "Generating changelog for v${NEW_VERSION}..."
+
+            # Generate changelog, but don't fail if it doesn't work
+            git-cliff --tag v${NEW_VERSION} --prepend CHANGELOG.md || {
+              echo "Warning: git-cliff failed, continuing without changelog update"
+            }
+
+            # Only commit if there are changes
+            if git diff --staged --quiet CHANGELOG.md 2>/dev/null || git diff --quiet CHANGELOG.md 2>/dev/null; then
+              if [ -f CHANGELOG.md ] && git diff CHANGELOG.md | grep -q .; then
+                git add CHANGELOG.md
+                git commit -m "docs: update changelog for v${NEW_VERSION}" || echo "No changelog changes to commit"
+              else
+                echo "No changelog changes detected"
+              fi
+            fi
+          else
+            echo "git-cliff not available, skipping changelog generation"
+          fi
+
+      - name: Execute Release
+        if: ${{ !inputs.dry_run }}
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          CARGO_TERM_COLOR: always
+          RUST_BACKTRACE: 1
+        run: |
+          echo "Releasing ${{ inputs.version }} version..."
+
+          # Run cargo-release with no-push first to catch any errors before pushing
+          cargo release ${{ inputs.version }} --execute --no-confirm --no-push --verbose || {
+            echo "::error::cargo-release failed. Check the logs above for details."
+            exit 1
+          }
+
+          # If successful, push everything
+          echo "Pushing changes and tags..."
+          git push --follow-tags
+
+      - name: Verify Release
+        if: ${{ !inputs.dry_run }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          echo "Verifying release v${VERSION}..."
+
+          # Check that tag was created
+          if git tag -l "v${VERSION}" | grep -q .; then
+            echo "✓ Tag v${VERSION} created successfully"
+          else
+            echo "✗ Tag v${VERSION} was not created"
+            exit 1
+          fi
+
+          # Check that versions were updated
+          CRATE_VERSION=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "redisctl") | .version')
+          if [ "$CRATE_VERSION" = "$VERSION" ]; then
+            echo "✓ Crate version updated to ${VERSION}"
+          else
+            echo "✗ Crate version mismatch: expected ${VERSION}, got ${CRATE_VERSION}"
+            exit 1
+          fi
+
+      - name: Create GitHub Release
+        if: ${{ !inputs.dry_run }}
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Release v${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Report Status
+        if: always()
+        run: |
+          echo "Release status: ${{ job.status }}"
+          if [ "${{ job.status }}" = "failure" ]; then
+            echo "::error::Release failed. Check logs above."
+            echo "Recovery steps if needed:"
+            echo "1. Delete partial tags: git push --delete origin v[VERSION]"
+            echo "2. Delete local tag: git tag -d v[VERSION]"
+            echo "3. Yank from crates.io if partially published"
+            echo "4. Revert commits if necessary: git revert HEAD"
+          elif [ "${{ job.status }}" = "success" ] && [ "${{ inputs.dry_run }}" != "true" ]; then
+            echo "::notice::Release completed successfully!"
+            echo "Next steps:"
+            echo "1. Wait for cargo-dist workflow to build binaries"
+            echo "2. Wait for Docker workflow to build images"
+            echo "3. Verify packages on crates.io"
+          fi
