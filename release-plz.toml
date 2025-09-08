@@ -1,0 +1,26 @@
+[workspace]
+# Single version for all packages - no independent versioning
+allow_dirty = false              # Don't allow uncommitted changes
+changelog_update = false         # Use git-cliff instead for changelog
+dependencies_update = true       # Update dependencies with cargo update
+git_release_enable = false       # Let cargo-dist handle GitHub releases
+git_tag_enable = true           # Create git tags
+git_tag_name = "v{{ version }}" # Single tag format for all packages
+pr_labels = ["release"]         # Add release label to PRs
+publish = true                  # Publish to crates.io
+publish_timeout = "10m"         # Timeout for cargo publish
+semver_check = true            # Check for breaking changes
+
+# Publish order: libraries first, then CLI
+# All packages share the same version
+[[package]]
+name = "redis-cloud"
+version_group = "workspace"
+
+[[package]]
+name = "redis-enterprise"
+version_group = "workspace"
+
+[[package]]
+name = "redisctl"
+version_group = "workspace"

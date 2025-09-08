@@ -1,43 +1,30 @@
-# Redis CLI Docker Image
-# Builds from source for reliability and multi-arch support
+# Multi-stage build for minimal final image
+FROM rust:1.89-alpine as builder
 
-# Build stage
-FROM rust:1.89-bookworm AS builder
+# Install build dependencies
+RUN apk add --no-cache musl-dev openssl-dev openssl-libs-static pkgconfig
 
-WORKDIR /usr/src/redisctl
+# Create app directory
+WORKDIR /app
 
-# Copy workspace files
-COPY Cargo.toml Cargo.lock ./
-COPY crates ./crates
+# Copy all source files
+COPY . .
 
-# Build the release binary
+# Build static binary with musl
 RUN cargo build --release --bin redisctl
 
-# Runtime stage
-FROM ubuntu:24.04
+# Final minimal image
+FROM alpine:3.19
 
 # Install runtime dependencies
-RUN apt-get update && apt-get install -y \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache ca-certificates
 
-# Copy the binary from builder
-COPY --from=builder /usr/src/redisctl/target/release/redisctl /usr/local/bin/redisctl
+# Copy binary from builder
+COPY --from=builder /app/target/release/redisctl /usr/local/bin/redisctl
 
 # Create non-root user
-RUN useradd -m redis && \
-    mkdir -p /home/redis/.config/redisctl && \
-    chown -R redis:redis /home/redis
+RUN adduser -D -u 1001 redisctl
+USER redisctl
 
-USER redis
-WORKDIR /home/redis
-
-# Default environment variables
-ENV REDIS_ENTERPRISE_URL=""
-ENV REDIS_ENTERPRISE_USER=""
-ENV REDIS_ENTERPRISE_PASSWORD=""
-ENV REDIS_CLOUD_API_KEY=""
-ENV REDIS_CLOUD_API_SECRET=""
-
+# Set entrypoint
 ENTRYPOINT ["redisctl"]
-CMD ["--help"]
