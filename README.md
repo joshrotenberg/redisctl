@@ -4,21 +4,12 @@ A unified CLI for Redis Cloud and Redis Enterprise REST APIs with comprehensive 
 
 ## Features
 
-- 🚀 **Unified Interface** - Single CLI for both Redis Cloud and Redis Enterprise
-- ⏳ **Async Operations** - Full support for long-running operations with `--wait` flags
-- 🔄 **Smart Routing** - Automatically detects which API to use based on context
-- 📊 **Multiple Output Formats** - JSON, YAML, and Table output with JMESPath filtering
-- 🔐 **Secure Configuration** - Profile-based auth with environment variable support
-- 🌐 **Comprehensive Coverage** - Full API coverage for both platforms
-A unified CLI for Redis Cloud and Redis Enterprise REST APIs with comprehensive async operation support.
-
-## Features
-
-- 🚀 **Unified Interface** - Single CLI for both Redis Cloud and Redis Enterprise
-- ⏳ **Async Operations** - Full support for long-running operations with `--wait` flags
-- 🔄 **Smart Routing** - Automatically detects which API to use based on context
-- 📊 **Multiple Output Formats** - JSON, YAML, and Table output with JMESPath filtering
-- 🔐 **Secure Configuration** - Profile-based auth with environment variable support
+- **Unified Interface** - Single CLI for both Redis Cloud and Redis Enterprise
+- **Async Operations** - Full support for long-running operations with `--wait` flags
+- **Smart Routing** - Automatically detects which API to use based on context
+- **Multiple Output Formats** - JSON, YAML, and Table output with JMESPath filtering
+- **Secure Configuration** - Profile-based auth with environment variable support
+- **Comprehensive Coverage** - Full API coverage for both platforms
 
 ## Installation
 

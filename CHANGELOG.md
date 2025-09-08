@@ -8,14 +8,14 @@ All notable changes to this project will be documented in this file.
 
 - Remove test styles command and legacy code ([0d220c9](https://github.com/joshrotenberg/redisctl/commit/0d220c962416f6e225f7cadbe8db4c3df9c6e182))
 
-### ⚙️ Miscellaneous Tasks
+### Miscellaneous Tasks
 
 - Rename colliding examples to avoid filename collision\n\n- redis-cloud: basic.rs -> basic_cloud.rs (README + comment updated)\n- redis-enterprise: basic.rs -> basic_enterprise.rs (README + comment updated) ([b0bcdaa](https://github.com/joshrotenberg/redisctl/commit/b0bcdaa2de5467f43c6377e980c5b2f320715160))
 - Run tests on commit and push; install pre-push hook\n\n- .pre-commit-config.yaml: add stages for clippy/tests; add --workspace\n- scripts/install-hooks.sh: install pre-commit and pre-push hooks; update messages ([4c92b03](https://github.com/joshrotenberg/redisctl/commit/4c92b0326c85cae334cbf5a8dc02983e8ff3b8bf))
 - Update lock file after dependency changes ([06a1f9d](https://github.com/joshrotenberg/redisctl/commit/06a1f9dfcd9573e0c37131c3290ea8a425ba1403))
 - Remove unused scripts, Docker Compose testing, and pre-commit hooks ([804c358](https://github.com/joshrotenberg/redisctl/commit/804c3580d170ed68d82349f19e4f4ac825f3f958))
 
-### ⚡ Features
+### Features
 
 - Improve redis-enterprise crate documentation and examples ([ae3caa9](https://github.com/joshrotenberg/redisctl/commit/ae3caa913d3b64e0e34f221ecbefee56be05010f))
 - Add all missing Enterprise CLI commands ([2e79b91](https://github.com/joshrotenberg/redisctl/commit/2e79b9171e6a3c7804a9cd4129233763de1d6cc4))
@@ -62,7 +62,7 @@ All notable changes to this project will be documented in this file.
 - Add --wait flag support for Cloud ACL commands ([1d652e8](https://github.com/joshrotenberg/redisctl/commit/1d652e879a2874dd7a0d01eb1f856bdb0f2e4c1a))
 - Implement comprehensive release automation system ([8514042](https://github.com/joshrotenberg/redisctl/commit/851404276c0b833e49c1b621b4bc3892df4f6f44))
 
-### 🎨 Styling
+### Styling
 
 - Rustfmt bdb handler changes for new endpoints ([442e278](https://github.com/joshrotenberg/redisctl/commit/442e278175c74d58490f068b5e59132e8da401e9))
 - Apply rustfmt and tidy tests; all new Cluster/Node endpoints covered by basic tests ([a335506](https://github.com/joshrotenberg/redisctl/commit/a33550608a4f7ba60b9cd3b27c6c33c8531ed32e))
@@ -70,7 +70,7 @@ All notable changes to this project will be documented in this file.
 - Fix clippy doc comment lint after raw removal ([5a14686](https://github.com/joshrotenberg/redisctl/commit/5a14686b87b91753d204ccccb3b35658101e6f26))
 - Apply cargo fmt across workspace ([5093f26](https://github.com/joshrotenberg/redisctl/commit/5093f26844a5f310a1e1d341d70997e0655def23))
 
-### 🐛 Bug Fixes
+### Bug Fixes
 
 - Correct cargo-dist workflow tag pattern ([84f97cb](https://github.com/joshrotenberg/redisctl/commit/84f97cbe4a7801ba3d21f4ec3b924a026360764e))
 - Add allow-dirty to cargo-dist config ([4808936](https://github.com/joshrotenberg/redisctl/commit/480893675fa3329ca14707cedd461b18cc502fb3))
@@ -123,7 +123,7 @@ All notable changes to this project will be documented in this file.
 - Remove internal dependency version updates from prepare-release workflow ([#204](https://github.com/joshrotenberg/redisctl/issues/204)) ([e99dcb0](https://github.com/joshrotenberg/redisctl/commit/e99dcb0911cb3051e920c05562b456a28a351e05))
 - Remove version constraints from workspace path dependencies ([#205](https://github.com/joshrotenberg/redisctl/issues/205)) ([e94466f](https://github.com/joshrotenberg/redisctl/commit/e94466fa714b1fea2ad7a193b4f7a37f349d1231))
 
-### 📚 Documentation
+### Documentation
 
 - Add contributing guide and update installation docs ([5893261](https://github.com/joshrotenberg/redisctl/commit/5893261a7d5fbabfa2cf26dfcfde4245a1b63b08))
 - Improve lib and module overviews; fix clippy doc warnings ([9fd5b2c](https://github.com/joshrotenberg/redisctl/commit/9fd5b2cb77ffc8e0f36863026feffb49181fb887))
