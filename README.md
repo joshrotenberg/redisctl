@@ -4,21 +4,12 @@ A unified CLI for Redis Cloud and Redis Enterprise REST APIs with comprehensive 
 
 ## Features
 
-- 🚀 **Unified Interface** - Single CLI for both Redis Cloud and Redis Enterprise
-- ⏳ **Async Operations** - Full support for long-running operations with `--wait` flags
-- 🔄 **Smart Routing** - Automatically detects which API to use based on context
-- 📊 **Multiple Output Formats** - JSON, YAML, and Table output with JMESPath filtering
-- 🔐 **Secure Configuration** - Profile-based auth with environment variable support
-- 🌐 **Comprehensive Coverage** - Full API coverage for both platforms
-A unified CLI for Redis Cloud and Redis Enterprise REST APIs with comprehensive async operation support.
-
-## Features
-
-- 🚀 **Unified Interface** - Single CLI for both Redis Cloud and Redis Enterprise
-- ⏳ **Async Operations** - Full support for long-running operations with `--wait` flags
-- 🔄 **Smart Routing** - Automatically detects which API to use based on context
-- 📊 **Multiple Output Formats** - JSON, YAML, and Table output with JMESPath filtering
-- 🔐 **Secure Configuration** - Profile-based auth with environment variable support
+- **Unified Interface** - Single CLI for both Redis Cloud and Redis Enterprise
+- **Async Operations** - Full support for long-running operations with `--wait` flags
+- **Smart Routing** - Automatically detects which API to use based on context
+- **Multiple Output Formats** - JSON, YAML, and Table output with JMESPath filtering
+- **Secure Configuration** - Profile-based auth with environment variable support
+- **Comprehensive Coverage** - Full API coverage for both platforms
 
 ## Installation
 
@@ -77,10 +68,13 @@ redisctl database list
 # Create database with async wait
 redisctl cloud database create --data @database.json --wait
 
-# Create database with async wait
-redisctl cloud database create
-# UpdateDifferent output
-redisctl Deletedatabaselist-o yaml | yq '.[] | select(.name == "prod")' database with force and wait
+# Update database with wait
+redisctl cloud database update 12345 --data @update.json --wait
+
+# Different output formats with filtering
+redisctl database list -o yaml | yq '.[] | select(.name == "prod")'
+
+# Delete database with force and wait
 redisctl cloud database delete 12345 --force --wait
 ```
 
