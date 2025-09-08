@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
-use clap::Parser;
+use clap::{CommandFactory, Parser};
+use clap_complete::{generate, shells};
 use tracing::{debug, error, info, trace};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -75,6 +76,11 @@ async fn execute_command(cli: &Cli, conn_mgr: &ConnectionManager) -> Result<(), 
             println!("redisctl {}", env!("CARGO_PKG_VERSION"));
             Ok(())
         }
+        Commands::Completions { shell } => {
+            debug!("Generating completions for {:?}", shell);
+            generate_completions(*shell);
+            Ok(())
+        }
 
         Commands::Profile(profile_cmd) => {
             debug!("Executing profile command");
@@ -124,10 +130,27 @@ async fn execute_command(cli: &Cli, conn_mgr: &ConnectionManager) -> Result<(), 
     result
 }
 
+/// Generate shell completions
+fn generate_completions(shell: cli::Shell) {
+    let mut cmd = cli::Cli::command();
+    let name = cmd.get_name().to_string();
+
+    match shell {
+        cli::Shell::Bash => generate(shells::Bash, &mut cmd, name, &mut std::io::stdout()),
+        cli::Shell::Zsh => generate(shells::Zsh, &mut cmd, name, &mut std::io::stdout()),
+        cli::Shell::Fish => generate(shells::Fish, &mut cmd, name, &mut std::io::stdout()),
+        cli::Shell::PowerShell => {
+            generate(shells::PowerShell, &mut cmd, name, &mut std::io::stdout())
+        }
+        cli::Shell::Elvish => generate(shells::Elvish, &mut cmd, name, &mut std::io::stdout()),
+    }
+}
+
 /// Format command for human-readable logging (without sensitive data)
 fn format_command(command: &Commands) -> String {
     match command {
         Commands::Version => "version".to_string(),
+        Commands::Completions { shell } => format!("completions {:?}", shell),
         Commands::Profile(cmd) => {
             use cli::ProfileCommands::*;
             match cmd {
