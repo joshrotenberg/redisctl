@@ -10,7 +10,7 @@ sign-commit = false
 sign-tag = false
 
 # Push and publish settings
-push = true
+push = false  # We'll push manually after success
 publish = true
 verify = true
 
