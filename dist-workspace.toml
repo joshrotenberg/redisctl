@@ -34,7 +34,7 @@ unix-archive = ".tar.gz"
 # Checksums to generate for each App
 checksum = "sha256"
 # Extra static files to include in each App (path relative to this Cargo.toml's dir)
-include = ["LICENSE", "README.md", "CHANGELOG.md"]
+include = ["LICENSE-APACHE", "LICENSE-MIT", "README.md", "CHANGELOG.md"]
 # Whether cargo-dist should create a Github Release or use an existing draft
 create-release = true
 

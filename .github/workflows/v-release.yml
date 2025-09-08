@@ -39,10 +39,16 @@ permissions:
 # If there's a prerelease-style suffix to the version, then the release(s)
 # will be marked as a prerelease.
 on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to build (e.g., v0.2.0)"
+        required: true
+        type: string
   pull_request:
   push:
     tags:
-      - 'v**[0-9]+.[0-9]+.[0-9]+*'
+      - "v**[0-9]+.[0-9]+.[0-9]+*"
 
 jobs:
   # Run 'dist plan' (or host) to determine what tasks we need to do
@@ -50,8 +56,8 @@ jobs:
     runs-on: "ubuntu-22.04"
     outputs:
       val: ${{ steps.plan.outputs.manifest }}
-      tag: ${{ !github.event.pull_request && github.ref_name || '' }}
-      tag-flag: ${{ !github.event.pull_request && format('--tag={0}', github.ref_name) || '' }}
+      tag: ${{ github.event.inputs.tag || (!github.event.pull_request && github.ref_name || '') }}
+      tag-flag: ${{ github.event.inputs.tag && format('--tag={0}', github.event.inputs.tag) || (!github.event.pull_request && format('--tag={0}', github.ref_name) || '') }}
       publishing: ${{ !github.event.pull_request }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
