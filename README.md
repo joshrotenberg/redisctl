@@ -68,10 +68,13 @@ redisctl database list
 # Create database with async wait
 redisctl cloud database create --data @database.json --wait
 
-# Create database with async wait
-redisctl cloud database create
-# UpdateDifferent output
-redisctl Deletedatabaselist-o yaml | yq '.[] | select(.name == "prod")' database with force and wait
+# Update database with wait
+redisctl cloud database update 12345 --data @update.json --wait
+
+# Different output formats with filtering
+redisctl database list -o yaml | yq '.[] | select(.name == "prod")'
+
+# Delete database with force and wait
 redisctl cloud database delete 12345 --force --wait
 ```
 
