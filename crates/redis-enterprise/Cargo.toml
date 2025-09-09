@@ -1,6 +1,6 @@
 [package]
 name = "redis-enterprise"
-version.workspace = true
+version = "0.3.2"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -12,8 +12,7 @@ keywords = ["redis", "enterprise", "api", "rest", "client"]
 categories = ["api-bindings", "database"]
 readme = "../../README.md"
 
-[package.metadata.release]
-# Use workspace configuration
+
 
 [dependencies]
 async-trait = { workspace = true }

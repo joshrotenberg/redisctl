@@ -1,6 +1,6 @@
 [package]
 name = "redisctl"
-version.workspace = true
+version = "0.3.2"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -15,12 +15,11 @@ readme = "../../README.md"
 name = "redisctl"
 path = "src/main.rs"
 
-[package.metadata.release]
-# Use workspace configuration
+
 
 [dependencies]
-redis-cloud = { version = "0.3.1", path = "../redis-cloud" }
-redis-enterprise = { version = "0.3.1", path = "../redis-enterprise" }
+redis-cloud = { version = "0.3.2", path = "../redis-cloud" }
+redis-enterprise = { version = "0.3.2", path = "../redis-enterprise" }
 
 # CLI dependencies
 clap = { workspace = true }
