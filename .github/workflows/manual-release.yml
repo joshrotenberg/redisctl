@@ -4,13 +4,14 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version bump type"
+        description: "Version bump type or explicit version"
         required: true
         type: choice
         options:
           - patch
           - minor
           - major
+          - current
         default: patch
       dry_run:
         description: "Dry run (do not publish)"
@@ -142,40 +143,57 @@ jobs:
           git status
           echo ""
 
-          # Debug: Show what cargo-release will do
-          echo "Checking what cargo-release will do..."
-          cargo release ${{ inputs.version }} --list 2>&1 | tee /tmp/release-list.log || true
+          # Handle "current" version option - release without bumping
+          if [ "${{ inputs.version }}" = "current" ]; then
+            echo "Releasing current version without bumping..."
 
-          if ! grep -q "redis-cloud\|redis-enterprise\|redisctl" /tmp/release-list.log; then
-            echo "::warning::No packages detected by cargo-release. Debug info:"
-            echo "Workspace members:"
-            cargo metadata --no-deps --format-version 1 | jq -r '.workspace_members[]'
-            echo ""
-            echo "Package metadata:"
-            for pkg in redis-cloud redis-enterprise redisctl; do
-              echo "Package: $pkg"
-              cargo metadata --no-deps --format-version 1 | jq ".packages[] | select(.name == \"$pkg\") | {name, version, publish}"
-            done
+            # Get current version
+            CURRENT_VERSION=$(cargo metadata --no-deps --format-version 1 | jq -r '.workspace.metadata.package.version // .packages[0].version')
+            echo "Current version: $CURRENT_VERSION"
+
+            # Run cargo-release with the explicit version to skip bumping
+            echo "Executing release of v$CURRENT_VERSION..."
+            cargo release $CURRENT_VERSION \
+              --execute --no-confirm --verbose 2>&1 | tee /tmp/release.log || {
+              echo "::error::cargo-release failed. Check the logs above for details."
+              exit 1
+            }
+          else
+            # Debug: Show what cargo-release will do
+            echo "Checking what cargo-release will do..."
+            cargo release ${{ inputs.version }} --list 2>&1 | tee /tmp/release-list.log || true
+
+            if ! grep -q "redis-cloud\|redis-enterprise\|redisctl" /tmp/release-list.log; then
+              echo "::warning::No packages detected by cargo-release. Debug info:"
+              echo "Workspace members:"
+              cargo metadata --no-deps --format-version 1 | jq -r '.workspace_members[]'
+              echo ""
+              echo "Package metadata:"
+              for pkg in redis-cloud redis-enterprise redisctl; do
+                echo "Package: $pkg"
+                cargo metadata --no-deps --format-version 1 | jq ".packages[] | select(.name == \"$pkg\") | {name, version, publish}"
+              done
+            fi
+
+            # Run cargo-release - it will handle everything
+            # Use workspace-level release with shared-version
+            echo "Executing release..."
+            cargo release ${{ inputs.version }} \
+              --execute --no-confirm --verbose 2>&1 | tee /tmp/release.log || {
+              echo "::error::cargo-release failed. Check the logs above for details."
+              echo ""
+              echo "Failure analysis:"
+              if grep -q "no packages selected" /tmp/release.log; then
+                echo "- cargo-release couldn't find packages to release"
+                echo "- This usually means a configuration or authentication issue"
+              fi
+              if grep -q "failed to connect" /tmp/release.log; then
+                echo "- Network/authentication issue detected"
+                echo "- Verify CARGO_REGISTRY_TOKEN is valid"
+              fi
+              exit 1
+            }
           fi
-
-          # Run cargo-release - it will handle everything
-          # Use workspace-level release with shared-version
-          echo "Executing release..."
-          cargo release ${{ inputs.version }} \
-            --execute --no-confirm --verbose 2>&1 | tee /tmp/release.log || {
-            echo "::error::cargo-release failed. Check the logs above for details."
-            echo ""
-            echo "Failure analysis:"
-            if grep -q "no packages selected" /tmp/release.log; then
-              echo "- cargo-release couldn't find packages to release"
-              echo "- This usually means a configuration or authentication issue"
-            fi
-            if grep -q "failed to connect" /tmp/release.log; then
-              echo "- Network/authentication issue detected"
-              echo "- Verify CARGO_REGISTRY_TOKEN is valid"
-            fi
-            exit 1
-          }
 
       - name: Report Status
         if: always()
