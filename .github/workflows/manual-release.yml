@@ -42,8 +42,26 @@ jobs:
           git config --global init.defaultBranch main
           git config --global push.autoSetupRemote true
 
+      - name: Cache cargo registry and tools
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+          key: ${{ runner.os }}-cargo-tools-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-tools-
+
       - name: Install cargo-release
-        run: cargo install cargo-release
+        run: |
+          if ! command -v cargo-release &> /dev/null; then
+            echo "Installing cargo-release..."
+            cargo install cargo-release
+          else
+            echo "cargo-release already installed"
+          fi
 
       - name: Dry Run Release
         if: inputs.dry_run
