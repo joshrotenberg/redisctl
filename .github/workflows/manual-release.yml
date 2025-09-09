@@ -42,10 +42,8 @@ jobs:
           git config --global init.defaultBranch main
           git config --global push.autoSetupRemote true
 
-      - name: Install tools
-        run: |
-          cargo install cargo-release
-          cargo install git-cliff || echo "git-cliff installation failed, will skip changelog"
+      - name: Install cargo-release
+        run: cargo install cargo-release
 
       - name: Dry Run Release
         if: inputs.dry_run
@@ -56,92 +54,6 @@ jobs:
           cargo release hook --execute --no-confirm --verbose
           echo "Dry run complete - no changes were pushed"
 
-      - name: Get New Version
-        if: ${{ !inputs.dry_run }}
-        id: version
-        run: |
-          # Run cargo release version to determine what the new version will be
-          OUTPUT=$(cargo release version ${{ inputs.version }} --verbose 2>&1)
-          echo "Raw output from cargo-release:"
-          echo "$OUTPUT"
-          echo "---"
-
-          # Try multiple patterns to extract version
-          # Pattern 1: Look for "to vX.Y.Z" or "to X.Y.Z"
-          NEW_VERSION=$(echo "$OUTPUT" | grep -E -o "to v?[0-9]+\.[0-9]+\.[0-9]+" | head -1 | sed 's/.*to //; s/^v//')
-
-          if [ -z "$NEW_VERSION" ]; then
-            # Pattern 2: Look for lines with "Upgrading" and extract version after "to"
-            NEW_VERSION=$(echo "$OUTPUT" | grep -i "upgrading" | grep -E -o "to [0-9]+\.[0-9]+\.[0-9]+" | head -1 | sed 's/to //')
-          fi
-
-          if [ -z "$NEW_VERSION" ]; then
-            # Pattern 3: Look for any semantic version pattern
-            NEW_VERSION=$(echo "$OUTPUT" | grep -E -o "[0-9]+\.[0-9]+\.[0-9]+" | tail -1)
-          fi
-
-          if [ -z "$NEW_VERSION" ]; then
-            # Pattern 4: Calculate version manually based on current version and bump type
-            CURRENT_VERSION=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "redisctl") | .version')
-            echo "Current version: $CURRENT_VERSION"
-
-            case "${{ inputs.version }}" in
-              patch)
-                NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{print $1"."$2"."$3+1}')
-                ;;
-              minor)
-                NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{print $1"."$2+1".0"}')
-                ;;
-              major)
-                NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{print $1+1".0.0"}')
-                ;;
-            esac
-            echo "Calculated new version: $NEW_VERSION"
-          fi
-
-          if [ -z "$NEW_VERSION" ]; then
-            echo "ERROR: Could not determine new version from cargo-release output"
-            echo "Please check the cargo-release output format above"
-            exit 1
-          fi
-
-          echo "Detected new version: $NEW_VERSION"
-          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-
-      - name: Generate Changelog
-        if: ${{ !inputs.dry_run }}
-        continue-on-error: true
-        run: |
-          NEW_VERSION="${{ steps.version.outputs.version }}"
-
-          if [ -z "$NEW_VERSION" ]; then
-            echo "Warning: No version available for changelog generation"
-            exit 0
-          fi
-
-          # Check if git-cliff is available
-          if command -v git-cliff &> /dev/null; then
-            echo "Generating changelog for v${NEW_VERSION}..."
-
-            # Generate changelog, but don't fail if it doesn't work
-            git-cliff --tag v${NEW_VERSION} --prepend CHANGELOG.md || {
-              echo "Warning: git-cliff failed, continuing without changelog update"
-              exit 0
-            }
-
-            # Check if there are actual changes to commit
-            if [ -f CHANGELOG.md ]; then
-              if git diff --exit-code CHANGELOG.md > /dev/null 2>&1; then
-                echo "No changelog changes detected"
-              else
-                git add CHANGELOG.md
-                git commit -m "docs: update changelog for v${NEW_VERSION}" || echo "No changelog changes to commit"
-              fi
-            fi
-          else
-            echo "git-cliff not available, skipping changelog generation"
-          fi
-
       - name: Execute Release
         if: ${{ !inputs.dry_run }}
         env:
@@ -151,49 +63,11 @@ jobs:
         run: |
           echo "Releasing ${{ inputs.version }} version..."
 
-          # Run cargo-release with no-push first to catch any errors before pushing
-          cargo release ${{ inputs.version }} --execute --no-confirm --no-push --verbose || {
+          # Run cargo-release - it will handle everything
+          cargo release ${{ inputs.version }} --execute --no-confirm --verbose || {
             echo "::error::cargo-release failed. Check the logs above for details."
             exit 1
           }
-
-          # If successful, push everything
-          echo "Pushing changes and tags..."
-          git push --follow-tags
-
-      - name: Verify Release
-        if: ${{ !inputs.dry_run }}
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          echo "Verifying release v${VERSION}..."
-
-          # Check that tag was created
-          if git tag -l "v${VERSION}" | grep -q .; then
-            echo "✓ Tag v${VERSION} created successfully"
-          else
-            echo "✗ Tag v${VERSION} was not created"
-            exit 1
-          fi
-
-          # Check that versions were updated
-          CRATE_VERSION=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "redisctl") | .version')
-          if [ "$CRATE_VERSION" = "$VERSION" ]; then
-            echo "✓ Crate version updated to ${VERSION}"
-          else
-            echo "✗ Crate version mismatch: expected ${VERSION}, got ${CRATE_VERSION}"
-            exit 1
-          fi
-
-      - name: Create GitHub Release
-        if: ${{ !inputs.dry_run }}
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v${{ steps.version.outputs.version }}
-          name: Release v${{ steps.version.outputs.version }}
-          draft: false
-          prerelease: false
-          generate_release_notes: true
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Report Status
         if: always()
