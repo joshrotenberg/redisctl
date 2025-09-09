@@ -81,10 +81,22 @@ jobs:
           fi
 
           if [ -z "$NEW_VERSION" ]; then
-            # Pattern 4: Try to get it from Cargo.toml after dry-run update
-            cargo release version ${{ inputs.version }} --execute --no-confirm 2>/dev/null || true
-            NEW_VERSION=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "redisctl") | .version')
-            git restore .
+            # Pattern 4: Calculate version manually based on current version and bump type
+            CURRENT_VERSION=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "redisctl") | .version')
+            echo "Current version: $CURRENT_VERSION"
+
+            case "${{ inputs.version }}" in
+              patch)
+                NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{print $1"."$2"."$3+1}')
+                ;;
+              minor)
+                NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{print $1"."$2+1".0"}')
+                ;;
+              major)
+                NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{print $1+1".0.0"}')
+                ;;
+            esac
+            echo "Calculated new version: $NEW_VERSION"
           fi
 
           if [ -z "$NEW_VERSION" ]; then
@@ -98,8 +110,14 @@ jobs:
 
       - name: Generate Changelog
         if: ${{ !inputs.dry_run }}
+        continue-on-error: true
         run: |
           NEW_VERSION="${{ steps.version.outputs.version }}"
+
+          if [ -z "$NEW_VERSION" ]; then
+            echo "Warning: No version available for changelog generation"
+            exit 0
+          fi
 
           # Check if git-cliff is available
           if command -v git-cliff &> /dev/null; then
@@ -108,15 +126,16 @@ jobs:
             # Generate changelog, but don't fail if it doesn't work
             git-cliff --tag v${NEW_VERSION} --prepend CHANGELOG.md || {
               echo "Warning: git-cliff failed, continuing without changelog update"
+              exit 0
             }
 
-            # Only commit if there are changes
-            if git diff --staged --quiet CHANGELOG.md 2>/dev/null || git diff --quiet CHANGELOG.md 2>/dev/null; then
-              if [ -f CHANGELOG.md ] && git diff CHANGELOG.md | grep -q .; then
+            # Check if there are actual changes to commit
+            if [ -f CHANGELOG.md ]; then
+              if git diff --exit-code CHANGELOG.md > /dev/null 2>&1; then
+                echo "No changelog changes detected"
+              else
                 git add CHANGELOG.md
                 git commit -m "docs: update changelog for v${NEW_VERSION}" || echo "No changelog changes to commit"
-              else
-                echo "No changelog changes detected"
               fi
             fi
           else
