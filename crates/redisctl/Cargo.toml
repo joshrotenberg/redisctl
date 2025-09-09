@@ -15,6 +15,9 @@ readme = "../../README.md"
 name = "redisctl"
 path = "src/main.rs"
 
+[package.metadata.release]
+# Use workspace configuration
+
 [dependencies]
 redis-cloud = { version = "0.3.1", path = "../redis-cloud" }
 redis-enterprise = { version = "0.3.1", path = "../redis-enterprise" }

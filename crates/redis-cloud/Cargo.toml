@@ -12,6 +12,9 @@ keywords = ["redis", "cloud", "api", "rest", "client"]
 categories = ["api-bindings", "database"]
 readme = "../../README.md"
 
+[package.metadata.release]
+# Use workspace configuration
+
 [dependencies]
 async-trait = { workspace = true }
 reqwest = { workspace = true }
