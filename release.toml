@@ -1,45 +1,34 @@
 # Cargo Release Configuration
-# Based on official cargo-release documentation
-# https://github.com/crate-ci/cargo-release/blob/master/docs/reference.md
+# BasedOnly on official cargo-release documentation
+# https://github.com/crate-ci/cargo-release/blob/master/docs/reference.mdcontains VALID fields per official documentation
 
-# Only allow releases from main branch
+# Branch restrictions
 allow-branch = ["main"]
 
-# Don't sign commits/tags (GitHub Actions doesn't have GPG)
+# Git signing (disabled for GitHub Actions)
 sign-commit = false
 sign-tag = false
 
-# Push and publish settings
+# Core settings
 push = true
 publish = true
 verify = true
 
-# Shared version for all workspace members
+# Version management
 shared-version = true
+consolidate-commits = true
+dependent-version = "upgrade"
 
 # Consolidate commits when releasing workspace
 consolidate-commits = true
 
-# Version bump commit message
+# Commit and commit messagetag messages
 pre-release-commit-message = "chore: release v{{version}}"
 
 # Tag configuration
 tag = true
 tag-message = "Release v{{version}}"
 tag-name = "v{{version}}"
-
-# Don't create GitHub releases - cargo-dist will handle that
+tag
+# Don't create GitHub releases (cargo-dist handles this)
 release = false
-
-# Dependencies between crates - automatically upgrade
-dependent-version = "upgrade"
-
-# Package-specific configuration (all use workspace defaults)
-[[package]]
-name = "redis-cloud"
-
-[[package]]
-name = "redis-enterprise"
-
-[[package]]
-name = "redisctl"
