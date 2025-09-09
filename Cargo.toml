@@ -5,6 +5,11 @@ members = [
     "crates/redis-enterprise",
     "crates/redisctl",
 ]
+default-members = [
+    "crates/redis-cloud",
+    "crates/redis-enterprise",
+    "crates/redisctl",
+]
 
 [workspace.package]
 version = "0.3.1"
