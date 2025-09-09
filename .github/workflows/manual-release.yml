@@ -153,7 +153,8 @@ jobs:
 
             # Run cargo-release with the explicit version to skip bumping
             echo "Executing release of v$CURRENT_VERSION..."
-            cargo release $CURRENT_VERSION \
+            cargo release release \
+              --no-bump \
               --execute --no-confirm --verbose 2>&1 | tee /tmp/release.log || {
               echo "::error::cargo-release failed. Check the logs above for details."
               exit 1
