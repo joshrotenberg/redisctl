@@ -1,7 +1,5 @@
-# Cargo Release Configuration
+# Cargo Release Configuration for Workspace
 
-# Workspace-level configuration
-[workspace]
 # Only allow releases from main branch
 allow-branch = ["main"]
 
@@ -10,7 +8,7 @@ sign-commit = false
 sign-tag = false
 
 # Push and publish settings
-push = false  # We'll push manually after success
+push = true  # Push after successful release
 publish = true
 verify = true
 
