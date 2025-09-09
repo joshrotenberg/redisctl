@@ -1,5 +1,14 @@
 # redisctl
 
+[![Crates.io](https://img.shields.io/crates/v/redisctl.svg)](https://crates.io/crates/redisctl)
+[![Downloads](https://img.shields.io/crates/d/redisctl.svg)](https://crates.io/crates/redisctl)
+[![Documentation](https://docs.rs/redisctl/badge.svg)](https://docs.rs/redisctl)
+[![GitHub Release](https://img.shields.io/github/v/release/joshrotenberg/redisctl)](https://github.com/joshrotenberg/redisctl/releases)
+[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](https://github.com/joshrotenberg/redisctl#license)
+[![CI](https://github.com/joshrotenberg/redisctl/actions/workflows/ci.yml/badge.svg)](https://github.com/joshrotenberg/redisctl/actions/workflows/ci.yml)
+[![Security Audit](https://github.com/joshrotenberg/redisctl/actions/workflows/security.yml/badge.svg)](https://github.com/joshrotenberg/redisctl/actions/workflows/security.yml)
+[![Docker](https://img.shields.io/docker/v/joshrotenberg/redisctl?label=docker)](https://hub.docker.com/r/joshrotenberg/redisctl)
+
 A unified CLI for Redis Cloud and Redis Enterprise REST APIs with comprehensive async operation support.
 
 ## Features
