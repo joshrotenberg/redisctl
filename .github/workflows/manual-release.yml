@@ -63,6 +63,60 @@ jobs:
             echo "cargo-release already installed"
           fi
 
+      - name: Verify crates.io authentication
+        if: ${{ !inputs.dry_run }}
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          echo "Verifying crates.io authentication..."
+
+          # Check if token is set (don't print it!)
+          if [ -z "$CARGO_REGISTRY_TOKEN" ]; then
+            echo "::error::CARGO_REGISTRY_TOKEN is not set!"
+            exit 1
+          fi
+
+          # Show token metadata (length and first few chars only for debugging)
+          TOKEN_LENGTH=${#CARGO_REGISTRY_TOKEN}
+          echo "Token is set (length: $TOKEN_LENGTH)"
+
+          # Verify token format (should start with specific prefix)
+          if [[ ! "$CARGO_REGISTRY_TOKEN" =~ ^[a-zA-Z0-9_-]{20,} ]]; then
+            echo "::warning::Token format may be invalid"
+          fi
+
+          # Test authentication with cargo
+          echo "Testing cargo login..."
+          cargo login "$CARGO_REGISTRY_TOKEN"
+
+          # Test with dry-run publish on smallest package
+          echo "Testing publish access with dry-run..."
+          cd crates/redis-cloud
+          if cargo publish --dry-run 2>&1 | tee /tmp/publish-test.log; then
+            echo "✓ Successfully authenticated to crates.io"
+          else
+            echo "::error::Failed to authenticate to crates.io"
+            echo "Debug output:"
+            cat /tmp/publish-test.log
+            exit 1
+          fi
+          cd ../..
+
+          # Verify all packages can be published
+          echo "Verifying all packages..."
+          for pkg in redis-cloud redis-enterprise redisctl; do
+            echo "  Checking $pkg..."
+            cd crates/$pkg
+            if ! cargo publish --dry-run --allow-dirty > /dev/null 2>&1; then
+              echo "::error::Package $pkg cannot be published"
+              cargo publish --dry-run --allow-dirty
+              exit 1
+            fi
+            cd ../..
+          done
+
+          echo "✓ All packages verified for publishing"
+
       - name: Dry Run Release
         if: inputs.dry_run
         run: |
@@ -77,15 +131,49 @@ jobs:
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
           CARGO_TERM_COLOR: always
-          RUST_BACKTRACE: 1
+          RUST_BACKTRACE: full
+          RUST_LOG: cargo_release=debug
         run: |
           echo "Releasing ${{ inputs.version }} version..."
 
+          # Debug: Show current state
+          echo "Current directory: $(pwd)"
+          echo "Git status:"
+          git status
+          echo ""
+
+          # Debug: Show what cargo-release will do
+          echo "Checking what cargo-release will do..."
+          cargo release ${{ inputs.version }} --list 2>&1 | tee /tmp/release-list.log || true
+
+          if ! grep -q "redis-cloud\|redis-enterprise\|redisctl" /tmp/release-list.log; then
+            echo "::warning::No packages detected by cargo-release. Debug info:"
+            echo "Workspace members:"
+            cargo metadata --no-deps --format-version 1 | jq -r '.workspace_members[]'
+            echo ""
+            echo "Package metadata:"
+            for pkg in redis-cloud redis-enterprise redisctl; do
+              echo "Package: $pkg"
+              cargo metadata --no-deps --format-version 1 | jq ".packages[] | select(.name == \"$pkg\") | {name, version, publish}"
+            done
+          fi
+
           # Run cargo-release - it will handle everything
           # Use workspace-level release with shared-version
+          echo "Executing release..."
           cargo release ${{ inputs.version }} \
-            --execute --no-confirm --verbose || {
+            --execute --no-confirm --verbose 2>&1 | tee /tmp/release.log || {
             echo "::error::cargo-release failed. Check the logs above for details."
+            echo ""
+            echo "Failure analysis:"
+            if grep -q "no packages selected" /tmp/release.log; then
+              echo "- cargo-release couldn't find packages to release"
+              echo "- This usually means a configuration or authentication issue"
+            fi
+            if grep -q "failed to connect" /tmp/release.log; then
+              echo "- Network/authentication issue detected"
+              echo "- Verify CARGO_REGISTRY_TOKEN is valid"
+            fi
             exit 1
           }
 
