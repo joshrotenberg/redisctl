@@ -33,13 +33,3 @@ release = false
 
 # Dependencies between crates - automatically upgrade
 dependent-version = "upgrade"
-
-# Package-specific configuration (all use workspace defaults)
-[[package]]
-name = "redis-cloud"
-
-[[package]]
-name = "redis-enterprise"
-
-[[package]]
-name = "redisctl"
