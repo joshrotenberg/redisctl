@@ -1,0 +1,150 @@
+name: Release with cargo-workspaces
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version bump type"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        required: true
+      dry_run:
+        description: "Dry run (do not publish)"
+        type: boolean
+        default: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry and tools
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+          key: ${{ runner.os }}-cargo-tools-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-tools-
+
+      - name: Install cargo-workspaces
+        run: |
+          if ! command -v cargo-workspaces &> /dev/null; then
+            echo "Installing cargo-workspaces..."
+            cargo install cargo-workspaces
+          else
+            echo "cargo-workspaces already installed"
+          fi
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Verify authentication (non-dry-run)
+        if: ${{ !inputs.dry_run }}
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          if [ -z "$CARGO_REGISTRY_TOKEN" ]; then
+            echo "::error::CARGO_REGISTRY_TOKEN is not set!"
+            exit 1
+          fi
+
+          echo "Testing crates.io authentication..."
+          cargo login "$CARGO_REGISTRY_TOKEN"
+
+          # Test with dry-run on smallest package
+          cd crates/redis-cloud
+          if cargo publish --dry-run 2>&1; then
+            echo "✓ Successfully authenticated to crates.io"
+          else
+            echo "::error::Failed to authenticate to crates.io"
+            exit 1
+          fi
+          cd ../..
+
+      - name: Show current state
+        run: |
+          echo "Current versions:"
+          for pkg in redis-cloud redis-enterprise redisctl; do
+            version=$(cargo metadata --no-deps --format-version 1 | jq -r ".packages[] | select(.name == \"$pkg\") | .version")
+            echo "  $pkg: $version"
+          done
+
+          echo ""
+          echo "Workspace members:"
+          cargo metadata --no-deps --format-version 1 | jq -r '.workspace_members[]'
+
+      - name: Dry run
+        if: inputs.dry_run
+        run: |
+          echo "Dry run: Testing version bump and publish..."
+          cargo workspaces publish --dry-run ${{ inputs.version }}
+          echo "✓ Dry run completed successfully"
+
+      - name: Version bump and publish
+        if: ${{ !inputs.dry_run }}
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          echo "Releasing ${{ inputs.version }} version..."
+
+          # This single command will:
+          # 1. Bump versions according to the specified type
+          # 2. Update cross-dependencies
+          # 3. Commit the changes with git
+          # 4. Create and push git tag
+          # 5. Publish all crates to crates.io
+          cargo workspaces publish \
+            --yes \
+            --no-verify \
+            --allow-branch main \
+            --force '*' \
+            ${{ inputs.version }}
+
+          # Get the new version that was created
+          NEW_VERSION=$(git describe --tags --abbrev=0)
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+
+      - name: Report success
+        if: ${{ !inputs.dry_run && success() }}
+        run: |
+          echo "::notice::✅ Successfully released v$NEW_VERSION"
+          echo ""
+          echo "Next steps:"
+          echo "1. The tag v$NEW_VERSION will trigger cargo-dist to build binaries"
+          echo "2. The tag will trigger Docker workflow to build images"
+          echo "3. Verify packages on crates.io:"
+          echo "   - https://crates.io/crates/redis-cloud"
+          echo "   - https://crates.io/crates/redis-enterprise"
+          echo "   - https://crates.io/crates/redisctl"
+
+      - name: Report failure
+        if: failure()
+        run: |
+          echo "::error::❌ Release failed!"
+          echo ""
+          echo "Recovery steps:"
+          echo "1. Check logs above for specific error"
+          echo "2. If tag was created but publish failed:"
+          echo "   - Delete tag: git push --delete origin v[VERSION]"
+          echo "   - Delete local tag: git tag -d v[VERSION]"
+          echo "   - Yank from crates.io if partially published"
+          echo "3. If commits were made: git reset --hard HEAD~1"
