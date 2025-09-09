@@ -1,4 +1,6 @@
-# Cargo Release Configuration for Workspace
+# Cargo Release Configuration
+# Based on official cargo-release documentation
+# https://github.com/crate-ci/cargo-release/blob/master/docs/reference.md
 
 # Only allow releases from main branch
 allow-branch = ["main"]
@@ -8,19 +10,23 @@ sign-commit = false
 sign-tag = false
 
 # Push and publish settings
-push = true  # Push after successful release
+push = true
 publish = true
 verify = true
 
 # Shared version for all workspace members
 shared-version = true
 
-# Version bump configuration
+# Consolidate commits when releasing workspace
+consolidate-commits = true
+
+# Version bump commit message
 pre-release-commit-message = "chore: release v{{version}}"
+
+# Tag configuration
+tag = true
 tag-message = "Release v{{version}}"
 tag-name = "v{{version}}"
-consolidate-commits = true
-consolidate-pushes = true
 
 # Don't create GitHub releases - cargo-dist will handle that
 release = false
