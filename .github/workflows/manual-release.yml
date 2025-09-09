@@ -64,7 +64,8 @@ jobs:
           echo "Releasing ${{ inputs.version }} version..."
 
           # Run cargo-release - it will handle everything
-          cargo release ${{ inputs.version }} --execute --no-confirm --verbose || {
+          # Use --workspace to release all workspace packages
+          cargo release ${{ inputs.version }} --workspace --execute --no-confirm --verbose || {
             echo "::error::cargo-release failed. Check the logs above for details."
             exit 1
           }
