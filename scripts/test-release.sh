@@ -24,18 +24,20 @@ for pkg in redis-cloud redis-enterprise redisctl; do
 done
 
 echo ""
-echo "Testing version bump (dry-run)..."
-cargo workspaces version patch --no-git-commit --no-git-push --no-git-tag -y
-
-echo ""
-echo "Testing publish (dry-run)..."
-cargo workspaces publish --dry-run skip
+echo "Testing release process (dry-run)..."
+cargo workspaces publish --dry-run patch
 
 echo ""
 echo "✓ All tests passed! cargo-workspaces is ready to use."
 echo ""
 echo "To perform an actual release:"
 echo "  1. Commit all changes"
-echo "  2. Run: cargo workspaces version [patch|minor|major]"
-echo "  3. Run: cargo workspaces publish --from-git --yes --no-verify --allow-branch main"
-echo "  4. Or use the GitHub Actions workflow for automated releases"
+echo "  2. Run: cargo workspaces publish [patch|minor|major] --yes --no-verify --allow-branch main --force '*'"
+echo "  3. Or use the GitHub Actions workflow for automated releases"
+echo ""
+echo "The single publish command will:"
+echo "  - Bump versions according to the specified type"
+echo "  - Update cross-dependencies between crates"
+echo "  - Commit the changes to git"
+echo "  - Create and push a git tag"
+echo "  - Publish all crates to crates.io in dependency order"

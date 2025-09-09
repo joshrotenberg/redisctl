@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version bump type'
+        description: "Version bump type"
         type: choice
         options:
           - patch
@@ -12,7 +12,7 @@ on:
           - major
         required: true
       dry_run:
-        description: 'Dry run (do not publish)'
+        description: "Dry run (do not publish)"
         type: boolean
         default: false
 
@@ -92,16 +92,11 @@ jobs:
           echo "Workspace members:"
           cargo metadata --no-deps --format-version 1 | jq -r '.workspace_members[]'
 
-      - name: Version bump (dry-run)
+      - name: Dry run
         if: inputs.dry_run
         run: |
-          echo "Dry run: Bumping versions..."
-          cargo workspaces version ${{ inputs.version }} --dry-run --no-git-commit
-
-          echo ""
-          echo "Dry run: Testing publish..."
-          cargo workspaces publish --dry-run
-
+          echo "Dry run: Testing version bump and publish..."
+          cargo workspaces publish --dry-run ${{ inputs.version }}
           echo "✓ Dry run completed successfully"
 
       - name: Version bump and publish
@@ -109,43 +104,28 @@ jobs:
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: |
-          echo "Bumping versions to ${{ inputs.version }}..."
-          cargo workspaces version ${{ inputs.version }} --yes --no-git-commit
+          echo "Releasing ${{ inputs.version }} version..."
 
-          # Show what versions we ended up with
-          echo ""
-          echo "New versions:"
-          for pkg in redis-cloud redis-enterprise redisctl; do
-            version=$(cargo metadata --no-deps --format-version 1 | jq -r ".packages[] | select(.name == \"$pkg\") | .version")
-            echo "  $pkg: $version"
-          done
-
-          # Commit the version changes
-          echo ""
-          echo "Committing version changes..."
-          git add -A
-          NEW_VERSION=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].version')
-          git commit -m "chore: release v$NEW_VERSION"
-
-          # Create and push tag
-          echo "Creating tag v$NEW_VERSION..."
-          git tag "v$NEW_VERSION"
-          git push origin main --tags
-
-          # Publish to crates.io
-          echo ""
-          echo "Publishing to crates.io..."
+          # This single command will:
+          # 1. Bump versions according to the specified type
+          # 2. Update cross-dependencies
+          # 3. Commit the changes with git
+          # 4. Create and push git tag
+          # 5. Publish all crates to crates.io
           cargo workspaces publish \
-            --from-git \
             --yes \
             --no-verify \
             --allow-branch main \
-            --force '*'
+            --force '*' \
+            ${{ inputs.version }}
+
+          # Get the new version that was created
+          NEW_VERSION=$(git describe --tags --abbrev=0)
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
 
       - name: Report success
         if: ${{ !inputs.dry_run && success() }}
         run: |
-          NEW_VERSION=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].version')
           echo "::notice::✅ Successfully released v$NEW_VERSION"
           echo ""
           echo "Next steps:"
