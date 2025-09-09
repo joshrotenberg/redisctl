@@ -18,8 +18,8 @@ path = "src/main.rs"
 
 
 [dependencies]
-redis-cloud = { version = "0.3.2", path = "../redis-cloud" }
-redis-enterprise = { version = "0.3.2", path = "../redis-enterprise" }
+redis-cloud = { version = "0.3.3", path = "../redis-cloud" }
+redis-enterprise = { version = "0.3.3", path = "../redis-enterprise" }
 
 # CLI dependencies
 clap = { workspace = true }
