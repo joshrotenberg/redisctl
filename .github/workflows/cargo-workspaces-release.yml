@@ -52,6 +52,27 @@ jobs:
             echo "cargo-workspaces already installed"
           fi
 
+      - name: Debug token configuration
+        run: |
+          echo "=== Token Debug Information ==="
+          if [ -n "${{ secrets.PAT_TOKEN }}" ]; then
+            echo "✅ PAT_TOKEN is available"
+            echo "PAT_TOKEN length: ${#PAT_TOKEN}"
+          else
+            echo "❌ PAT_TOKEN is NOT available"
+          fi
+
+          if [ -n "${{ secrets.GITHUB_TOKEN }}" ]; then
+            echo "✅ GITHUB_TOKEN is available"
+          else
+            echo "❌ GITHUB_TOKEN is NOT available"
+          fi
+          echo "Current git remote:"
+          git remote -v
+          echo "=== End Debug ==="
+        env:
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+
       - name: Configure git
         run: |
           git config user.name "github-actions[bot]"
@@ -65,6 +86,9 @@ jobs:
             echo "PAT_TOKEN not available, using GITHUB_TOKEN"
             git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
           fi
+
+          echo "Final git remote configuration:"
+          git remote -v
 
       - name: Verify authentication (non-dry-run)
         if: ${{ !inputs.dry_run }}
