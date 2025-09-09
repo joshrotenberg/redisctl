@@ -57,6 +57,15 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+          # Configure git remote to use PAT_TOKEN for pushes
+          if [ -n "${{ secrets.PAT_TOKEN }}" ]; then
+            echo "Configuring git to use PAT_TOKEN for pushes"
+            git remote set-url origin https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git
+          else
+            echo "PAT_TOKEN not available, using GITHUB_TOKEN"
+            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          fi
+
       - name: Verify authentication (non-dry-run)
         if: ${{ !inputs.dry_run }}
         env:
