@@ -60,22 +60,36 @@ jobs:
         if: ${{ !inputs.dry_run }}
         id: version
         run: |
-          # More robust version extraction
+          # Run cargo release version to determine what the new version will be
           OUTPUT=$(cargo release version ${{ inputs.version }} --verbose 2>&1)
-          echo "Raw output:"
+          echo "Raw output from cargo-release:"
           echo "$OUTPUT"
+          echo "---"
 
           # Try multiple patterns to extract version
-          NEW_VERSION=$(echo "$OUTPUT" | grep -E "^Upgrading" | head -1 | sed 's/.*to //' | sed 's/[[:space:]]*$//')
+          # Pattern 1: Look for "to vX.Y.Z" or "to X.Y.Z"
+          NEW_VERSION=$(echo "$OUTPUT" | grep -E -o "to v?[0-9]+\.[0-9]+\.[0-9]+" | head -1 | sed 's/.*to //; s/^v//')
 
           if [ -z "$NEW_VERSION" ]; then
-            # Try alternative pattern
-            NEW_VERSION=$(echo "$OUTPUT" | grep -E "would be upgraded to" | head -1 | sed 's/.*to //' | sed 's/[[:space:]]*$//')
+            # Pattern 2: Look for lines with "Upgrading" and extract version after "to"
+            NEW_VERSION=$(echo "$OUTPUT" | grep -i "upgrading" | grep -E -o "to [0-9]+\.[0-9]+\.[0-9]+" | head -1 | sed 's/to //')
           fi
 
           if [ -z "$NEW_VERSION" ]; then
-            echo "ERROR: Could not determine new version from output:"
-            echo "$OUTPUT"
+            # Pattern 3: Look for any semantic version pattern
+            NEW_VERSION=$(echo "$OUTPUT" | grep -E -o "[0-9]+\.[0-9]+\.[0-9]+" | tail -1)
+          fi
+
+          if [ -z "$NEW_VERSION" ]; then
+            # Pattern 4: Try to get it from Cargo.toml after dry-run update
+            cargo release version ${{ inputs.version }} --execute --no-confirm 2>/dev/null || true
+            NEW_VERSION=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "redisctl") | .version')
+            git restore .
+          fi
+
+          if [ -z "$NEW_VERSION" ]; then
+            echo "ERROR: Could not determine new version from cargo-release output"
+            echo "Please check the cargo-release output format above"
             exit 1
           fi
 
