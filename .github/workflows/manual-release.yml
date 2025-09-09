@@ -82,11 +82,8 @@ jobs:
           echo "Releasing ${{ inputs.version }} version..."
 
           # Run cargo-release - it will handle everything
-          # Explicitly specify all packages to release
+          # Use workspace-level release with shared-version
           cargo release ${{ inputs.version }} \
-            --package redis-cloud \
-            --package redis-enterprise \
-            --package redisctl \
             --execute --no-confirm --verbose || {
             echo "::error::cargo-release failed. Check the logs above for details."
             exit 1
