@@ -83,6 +83,31 @@ pub enum Commands {
     /// Version information
     #[command(visible_alias = "ver", visible_alias = "v")]
     Version,
+
+    /// Generate shell completions
+    #[command(visible_alias = "comp")]
+    Completions {
+        /// Shell to generate completions for
+        #[arg(value_enum)]
+        shell: Shell,
+    },
+}
+
+/// Supported shells for completion generation
+#[derive(Debug, Clone, Copy, clap::ValueEnum)]
+#[allow(clippy::enum_variant_names)]
+pub enum Shell {
+    /// Bourne Again Shell
+    Bash,
+    /// Z Shell
+    Zsh,
+    /// Friendly Interactive Shell
+    Fish,
+    /// PowerShell
+    #[value(name = "powershell", alias = "power-shell")]
+    PowerShell,
+    /// Elvish
+    Elvish,
 }
 
 /// HTTP methods for raw API access

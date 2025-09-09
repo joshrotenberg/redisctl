@@ -21,6 +21,7 @@ redis-enterprise = { version = "0.3.1", path = "../redis-enterprise" }
 
 # CLI dependencies
 clap = { workspace = true }
+clap_complete = "4.5"
 anyhow = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }

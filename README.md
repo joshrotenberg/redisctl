@@ -23,6 +23,53 @@ cd redisctl
 cargo install --path crates/redisctl
 ```
 
+### Shell Completions
+
+`redisctl` can generate shell completions for various shells. To install them:
+
+#### Bash
+```bash
+# Generate and install completion
+redisctl completions bash > ~/.local/share/bash-completion/completions/redisctl
+
+# Or for system-wide installation (requires sudo)
+redisctl completions bash | sudo tee /usr/share/bash-completion/completions/redisctl
+```
+
+#### Zsh
+```bash
+# Generate completion to a directory in your $fpath
+redisctl completions zsh > ~/.zsh/completions/_redisctl
+
+# Add this to your ~/.zshrc if not already present
+fpath=(~/.zsh/completions $fpath)
+autoload -U compinit && compinit
+```
+
+#### Fish
+```bash
+# Generate completion
+redisctl completions fish > ~/.config/fish/completions/redisctl.fish
+```
+
+#### PowerShell
+```powershell
+# Generate completion
+redisctl completions powershell > $PROFILE.CurrentUserAllHosts
+
+# Or add to your profile
+redisctl completions powershell >> $PROFILE
+```
+
+#### Elvish
+```bash
+# Generate completion
+redisctl completions elvish > ~/.elvish/lib/redisctl.elv
+
+# Add to rc.elv
+echo "use redisctl" >> ~/.elvish/rc.elv
+```
+
 ## Quick Start
 
 ### Configure Authentication
