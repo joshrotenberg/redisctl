@@ -101,41 +101,41 @@ fn test_shard_stats() -> serde_json::Value {
 
 fn test_cluster_last_stats() -> serde_json::Value {
     json!({
-        "time": "2023-01-01T12:02:00Z",
-        "metrics": {
-            "cpu_usage": 28.3,
-            "memory_usage": 77.5,
-            "network_in": 1150000,
-            "network_out": 2300000,
-            "total_req": 158000
-        }
+        "stime": "2023-01-01T12:00:00Z",
+        "etime": "2023-01-01T12:02:00Z",
+        "interval": "2m",
+        "cpu_usage": 28.3,
+        "memory_usage": 77.5,
+        "network_in": 1150000,
+        "network_out": 2300000,
+        "total_req": 158000
     })
 }
 
 fn test_node_last_stats() -> serde_json::Value {
     json!({
-        "time": "2023-01-01T12:02:00Z",
-        "metrics": {
-            "cpu_user": 16.2,
-            "cpu_system": 5.8,
-            "cpu_idle": 78.0,
-            "free_memory": 4194304000u64,
-            "network_bytes_in": 520000,
-            "network_bytes_out": 1040000
-        }
+        "stime": "2023-01-01T12:00:00Z",
+        "etime": "2023-01-01T12:02:00Z",
+        "interval": "2m",
+        "cpu_user": 16.2,
+        "cpu_system": 5.8,
+        "cpu_idle": 78.0,
+        "free_memory": 4194304000u64,
+        "network_bytes_in": 520000,
+        "network_bytes_out": 1040000
     })
 }
 
 fn test_database_last_stats() -> serde_json::Value {
     json!({
-        "time": "2023-01-01T12:02:00Z",
-        "metrics": {
-            "used_memory": 1100000,
-            "total_req": 5200,
-            "ops_per_sec": 105.2,
-            "hits": 4680,
-            "misses": 520
-        }
+        "stime": "2023-01-01T12:00:00Z",
+        "etime": "2023-01-01T12:02:00Z",
+        "interval": "2m",
+        "used_memory": 1100000,
+        "total_req": 5200,
+        "ops_per_sec": 105.2,
+        "hits": 4680,
+        "misses": 520
     })
 }
 

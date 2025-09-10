@@ -996,6 +996,10 @@ pub enum EnterpriseCommands {
     /// Module management operations
     #[command(subcommand)]
     Module(crate::commands::enterprise::module::ModuleCommands),
+
+    /// Statistics and metrics operations
+    #[command(subcommand)]
+    Stats(EnterpriseStatsCommands),
 }
 
 // Placeholder command structures - will be expanded in later PRs
@@ -2547,5 +2551,67 @@ pub enum EnterpriseCrdbCommands {
         /// Export configuration as JSON string or @file.json
         #[arg(long)]
         data: String,
+    },
+}
+
+#[derive(Subcommand, Debug, Clone)]
+pub enum EnterpriseStatsCommands {
+    /// Get database statistics
+    Database {
+        /// Database ID
+        id: u32,
+    },
+
+    /// Get database shard statistics
+    DatabaseShards {
+        /// Database ID
+        id: u32,
+    },
+
+    /// Get database metrics over time
+    DatabaseMetrics {
+        /// Database ID
+        id: u32,
+        /// Time interval (1m, 5m, 1h, 1d)
+        #[arg(long, default_value = "1h")]
+        interval: String,
+    },
+
+    /// Get node statistics
+    Node {
+        /// Node ID
+        id: u32,
+    },
+
+    /// Get node metrics over time
+    NodeMetrics {
+        /// Node ID
+        id: u32,
+        /// Time interval (1m, 5m, 1h, 1d)
+        #[arg(long, default_value = "1h")]
+        interval: String,
+    },
+
+    /// Get cluster-wide statistics
+    Cluster,
+
+    /// Get cluster metrics over time
+    ClusterMetrics {
+        /// Time interval (1m, 5m, 1h, 1d)
+        #[arg(long, default_value = "1h")]
+        interval: String,
+    },
+
+    /// Get listener statistics
+    Listener,
+
+    /// Export statistics in various formats
+    Export {
+        /// Export format (json, prometheus, csv)
+        #[arg(long, default_value = "json")]
+        format: String,
+        /// Time interval for time-series data (1m, 5m, 1h, 1d)
+        #[arg(long)]
+        interval: Option<String>,
     },
 }

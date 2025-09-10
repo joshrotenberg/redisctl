@@ -93,12 +93,14 @@ pub struct StatsInterval {
 }
 
 /// Last stats response for single resource
+/// Response for last stats endpoint - the API returns metrics directly
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LastStatsResponse {
-    pub time: String,
-    pub metrics: Value,
+    pub stime: Option<String>,
+    pub etime: Option<String>,
+    pub interval: Option<String>,
     #[serde(flatten)]
-    pub extra: Value,
+    pub metrics: Value, // All other fields are metrics
 }
 
 /// Aggregated stats response for multiple resources
