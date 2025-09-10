@@ -992,6 +992,10 @@ pub enum EnterpriseCommands {
     /// Log operations
     #[command(subcommand)]
     Logs(crate::commands::enterprise::logs::LogsCommands),
+
+    /// Module management operations
+    #[command(subcommand)]
+    Module(crate::commands::enterprise::module::ModuleCommands),
 }
 
 // Placeholder command structures - will be expanded in later PRs
