@@ -242,6 +242,12 @@ async fn execute_enterprise_command(
             )
             .await
         }
+        Stats(stats_cmd) => {
+            commands::enterprise::stats::handle_stats_command(
+                conn_mgr, profile, stats_cmd, output, query,
+            )
+            .await
+        }
     }
 }
 
