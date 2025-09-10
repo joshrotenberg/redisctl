@@ -155,6 +155,7 @@ fn format_command(command: &Commands) -> String {
             use cli::ProfileCommands::*;
             match cmd {
                 List => "profile list".to_string(),
+                Path => "profile path".to_string(),
                 Show { name } => format!("profile show {}", name),
                 Set { name, .. } => format!("profile set {} [credentials redacted]", name),
                 Remove { name } => format!("profile remove {}", name),
@@ -275,6 +276,12 @@ async fn execute_profile_command(
             let profiles = conn_mgr.config.list_profiles();
             trace!("Found {} profiles", profiles.len());
 
+            // Show config file path at the top
+            if let Ok(config_path) = config::Config::config_path() {
+                println!("Configuration file: {}", config_path.display());
+                println!();
+            }
+
             if profiles.is_empty() {
                 info!("No profiles configured");
                 println!("No profiles configured.");
@@ -319,6 +326,12 @@ async fn execute_profile_command(
                 );
             }
 
+            Ok(())
+        }
+
+        Path => {
+            let config_path = config::Config::config_path()?;
+            println!("{}", config_path.display());
             Ok(())
         }
 
@@ -453,7 +466,12 @@ async fn execute_profile_command(
             // Save the configuration
             config.save().context("Failed to save configuration")?;
 
-            println!("Profile '{}' saved successfully.", name);
+            if let Ok(config_path) = config::Config::config_path() {
+                println!("Profile '{}' saved successfully to:", name);
+                println!("  {}", config_path.display());
+            } else {
+                println!("Profile '{}' saved successfully.", name);
+            }
 
             // Ask if this should be the default profile
             if config.default_profile.is_none() || config.profiles.len() == 1 {

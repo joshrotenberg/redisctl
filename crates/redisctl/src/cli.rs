@@ -154,6 +154,9 @@ pub enum ProfileCommands {
     #[command(visible_alias = "ls", visible_alias = "l")]
     List,
 
+    /// Show the path to the configuration file
+    Path,
+
     /// Show details of a specific profile
     #[command(visible_alias = "sh", visible_alias = "get")]
     Show {
