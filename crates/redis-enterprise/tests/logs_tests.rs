@@ -19,10 +19,8 @@ fn error_response(code: u16, message: &str) -> ResponseTemplate {
 
 fn test_log_entry() -> serde_json::Value {
     json!({
-        "id": 123456,
         "time": "2023-01-01T12:00:00Z",
-        "level": "INFO",
-        "component": "database",
+        "type": "database_backup_completed",
         "message": "Database backup completed successfully",
         "node_uid": 1,
         "bdb_uid": 1,
@@ -32,10 +30,8 @@ fn test_log_entry() -> serde_json::Value {
 
 fn test_warning_log() -> serde_json::Value {
     json!({
-        "id": 123457,
         "time": "2023-01-01T12:01:00Z",
-        "level": "WARNING",
-        "component": "cluster",
+        "type": "high_memory_usage",
         "message": "High memory usage detected on node 2",
         "node_uid": 2,
         "user": "system"
@@ -44,37 +40,35 @@ fn test_warning_log() -> serde_json::Value {
 
 fn test_error_log() -> serde_json::Value {
     json!({
-        "id": 123458,
         "time": "2023-01-01T12:02:00Z",
-        "level": "ERROR",
-        "component": "network",
+        "type": "network_error",
         "message": "Connection timeout to node 3",
         "node_uid": 3,
         "user": "monitor"
     })
 }
 
+// Tests
 #[tokio::test]
-async fn test_logs_list_all() {
+async fn test_list_logs() {
     let mock_server = MockServer::start().await;
+    let mock_url = mock_server.uri();
+
+    let client = EnterpriseClient::builder()
+        .base_url(&mock_url)
+        .username("admin")
+        .password("password123")
+        .build()
+        .expect("Failed to create test client");
+
+    let response_body = json!([test_log_entry(), test_warning_log(), test_error_log()]);
 
     Mock::given(method("GET"))
         .and(path("/v1/logs"))
-        .and(basic_auth("admin", "password"))
-        .respond_with(success_response(json!([
-            test_log_entry(),
-            test_warning_log(),
-            test_error_log()
-        ])))
+        .and(basic_auth("admin", "password123"))
+        .respond_with(success_response(response_body))
         .mount(&mock_server)
         .await;
-
-    let client = EnterpriseClient::builder()
-        .base_url(mock_server.uri())
-        .username("admin")
-        .password("password")
-        .build()
-        .unwrap();
 
     let handler = LogsHandler::new(client);
     let result = handler.list(None).await;
@@ -82,29 +76,30 @@ async fn test_logs_list_all() {
     assert!(result.is_ok());
     let logs = result.unwrap();
     assert_eq!(logs.len(), 3);
-    assert_eq!(logs[0].id, 123456);
-    assert_eq!(logs[0].level, "INFO");
-    assert_eq!(logs[1].level, "WARNING");
-    assert_eq!(logs[2].level, "ERROR");
+    assert_eq!(logs[0].time, "2023-01-01T12:00:00Z");
+    assert_eq!(logs[0].event_type, "database_backup_completed");
+    assert_eq!(logs[1].event_type, "high_memory_usage");
+    assert_eq!(logs[2].event_type, "network_error");
 }
 
 #[tokio::test]
-async fn test_logs_list_empty() {
+async fn test_list_logs_empty_response() {
     let mock_server = MockServer::start().await;
+    let mock_url = mock_server.uri();
+
+    let client = EnterpriseClient::builder()
+        .base_url(&mock_url)
+        .username("admin")
+        .password("password123")
+        .build()
+        .expect("Failed to create test client");
 
     Mock::given(method("GET"))
         .and(path("/v1/logs"))
-        .and(basic_auth("admin", "password"))
+        .and(basic_auth("admin", "password123"))
         .respond_with(success_response(json!([])))
         .mount(&mock_server)
         .await;
-
-    let client = EnterpriseClient::builder()
-        .base_url(mock_server.uri())
-        .username("admin")
-        .password("password")
-        .build()
-        .unwrap();
 
     let handler = LogsHandler::new(client);
     let result = handler.list(None).await;
@@ -115,67 +110,71 @@ async fn test_logs_list_empty() {
 }
 
 #[tokio::test]
-async fn test_logs_list_with_limit() {
+async fn test_list_logs_with_limit() {
     let mock_server = MockServer::start().await;
+    let mock_url = mock_server.uri();
+
+    let client = EnterpriseClient::builder()
+        .base_url(&mock_url)
+        .username("admin")
+        .password("password123")
+        .build()
+        .expect("Failed to create test client");
+
+    let response_body = json!([test_log_entry()]);
 
     Mock::given(method("GET"))
         .and(path("/v1/logs"))
         .and(query_param("limit", "10"))
-        .and(basic_auth("admin", "password"))
-        .respond_with(success_response(json!([test_log_entry()])))
+        .and(basic_auth("admin", "password123"))
+        .respond_with(success_response(response_body))
         .mount(&mock_server)
         .await;
 
-    let client = EnterpriseClient::builder()
-        .base_url(mock_server.uri())
-        .username("admin")
-        .password("password")
-        .build()
-        .unwrap();
-
     let handler = LogsHandler::new(client);
     let query = LogsQuery {
+        stime: None,
+        etime: None,
+        order: None,
         limit: Some(10),
         offset: None,
-        level: None,
-        component: None,
-        node_uid: None,
-        bdb_uid: None,
     };
     let result = handler.list(Some(query)).await;
 
-    assert!(result.is_ok());
+    assert!(result.is_ok(), "Failed to list logs: {:?}", result.err());
     let logs = result.unwrap();
     assert_eq!(logs.len(), 1);
 }
 
 #[tokio::test]
-async fn test_logs_list_with_offset() {
+async fn test_list_logs_with_offset() {
     let mock_server = MockServer::start().await;
+    let mock_url = mock_server.uri();
+
+    let client = EnterpriseClient::builder()
+        .base_url(&mock_url)
+        .username("admin")
+        .password("password123")
+        .build()
+        .expect("Failed to create test client");
+
+    let response_body = json!([test_warning_log()]);
 
     Mock::given(method("GET"))
         .and(path("/v1/logs"))
         .and(query_param("offset", "20"))
-        .and(basic_auth("admin", "password"))
-        .respond_with(success_response(json!([test_warning_log()])))
+        .and(basic_auth("admin", "password123"))
+        .respond_with(success_response(response_body))
         .mount(&mock_server)
         .await;
 
-    let client = EnterpriseClient::builder()
-        .base_url(mock_server.uri())
-        .username("admin")
-        .password("password")
-        .build()
-        .unwrap();
-
     let handler = LogsHandler::new(client);
     let query = LogsQuery {
+        stime: None,
+        etime: None,
+        order: None,
         limit: None,
         offset: Some(20),
-        level: None,
-        component: None,
-        node_uid: None,
-        bdb_uid: None,
     };
     let result = handler.list(Some(query)).await;
 
@@ -185,262 +184,168 @@ async fn test_logs_list_with_offset() {
 }
 
 #[tokio::test]
-async fn test_logs_list_filter_by_level() {
+async fn test_list_logs_with_time_filter() {
     let mock_server = MockServer::start().await;
+    let mock_url = mock_server.uri();
+
+    let client = EnterpriseClient::builder()
+        .base_url(&mock_url)
+        .username("admin")
+        .password("password123")
+        .build()
+        .expect("Failed to create test client");
+
+    let response_body = json!([test_error_log()]);
 
     Mock::given(method("GET"))
         .and(path("/v1/logs"))
-        .and(query_param("level", "ERROR"))
-        .and(basic_auth("admin", "password"))
-        .respond_with(success_response(json!([test_error_log()])))
+        .and(query_param("stime", "2023-01-01T00:00:00Z"))
+        .and(query_param("etime", "2023-01-02T00:00:00Z"))
+        .and(basic_auth("admin", "password123"))
+        .respond_with(success_response(response_body))
         .mount(&mock_server)
         .await;
 
-    let client = EnterpriseClient::builder()
-        .base_url(mock_server.uri())
-        .username("admin")
-        .password("password")
-        .build()
-        .unwrap();
-
     let handler = LogsHandler::new(client);
     let query = LogsQuery {
+        stime: Some("2023-01-01T00:00:00Z".to_string()),
+        etime: Some("2023-01-02T00:00:00Z".to_string()),
+        order: None,
         limit: None,
         offset: None,
-        level: Some("ERROR".to_string()),
-        component: None,
-        node_uid: None,
-        bdb_uid: None,
     };
     let result = handler.list(Some(query)).await;
 
     assert!(result.is_ok());
     let logs = result.unwrap();
     assert_eq!(logs.len(), 1);
-    assert_eq!(logs[0].level, "ERROR");
+    assert_eq!(logs[0].event_type, "network_error");
 }
 
 #[tokio::test]
-async fn test_logs_list_filter_by_component() {
+async fn test_list_logs_with_order() {
     let mock_server = MockServer::start().await;
+    let mock_url = mock_server.uri();
+
+    let client = EnterpriseClient::builder()
+        .base_url(&mock_url)
+        .username("admin")
+        .password("password123")
+        .build()
+        .expect("Failed to create test client");
+
+    let response_body = json!([test_error_log(), test_warning_log(), test_log_entry()]);
 
     Mock::given(method("GET"))
         .and(path("/v1/logs"))
-        .and(query_param("component", "database"))
-        .and(basic_auth("admin", "password"))
-        .respond_with(success_response(json!([test_log_entry()])))
+        .and(query_param("order", "desc"))
+        .and(basic_auth("admin", "password123"))
+        .respond_with(success_response(response_body))
         .mount(&mock_server)
         .await;
 
-    let client = EnterpriseClient::builder()
-        .base_url(mock_server.uri())
-        .username("admin")
-        .password("password")
-        .build()
-        .unwrap();
-
     let handler = LogsHandler::new(client);
     let query = LogsQuery {
+        stime: None,
+        etime: None,
+        order: Some("desc".to_string()),
         limit: None,
         offset: None,
-        level: None,
-        component: Some("database".to_string()),
-        node_uid: None,
-        bdb_uid: None,
     };
     let result = handler.list(Some(query)).await;
 
     assert!(result.is_ok());
     let logs = result.unwrap();
-    assert_eq!(logs.len(), 1);
-    assert_eq!(logs[0].component.as_ref().unwrap(), "database");
+    assert_eq!(logs.len(), 3);
+    // In descending order
+    assert_eq!(logs[0].event_type, "network_error");
+    assert_eq!(logs[1].event_type, "high_memory_usage");
+    assert_eq!(logs[2].event_type, "database_backup_completed");
 }
 
 #[tokio::test]
-async fn test_logs_list_filter_by_node() {
+async fn test_list_logs_with_combined_filters() {
     let mock_server = MockServer::start().await;
-
-    Mock::given(method("GET"))
-        .and(path("/v1/logs"))
-        .and(query_param("node_uid", "1"))
-        .and(basic_auth("admin", "password"))
-        .respond_with(success_response(json!([test_log_entry()])))
-        .mount(&mock_server)
-        .await;
+    let mock_url = mock_server.uri();
 
     let client = EnterpriseClient::builder()
-        .base_url(mock_server.uri())
+        .base_url(&mock_url)
         .username("admin")
-        .password("password")
+        .password("password123")
         .build()
-        .unwrap();
+        .expect("Failed to create test client");
 
-    let handler = LogsHandler::new(client);
-    let query = LogsQuery {
-        limit: None,
-        offset: None,
-        level: None,
-        component: None,
-        node_uid: Some(1),
-        bdb_uid: None,
-    };
-    let result = handler.list(Some(query)).await;
-
-    assert!(result.is_ok());
-    let logs = result.unwrap();
-    assert_eq!(logs.len(), 1);
-    assert_eq!(logs[0].node_uid.unwrap(), 1);
-}
-
-#[tokio::test]
-async fn test_logs_list_filter_by_database() {
-    let mock_server = MockServer::start().await;
-
-    Mock::given(method("GET"))
-        .and(path("/v1/logs"))
-        .and(query_param("bdb_uid", "1"))
-        .and(basic_auth("admin", "password"))
-        .respond_with(success_response(json!([test_log_entry()])))
-        .mount(&mock_server)
-        .await;
-
-    let client = EnterpriseClient::builder()
-        .base_url(mock_server.uri())
-        .username("admin")
-        .password("password")
-        .build()
-        .unwrap();
-
-    let handler = LogsHandler::new(client);
-    let query = LogsQuery {
-        limit: None,
-        offset: None,
-        level: None,
-        component: None,
-        node_uid: None,
-        bdb_uid: Some(1),
-    };
-    let result = handler.list(Some(query)).await;
-
-    assert!(result.is_ok());
-    let logs = result.unwrap();
-    assert_eq!(logs.len(), 1);
-    assert_eq!(logs[0].bdb_uid.unwrap(), 1);
-}
-
-#[tokio::test]
-async fn test_logs_list_complex_query() {
-    let mock_server = MockServer::start().await;
+    let response_body = json!([test_warning_log()]);
 
     Mock::given(method("GET"))
         .and(path("/v1/logs"))
         .and(query_param("limit", "50"))
         .and(query_param("offset", "10"))
-        .and(query_param("level", "WARNING"))
-        .and(query_param("node_uid", "2"))
-        .and(basic_auth("admin", "password"))
-        .respond_with(success_response(json!([test_warning_log()])))
+        .and(query_param("order", "asc"))
+        .and(basic_auth("admin", "password123"))
+        .respond_with(success_response(response_body))
         .mount(&mock_server)
         .await;
 
-    let client = EnterpriseClient::builder()
-        .base_url(mock_server.uri())
-        .username("admin")
-        .password("password")
-        .build()
-        .unwrap();
-
     let handler = LogsHandler::new(client);
     let query = LogsQuery {
+        stime: None,
+        etime: None,
+        order: Some("asc".to_string()),
         limit: Some(50),
         offset: Some(10),
-        level: Some("WARNING".to_string()),
-        component: None,
-        node_uid: Some(2),
-        bdb_uid: None,
     };
     let result = handler.list(Some(query)).await;
 
     assert!(result.is_ok());
     let logs = result.unwrap();
-    assert_eq!(logs.len(), 1);
-    assert_eq!(logs[0].level, "WARNING");
-    assert_eq!(logs[0].node_uid.unwrap(), 2);
+    assert_eq!(logs[0].event_type, "high_memory_usage");
 }
 
 #[tokio::test]
-async fn test_logs_get() {
+async fn test_list_logs_error_response() {
     let mock_server = MockServer::start().await;
-
-    Mock::given(method("GET"))
-        .and(path("/v1/logs/123456"))
-        .and(basic_auth("admin", "password"))
-        .respond_with(success_response(test_log_entry()))
-        .mount(&mock_server)
-        .await;
+    let mock_url = mock_server.uri();
 
     let client = EnterpriseClient::builder()
-        .base_url(mock_server.uri())
+        .base_url(&mock_url)
         .username("admin")
-        .password("password")
+        .password("password123")
         .build()
-        .unwrap();
-
-    let handler = LogsHandler::new(client);
-    let result = handler.get(123456).await;
-
-    assert!(result.is_ok());
-    let log = result.unwrap();
-    assert_eq!(log.id, 123456);
-    assert_eq!(log.level, "INFO");
-    assert_eq!(log.component.unwrap(), "database");
-    assert_eq!(log.message, "Database backup completed successfully");
-    assert_eq!(log.node_uid.unwrap(), 1);
-    assert_eq!(log.bdb_uid.unwrap(), 1);
-    assert_eq!(log.user.unwrap(), "admin");
-}
-
-#[tokio::test]
-async fn test_logs_get_nonexistent() {
-    let mock_server = MockServer::start().await;
-
-    Mock::given(method("GET"))
-        .and(path("/v1/logs/999999"))
-        .and(basic_auth("admin", "password"))
-        .respond_with(error_response(404, "Log entry not found"))
-        .mount(&mock_server)
-        .await;
-
-    let client = EnterpriseClient::builder()
-        .base_url(mock_server.uri())
-        .username("admin")
-        .password("password")
-        .build()
-        .unwrap();
-
-    let handler = LogsHandler::new(client);
-    let result = handler.get(999999).await;
-
-    assert!(result.is_err());
-}
-
-#[tokio::test]
-async fn test_logs_list_error() {
-    let mock_server = MockServer::start().await;
+        .expect("Failed to create test client");
 
     Mock::given(method("GET"))
         .and(path("/v1/logs"))
-        .and(basic_auth("admin", "password"))
-        .respond_with(error_response(500, "Internal server error"))
+        .and(basic_auth("admin", "password123"))
+        .respond_with(error_response(403, "Insufficient permissions"))
         .mount(&mock_server)
         .await;
 
+    let handler = LogsHandler::new(client);
+    let result = handler.list(None).await;
+
+    assert!(result.is_err());
+    let error = result.unwrap_err();
+    assert!(error.to_string().contains("403"));
+}
+
+#[tokio::test]
+async fn test_list_logs_authentication_error() {
+    let mock_server = MockServer::start().await;
+    let mock_url = mock_server.uri();
+
     let client = EnterpriseClient::builder()
-        .base_url(mock_server.uri())
+        .base_url(&mock_url)
         .username("admin")
-        .password("password")
+        .password("wrong_password")
         .build()
-        .unwrap();
+        .expect("Failed to create test client");
+
+    Mock::given(method("GET"))
+        .and(path("/v1/logs"))
+        .respond_with(error_response(401, "Authentication failed"))
+        .mount(&mock_server)
+        .await;
 
     let handler = LogsHandler::new(client);
     let result = handler.list(None).await;
