@@ -8,42 +8,45 @@
 - [Configuration](./getting-started/configuration.md)
 - [Quick Start](./getting-started/quickstart.md)
 
-# Features
-
-- [Async Operations](./features/async-operations.md)
-  - [Database Operations](./features/database-operations.md)
-  - [Subscription Management](./features/subscription-management.md)
-  - [Network Connectivity](./features/network-connectivity.md)
-  - [ACL Management](./features/acl-management.md)
-  - [User & Account Management](./features/user-management.md)
-- [Output Formats](./features/output-formats.md)
-- [Profile Management](./features/profiles.md)
-
-# Redis Cloud
+# Redis Cloud Commands
 
 - [Overview](./cloud/overview.md)
-- [Commands](./cloud/commands.md)
-  - [Human-Friendly Commands](./cloud/human-commands.md)
-  - [Raw API Access](./cloud/api-access.md)
-  - [Workflows (Coming Soon)]()
-- [Examples](./cloud/examples.md)
+- [Subscriptions](./cloud/subscriptions.md)
+- [Databases](./cloud/databases.md)
+- [Network Connectivity](./cloud/connectivity.md)
+- [Access Control](./cloud/acl.md)
+- [Users](./cloud/users.md)
+- [Provider Accounts](./cloud/provider-accounts.md)
+- [Tasks](./cloud/tasks.md)
+- [Raw API Access](./cloud/api-access.md)
 
-# Redis Enterprise
+# Redis Enterprise Commands
 
 - [Overview](./enterprise/overview.md)
-- [Commands](./enterprise/commands.md)
-  - [Human-Friendly Commands](./enterprise/human-commands.md)
-  - [Raw API Access](./enterprise/api-access.md)
-  - [Workflows (Coming Soon)]()
-- [Examples](./enterprise/examples.md)
+- [Cluster](./enterprise/cluster.md)
+- [Databases](./enterprise/databases.md)
+- [Nodes](./enterprise/nodes.md)
+- [Users & RBAC](./enterprise/users.md)
+- [Statistics](./enterprise/stats.md)
+- [Modules](./enterprise/modules.md)
+- [Logs](./enterprise/logs.md)
+- [Active-Active (CRDB)](./enterprise/crdb.md)
+- [Raw API Access](./enterprise/api-access.md)
 
-# CLI Reference
+# Core Features
 
-- [Global Options](./cli-reference/global-options.md)
-- [Cloud Commands](./cli-reference/cloud-commands.md)
-- [Enterprise Commands](./cli-reference/enterprise-commands.md)
-- [Smart Commands](./cli-reference/smart-commands.md)
-- [Profile Commands](./cli-reference/profile-commands.md)
+- [Async Operations](./features/async-operations.md)
+- [Output Formats](./features/output-formats.md)
+- [Profile Management](./features/profiles.md)
+- [Smart Commands](./features/smart-commands.md)
+
+# Tutorials
+
+- [Managing Production Databases](./tutorials/production-databases.md)
+- [Setting Up Monitoring](./tutorials/monitoring.md)
+- [Disaster Recovery](./tutorials/disaster-recovery.md)
+- [Network Security](./tutorials/network-security.md)
+- [CI/CD Integration](./tutorials/cicd.md)
 
 # Reference
 
@@ -51,6 +54,7 @@
 - [Configuration File](./reference/config-file.md)
 - [Troubleshooting](./reference/troubleshooting.md)
 - [Best Practices](./reference/best-practices.md)
+- [API Reference](./reference/api.md)
 
 # Developer Guide
 
