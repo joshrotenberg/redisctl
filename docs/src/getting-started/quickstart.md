@@ -34,7 +34,7 @@ api_secret = "your-secret"
 
 ```bash
 # For Cloud
-redisctl api cloud get /account
+redisctl api cloud get /
 
 # For Enterprise
 redisctl api enterprise get /v1/cluster

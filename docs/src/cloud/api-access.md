@@ -16,7 +16,7 @@ Methods: `get`, `post`, `put`, `patch`, `delete`
 
 ```bash
 # Get account information
-redisctl api cloud get /account
+redisctl api cloud get /
 
 # Get all subscriptions
 redisctl api cloud get /subscriptions
@@ -72,7 +72,7 @@ redisctl api cloud delete /subscriptions/12345/databases/67890
 
 ```bash
 # Add custom headers
-redisctl api cloud get /account \
+redisctl api cloud get / \
   --header "X-Request-ID: abc123" \
   --header "X-Custom: value"
 ```
@@ -81,13 +81,13 @@ redisctl api cloud get /account \
 
 ```bash
 # Get raw response body only
-redisctl api cloud get /account --raw
+redisctl api cloud get / --raw
 
 # Include response headers
-redisctl api cloud get /account --include-headers
+redisctl api cloud get / --include-headers
 
 # Verbose output (shows request details)
-redisctl api cloud get /account --verbose
+redisctl api cloud get / --verbose
 ```
 
 ## Working with Files

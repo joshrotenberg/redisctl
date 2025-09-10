@@ -12,7 +12,7 @@ export REDIS_CLOUD_API_KEY="your-account-key"
 export REDIS_CLOUD_API_SECRET="your-secret-key"
 
 # Test connection
-redisctl api cloud get /account
+redisctl api cloud get /
 ```
 
 ## Command Structure

@@ -53,7 +53,7 @@ redisctl api <deployment> <method> <path> [OPTIONS]
 #### Account
 ```bash
 # Get account info
-redisctl api cloud get /account
+redisctl api cloud get /
 
 # Get payment methods
 redisctl api cloud get /payment-methods

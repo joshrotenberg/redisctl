@@ -85,7 +85,7 @@ Get credentials from your cluster administrator or use the default:
 
 ```bash
 # Test Cloud connection
-redisctl api cloud get /account
+redisctl api cloud get /
 
 # Test Enterprise connection
 redisctl api enterprise get /v1/cluster
