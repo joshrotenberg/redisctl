@@ -989,6 +989,10 @@ pub enum EnterpriseCommands {
     #[command(subcommand)]
     Crdb(EnterpriseCrdbCommands),
 
+    /// Log operations
+    #[command(subcommand)]
+    Logs(crate::commands::enterprise::logs::LogsCommands),
+
     /// Statistics and metrics operations
     #[command(subcommand)]
     Stats(EnterpriseStatsCommands),
