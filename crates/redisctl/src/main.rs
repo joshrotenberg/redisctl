@@ -242,6 +242,12 @@ async fn execute_enterprise_command(
             )
             .await
         }
+        Module(module_cmd) => {
+            commands::enterprise::module_impl::handle_module_commands(
+                conn_mgr, profile, module_cmd, output, query,
+            )
+            .await
+        }
     }
 }
 

@@ -14,8 +14,8 @@ use serde_json::Value;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Module {
     pub uid: String,
-    pub name: String,
-    pub version: String,
+    pub module_name: Option<String>,
+    pub version: Option<u32>,
     pub semantic_version: Option<String>,
     pub author: Option<String>,
     pub description: Option<String>,
@@ -24,8 +24,9 @@ pub struct Module {
     pub command_line_args: Option<String>,
     pub capabilities: Option<Vec<String>>,
     pub min_redis_version: Option<String>,
-    pub min_redis_pack_version: Option<String>,
-
+    pub compatible_redis_version: Option<String>,
+    pub display_name: Option<String>,
+    pub is_bundled: Option<bool>,
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -88,13 +89,6 @@ impl ModuleHandler {
             .await
     }
 
-    /// Upgrade modules for a specific database - POST /v1/modules/upgrade/bdb/{uid}
-    pub async fn upgrade_bdb(&self, bdb_uid: u32, body: Value) -> Result<Module> {
-        self.client
-            .post(&format!("/v1/modules/upgrade/bdb/{}", bdb_uid), &body)
-            .await
-    }
-
     /// Upload module via v2 API - POST /v2/modules
     pub async fn upload_v2(&self, body: Value) -> Result<Module> {
         self.client.post("/v2/modules", &body).await
@@ -103,77 +97,5 @@ impl ModuleHandler {
     /// Delete module via v2 API - DELETE /v2/modules/{uid}
     pub async fn delete_v2(&self, uid: &str) -> Result<()> {
         self.client.delete(&format!("/v2/modules/{}", uid)).await
-    }
-
-    // Versioned accessors
-    pub fn v1(&self) -> v1::ModulesV1 {
-        v1::ModulesV1::new(self.client.clone())
-    }
-
-    pub fn v2(&self) -> v2::ModulesV2 {
-        v2::ModulesV2::new(self.client.clone())
-    }
-}
-
-pub mod v1 {
-    use super::{Module, RestClient};
-    use crate::error::Result;
-    use serde_json::Value;
-
-    pub struct ModulesV1 {
-        client: RestClient,
-    }
-
-    impl ModulesV1 {
-        pub(crate) fn new(client: RestClient) -> Self {
-            Self { client }
-        }
-
-        pub async fn list(&self) -> Result<Vec<Module>> {
-            self.client.get("/v1/modules").await
-        }
-
-        pub async fn get(&self, uid: &str) -> Result<Module> {
-            self.client.get(&format!("/v1/modules/{}", uid)).await
-        }
-
-        pub async fn upload(&self, data: Vec<u8>) -> Result<Module> {
-            let body = serde_json::json!({ "module": data });
-            self.client.post("/v1/modules", &body).await
-        }
-
-        pub async fn delete(&self, uid: &str) -> Result<()> {
-            self.client.delete(&format!("/v1/modules/{}", uid)).await
-        }
-
-        pub async fn update(&self, uid: &str, updates: Value) -> Result<Module> {
-            self.client
-                .put(&format!("/v1/modules/{}", uid), &updates)
-                .await
-        }
-    }
-}
-
-pub mod v2 {
-    use super::{Module, RestClient};
-    use crate::error::Result;
-    use serde_json::Value;
-
-    pub struct ModulesV2 {
-        client: RestClient,
-    }
-
-    impl ModulesV2 {
-        pub(crate) fn new(client: RestClient) -> Self {
-            Self { client }
-        }
-
-        pub async fn upload(&self, body: Value) -> Result<Module> {
-            self.client.post("/v2/modules", &body).await
-        }
-
-        pub async fn delete(&self, uid: &str) -> Result<()> {
-            self.client.delete(&format!("/v2/modules/{}", uid)).await
-        }
     }
 }

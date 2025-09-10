@@ -21,9 +21,9 @@ fn no_content_response() -> ResponseTemplate {
 fn test_module() -> serde_json::Value {
     json!({
         "uid": "1",
-        "name": "RedisSearch",
-        "version": "2.6.1",
-        "status": "loaded",
+        "module_name": "RedisSearch",
+        "version": 20601,
+        "semantic_version": "2.6.1",
         "capabilities": ["search", "index"]
     })
 }
@@ -39,9 +39,9 @@ async fn test_module_list() {
             test_module(),
             {
                 "uid": "2",
-                "name": "RedisJSON",
-                "version": "2.4.0",
-                "status": "loaded",
+                "module_name": "RedisJSON",
+                "version": 20400,
+                "semantic_version": "2.4.0",
                 "capabilities": ["json"]
             }
         ])))
@@ -87,7 +87,7 @@ async fn test_module_get() {
     assert!(result.is_ok());
     let module = result.unwrap();
     assert_eq!(module.uid, "1");
-    assert_eq!(module.name, "RedisSearch");
+    assert_eq!(module.module_name, Some("RedisSearch".to_string()));
 }
 
 #[tokio::test]
@@ -114,7 +114,7 @@ async fn test_module_upload() {
     assert!(result.is_ok());
     let module = result.unwrap();
     assert_eq!(module.uid, "1");
-    assert_eq!(module.name, "RedisSearch");
+    assert_eq!(module.module_name, Some("RedisSearch".to_string()));
 }
 
 #[tokio::test]
