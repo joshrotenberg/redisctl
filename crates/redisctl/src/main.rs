@@ -242,6 +242,12 @@ async fn execute_enterprise_command(
             )
             .await
         }
+        Logs(logs_cmd) => {
+            commands::enterprise::logs_impl::handle_logs_commands(
+                conn_mgr, profile, logs_cmd, output, query,
+            )
+            .await
+        }
     }
 }
 

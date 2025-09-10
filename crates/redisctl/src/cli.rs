@@ -988,6 +988,10 @@ pub enum EnterpriseCommands {
     /// Active-Active database (CRDB) operations
     #[command(subcommand)]
     Crdb(EnterpriseCrdbCommands),
+
+    /// Log operations
+    #[command(subcommand)]
+    Logs(crate::commands::enterprise::logs::LogsCommands),
 }
 
 // Placeholder command structures - will be expanded in later PRs
