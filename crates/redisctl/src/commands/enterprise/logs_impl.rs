@@ -1,3 +1,5 @@
+//! Implementation of enterprise logs commands
+
 use crate::cli::OutputFormat;
 use crate::commands::enterprise::logs::LogsCommands;
 use crate::connection::ConnectionManager;
@@ -6,7 +8,6 @@ use anyhow::Context;
 use redis_enterprise::logs::LogsQuery;
 
 /// Parameters for log list operation
-#[allow(dead_code)]
 struct LogListParams {
     since: Option<String>,
     until: Option<String>,
