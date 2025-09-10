@@ -57,6 +57,10 @@ redisctl profile set cloud-prod \
 redisctl --profile cloud-prod cloud database list
 ```
 
+Profiles are stored in:
+- **Linux/macOS**: `~/.config/redisctl/config.toml`
+- **Windows**: `%APPDATA%\redis\redisctl\config.toml`
+
 ### 2. Basic Commands
 
 ```bash
