@@ -1,4 +1,5 @@
 //! Implementation of enterprise logs commands
+#![allow(dead_code)]
 
 use crate::cli::OutputFormat;
 use crate::commands::enterprise::logs::LogsCommands;
