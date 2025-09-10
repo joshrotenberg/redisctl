@@ -34,5 +34,8 @@ dump.rdb
 .claude/
 CLAUDE.md
 
-# Temporoary stuff
+# Temporary stuff
 tmp/
+
+# mdBook build output
+docs/book/
