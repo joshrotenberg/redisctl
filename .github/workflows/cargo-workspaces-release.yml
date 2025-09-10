@@ -53,16 +53,19 @@ jobs:
           fi
 
       - name: Debug token configuration
+        env:
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "=== Token Debug Information ==="
-          if [ -n "${{ secrets.PAT_TOKEN }}" ]; then
+          if [ -n "$PAT_TOKEN" ]; then
             echo "✅ PAT_TOKEN is available"
             echo "PAT_TOKEN length: ${#PAT_TOKEN}"
           else
             echo "❌ PAT_TOKEN is NOT available"
           fi
 
-          if [ -n "${{ secrets.GITHUB_TOKEN }}" ]; then
+          if [ -n "$GITHUB_TOKEN" ]; then
             echo "✅ GITHUB_TOKEN is available"
           else
             echo "❌ GITHUB_TOKEN is NOT available"
@@ -70,8 +73,6 @@ jobs:
           echo "Current git remote:"
           git remote -v
           echo "=== End Debug ==="
-        env:
-          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
 
       - name: Configure git
         env:
