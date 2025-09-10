@@ -49,7 +49,7 @@ export REDIS_ENTERPRISE_INSECURE="true"
 ```bash
 # Enable debug logging
 export RUST_LOG=debug
-redisctl api cloud get /account
+redisctl api cloud get /
 
 # Trace specific modules
 export RUST_LOG=redisctl=debug,redis_cloud=trace

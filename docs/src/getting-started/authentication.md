@@ -24,7 +24,7 @@ export REDIS_CLOUD_API_KEY="your-account-key"
 export REDIS_CLOUD_API_SECRET="your-secret-key"
 
 # Test it works
-redisctl api cloud get /account
+redisctl api cloud get /
 ```
 
 Or create a configuration file at `~/.config/redisctl/config.toml`:
@@ -86,7 +86,7 @@ insecure = true  # For self-signed certs
 Check your credentials:
 ```bash
 # Enable debug logging to see what's happening
-RUST_LOG=debug redisctl api cloud get /account
+RUST_LOG=debug redisctl api cloud get /
 ```
 
 ### Connection Refused
