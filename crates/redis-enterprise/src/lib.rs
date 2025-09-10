@@ -387,7 +387,7 @@ pub use nodes::{Node, NodeActionRequest, NodeHandler, NodeStats};
 pub use users::{CreateUserRequest, Role, RoleHandler, UpdateUserRequest, User, UserHandler};
 
 // Module management
-pub use modules::{Module, ModuleHandler, UploadModuleRequest};
+pub use modules::{Module, ModuleHandler};
 
 // Action tracking
 pub use actions::{Action, ActionHandler};

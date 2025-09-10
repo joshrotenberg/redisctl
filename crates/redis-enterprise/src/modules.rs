@@ -31,12 +31,6 @@ pub struct Module {
     pub extra: Value,
 }
 
-/// Module upload request
-#[derive(Debug, Serialize)]
-pub struct UploadModuleRequest {
-    pub module: Vec<u8>, // Binary module data
-}
-
 /// Module handler for managing Redis modules
 pub struct ModuleHandler {
     client: RestClient,
@@ -60,14 +54,23 @@ impl ModuleHandler {
         self.client.get(&format!("/v1/modules/{}", uid)).await
     }
 
-    /// Upload new module
-    pub async fn upload(&self, module_data: Vec<u8>) -> Result<Module> {
-        // Note: This endpoint typically requires multipart/form-data
-        // The actual implementation would need to handle file upload
-        let request = UploadModuleRequest {
-            module: module_data,
-        };
-        self.client.post("/v1/modules", &request).await
+    /// Upload new module (tries v2 first, falls back to v1)
+    pub async fn upload(&self, module_data: Vec<u8>, file_name: &str) -> Result<Value> {
+        // Try v2 first (returns action_uid for async tracking)
+        match self
+            .client
+            .post_multipart("/v2/modules", module_data.clone(), "module", file_name)
+            .await
+        {
+            Ok(response) => Ok(response),
+            Err(crate::error::RestError::NotFound) => {
+                // v2 endpoint doesn't exist, try v1
+                self.client
+                    .post_multipart("/v1/modules", module_data, "module", file_name)
+                    .await
+            }
+            Err(e) => Err(e),
+        }
     }
 
     /// Delete module
@@ -87,15 +90,5 @@ impl ModuleHandler {
         self.client
             .post(&format!("/v1/modules/config/bdb/{}", bdb_uid), &config)
             .await
-    }
-
-    /// Upload module via v2 API - POST /v2/modules
-    pub async fn upload_v2(&self, body: Value) -> Result<Module> {
-        self.client.post("/v2/modules", &body).await
-    }
-
-    /// Delete module via v2 API - DELETE /v2/modules/{uid}
-    pub async fn delete_v2(&self, uid: &str) -> Result<()> {
-        self.client.delete(&format!("/v2/modules/{}", uid)).await
     }
 }

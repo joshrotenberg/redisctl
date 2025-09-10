@@ -94,6 +94,15 @@ async fn test_module_get() {
 async fn test_module_upload() {
     let mock_server = MockServer::start().await;
 
+    // Mock v2 endpoint as not found
+    Mock::given(method("POST"))
+        .and(path("/v2/modules"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(ResponseTemplate::new(404))
+        .mount(&mock_server)
+        .await;
+
+    // Mock v1 endpoint as success
     Mock::given(method("POST"))
         .and(path("/v1/modules"))
         .and(basic_auth("admin", "password"))
@@ -109,12 +118,13 @@ async fn test_module_upload() {
         .unwrap();
 
     let handler = ModuleHandler::new(client);
-    let result = handler.upload(vec![1, 2, 3, 4]).await; // Mock binary data
+    let result = handler.upload(vec![1, 2, 3, 4], "test.zip").await; // Mock binary data
 
     assert!(result.is_ok());
-    let module = result.unwrap();
-    assert_eq!(module.uid, "1");
-    assert_eq!(module.module_name, Some("RedisSearch".to_string()));
+    let response = result.unwrap();
+    // Response is now a Value, not a Module
+    assert_eq!(response["uid"], "1");
+    assert_eq!(response["module_name"], "RedisSearch");
 }
 
 #[tokio::test]

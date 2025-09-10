@@ -94,7 +94,8 @@ async fn handle_upload(
     };
 
     // Check if file exists
-    if !Path::new(file_path).exists() {
+    let path = Path::new(file_path);
+    if !path.exists() {
         return Err(anyhow::anyhow!("Module file not found: {}", file_path).into());
     }
 
@@ -102,23 +103,42 @@ async fn handle_upload(
     let module_data = fs::read(file_path)
         .with_context(|| format!("Failed to read module file: {}", file_path))?;
 
+    // Get the filename for the upload
+    let file_name = path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("module.zip");
+
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
     let handler = ModuleHandler::new(client);
 
-    // Upload module
-    let module = handler
-        .upload(module_data)
+    // Upload module using v2 API (returns action_uid for async tracking)
+    let response = handler
+        .upload(module_data, file_name)
         .await
         .context("Failed to upload module")?;
 
-    let module_json = serde_json::to_value(&module)?;
-    let output_data = if let Some(q) = query {
-        crate::commands::enterprise::utils::apply_jmespath(&module_json, q)?
-    } else {
-        module_json
-    };
+    // Check if response contains action_uid (v2 async operation)
+    if response.get("action_uid").is_some() {
+        println!("Module upload initiated. Response:");
+        crate::commands::enterprise::utils::print_formatted_output(
+            response.clone(),
+            output_format,
+        )?;
 
-    crate::commands::enterprise::utils::print_formatted_output(output_data, output_format)?;
+        // Note: Full async tracking would require polling /v1/actions/{action_uid}
+        // For now, we just return the response with action_uid
+        println!("\nNote: Module upload is processing. Use the action_uid to check status.");
+    } else {
+        // Direct response (shouldn't happen with v2, but handle it)
+        let output_data = if let Some(q) = query {
+            crate::commands::enterprise::utils::apply_jmespath(&response, q)?
+        } else {
+            response
+        };
+        crate::commands::enterprise::utils::print_formatted_output(output_data, output_format)?;
+    }
+
     Ok(())
 }
 
