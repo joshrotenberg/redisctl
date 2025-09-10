@@ -297,6 +297,34 @@ impl EnterpriseClient {
         }
     }
 
+    /// POST request with multipart/form-data for file uploads
+    pub async fn post_multipart<T: DeserializeOwned>(
+        &self,
+        path: &str,
+        file_data: Vec<u8>,
+        field_name: &str,
+        file_name: &str,
+    ) -> Result<T> {
+        let url = format!("{}{}", self.base_url, path);
+        debug!("POST {} (multipart)", url);
+
+        let part = reqwest::multipart::Part::bytes(file_data).file_name(file_name.to_string());
+
+        let form = reqwest::multipart::Form::new().part(field_name.to_string(), part);
+
+        let response = self
+            .client
+            .post(&url)
+            .basic_auth(&self.username, Some(&self.password))
+            .multipart(form)
+            .send()
+            .await
+            .map_err(|e| self.map_reqwest_error(e, &url))?;
+
+        trace!("Response status: {}", response.status());
+        self.handle_response(response).await
+    }
+
     /// Get a reference to self for handler construction
     pub fn rest_client(&self) -> Self {
         self.clone()

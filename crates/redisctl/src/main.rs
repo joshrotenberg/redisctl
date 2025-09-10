@@ -248,6 +248,12 @@ async fn execute_enterprise_command(
             )
             .await
         }
+        Module(module_cmd) => {
+            commands::enterprise::module_impl::handle_module_commands(
+                conn_mgr, profile, module_cmd, output, query,
+            )
+            .await
+        }
         Stats(stats_cmd) => {
             commands::enterprise::stats::handle_stats_command(
                 conn_mgr, profile, stats_cmd, output, query,

@@ -993,6 +993,10 @@ pub enum EnterpriseCommands {
     #[command(subcommand)]
     Logs(crate::commands::enterprise::logs::LogsCommands),
 
+    /// Module management operations
+    #[command(subcommand)]
+    Module(crate::commands::enterprise::module::ModuleCommands),
+
     /// Statistics and metrics operations
     #[command(subcommand)]
     Stats(EnterpriseStatsCommands),

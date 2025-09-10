@@ -167,11 +167,11 @@
 //! let v1_actions = actions.v1().list().await?; // GET /v1/actions
 //! let v2_actions = actions.v2().list().await?; // GET /v2/actions
 //!
-//! // Modules: v1 and v2
+//! // Modules
 //! let modules = ModuleHandler::new(client.clone());
-//! let all = modules.v1().list().await?;            // GET /v1/modules
-//! // v2 upload body can be an opaque Value or multipart in a higher-level helper
-//! let uploaded = modules.v2().upload(serde_json::json!({"name": "search", "data": "..."})).await?;
+//! let all = modules.list().await?;            // GET /v1/modules
+//! // Upload uses v2 endpoint with fallback to v1
+//! let uploaded = modules.upload(b"module_data".to_vec(), "module.zip").await?;
 //! # Ok(())
 //! # }
 //! ```
@@ -387,7 +387,7 @@ pub use nodes::{Node, NodeActionRequest, NodeHandler, NodeStats};
 pub use users::{CreateUserRequest, Role, RoleHandler, UpdateUserRequest, User, UserHandler};
 
 // Module management
-pub use modules::{Module, ModuleHandler, UploadModuleRequest};
+pub use modules::{Module, ModuleHandler};
 
 // Action tracking
 pub use actions::{Action, ActionHandler};
