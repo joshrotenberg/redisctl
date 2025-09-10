@@ -61,21 +61,71 @@ Profiles are stored in:
 - **Linux/macOS**: `~/.config/redisctl/config.toml`
 - **Windows**: `%APPDATA%\redis\redisctl\config.toml`
 
-### 2. Basic Commands
+Example configuration file:
+```toml
+default_profile = "cloud-prod"
+
+[profiles.cloud-prod]
+deployment_type = "cloud"
+api_key = "${REDIS_CLOUD_API_KEY}"
+api_secret = "${REDIS_CLOUD_API_SECRET}"
+
+[profiles.enterprise-dev]
+deployment_type = "enterprise"
+url = "https://localhost:9443"
+username = "admin@redis.local"
+password = "${REDIS_ENTERPRISE_PASSWORD}"
+insecure = true
+```
+
+### 2. Verify Setup & First Commands
 
 ```bash
-# List databases (auto-detects deployment type from profile)
-redisctl database list
+# Test your connection
+redisctl api cloud get /        # For Cloud
+redisctl api enterprise get /v1/cluster  # For Enterprise
 
-# Get database details with formatted output
-redisctl database get 12345 --output table
+# View your configuration
+redisctl profile list           # Show all profiles
+redisctl profile path           # Show config file location
 
-# Create a database and wait for completion
+# Common first commands
+redisctl database list          # List all databases
+redisctl cloud subscription list  # List Cloud subscriptions
+redisctl enterprise node list   # List Enterprise nodes
+
+# Get detailed output
+redisctl database get 12345 --output table  # Table format
+redisctl database list -o json | jq         # JSON with jq
+
+# Create resources and wait for completion
 redisctl cloud database create --data @database.json --wait
-
-# Direct API access for any endpoint
-redisctl api cloud get /subscriptions/88449/databases
 ```
+
+## Using with Docker
+
+```bash
+# Run commands directly with Docker
+docker run --rm \
+  -e REDIS_CLOUD_API_KEY \
+  -e REDIS_CLOUD_API_SECRET \
+  ghcr.io/joshrotenberg/redisctl:latest \
+  cloud subscription list
+
+# Use local config file
+docker run --rm \
+  -v ~/.config/redisctl:/root/.config/redisctl:ro \
+  ghcr.io/joshrotenberg/redisctl:latest \
+  database list
+
+# Development environment with test cluster
+make docker-up    # Start Redis Enterprise cluster
+make docker-cli   # Interactive CLI session
+make docker-test  # Run test suite
+make docker-down  # Clean up
+```
+
+See the [Docker documentation](https://joshrotenberg.com/redisctl/getting-started/docker.html) for advanced usage.
 
 ## Documentation
 

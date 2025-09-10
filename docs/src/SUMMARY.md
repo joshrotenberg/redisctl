@@ -7,6 +7,9 @@
 - [Installation](./getting-started/installation.md)
 - [Configuration](./getting-started/configuration.md)
 - [Quick Start](./getting-started/quickstart.md)
+- [Authentication](./getting-started/authentication.md)
+- [Shell Completions](./getting-started/shell-completions.md)
+- [Docker Development](./getting-started/docker.md)
 
 # Redis Cloud Commands
 
@@ -42,6 +45,7 @@
 
 # Tutorials
 
+- [Common Recipes](./tutorials/common-recipes.md)
 - [Managing Production Databases](./tutorials/production-databases.md)
 - [Setting Up Monitoring](./tutorials/monitoring.md)
 - [Disaster Recovery](./tutorials/disaster-recovery.md)
