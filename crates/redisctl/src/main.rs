@@ -299,7 +299,7 @@ async fn handle_enterprise_workflow_command(
                         _ => output::OutputFormat::Table,
                     };
                     crate::output::print_output(
-                        &serde_json::json!(workflow_list),
+                        serde_json::json!(workflow_list),
                         output_format,
                         None,
                     )?;

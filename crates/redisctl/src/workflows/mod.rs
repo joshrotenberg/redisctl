@@ -33,6 +33,7 @@ pub struct WorkflowContext {
     pub conn_mgr: crate::connection::ConnectionManager,
     pub profile_name: Option<String>,
     pub output_format: crate::output::OutputFormat,
+    #[allow(dead_code)] // Will be used by future workflows
     pub wait_timeout: u64,
 }
 

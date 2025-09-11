@@ -178,14 +178,13 @@ impl Workflow for InitClusterWorkflow {
                                 Ok(response) => {
                                     if let Some(result) = response.get("response") {
                                         // The command endpoint returns {"response": true} for successful PING
-                                        if result.as_bool() == Some(true)
-                                            || result.as_str() == Some("PONG")
+                                        if (result.as_bool() == Some(true)
+                                            || result.as_str() == Some("PONG"))
+                                            && is_human_output
                                         {
-                                            if is_human_output {
-                                                println!(
-                                                    "Database connectivity verified (PING successful)"
-                                                );
-                                            }
+                                            println!(
+                                                "Database connectivity verified (PING successful)"
+                                            );
                                         }
                                     }
                                 }
@@ -209,10 +208,8 @@ impl Workflow for InitClusterWorkflow {
                         }
                     }
                 }
-            } else {
-                if is_human_output {
-                    println!("Skipping database creation (--skip-database flag set)");
-                }
+            } else if is_human_output {
+                println!("Skipping database creation (--skip-database flag set)");
             }
 
             // Final summary (only for human output)
