@@ -113,11 +113,28 @@ impl Workflow for InitClusterWorkflow {
             }
 
             // Step 3: Cluster should be ready after bootstrap
-            // For now, just wait a bit for it to stabilize
-            sleep(Duration::from_secs(5)).await;
+            // Wait longer for cluster to fully stabilize
+            sleep(Duration::from_secs(10)).await;
             if is_human_output {
                 println!("Cluster is ready");
             }
+
+            // After bootstrap, we need to create a new client with the credentials we just set
+            // Get the base URL from environment or use default
+            let base_url = std::env::var("REDIS_ENTERPRISE_URL")
+                .unwrap_or_else(|_| "https://localhost:9443".to_string());
+            let insecure = std::env::var("REDIS_ENTERPRISE_INSECURE")
+                .unwrap_or_else(|_| "true".to_string())
+                .parse::<bool>()
+                .unwrap_or(true);
+
+            let authenticated_client = redis_enterprise::EnterpriseClient::builder()
+                .base_url(base_url)
+                .username(username.clone())
+                .password(password.clone())
+                .insecure(insecure)
+                .build()
+                .context("Failed to create authenticated client after bootstrap")?;
 
             // Step 4: Optionally create a default database
             if create_db {
@@ -129,17 +146,17 @@ impl Workflow for InitClusterWorkflow {
                     "name": db_name,
                     "memory_size": db_memory_gb * 1024 * 1024 * 1024,  // Convert GB to bytes
                     "type": "redis",
-                    "replication": false,
-                    "persistence": "disabled"
+                    "replication": false
                 });
 
-                match client.post_raw("/v1/bdbs", db_data).await {
+                match authenticated_client.post_raw("/v1/bdbs", db_data).await {
                     Ok(db_result) => {
                         // Check for async operation
                         if let Some(action_id) =
                             db_result.get("action_uid").and_then(|v| v.as_str())
                         {
-                            wait_for_action(&client, action_id, "database creation").await?;
+                            wait_for_action(&authenticated_client, action_id, "database creation")
+                                .await?;
                         }
 
                         let db_uid = db_result
@@ -157,7 +174,7 @@ impl Workflow for InitClusterWorkflow {
                             // Wait a moment for database to be fully ready
                             sleep(Duration::from_secs(2)).await;
 
-                            match client.execute_command(db_uid, "PING").await {
+                            match authenticated_client.execute_command(db_uid, "PING").await {
                                 Ok(response) => {
                                     if let Some(result) = response.get("response") {
                                         // The command endpoint returns {"response": true} for successful PING
