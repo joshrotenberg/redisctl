@@ -2,8 +2,8 @@ version: "3.8"
 
 services:
   redis-enterprise:
-    image: kurtfm/rs-arm:latest
-    platform: linux/arm64
+    image: ${REDIS_ENTERPRISE_IMAGE:-redislabs/redis:latest}
+    platform: ${REDIS_ENTERPRISE_PLATFORM:-linux/amd64}
     container_name: redis-enterprise
     tty: true
     cap_add:
