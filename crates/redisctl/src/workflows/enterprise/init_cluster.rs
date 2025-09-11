@@ -212,11 +212,11 @@ async fn wait_for_cluster_ready(client: &EnterpriseClient) -> Result<()> {
 
         match client.get_raw("/v1/cluster").await {
             Ok(cluster) => {
-                if let Some(state) = cluster.get("state").and_then(|v| v.as_str()) {
-                    if state == "active" || state == "ready" {
-                        pb.finish_and_clear();
-                        return Ok(());
-                    }
+                if let Some(state) = cluster.get("state").and_then(|v| v.as_str())
+                    && (state == "active" || state == "ready")
+                {
+                    pb.finish_and_clear();
+                    return Ok(());
                 }
             }
             Err(_) => {
