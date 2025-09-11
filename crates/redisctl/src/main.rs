@@ -293,7 +293,7 @@ async fn handle_enterprise_workflow_command(
             name,
             username,
             password,
-            create_database,
+            skip_database,
             database_name,
             database_memory_gb,
         } => {
@@ -301,7 +301,7 @@ async fn handle_enterprise_workflow_command(
             args.insert("name", name);
             args.insert("username", username);
             args.insert("password", password);
-            args.insert("create_database", create_database);
+            args.insert("create_database", !skip_database);
             args.insert("database_name", database_name);
             args.insert("database_memory_gb", database_memory_gb);
 

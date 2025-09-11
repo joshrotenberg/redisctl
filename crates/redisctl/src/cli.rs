@@ -1030,9 +1030,9 @@ pub enum EnterpriseWorkflowCommands {
         #[arg(long, env = "REDIS_ENTERPRISE_INIT_PASSWORD")]
         password: String,
 
-        /// Create a default database after initialization
-        #[arg(long, default_value = "true")]
-        create_database: bool,
+        /// Skip creating a default database after initialization
+        #[arg(long)]
+        skip_database: bool,
 
         /// Name for the default database
         #[arg(long, default_value = "default-db")]

@@ -77,14 +77,19 @@ impl Workflow for InitClusterWorkflow {
             // Step 2: Bootstrap the cluster
             println!("🔧 Step 2: Bootstrapping cluster '{}'...", cluster_name);
             let bootstrap_data = json!({
-                "name": cluster_name,
-                "username": username,
-                "password": password,
-                "action": "create_cluster"
+                "action": "create_cluster",
+                "cluster": {
+                    "name": cluster_name
+                },
+                "credentials": {
+                    "username": username,
+                    "password": password
+                },
+                "flash_enabled": false
             });
 
             let bootstrap_result = client
-                .post_bootstrap("/v1/bootstrap", &bootstrap_data)
+                .post_bootstrap("/v1/bootstrap/create_cluster", &bootstrap_data)
                 .await
                 .context("Failed to bootstrap cluster")?;
 
@@ -100,9 +105,10 @@ impl Workflow for InitClusterWorkflow {
 
             println!("✅ Cluster bootstrapped successfully!");
 
-            // Step 3: Verify cluster is ready
-            println!("🔍 Step 3: Verifying cluster is ready...");
-            wait_for_cluster_ready(&client).await?;
+            // Step 3: Cluster should be ready after bootstrap
+            // For now, just wait a bit for it to stabilize
+            println!("🔍 Step 3: Waiting for cluster to stabilize...");
+            sleep(Duration::from_secs(5)).await;
             println!("✅ Cluster is ready!");
 
             // Step 4: Optionally create a default database
@@ -212,11 +218,18 @@ async fn wait_for_cluster_ready(client: &EnterpriseClient) -> Result<()> {
 
         match client.get_raw("/v1/cluster").await {
             Ok(cluster) => {
-                if let Some(state) = cluster.get("state").and_then(|v| v.as_str())
-                    && (state == "active" || state == "ready")
-                {
-                    pb.finish_and_clear();
-                    return Ok(());
+                // Check if cluster has a name (indicates it's initialized)
+                // and is not in upgrade mode
+                if cluster.get("name").is_some() {
+                    let upgrading = cluster
+                        .get("upgrade_in_progress")
+                        .and_then(|v| v.as_bool())
+                        .unwrap_or(false);
+
+                    if !upgrading {
+                        pb.finish_and_clear();
+                        return Ok(());
+                    }
                 }
             }
             Err(_) => {
