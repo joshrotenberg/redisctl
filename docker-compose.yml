@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   redis-enterprise:
@@ -9,7 +9,6 @@ services:
     cap_add:
       - ALL
     ports:
-      # - "10000-19999:10000-19999"
       - "12000:12000"
       - "12001:12001"
       - "9443:9443"
@@ -22,6 +21,20 @@ services:
       timeout: 3s
       retries: 5
       start_period: 10s
+
+  # Once we have a published Docker image, we can use this service to auto-initialize
+  # redis-enterprise-init:
+  #   image: ghcr.io/joshrotenberg/redisctl:latest
+  #   container_name: redis-enterprise-init
+  #   depends_on:
+  #     redis-enterprise:
+  #       condition: service_healthy
+  #   networks:
+  #     - radar-network
+  #   environment:
+  #     REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
+  #     REDIS_ENTERPRISE_INSECURE: "true"
+  #   command: ["enterprise", "workflow", "init-cluster", "--name", "docker-cluster", "--username", "admin@redis.local", "--password", "Redis123!"]
 
 networks:
   radar-network:
