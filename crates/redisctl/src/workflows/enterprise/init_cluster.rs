@@ -37,8 +37,14 @@ impl Workflow for InitClusterWorkflow {
         args: WorkflowArgs,
     ) -> Pin<Box<dyn Future<Output = Result<WorkflowResult>> + Send>> {
         Box::pin(async move {
-            println!("🚀 Starting Redis Enterprise Cluster Initialization Workflow");
-            println!();
+            use crate::output::OutputFormat;
+
+            // Only print human-readable output for Table format
+            let is_human_output = matches!(context.output_format, OutputFormat::Table);
+
+            if is_human_output {
+                println!("Initializing Redis Enterprise cluster...");
+            }
 
             // Get parameters
             let cluster_name = args
@@ -64,18 +70,18 @@ impl Workflow for InitClusterWorkflow {
                 .context("Failed to create Enterprise client")?;
 
             // Step 1: Check if cluster is already initialized
-            println!("📊 Step 1: Checking cluster status...");
             let needs_bootstrap = check_if_needs_bootstrap(&client).await?;
 
             if !needs_bootstrap {
-                println!("✅ Cluster is already initialized!");
+                if is_human_output {
+                    println!("Cluster is already initialized");
+                }
                 return Ok(WorkflowResult::success("Cluster already initialized")
                     .with_output("cluster_name", &cluster_name)
                     .with_output("already_initialized", true));
             }
 
             // Step 2: Bootstrap the cluster
-            println!("🔧 Step 2: Bootstrapping cluster '{}'...", cluster_name);
             let bootstrap_data = json!({
                 "action": "create_cluster",
                 "cluster": {
@@ -96,24 +102,28 @@ impl Workflow for InitClusterWorkflow {
             // Check if bootstrap returned an action ID (async operation)
             if let Some(action_id) = bootstrap_result.get("action_uid").and_then(|v| v.as_str()) {
                 // Wait for bootstrap to complete
-                wait_for_action(&client, action_id, "Cluster bootstrap").await?;
+                wait_for_action(&client, action_id, "cluster bootstrap").await?;
             } else {
                 // Bootstrap was synchronous, just wait a bit for cluster to stabilize
-                println!("   Waiting for cluster to stabilize...");
                 sleep(Duration::from_secs(5)).await;
             }
 
-            println!("✅ Cluster bootstrapped successfully!");
+            if is_human_output {
+                println!("Bootstrap completed successfully");
+            }
 
             // Step 3: Cluster should be ready after bootstrap
             // For now, just wait a bit for it to stabilize
-            println!("🔍 Step 3: Waiting for cluster to stabilize...");
             sleep(Duration::from_secs(5)).await;
-            println!("✅ Cluster is ready!");
+            if is_human_output {
+                println!("Cluster is ready");
+            }
 
             // Step 4: Optionally create a default database
             if create_db {
-                println!("💾 Step 4: Creating default database '{}'...", db_name);
+                if is_human_output {
+                    println!("Creating default database '{}'...", db_name);
+                }
 
                 let db_data = json!({
                     "name": db_name,
@@ -129,7 +139,7 @@ impl Workflow for InitClusterWorkflow {
                         if let Some(action_id) =
                             db_result.get("action_uid").and_then(|v| v.as_str())
                         {
-                            wait_for_action(&client, action_id, "Database creation").await?;
+                            wait_for_action(&client, action_id, "database creation").await?;
                         }
 
                         let db_uid = db_result
@@ -138,38 +148,40 @@ impl Workflow for InitClusterWorkflow {
                             .and_then(|v| v.as_i64())
                             .unwrap_or(0);
 
-                        println!("✅ Database created successfully (ID: {})", db_uid);
+                        if is_human_output {
+                            println!("Database created successfully (ID: {})", db_uid);
+                        }
                     }
                     Err(e) => {
                         // Database creation failed, but cluster is initialized
-                        eprintln!("⚠️  Warning: Failed to create database: {}", e);
-                        eprintln!("   Cluster is initialized but database creation failed.");
-                        eprintln!("   You can create a database manually later.");
+                        if is_human_output {
+                            eprintln!("Warning: Failed to create database: {}", e);
+                            eprintln!("Cluster is initialized but database creation failed.");
+                            eprintln!("You can create a database manually later.");
+                        }
                     }
                 }
             } else {
-                println!("⏭️  Step 4: Skipping database creation (--no-database flag set)");
+                if is_human_output {
+                    println!("Skipping database creation (--skip-database flag set)");
+                }
             }
 
-            // Final summary
-            println!();
-            println!("🎉 Cluster Initialization Complete!");
-            println!();
-            println!("📋 Summary:");
-            println!("   • Cluster Name: {}", cluster_name);
-            println!("   • Admin User: {}", username);
-            if create_db {
-                println!("   • Database: {} ({}GB)", db_name, db_memory_gb);
+            // Final summary (only for human output)
+            if is_human_output {
+                println!();
+                println!("Cluster initialization completed successfully");
+                println!();
+                println!("Cluster name: {}", cluster_name);
+                println!("Admin user: {}", username);
+                if create_db {
+                    println!("Database: {} ({}GB)", db_name, db_memory_gb);
+                }
+                println!();
+                println!("Access endpoints:");
+                println!("  Web UI: https://localhost:8443");
+                println!("  API: https://localhost:9443");
             }
-            println!();
-            println!("🔗 Access the cluster:");
-            println!("   • Web UI: https://localhost:8443");
-            println!("   • API: https://localhost:9443");
-            println!();
-            println!("Next steps:");
-            println!("   • redisctl enterprise database list");
-            println!("   • redisctl enterprise node list");
-            println!("   • redisctl enterprise cluster info");
 
             Ok(WorkflowResult::success("Cluster initialized successfully")
                 .with_output("cluster_name", &cluster_name)

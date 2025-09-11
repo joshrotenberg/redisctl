@@ -282,10 +282,35 @@ async fn handle_enterprise_workflow_command(
             let registry = WorkflowRegistry::new();
             let workflows = registry.list();
 
-            println!("Available Enterprise Workflows:");
-            println!();
-            for (name, description) in workflows {
-                println!("  {} - {}", name, description);
+            match output {
+                cli::OutputFormat::Json | cli::OutputFormat::Yaml => {
+                    let workflow_list: Vec<serde_json::Value> = workflows
+                        .into_iter()
+                        .map(|(name, description)| {
+                            serde_json::json!({
+                                "name": name,
+                                "description": description
+                            })
+                        })
+                        .collect();
+                    let output_format = match output {
+                        cli::OutputFormat::Json => output::OutputFormat::Json,
+                        cli::OutputFormat::Yaml => output::OutputFormat::Yaml,
+                        _ => output::OutputFormat::Table,
+                    };
+                    crate::output::print_output(
+                        &serde_json::json!(workflow_list),
+                        output_format,
+                        None,
+                    )?;
+                }
+                _ => {
+                    println!("Available Enterprise Workflows:");
+                    println!();
+                    for (name, description) in workflows {
+                        println!("  {} - {}", name, description);
+                    }
+                }
             }
             Ok(())
         }
@@ -296,6 +321,7 @@ async fn handle_enterprise_workflow_command(
             skip_database,
             database_name,
             database_memory_gb,
+            async_ops,
         } => {
             let mut args = WorkflowArgs::new();
             args.insert("name", name);
@@ -315,6 +341,11 @@ async fn handle_enterprise_workflow_command(
                 conn_mgr: conn_mgr.clone(),
                 profile_name: profile.map(String::from),
                 output_format,
+                wait_timeout: if async_ops.wait {
+                    async_ops.wait_timeout
+                } else {
+                    0
+                },
             };
 
             let registry = WorkflowRegistry::new();
@@ -336,6 +367,21 @@ async fn handle_enterprise_workflow_command(
                 return Err(RedisCtlError::ApiError {
                     message: result.message,
                 });
+            }
+
+            // Print result as JSON/YAML if requested
+            match output {
+                cli::OutputFormat::Json | cli::OutputFormat::Yaml => {
+                    let result_json = serde_json::json!({
+                        "success": result.success,
+                        "message": result.message,
+                        "outputs": result.outputs,
+                    });
+                    crate::output::print_output(&result_json, output_format, None)?;
+                }
+                _ => {
+                    // Human output was already printed by the workflow
+                }
             }
 
             Ok(())

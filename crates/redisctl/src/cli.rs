@@ -1041,6 +1041,10 @@ pub enum EnterpriseWorkflowCommands {
         /// Memory size for the default database in GB
         #[arg(long, default_value = "1")]
         database_memory_gb: i64,
+
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 }
 
