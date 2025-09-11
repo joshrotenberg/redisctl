@@ -182,9 +182,9 @@ cp .env.example .env
 # - REDIS_ENTERPRISE_IMAGE: Docker image to use
 # - REDIS_ENTERPRISE_PLATFORM: Platform architecture
 
-# For Apple Silicon Macs, use:
-REDIS_ENTERPRISE_IMAGE=kurtfm/rs-arm:latest
-REDIS_ENTERPRISE_PLATFORM=linux/arm64
+# For Apple Silicon Macs:
+# Set REDIS_ENTERPRISE_PLATFORM=linux/arm64
+# Use an ARM64-compatible Redis Enterprise image
 ```
 
 Control logging and behavior:
@@ -296,9 +296,9 @@ docker compose down
 # Copy and configure environment file
 cp .env.example .env
 
-# Edit .env and uncomment ARM settings:
-# REDIS_ENTERPRISE_IMAGE=kurtfm/rs-arm:latest
+# Edit .env for ARM64:
 # REDIS_ENTERPRISE_PLATFORM=linux/arm64
+# Set REDIS_ENTERPRISE_IMAGE to an ARM64-compatible image
 
 # Start with ARM configuration
 docker compose up -d
