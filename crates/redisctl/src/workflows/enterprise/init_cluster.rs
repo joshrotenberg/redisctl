@@ -199,51 +199,6 @@ async fn check_if_needs_bootstrap(client: &EnterpriseClient) -> Result<bool> {
     }
 }
 
-/// Wait for cluster to be ready
-async fn wait_for_cluster_ready(client: &EnterpriseClient) -> Result<()> {
-    let pb = ProgressBar::new_spinner();
-    pb.set_style(
-        ProgressStyle::default_spinner()
-            .template("{spinner:.green} {msg}")
-            .unwrap(),
-    );
-    pb.set_message("Waiting for cluster to be ready...");
-
-    let max_attempts = 60; // 5 minutes with 5 second intervals
-    for attempt in 1..=max_attempts {
-        pb.set_message(format!(
-            "Waiting for cluster to be ready... (attempt {}/{})",
-            attempt, max_attempts
-        ));
-
-        match client.get_raw("/v1/cluster").await {
-            Ok(cluster) => {
-                // Check if cluster has a name (indicates it's initialized)
-                // and is not in upgrade mode
-                if cluster.get("name").is_some() {
-                    let upgrading = cluster
-                        .get("upgrade_in_progress")
-                        .and_then(|v| v.as_bool())
-                        .unwrap_or(false);
-
-                    if !upgrading {
-                        pb.finish_and_clear();
-                        return Ok(());
-                    }
-                }
-            }
-            Err(_) => {
-                // Cluster might still be initializing
-            }
-        }
-
-        sleep(Duration::from_secs(5)).await;
-    }
-
-    pb.finish_and_clear();
-    anyhow::bail!("Cluster did not become ready within 5 minutes")
-}
-
 /// Wait for an async action to complete
 async fn wait_for_action(
     client: &EnterpriseClient,
