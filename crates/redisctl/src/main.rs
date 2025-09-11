@@ -10,6 +10,7 @@ mod config;
 mod connection;
 mod error;
 mod output;
+mod workflows;
 
 use cli::{Cli, Commands};
 use config::Config;
@@ -255,11 +256,89 @@ async fn execute_enterprise_command(
             )
             .await
         }
+        Workflow(workflow_cmd) => {
+            handle_enterprise_workflow_command(conn_mgr, profile, workflow_cmd, output).await
+        }
         Stats(stats_cmd) => {
             commands::enterprise::stats::handle_stats_command(
                 conn_mgr, profile, stats_cmd, output, query,
             )
             .await
+        }
+    }
+}
+
+async fn handle_enterprise_workflow_command(
+    conn_mgr: &ConnectionManager,
+    profile: Option<&str>,
+    workflow_cmd: &cli::EnterpriseWorkflowCommands,
+    output: cli::OutputFormat,
+) -> Result<(), RedisCtlError> {
+    use cli::EnterpriseWorkflowCommands::*;
+    use workflows::{WorkflowArgs, WorkflowContext, WorkflowRegistry};
+
+    match workflow_cmd {
+        List => {
+            let registry = WorkflowRegistry::new();
+            let workflows = registry.list();
+
+            println!("Available Enterprise Workflows:");
+            println!();
+            for (name, description) in workflows {
+                println!("  {} - {}", name, description);
+            }
+            Ok(())
+        }
+        InitCluster {
+            name,
+            username,
+            password,
+            create_database,
+            database_name,
+            database_memory_gb,
+        } => {
+            let mut args = WorkflowArgs::new();
+            args.insert("name", name);
+            args.insert("username", username);
+            args.insert("password", password);
+            args.insert("create_database", create_database);
+            args.insert("database_name", database_name);
+            args.insert("database_memory_gb", database_memory_gb);
+
+            let output_format = match output {
+                cli::OutputFormat::Json => output::OutputFormat::Json,
+                cli::OutputFormat::Yaml => output::OutputFormat::Yaml,
+                cli::OutputFormat::Table | cli::OutputFormat::Auto => output::OutputFormat::Table,
+            };
+
+            let context = WorkflowContext {
+                conn_mgr: conn_mgr.clone(),
+                profile_name: profile.map(String::from),
+                output_format,
+            };
+
+            let registry = WorkflowRegistry::new();
+            let workflow = registry
+                .get("init-cluster")
+                .ok_or_else(|| RedisCtlError::ApiError {
+                    message: "Workflow not found".to_string(),
+                })?;
+
+            let result =
+                workflow
+                    .execute(context, args)
+                    .await
+                    .map_err(|e| RedisCtlError::ApiError {
+                        message: e.to_string(),
+                    })?;
+
+            if !result.success {
+                return Err(RedisCtlError::ApiError {
+                    message: result.message,
+                });
+            }
+
+            Ok(())
         }
     }
 }

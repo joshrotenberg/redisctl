@@ -1000,9 +1000,48 @@ pub enum EnterpriseCommands {
     #[command(subcommand)]
     Module(crate::commands::enterprise::module::ModuleCommands),
 
+    /// Workflow operations for multi-step tasks
+    #[command(subcommand)]
+    Workflow(EnterpriseWorkflowCommands),
+
     /// Statistics and metrics operations
     #[command(subcommand)]
     Stats(EnterpriseStatsCommands),
+}
+
+/// Enterprise workflow commands
+#[derive(Debug, Subcommand)]
+pub enum EnterpriseWorkflowCommands {
+    /// List available workflows
+    List,
+
+    /// Initialize a Redis Enterprise cluster
+    #[command(name = "init-cluster")]
+    InitCluster {
+        /// Cluster name
+        #[arg(long, default_value = "redis-cluster")]
+        name: String,
+
+        /// Admin username
+        #[arg(long, default_value = "admin@redis.local")]
+        username: String,
+
+        /// Admin password (required)
+        #[arg(long, env = "REDIS_ENTERPRISE_INIT_PASSWORD")]
+        password: String,
+
+        /// Create a default database after initialization
+        #[arg(long, default_value = "true")]
+        create_database: bool,
+
+        /// Name for the default database
+        #[arg(long, default_value = "default-db")]
+        database_name: String,
+
+        /// Memory size for the default database in GB
+        #[arg(long, default_value = "1")]
+        database_memory_gb: i64,
+    },
 }
 
 // Placeholder command structures - will be expanded in later PRs
