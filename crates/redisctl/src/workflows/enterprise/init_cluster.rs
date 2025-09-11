@@ -146,10 +146,41 @@ impl Workflow for InitClusterWorkflow {
                             .get("uid")
                             .or_else(|| db_result.get("resource_id"))
                             .and_then(|v| v.as_i64())
-                            .unwrap_or(0);
+                            .unwrap_or(0) as u32;
 
                         if is_human_output {
                             println!("Database created successfully (ID: {})", db_uid);
+                        }
+
+                        // Verify database connectivity with PING command
+                        if db_uid > 0 {
+                            // Wait a moment for database to be fully ready
+                            sleep(Duration::from_secs(2)).await;
+
+                            match client.execute_command(db_uid, "PING").await {
+                                Ok(response) => {
+                                    if let Some(result) = response.get("response") {
+                                        // The command endpoint returns {"response": true} for successful PING
+                                        if result.as_bool() == Some(true)
+                                            || result.as_str() == Some("PONG")
+                                        {
+                                            if is_human_output {
+                                                println!(
+                                                    "Database connectivity verified (PING successful)"
+                                                );
+                                            }
+                                        }
+                                    }
+                                }
+                                Err(e) => {
+                                    if is_human_output {
+                                        eprintln!(
+                                            "Note: Could not verify database connectivity: {}",
+                                            e
+                                        );
+                                    }
+                                }
+                            }
                         }
                     }
                     Err(e) => {
