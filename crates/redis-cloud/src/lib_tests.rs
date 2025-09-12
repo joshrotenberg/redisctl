@@ -102,4 +102,69 @@ mod tests {
         };
         assert_eq!(err.to_string(), "API error (400): Bad request");
     }
+
+    #[tokio::test]
+    async fn test_url_normalization() {
+        // Test various combinations of base URLs and paths to ensure no double slashes
+        let test_cases = vec![
+            (
+                "https://api.redislabs.com/v1",
+                "/subscriptions",
+                "https://api.redislabs.com/v1/subscriptions",
+            ),
+            (
+                "https://api.redislabs.com/v1/",
+                "/subscriptions",
+                "https://api.redislabs.com/v1/subscriptions",
+            ),
+            (
+                "https://api.redislabs.com/v1",
+                "subscriptions",
+                "https://api.redislabs.com/v1/subscriptions",
+            ),
+            (
+                "https://api.redislabs.com/v1/",
+                "subscriptions",
+                "https://api.redislabs.com/v1/subscriptions",
+            ),
+            (
+                "https://api.redislabs.com/v1",
+                "/subscriptions/123/databases",
+                "https://api.redislabs.com/v1/subscriptions/123/databases",
+            ),
+            (
+                "https://api.redislabs.com/v1/",
+                "/subscriptions/123/databases",
+                "https://api.redislabs.com/v1/subscriptions/123/databases",
+            ),
+        ];
+
+        for (base_url, test_path, _expected) in test_cases {
+            let mock_server = MockServer::start().await;
+
+            // Mock will fail if the URL has double slashes
+            Mock::given(method("GET"))
+                .and(path(test_path.trim_start_matches('/')))
+                .respond_with(
+                    ResponseTemplate::new(200).set_body_json(serde_json::json!({"ok": true})),
+                )
+                .mount(&mock_server)
+                .await;
+
+            let client = CloudClient::builder()
+                .base_url(base_url.replace("https://api.redislabs.com/v1", &mock_server.uri()))
+                .api_key("test_key")
+                .api_secret("test_secret")
+                .build()
+                .unwrap();
+
+            let result: Result<serde_json::Value> = client.get(test_path).await;
+            assert!(
+                result.is_ok(),
+                "Failed for base_url: {}, path: {}",
+                base_url,
+                test_path
+            );
+        }
+    }
 }

@@ -126,9 +126,16 @@ impl CloudClient {
         CloudClientBuilder::new()
     }
 
+    /// Normalize URL path concatenation to avoid double slashes
+    fn normalize_url(&self, path: &str) -> String {
+        let base = self.base_url.trim_end_matches('/');
+        let path = path.trim_start_matches('/');
+        format!("{}/{}", base, path)
+    }
+
     /// Make a GET request with API key authentication
     pub async fn get<T: serde::de::DeserializeOwned>(&self, path: &str) -> Result<T> {
-        let url = format!("{}{}", self.base_url, path);
+        let url = self.normalize_url(path);
 
         // Redis Cloud API uses these headers for authentication
         let response = self
@@ -148,7 +155,7 @@ impl CloudClient {
         path: &str,
         body: &B,
     ) -> Result<T> {
-        let url = format!("{}{}", self.base_url, path);
+        let url = self.normalize_url(path);
 
         // Same backwards header naming as GET
         let response = self
@@ -169,7 +176,7 @@ impl CloudClient {
         path: &str,
         body: &B,
     ) -> Result<T> {
-        let url = format!("{}{}", self.base_url, path);
+        let url = self.normalize_url(path);
 
         // Same backwards header naming as GET
         let response = self
@@ -186,7 +193,7 @@ impl CloudClient {
 
     /// Make a DELETE request
     pub async fn delete(&self, path: &str) -> Result<()> {
-        let url = format!("{}{}", self.base_url, path);
+        let url = self.normalize_url(path);
 
         // Same backwards header naming as GET
         let response = self
@@ -240,7 +247,7 @@ impl CloudClient {
         path: &str,
         body: serde_json::Value,
     ) -> Result<serde_json::Value> {
-        let url = format!("{}{}", self.base_url, path);
+        let url = self.normalize_url(path);
 
         // Use backwards header names for compatibility
         let response = self
@@ -257,7 +264,7 @@ impl CloudClient {
 
     /// Execute raw DELETE request returning any response body
     pub async fn delete_raw(&self, path: &str) -> Result<serde_json::Value> {
-        let url = format!("{}{}", self.base_url, path);
+        let url = self.normalize_url(path);
 
         // Use backwards header names for compatibility
         let response = self

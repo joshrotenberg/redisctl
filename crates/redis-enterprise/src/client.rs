@@ -110,6 +110,13 @@ impl EnterpriseClient {
         EnterpriseClientBuilder::new()
     }
 
+    /// Normalize URL path concatenation to avoid double slashes
+    fn normalize_url(&self, path: &str) -> String {
+        let base = self.base_url.trim_end_matches('/');
+        let path = path.trim_start_matches('/');
+        format!("{}/{}", base, path)
+    }
+
     /// Create a client from environment variables
     ///
     /// Reads configuration from:
@@ -141,7 +148,7 @@ impl EnterpriseClient {
 
     /// Make a GET request
     pub async fn get<T: DeserializeOwned>(&self, path: &str) -> Result<T> {
-        let url = format!("{}{}", self.base_url, path);
+        let url = self.normalize_url(path);
         debug!("GET {}", url);
 
         let response = self
@@ -158,7 +165,7 @@ impl EnterpriseClient {
 
     /// Make a GET request for text content
     pub async fn get_text(&self, path: &str) -> Result<String> {
-        let url = format!("{}{}", self.base_url, path);
+        let url = self.normalize_url(path);
         debug!("GET {} (text)", url);
 
         let response = self
@@ -192,7 +199,7 @@ impl EnterpriseClient {
 
     /// Make a POST request
     pub async fn post<B: Serialize, T: DeserializeOwned>(&self, path: &str, body: &B) -> Result<T> {
-        let url = format!("{}{}", self.base_url, path);
+        let url = self.normalize_url(path);
         debug!("POST {}", url);
         trace!("Request body: {:?}", serde_json::to_value(body).ok());
 
@@ -211,7 +218,7 @@ impl EnterpriseClient {
 
     /// Make a PUT request
     pub async fn put<B: Serialize, T: DeserializeOwned>(&self, path: &str, body: &B) -> Result<T> {
-        let url = format!("{}{}", self.base_url, path);
+        let url = self.normalize_url(path);
         debug!("PUT {}", url);
         trace!("Request body: {:?}", serde_json::to_value(body).ok());
 
@@ -230,7 +237,7 @@ impl EnterpriseClient {
 
     /// Make a DELETE request
     pub async fn delete(&self, path: &str) -> Result<()> {
-        let url = format!("{}{}", self.base_url, path);
+        let url = self.normalize_url(path);
         debug!("DELETE {}", url);
 
         let response = self
@@ -271,7 +278,7 @@ impl EnterpriseClient {
 
     /// POST request for actions that return no content
     pub async fn post_action<B: Serialize>(&self, path: &str, body: &B) -> Result<()> {
-        let url = format!("{}{}", self.base_url, path);
+        let url = self.normalize_url(path);
         debug!("POST {}", url);
         trace!("Request body: {:?}", serde_json::to_value(body).ok());
 
@@ -305,7 +312,7 @@ impl EnterpriseClient {
         field_name: &str,
         file_name: &str,
     ) -> Result<T> {
-        let url = format!("{}{}", self.base_url, path);
+        let url = self.normalize_url(path);
         debug!("POST {} (multipart)", url);
 
         let part = reqwest::multipart::Part::bytes(file_data).file_name(file_name.to_string());
@@ -336,7 +343,7 @@ impl EnterpriseClient {
         path: &str,
         body: &B,
     ) -> Result<serde_json::Value> {
-        let url = format!("{}{}", self.base_url, path);
+        let url = self.normalize_url(path);
 
         let response = self
             .client
@@ -372,7 +379,7 @@ impl EnterpriseClient {
         path: &str,
         body: serde_json::Value,
     ) -> Result<serde_json::Value> {
-        let url = format!("{}{}", self.base_url, path);
+        let url = self.normalize_url(path);
         let response = self
             .client
             .patch(&url)
@@ -399,7 +406,7 @@ impl EnterpriseClient {
 
     /// Execute raw DELETE request returning any response body
     pub async fn delete_raw(&self, path: &str) -> Result<serde_json::Value> {
-        let url = format!("{}{}", self.base_url, path);
+        let url = self.normalize_url(path);
         let response = self
             .client
             .delete(&url)
@@ -482,7 +489,7 @@ impl EnterpriseClient {
     /// Execute a Redis command on a specific database (internal use only)
     /// This uses the /v1/bdbs/{uid}/command endpoint which may not be publicly documented
     pub async fn execute_command(&self, db_uid: u32, command: &str) -> Result<serde_json::Value> {
-        let url = format!("{}/v1/bdbs/{}/command", self.base_url, db_uid);
+        let url = self.normalize_url(&format!("/v1/bdbs/{}/command", db_uid));
         let body = serde_json::json!({
             "command": command
         });

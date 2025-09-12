@@ -452,4 +452,70 @@ mod tests {
         assert_eq!(endpoints[1].exclude_proxies, Some(vec![1, 2]));
         assert_eq!(endpoints[1].include_proxies, Some(vec![3, 4, 5]));
     }
+
+    #[tokio::test]
+    async fn test_url_normalization() {
+        // Test various combinations of base URLs and paths to ensure no double slashes
+        let test_cases = vec![
+            (
+                "https://localhost:9443",
+                "/v1/cluster",
+                "https://localhost:9443/v1/cluster",
+            ),
+            (
+                "https://localhost:9443/",
+                "/v1/cluster",
+                "https://localhost:9443/v1/cluster",
+            ),
+            (
+                "https://localhost:9443",
+                "v1/cluster",
+                "https://localhost:9443/v1/cluster",
+            ),
+            (
+                "https://localhost:9443/",
+                "v1/cluster",
+                "https://localhost:9443/v1/cluster",
+            ),
+            (
+                "https://localhost:9443",
+                "/v1/bdbs/1",
+                "https://localhost:9443/v1/bdbs/1",
+            ),
+            (
+                "https://localhost:9443/",
+                "/v1/bdbs/1",
+                "https://localhost:9443/v1/bdbs/1",
+            ),
+        ];
+
+        for (base_url, test_path, _expected) in test_cases {
+            let mock_server = MockServer::start().await;
+
+            // Mock will fail if the URL has double slashes
+            Mock::given(method("GET"))
+                .and(path(test_path.trim_start_matches('/')))
+                .and(basic_auth("test", "test"))
+                .respond_with(
+                    ResponseTemplate::new(200).set_body_json(serde_json::json!({"ok": true})),
+                )
+                .mount(&mock_server)
+                .await;
+
+            let client = EnterpriseClient::builder()
+                .base_url(base_url.replace("https://localhost:9443", &mock_server.uri()))
+                .username("test")
+                .password("test")
+                .build()
+                .unwrap();
+
+            let result: Result<serde_json::Value> = client.get(test_path).await;
+            assert!(
+                result.is_ok(),
+                "Failed for base_url: {}, path: {}",
+                base_url,
+                test_path
+            );
+        }
+    }
 }
