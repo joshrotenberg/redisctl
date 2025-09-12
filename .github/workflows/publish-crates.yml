@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       dry-run:
-        description: 'Dry run (do not actually publish)'
+        description: "Dry run (do not actually publish)"
         required: false
         default: false
         type: boolean
@@ -42,6 +42,9 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
 
       - name: Install cargo-workspaces
         run: cargo install cargo-workspaces
