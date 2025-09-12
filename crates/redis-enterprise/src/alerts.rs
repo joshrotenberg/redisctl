@@ -11,25 +11,37 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 /// Alert information
+/// Represents an alert state for a cluster object (database, node, or cluster)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Alert {
+    /// Unique identifier for the alert
     pub uid: String,
+    /// Name/type of the alert
     pub name: String,
+    /// Alert severity level: DEBUG, INFO, WARNING, ERROR, CRITICAL
     pub severity: String,
+    /// Current alert state - true if alert is currently triggered
     pub state: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    /// Type of entity this alert is associated with (e.g., "bdb", "node", "cluster")
     pub entity_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    /// Name of the entity this alert is associated with
     pub entity_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    /// UID of the entity this alert is associated with
     pub entity_uid: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    /// String representing an alert threshold when applicable
     pub threshold: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    /// ISO 8601 timestamp when alert state last changed
     pub change_time: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    /// Object containing data relevant to the evaluation time when the alert went on/off (thresholds/sampled values/etc.)
     pub change_value: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    /// Human-readable description of the alert
     pub description: Option<String>,
     /// Error code associated with the alert
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -42,19 +54,25 @@ pub struct Alert {
 /// Generic alert settings (legacy - kept for compatibility)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AlertSettings {
+    /// True if alert is enabled
     pub enabled: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
+    /// Alert threshold value when applicable
     pub threshold: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    /// List of email addresses to notify when alert triggers
     pub email_recipients: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    /// Webhook URL to call when alert triggers
     pub webhook_url: Option<String>,
 }
 
 /// Database alert settings with threshold
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BdbAlertSettingsWithThreshold {
+    /// True if alert is enabled
     pub enabled: bool,
+    /// String representing the alert threshold value
     pub threshold: String,
 }
 
@@ -140,11 +158,15 @@ pub struct DbAlertsSettings {
 /// Cluster alert settings with threshold
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClusterAlertSettingsWithThreshold {
+    /// True if alert is enabled
     pub enabled: bool,
+    /// String representing the alert threshold value
     pub threshold: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    /// List of email addresses to notify when alert triggers
     pub email: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    /// Webhook URL to call when alert triggers
     pub webhook_url: Option<String>,
 }
 

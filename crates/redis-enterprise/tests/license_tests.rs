@@ -13,7 +13,7 @@ fn success_response(body: serde_json::Value) -> ResponseTemplate {
 fn valid_license() -> serde_json::Value {
     json!({
         "license_key": "lic-123-456-789",
-        "type_": "production",
+        "type": "production",
         "expired": false,
         "expiration_date": "2025-12-31T23:59:59Z",
         "shards_limit": 100,
@@ -26,7 +26,7 @@ fn valid_license() -> serde_json::Value {
 fn expired_license() -> serde_json::Value {
     json!({
         "license_key": "lic-expired-123",
-        "type_": "trial",
+        "type": "trial",
         "expired": true,
         "expiration_date": "2023-01-01T00:00:00Z",
         "shards_limit": 10,
@@ -50,7 +50,7 @@ fn license_usage() -> serde_json::Value {
 fn minimal_license() -> serde_json::Value {
     json!({
         "license_key": "lic-minimal-789",
-        "type_": "dev",
+        "type": "dev",
         "expired": false
     })
 }
@@ -179,7 +179,7 @@ async fn test_license_update() {
         .and(body_json(&update_request))
         .respond_with(success_response(json!({
             "license_key": "new-license-key-12345",
-            "type_": "production",
+            "type": "production",
             "expired": false,
             "expiration_date": "2026-12-31T23:59:59Z",
             "shards_limit": 200,
@@ -299,7 +299,7 @@ async fn test_license_validate_valid() {
         .and(body_json(&validate_request))
         .respond_with(success_response(json!({
             "license_key": "valid-license-to-validate",
-            "type_": "production",
+            "type": "production",
             "expired": false,
             "expiration_date": "2025-06-30T23:59:59Z",
             "shards_limit": 50,
@@ -370,7 +370,7 @@ async fn test_license_cluster_license() {
         .and(basic_auth("admin", "password"))
         .respond_with(success_response(json!({
             "license_key": "cluster-license-789",
-            "type_": "enterprise",
+            "type": "enterprise",
             "expired": false,
             "expiration_date": "2024-12-31T23:59:59Z",
             "shards_limit": 1000,

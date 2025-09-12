@@ -14,14 +14,23 @@ use typed_builder::TypedBuilder;
 /// CRDB (Active-Active Database) information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Crdb {
+    /// The GUID of the Active-Active database
     pub guid: String,
+    /// Name of Active-Active database
     pub name: String,
+    /// Current status of the Active-Active database
     pub status: String,
+    /// Database memory size limit, in bytes
     pub memory_size: u64,
+    /// List of participating instances in the Active-Active setup
     pub instances: Vec<CrdbInstance>,
+    /// Whether communication encryption is enabled
     pub encryption: Option<bool>,
+    /// Database on-disk persistence policy
     pub data_persistence: Option<String>,
+    /// Whether database replication is enabled
     pub replication: Option<bool>,
+    /// Data eviction policy (e.g., 'allkeys-lru', 'volatile-lru')
     pub eviction_policy: Option<String>,
 
     #[serde(flatten)]
@@ -31,10 +40,15 @@ pub struct Crdb {
 /// CRDB instance information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CrdbInstance {
+    /// Unique instance ID
     pub id: u32,
+    /// Cluster fully qualified name
     pub cluster: String,
+    /// Human-readable cluster name
     pub cluster_name: Option<String>,
+    /// Current status of this instance
     pub status: String,
+    /// List of endpoint addresses for this instance
     pub endpoints: Option<Vec<String>>,
 
     #[serde(flatten)]
@@ -71,16 +85,22 @@ pub struct CrdbInstance {
 /// ```
 #[derive(Debug, Serialize, TypedBuilder)]
 pub struct CreateCrdbRequest {
+    /// Name of the Active-Active database
     #[builder(setter(into))]
     pub name: String,
+    /// Database memory size limit, in bytes
     pub memory_size: u64,
+    /// List of participating cluster instances
     pub instances: Vec<CreateCrdbInstance>,
+    /// Whether to encrypt communication between instances
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(strip_option))]
     pub encryption: Option<bool>,
+    /// Database on-disk persistence policy ('disabled', 'aof', 'snapshot')
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(into, strip_option))]
     pub data_persistence: Option<String>,
+    /// Data eviction policy when memory limit is reached
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(into, strip_option))]
     pub eviction_policy: Option<String>,
@@ -89,14 +109,18 @@ pub struct CreateCrdbRequest {
 /// Create CRDB instance
 #[derive(Debug, Serialize, TypedBuilder)]
 pub struct CreateCrdbInstance {
+    /// Cluster fully qualified name, used to uniquely identify the cluster
     #[builder(setter(into))]
     pub cluster: String,
+    /// Cluster access URL (e.g., 'https://cluster1.example.com:9443')
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(into, strip_option))]
     pub cluster_url: Option<String>,
+    /// Username for cluster authentication
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(into, strip_option))]
     pub username: Option<String>,
+    /// Password for cluster authentication
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(into, strip_option))]
     pub password: Option<String>,

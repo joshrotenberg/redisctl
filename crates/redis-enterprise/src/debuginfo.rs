@@ -14,21 +14,27 @@ use typed_builder::TypedBuilder;
 /// Debug info collection request
 #[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
 pub struct DebugInfoRequest {
+    /// List of node UIDs to collect debug info from (if not specified, collects from all nodes)
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(strip_option))]
     pub node_uids: Option<Vec<u32>>,
+    /// List of database UIDs to collect debug info for (if not specified, collects for all databases)
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(strip_option))]
     pub bdb_uids: Option<Vec<u32>>,
+    /// Whether to include log files in the debug info collection
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(strip_option))]
     pub include_logs: Option<bool>,
+    /// Whether to include system and database metrics in the debug info
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(strip_option))]
     pub include_metrics: Option<bool>,
+    /// Whether to include configuration files and settings
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(strip_option))]
     pub include_configs: Option<bool>,
+    /// Time range for collecting historical data and logs
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(strip_option))]
     pub time_range: Option<TimeRange>,
@@ -37,19 +43,26 @@ pub struct DebugInfoRequest {
 /// Time range for debug info collection
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TimeRange {
+    /// Start time for data collection (ISO 8601 format)
     pub start: String,
+    /// End time for data collection (ISO 8601 format)
     pub end: String,
 }
 
 /// Debug info status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DebugInfoStatus {
+    /// Unique identifier for the debug info collection task
     pub task_id: String,
+    /// Current status of the debug info collection (queued, running, completed, failed)
     pub status: String,
+    /// Completion progress as a percentage (0.0-100.0)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub progress: Option<f32>,
+    /// URL for downloading the collected debug info package
     #[serde(skip_serializing_if = "Option::is_none")]
     pub download_url: Option<String>,
+    /// Error description if the collection task failed
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<String>,
 

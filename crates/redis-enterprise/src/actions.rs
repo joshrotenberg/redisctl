@@ -14,13 +14,23 @@ use serde_json::Value;
 /// Represents an action (operation) in the cluster
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Action {
+    /// Action's unique identifier (read-only)
     pub action_uid: String,
+    /// Action's name (read-only)
     pub name: String,
+    /// Current status of the action
+    ///
+    /// Possible values: 'queued', 'starting', 'running', 'cancelling', 'cancelled', 'completed', 'failed'
     pub status: String,
+    /// Percent of completed steps in current action (0-100)
     pub progress: Option<f32>,
+    /// ISO 8601 timestamp when the action was started
     pub start_time: Option<String>,
+    /// ISO 8601 timestamp when the action completed or failed
     pub end_time: Option<String>,
+    /// Human-readable description of the action
     pub description: Option<String>,
+    /// Error message if the action failed
     pub error: Option<String>,
     /// Database UID associated with the action
     pub bdb_uid: Option<u32>,

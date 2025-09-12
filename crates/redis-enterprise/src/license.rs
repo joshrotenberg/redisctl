@@ -25,7 +25,8 @@ pub struct License {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub license: Option<String>,
 
-    /// License type
+    /// License type (trial, commercial, etc.)
+    #[serde(rename = "type")]
     pub type_: Option<String>,
 
     /// Mark license expired or not
@@ -82,6 +83,7 @@ pub struct License {
 /// License update request
 #[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
 pub struct LicenseUpdateRequest {
+    /// New license key to install
     #[builder(setter(into))]
     pub license: String,
 }
@@ -89,12 +91,18 @@ pub struct LicenseUpdateRequest {
 /// License usage statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LicenseUsage {
+    /// Number of shards currently in use
     pub shards_used: u32,
+    /// Maximum number of shards allowed by license
     pub shards_limit: u32,
+    /// Number of nodes currently in use
     pub nodes_used: u32,
+    /// Maximum number of nodes allowed by license
     pub nodes_limit: u32,
+    /// Amount of RAM currently in use (bytes)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ram_used: Option<u64>,
+    /// Maximum amount of RAM allowed by license (bytes)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ram_limit: Option<u64>,
 

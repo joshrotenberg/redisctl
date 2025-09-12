@@ -14,12 +14,15 @@ use typed_builder::TypedBuilder;
 /// Diagnostic check request
 #[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
 pub struct DiagnosticRequest {
+    /// Specific diagnostic checks to run (if not specified, runs all checks)
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(strip_option))]
     pub checks: Option<Vec<String>>,
+    /// Node UIDs to run diagnostics on (if not specified, runs on all nodes)
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(strip_option))]
     pub node_uids: Option<Vec<u32>>,
+    /// Database UIDs to run diagnostics on (if not specified, runs on all databases)
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(strip_option))]
     pub bdb_uids: Option<Vec<u32>>,
@@ -28,12 +31,17 @@ pub struct DiagnosticRequest {
 /// Diagnostic result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiagnosticResult {
+    /// Name of the diagnostic check performed
     pub check_name: String,
+    /// Status of the check ('pass', 'warning', 'fail')
     pub status: String,
+    /// Human-readable message describing the result
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message: Option<String>,
+    /// Additional details about the check result
     #[serde(skip_serializing_if = "Option::is_none")]
     pub details: Option<Value>,
+    /// Recommended actions to resolve any issues found
     #[serde(skip_serializing_if = "Option::is_none")]
     pub recommendations: Option<Vec<String>>,
 
@@ -44,9 +52,13 @@ pub struct DiagnosticResult {
 /// Diagnostic report
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiagnosticReport {
+    /// Unique identifier for this diagnostic report
     pub report_id: String,
+    /// Timestamp when the report was generated
     pub timestamp: String,
+    /// List of individual diagnostic check results
     pub results: Vec<DiagnosticResult>,
+    /// Summary statistics of the diagnostic run
     #[serde(skip_serializing_if = "Option::is_none")]
     pub summary: Option<DiagnosticSummary>,
 
@@ -57,9 +69,13 @@ pub struct DiagnosticReport {
 /// Diagnostic summary
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiagnosticSummary {
+    /// Total number of diagnostic checks performed
     pub total_checks: u32,
+    /// Number of checks that passed
     pub passed: u32,
+    /// Number of checks with warnings
     pub warnings: u32,
+    /// Number of checks that failed
     pub failures: u32,
 }
 
