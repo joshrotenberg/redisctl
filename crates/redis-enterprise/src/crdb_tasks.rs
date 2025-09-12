@@ -14,16 +14,24 @@ use typed_builder::TypedBuilder;
 /// CRDB task information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CrdbTask {
+    /// Unique task identifier
     pub task_id: String,
+    /// Globally unique Active-Active database ID (GUID)
     pub crdb_guid: String,
+    /// Type of task being executed
     pub task_type: String,
+    /// Current status of the task (queued, running, completed, failed)
     pub status: String,
+    /// Task completion progress as a percentage (0.0-100.0)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub progress: Option<f32>,
+    /// Timestamp when the task was started (ISO 8601 format)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub start_time: Option<String>,
+    /// Timestamp when the task was completed or failed (ISO 8601 format)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub end_time: Option<String>,
+    /// Error description if the task failed
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<String>,
 
@@ -34,10 +42,13 @@ pub struct CrdbTask {
 /// CRDB task creation request
 #[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
 pub struct CreateCrdbTaskRequest {
+    /// Globally unique Active-Active database ID (GUID) for the target CRDB
     #[builder(setter(into))]
     pub crdb_guid: String,
+    /// Type of task to create (e.g., "flush", "purge", "update_config")
     #[builder(setter(into))]
     pub task_type: String,
+    /// Optional parameters specific to the task type
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(strip_option))]
     pub params: Option<Value>,

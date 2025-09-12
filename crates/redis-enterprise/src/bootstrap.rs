@@ -13,12 +13,16 @@ use serde_json::Value;
 /// Bootstrap configuration for cluster initialization
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BootstrapConfig {
+    /// Action to perform (e.g., 'create', 'join', 'recover_cluster')
     pub action: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    /// Cluster configuration for initialization
     pub cluster: Option<ClusterBootstrap>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    /// Node configuration for bootstrap
     pub node: Option<NodeBootstrap>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    /// Admin credentials for cluster access
     pub credentials: Option<CredentialsBootstrap>,
 
     #[serde(flatten)]
@@ -28,10 +32,13 @@ pub struct BootstrapConfig {
 /// Cluster bootstrap configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClusterBootstrap {
+    /// Cluster name for identification
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    /// DNS suffixes for cluster FQDN resolution
     pub dns_suffixes: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    /// Enable rack-aware placement for high availability
     pub rack_aware: Option<bool>,
 }
 
@@ -39,6 +46,7 @@ pub struct ClusterBootstrap {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NodeBootstrap {
     #[serde(skip_serializing_if = "Option::is_none")]
+    /// Storage paths configuration for the node
     pub paths: Option<NodePaths>,
 }
 
@@ -46,25 +54,32 @@ pub struct NodeBootstrap {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NodePaths {
     #[serde(skip_serializing_if = "Option::is_none")]
+    /// Path for persistent storage (databases, configuration, logs)
     pub persistent_path: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    /// Path for ephemeral storage (temporary files, caches)
     pub ephemeral_path: Option<String>,
 }
 
 /// Credentials bootstrap configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CredentialsBootstrap {
+    /// Admin username for cluster management
     pub username: String,
+    /// Admin password for authentication
     pub password: String,
 }
 
 /// Bootstrap status response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BootstrapStatus {
+    /// Current status of the bootstrap operation
     pub status: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    /// Progress percentage (0.0-100.0) of the bootstrap operation
     pub progress: Option<f32>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    /// Status message or error description
     pub message: Option<String>,
 
     #[serde(flatten)]

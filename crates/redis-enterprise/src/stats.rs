@@ -66,19 +66,24 @@ use serde_json::Value;
 /// Stats query parameters
 #[derive(Debug, Serialize)]
 pub struct StatsQuery {
+    /// Time interval for aggregation ("1min", "5min", "1hour", "1day")
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub interval: Option<String>, // "1min", "5min", "1hour", "1day"
+    pub interval: Option<String>,
+    /// Start time for the query (ISO 8601 format)
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub stime: Option<String>, // Start time
+    pub stime: Option<String>,
+    /// End time for the query (ISO 8601 format)
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub etime: Option<String>, // End time
+    pub etime: Option<String>,
+    /// Comma-separated list of specific metrics to retrieve
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub metrics: Option<String>, // Comma-separated metrics
+    pub metrics: Option<String>,
 }
 
 /// Generic stats response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StatsResponse {
+    /// Array of time intervals with their corresponding metrics
     pub intervals: Vec<StatsInterval>,
 
     #[serde(flatten)]
@@ -88,7 +93,9 @@ pub struct StatsResponse {
 /// Stats interval
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StatsInterval {
+    /// Timestamp for this interval (ISO 8601 format)
     pub time: String,
+    /// Metrics data for this time interval (dynamic field names)
     pub metrics: Value,
 }
 
@@ -96,16 +103,21 @@ pub struct StatsInterval {
 /// Response for last stats endpoint - the API returns metrics directly
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LastStatsResponse {
+    /// Start time of the stats interval
     pub stime: Option<String>,
+    /// End time of the stats interval
     pub etime: Option<String>,
+    /// Interval duration (e.g., "5min", "1hour")
     pub interval: Option<String>,
+    /// All metric values for the last interval (dynamic field names)
     #[serde(flatten)]
-    pub metrics: Value, // All other fields are metrics
+    pub metrics: Value,
 }
 
 /// Aggregated stats response for multiple resources
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AggregatedStatsResponse {
+    /// Array of stats for individual resources (nodes, databases, shards)
     pub stats: Vec<ResourceStats>,
     #[serde(flatten)]
     pub extra: Value,
@@ -114,7 +126,9 @@ pub struct AggregatedStatsResponse {
 /// Stats for a single resource
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceStats {
+    /// Unique identifier of the resource (node UID, database UID, etc.)
     pub uid: u32,
+    /// Time intervals with metrics for this specific resource
     pub intervals: Vec<StatsInterval>,
     #[serde(flatten)]
     pub extra: Value,

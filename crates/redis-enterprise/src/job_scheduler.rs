@@ -14,16 +14,24 @@ use typed_builder::TypedBuilder;
 /// Scheduled job information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScheduledJob {
+    /// Unique identifier for the scheduled job
     pub job_id: String,
+    /// Human-readable name for the job
     pub name: String,
+    /// Type of job (backup, cleanup, rotation, etc.)
     pub job_type: String,
+    /// Cron-style schedule expression for when the job runs
     pub schedule: String,
+    /// Whether the scheduled job is currently enabled
     #[serde(skip_serializing_if = "Option::is_none")]
     pub enabled: Option<bool>,
+    /// Timestamp of the last job execution (ISO 8601 format)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub last_run: Option<String>,
+    /// Timestamp of the next scheduled job execution (ISO 8601 format)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub next_run: Option<String>,
+    /// Job-specific parameters and configuration
     #[serde(skip_serializing_if = "Option::is_none")]
     pub params: Option<Value>,
 
@@ -34,15 +42,20 @@ pub struct ScheduledJob {
 /// Create scheduled job request
 #[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
 pub struct CreateScheduledJobRequest {
+    /// Human-readable name for the new job
     #[builder(setter(into))]
     pub name: String,
+    /// Type of job to create (backup, cleanup, rotation, etc.)
     #[builder(setter(into))]
     pub job_type: String,
+    /// Cron-style schedule expression defining when the job should run
     #[builder(setter(into))]
     pub schedule: String,
+    /// Whether the job should be enabled immediately upon creation
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(strip_option))]
     pub enabled: Option<bool>,
+    /// Job-specific parameters and configuration
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(strip_option))]
     pub params: Option<Value>,
@@ -51,12 +64,18 @@ pub struct CreateScheduledJobRequest {
 /// Job execution history
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JobExecution {
+    /// Unique identifier for this job execution instance
     pub execution_id: String,
+    /// ID of the scheduled job that was executed
     pub job_id: String,
+    /// Timestamp when the job execution started (ISO 8601 format)
     pub start_time: String,
+    /// Timestamp when the job execution finished (ISO 8601 format)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub end_time: Option<String>,
+    /// Execution status (running, completed, failed, cancelled)
     pub status: String,
+    /// Error description if the job execution failed
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<String>,
 

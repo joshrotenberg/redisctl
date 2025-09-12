@@ -11,10 +11,19 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 /// Database group information
+/// Represents a group of databases that share a memory pool
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BdbGroup {
+    /// Cluster unique ID of the database group
     pub uid: u32,
+    /// Group name (may be auto-generated if not specified)
     pub name: String,
+    /// The common memory pool size limit for all databases in the group, expressed in bytes
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub memory_size: Option<u64>,
+    /// A list of UIDs of member databases (read-only)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub members: Option<Vec<String>>,
     #[serde(flatten)]
     pub extra: Value,
 }

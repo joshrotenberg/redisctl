@@ -13,18 +13,25 @@ use serde_json::Value;
 /// Cluster Manager settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CmSettings {
+    /// Port number for the Cluster Manager service
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cm_port: Option<u16>,
+    /// Session timeout for Cluster Manager connections in seconds
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cm_session_timeout: Option<u32>,
+    /// Enable automatic recovery of failed databases
     #[serde(skip_serializing_if = "Option::is_none")]
     pub auto_recovery: Option<bool>,
+    /// Enable automatic failover for high availability
     #[serde(skip_serializing_if = "Option::is_none")]
     pub auto_failover: Option<bool>,
+    /// Enable slave high availability for replica databases
     #[serde(skip_serializing_if = "Option::is_none")]
     pub slave_ha: Option<bool>,
+    /// Grace period in seconds before triggering slave high availability
     #[serde(skip_serializing_if = "Option::is_none")]
     pub slave_ha_grace_period: Option<u32>,
+    /// Maximum number of simultaneous backup operations allowed
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_simultaneous_backups: Option<u32>,
 

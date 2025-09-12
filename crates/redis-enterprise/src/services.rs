@@ -14,14 +14,21 @@ use typed_builder::TypedBuilder;
 /// Service configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Service {
+    /// Unique identifier for the service
     pub service_id: String,
+    /// Human-readable name of the service
     pub name: String,
+    /// Type of service (e.g., "mdns_server", "cm_server", "stats_archiver")
     pub service_type: String,
+    /// Whether the service is enabled
     pub enabled: bool,
+    /// Service-specific configuration parameters
     #[serde(skip_serializing_if = "Option::is_none")]
     pub config: Option<Value>,
+    /// Current operational status of the service
     #[serde(skip_serializing_if = "Option::is_none")]
     pub status: Option<String>,
+    /// List of node UIDs where this service is running
     #[serde(skip_serializing_if = "Option::is_none")]
     pub node_uids: Option<Vec<u32>>,
 
@@ -32,10 +39,13 @@ pub struct Service {
 /// Service configuration request
 #[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
 pub struct ServiceConfigRequest {
+    /// Whether to enable or disable the service
     pub enabled: bool,
+    /// Service-specific configuration parameters
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(strip_option))]
     pub config: Option<Value>,
+    /// Specific nodes where the service should run (optional)
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(strip_option))]
     pub node_uids: Option<Vec<u32>>,
@@ -44,10 +54,14 @@ pub struct ServiceConfigRequest {
 /// Service status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceStatus {
+    /// Unique identifier for the service
     pub service_id: String,
+    /// Overall status of the service (e.g., "running", "stopped", "error")
     pub status: String,
+    /// Additional status message or error description
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message: Option<String>,
+    /// Status of the service on individual nodes
     #[serde(skip_serializing_if = "Option::is_none")]
     pub node_statuses: Option<Vec<NodeServiceStatus>>,
 
@@ -58,8 +72,11 @@ pub struct ServiceStatus {
 /// Node service status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NodeServiceStatus {
+    /// Node unique identifier where the service is running
     pub node_uid: u32,
+    /// Service status on this specific node (e.g., "running", "stopped", "error")
     pub status: String,
+    /// Node-specific status message or error description
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message: Option<String>,
 }
