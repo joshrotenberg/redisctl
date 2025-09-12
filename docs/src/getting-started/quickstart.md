@@ -77,7 +77,26 @@ redisctl api enterprise get /v1/bdbs
 redisctl api enterprise get /v1/nodes
 ```
 
-## Step 4: Explore More
+## Step 4: Using Workflows
+
+### Initialize Enterprise Cluster
+
+For new Redis Enterprise installations, use the init-cluster workflow:
+
+```bash
+# Complete cluster setup with one command
+redisctl enterprise workflow init-cluster \
+  --username "admin@cluster.local" \
+  --password "YourSecurePassword"
+
+# This workflow will:
+# 1. Bootstrap the cluster
+# 2. Set up authentication
+# 3. Create a default database
+# 4. Verify connectivity
+```
+
+## Step 5: Explore More
 
 ### Cloud Operations
 
@@ -116,4 +135,5 @@ redisctl database list -q "[].{name:name,memory:memory_size}"
 
 - [Redis Cloud Guide](../cloud/overview.md) - Cloud-specific operations
 - [Redis Enterprise Guide](../enterprise/overview.md) - Enterprise-specific operations
+- [Workflows](../features/workflows.md) - Automating complex operations
 - [Examples](../cloud/examples.md) - More detailed examples

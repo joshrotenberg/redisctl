@@ -14,17 +14,21 @@ Our Docker environment includes:
 ## Quick Start
 
 ```bash
-# Start Redis Enterprise and initialize cluster
-make docker-up
+# For Intel/AMD systems (default)
+docker compose up -d
 
-# Access interactive CLI
-make docker-cli
+# For Apple Silicon (M1/M2/M3) Macs
+cp .env.example .env
+# Edit .env to uncomment ARM settings
+docker compose up -d
 
-# Run tests against the cluster
-make docker-test
+# Access the cluster
+export REDIS_ENTERPRISE_URL="https://localhost:9443"
+export REDIS_ENTERPRISE_INSECURE="true"
+redisctl enterprise cluster info
 
 # Clean up
-make docker-down
+docker compose down -v
 ```
 
 ## Service Profiles
@@ -168,6 +172,21 @@ make docker-cleanup
 
 ## Environment Variables
 
+Configure the Docker environment via `.env` file:
+
+```bash
+# Copy example environment file
+cp .env.example .env
+
+# Edit .env to set:
+# - REDIS_ENTERPRISE_IMAGE: Docker image to use
+# - REDIS_ENTERPRISE_PLATFORM: Platform architecture
+
+# For Apple Silicon Macs:
+# Set REDIS_ENTERPRISE_PLATFORM=linux/arm64
+# Use an ARM64-compatible Redis Enterprise image
+```
+
 Control logging and behavior:
 
 ```bash
@@ -175,10 +194,7 @@ Control logging and behavior:
 RUST_LOG=debug docker compose up
 
 # Component-specific logging
-RUST_LOG="redis_enterprise=trace,redis_enterprise_cli=debug" docker compose up
-
-# Use different Redis Enterprise image
-ENTERPRISE_IMAGE=redislabs/redis:latest docker compose up
+RUST_LOG="redis_enterprise=trace,redisctl=debug" docker compose up
 ```
 
 ## Development Workflow
@@ -277,8 +293,15 @@ docker compose down
 
 **ARM Mac Issues:**
 ```bash
-# Ensure using ARM-compatible image
-ENTERPRISE_IMAGE=kurtfm/rs-arm:latest docker compose up
+# Copy and configure environment file
+cp .env.example .env
+
+# Edit .env for ARM64:
+# REDIS_ENTERPRISE_PLATFORM=linux/arm64
+# Set REDIS_ENTERPRISE_IMAGE to an ARM64-compatible image
+
+# Start with ARM configuration
+docker compose up -d
 ```
 
 **Permission Issues:**

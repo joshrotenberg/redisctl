@@ -10,6 +10,7 @@ mod config;
 mod connection;
 mod error;
 mod output;
+mod workflows;
 
 use cli::{Cli, Commands};
 use config::Config;
@@ -255,11 +256,135 @@ async fn execute_enterprise_command(
             )
             .await
         }
+        Workflow(workflow_cmd) => {
+            handle_enterprise_workflow_command(conn_mgr, profile, workflow_cmd, output).await
+        }
         Stats(stats_cmd) => {
             commands::enterprise::stats::handle_stats_command(
                 conn_mgr, profile, stats_cmd, output, query,
             )
             .await
+        }
+    }
+}
+
+async fn handle_enterprise_workflow_command(
+    conn_mgr: &ConnectionManager,
+    profile: Option<&str>,
+    workflow_cmd: &cli::EnterpriseWorkflowCommands,
+    output: cli::OutputFormat,
+) -> Result<(), RedisCtlError> {
+    use cli::EnterpriseWorkflowCommands::*;
+    use workflows::{WorkflowArgs, WorkflowContext, WorkflowRegistry};
+
+    match workflow_cmd {
+        List => {
+            let registry = WorkflowRegistry::new();
+            let workflows = registry.list();
+
+            match output {
+                cli::OutputFormat::Json | cli::OutputFormat::Yaml => {
+                    let workflow_list: Vec<serde_json::Value> = workflows
+                        .into_iter()
+                        .map(|(name, description)| {
+                            serde_json::json!({
+                                "name": name,
+                                "description": description
+                            })
+                        })
+                        .collect();
+                    let output_format = match output {
+                        cli::OutputFormat::Json => output::OutputFormat::Json,
+                        cli::OutputFormat::Yaml => output::OutputFormat::Yaml,
+                        _ => output::OutputFormat::Table,
+                    };
+                    crate::output::print_output(
+                        serde_json::json!(workflow_list),
+                        output_format,
+                        None,
+                    )?;
+                }
+                _ => {
+                    println!("Available Enterprise Workflows:");
+                    println!();
+                    for (name, description) in workflows {
+                        println!("  {} - {}", name, description);
+                    }
+                }
+            }
+            Ok(())
+        }
+        InitCluster {
+            name,
+            username,
+            password,
+            skip_database,
+            database_name,
+            database_memory_gb,
+            async_ops,
+        } => {
+            let mut args = WorkflowArgs::new();
+            args.insert("name", name);
+            args.insert("username", username);
+            args.insert("password", password);
+            args.insert("create_database", !skip_database);
+            args.insert("database_name", database_name);
+            args.insert("database_memory_gb", database_memory_gb);
+
+            let output_format = match output {
+                cli::OutputFormat::Json => output::OutputFormat::Json,
+                cli::OutputFormat::Yaml => output::OutputFormat::Yaml,
+                cli::OutputFormat::Table | cli::OutputFormat::Auto => output::OutputFormat::Table,
+            };
+
+            let context = WorkflowContext {
+                conn_mgr: conn_mgr.clone(),
+                profile_name: profile.map(String::from),
+                output_format,
+                wait_timeout: if async_ops.wait {
+                    async_ops.wait_timeout
+                } else {
+                    0
+                },
+            };
+
+            let registry = WorkflowRegistry::new();
+            let workflow = registry
+                .get("init-cluster")
+                .ok_or_else(|| RedisCtlError::ApiError {
+                    message: "Workflow not found".to_string(),
+                })?;
+
+            let result =
+                workflow
+                    .execute(context, args)
+                    .await
+                    .map_err(|e| RedisCtlError::ApiError {
+                        message: e.to_string(),
+                    })?;
+
+            if !result.success {
+                return Err(RedisCtlError::ApiError {
+                    message: result.message,
+                });
+            }
+
+            // Print result as JSON/YAML if requested
+            match output {
+                cli::OutputFormat::Json | cli::OutputFormat::Yaml => {
+                    let result_json = serde_json::json!({
+                        "success": result.success,
+                        "message": result.message,
+                        "outputs": result.outputs,
+                    });
+                    crate::output::print_output(&result_json, output_format, None)?;
+                }
+                _ => {
+                    // Human output was already printed by the workflow
+                }
+            }
+
+            Ok(())
         }
     }
 }

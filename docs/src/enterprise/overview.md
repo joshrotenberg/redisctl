@@ -32,6 +32,7 @@ Resources include:
 - `user` - User management
 - `role` - Role-based access control
 - `alert` - Alert configuration
+- `workflow` - Multi-step automated operations
 
 ## Common Operations
 
@@ -47,10 +48,16 @@ redisctl enterprise database get 1
 
 # List nodes
 redisctl enterprise node list
+
+# Initialize a new cluster (workflow)
+redisctl enterprise workflow init-cluster \
+  --username "admin@cluster.local" \
+  --password "SecurePassword"
 ```
 
 ## Next Steps
 
 - [Human-Friendly Commands](./human-commands.md) - High-level command reference
+- [Workflows](./workflows.md) - Automated multi-step operations
 - [Raw API Access](./api-access.md) - Direct API endpoint access
 - [Examples](./examples.md) - Real-world usage examples

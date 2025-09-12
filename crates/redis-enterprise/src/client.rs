@@ -478,4 +478,26 @@ impl EnterpriseClient {
             }
         }
     }
+
+    /// Execute a Redis command on a specific database (internal use only)
+    /// This uses the /v1/bdbs/{uid}/command endpoint which may not be publicly documented
+    pub async fn execute_command(&self, db_uid: u32, command: &str) -> Result<serde_json::Value> {
+        let url = format!("{}/v1/bdbs/{}/command", self.base_url, db_uid);
+        let body = serde_json::json!({
+            "command": command
+        });
+
+        debug!("Executing command on database {}: {}", db_uid, command);
+
+        let response = self
+            .client
+            .post(&url)
+            .basic_auth(&self.username, Some(&self.password))
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| self.map_reqwest_error(e, &url))?;
+
+        self.handle_response(response).await
+    }
 }

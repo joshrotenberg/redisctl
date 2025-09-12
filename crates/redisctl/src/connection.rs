@@ -7,6 +7,7 @@ use tracing::{debug, info, trace};
 
 /// Connection manager for creating authenticated clients
 #[allow(dead_code)] // Used by binary target
+#[derive(Clone)]
 pub struct ConnectionManager {
     pub config: Config,
 }
