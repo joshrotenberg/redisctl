@@ -109,20 +109,20 @@ redisctl cloud database create --data @database.json --wait
 docker run --rm \
   -e REDIS_CLOUD_API_KEY \
   -e REDIS_CLOUD_API_SECRET \
-  ghcr.io/joshrotenberg/redisctl:latest \
+  joshrotenberg/redisctl:latest \
   cloud subscription list
 
 # Use local config file
 docker run --rm \
   -v ~/.config/redisctl:/root/.config/redisctl:ro \
-  ghcr.io/joshrotenberg/redisctl:latest \
+  joshrotenberg/redisctl:latest \
   database list
 
 # Development environment with test cluster
-make docker-up    # Start Redis Enterprise cluster
-make docker-cli   # Interactive CLI session
-make docker-test  # Run test suite
-make docker-down  # Clean up
+docker compose up -d                    # Start Redis Enterprise cluster
+docker compose --profile cli up cli     # Interactive CLI session
+docker compose --profile test up test   # Run test suite
+docker compose down -v                  # Clean up
 ```
 
 See the [Docker documentation](https://joshrotenberg.com/redisctl/getting-started/docker.html) for advanced usage.

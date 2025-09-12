@@ -5,7 +5,7 @@ The Redis Enterprise CLI includes a comprehensive Docker setup for development a
 ## Overview
 
 Our Docker environment includes:
-- **Redis Enterprise cluster** with ARM Mac compatibility
+- **Redis Enterprise cluster** for local development
 - **Automated cluster initialization** using our CLI workflows
 - **Multiple service profiles** for different testing scenarios
 - **Development tooling** with live code mounting
@@ -14,12 +14,7 @@ Our Docker environment includes:
 ## Quick Start
 
 ```bash
-# For Intel/AMD systems (default)
-docker compose up -d
-
-# For Apple Silicon (M1/M2/M3) Macs
-cp .env.example .env
-# Edit .env to uncomment ARM settings
+# Start Redis Enterprise cluster
 docker compose up -d
 
 # Access the cluster
@@ -31,160 +26,91 @@ redisctl enterprise cluster info
 docker compose down -v
 ```
 
-## Service Profiles
+## Using Docker Compose
 
-### Default Profile
-
-Starts Redis Enterprise with basic setup:
+The Docker Compose setup provides a Redis Enterprise cluster with automatic initialization:
 
 ```bash
+# Start Redis Enterprise with auto-initialization
 docker compose up -d
+
+# Check cluster status
+export REDIS_ENTERPRISE_URL="https://localhost:9443"
+export REDIS_ENTERPRISE_USER="admin@redis.local"
+export REDIS_ENTERPRISE_PASSWORD="Redis123!"
+export REDIS_ENTERPRISE_INSECURE="true"
+redisctl enterprise cluster info
+
+# View databases
+redisctl enterprise database list
+
+# Clean up when done
+docker compose down -v
 ```
 
 **Includes:**
 - Redis Enterprise server
-- Cluster initialization
-- Basic test database
+- Automatic cluster initialization via workflow
+- Ready-to-use configuration
 
-### CLI Profile
+## Testing with Docker
 
-Interactive container for manual testing:
+### Running Tests Against the Cluster
+
+Once your cluster is running, you can test various commands:
 
 ```bash
-docker compose --profile cli up cli
-# or
-make docker-cli
+# Test cluster commands
+redisctl enterprise cluster info
+redisctl enterprise node list
+redisctl enterprise database list
+
+# Create a test database
+redisctl enterprise database create --data '{
+  "name": "test-db",
+  "memory_size": 1073741824,
+  "port": 12000
+}'
+
+# Test with different output formats
+redisctl enterprise database list -o yaml
+redisctl enterprise database list -o table
+
+# Use verbose logging for debugging
+RUST_LOG=debug redisctl enterprise cluster info
 ```
 
-**Features:**
-- Pre-configured credentials
-- Interactive shell with CLI installed
-- Project source mounted for reference
+### Interactive Testing
 
-### Examples Profile
-
-Demonstrates workflow commands:
+For interactive testing, you can use a temporary container:
 
 ```bash
-docker compose --profile examples up
-# or
-make docker-examples
-```
+# Run interactive shell with redisctl
+docker run --rm -it \
+  --network redisctl_radar-network \
+  -e REDIS_ENTERPRISE_URL="https://redis-enterprise:9443" \
+  -e REDIS_ENTERPRISE_INSECURE="true" \
+  -e REDIS_ENTERPRISE_USER="admin@redis.local" \
+  -e REDIS_ENTERPRISE_PASSWORD="Redis123!" \
+  joshrotenberg/redisctl:latest \
+  /bin/sh
 
-**Creates:**
-- Cache database (optimized for caching)
-- Persistent database (with AOF persistence)
-- Displays results in table format
-
-### Monitor Profile
-
-Continuous monitoring of cluster status:
-
-```bash
-docker compose --profile monitor up
-# or
-make docker-monitor
-```
-
-**Shows:**
-- Cluster information every 30 seconds
-- Database list with current status
-- Useful for watching changes during development
-
-## Advanced Development Features
-
-### Testing Profile
-
-Comprehensive test suite against live cluster:
-
-```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile test up
-# or
-make docker-test
-```
-
-**Tests:**
-- All cluster commands
-- Database CRUD operations
-- Node and user management
-- Direct API access
-- Output format validation
-
-### All Database Types
-
-Creates every supported database type:
-
-```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile all-dbs up
-# or
-make docker-all-dbs
-```
-
-**Database Types:**
-- **cache**: High-performance caching with LRU eviction
-- **persistent**: Durable storage with AOF persistence  
-- **search**: RediSearch for full-text search
-- **timeseries**: RedisTimeSeries for time-series data
-- **json**: RedisJSON for JSON document storage
-- **graph**: RedisGraph for graph database operations
-
-### Performance Testing
-
-Load testing against the cluster:
-
-```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile perf up
-# or
-make docker-perf
-```
-
-**Tests:**
-- 100+ rapid database list operations
-- 100+ rapid database get operations
-- Performance timing measurements
-- Stress testing API responsiveness
-
-### Debug Mode
-
-Development container with verbose logging:
-
-```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile debug up
-# or
-make docker-debug
-```
-
-**Features:**
-- `RUST_LOG=trace` for maximum verbosity
-- Full backtrace enabled
-- Source code mounted for live development
-- Interactive shell for debugging
-
-### Cleanup
-
-Remove all test databases:
-
-```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile cleanup up
-# or
-make docker-cleanup
+# Inside the container, run commands
+redisctl enterprise cluster info
+redisctl enterprise database list
 ```
 
 ## Environment Variables
 
-Configure the Docker environment via `.env` file:
+Configure the Docker environment via `.env` file (if needed):
 
 ```bash
-# Copy example environment file
+# Copy example environment file (optional)
 cp .env.example .env
 
-# Edit .env to set:
+# Edit .env to customize:
 # - REDIS_ENTERPRISE_IMAGE: Docker image to use
 # - REDIS_ENTERPRISE_PLATFORM: Platform architecture
-
-# For Apple Silicon Macs:
-# Set REDIS_ENTERPRISE_PLATFORM=linux/arm64
-# Use an ARM64-compatible Redis Enterprise image
 ```
 
 Control logging and behavior:
@@ -203,20 +129,24 @@ RUST_LOG="redis_enterprise=trace,redisctl=debug" docker compose up
 
 ```bash
 # 1. Start development environment
-make dev
+docker compose up -d
 
-# 2. Make changes to CLI code
-# 3. Test changes
-make docker-test
+# 2. Build and test your changes locally
+cargo build --release
+./target/release/redisctl enterprise cluster info
 
-# 4. Try new features
-make docker-cli
+# 3. Test with Docker image
+docker build -t redisctl:dev .
+docker run --rm \
+  --network redisctl_radar-network \
+  -e REDIS_ENTERPRISE_URL="https://redis-enterprise:9443" \
+  -e REDIS_ENTERPRISE_INSECURE="true" \
+  -e REDIS_ENTERPRISE_USER="admin@redis.local" \
+  -e REDIS_ENTERPRISE_PASSWORD="Redis123!" \
+  redisctl:dev enterprise cluster info
 
-# 5. Debug issues if needed
-make docker-debug
-
-# 6. Clean up
-make dev-clean
+# 4. Clean up
+docker compose down -v
 ```
 
 ### Testing New Features
@@ -225,12 +155,18 @@ make dev-clean
 # Start basic environment
 docker compose up -d
 
-# Test your new command
-docker compose exec redis-enterprise-cli-interactive redis-enterprise your-new-command
+# Test your new command locally
+export REDIS_ENTERPRISE_URL="https://localhost:9443"
+export REDIS_ENTERPRISE_USER="admin@redis.local"
+export REDIS_ENTERPRISE_PASSWORD="Redis123!"
+export REDIS_ENTERPRISE_INSECURE="true"
 
-# Or rebuild and test
-docker compose build redis-enterprise-cli
-docker compose up --force-recreate enterprise-init
+# Run your new command
+cargo run -- enterprise your-new-command
+
+# Or test with the release build
+cargo build --release
+./target/release/redisctl enterprise your-new-command
 ```
 
 ### Debugging Connection Issues
@@ -238,38 +174,33 @@ docker compose up --force-recreate enterprise-init
 ```bash
 # Check Redis Enterprise health
 docker compose ps
-docker compose logs enterprise
+docker compose logs redis-enterprise
 
-# Test CLI connectivity
-docker compose exec cli redis-enterprise --insecure cluster info
+# Test connectivity directly
+curl -k https://localhost:9443/v1/bootstrap
 
-# Debug with verbose logging
-RUST_LOG=debug docker compose exec cli redis-enterprise --insecure --verbose cluster info
+# Test with verbose logging
+RUST_LOG=debug redisctl enterprise cluster info
+
+# Check network connectivity from container
+docker run --rm \
+  --network redisctl_radar-network \
+  alpine/curl \
+  curl -k https://redis-enterprise:9443/v1/bootstrap
 ```
 
 ## Service Architecture
 
 ### Main Services
 
-- **enterprise**: Redis Enterprise server (ARM-compatible)
-- **enterprise-init**: Cluster initialization using workflows  
-- **enterprise-db-create**: Creates initial test database
-- **cli**: Interactive CLI container
-
-### Development Services
-
-- **enterprise-db-examples**: Workflow demonstrations
-- **monitor**: Continuous cluster monitoring
-- **test-runner**: Automated test execution
-- **create-all-db-types**: Database type showcase
-- **perf-test**: Performance validation
-- **debug**: Development debugging container
+- **redis-enterprise**: Redis Enterprise server
+- **redis-enterprise-init**: Automatic cluster initialization using the workflow command
 
 ### Networking
 
-All services use the `redis-net` bridge network:
-- Redis Enterprise API: `https://enterprise:9443`
-- Web UI: `https://enterprise:8443`  
+All services use the `radar-network` bridge network:
+- Redis Enterprise API: `https://redis-enterprise:9443` (external: `https://localhost:9443`)
+- Web UI: `https://redis-enterprise:8443` (external: `https://localhost:8443`)  
 - Database ports: `12000-12010`
 
 ### Volumes
@@ -291,17 +222,14 @@ lsof -i :8443
 docker compose down
 ```
 
-**ARM Mac Issues:**
+**Platform Compatibility Issues:**
 ```bash
-# Copy and configure environment file
-cp .env.example .env
+# If you encounter platform issues, check Docker settings
+docker version
 
-# Edit .env for ARM64:
-# REDIS_ENTERPRISE_PLATFORM=linux/arm64
-# Set REDIS_ENTERPRISE_IMAGE to an ARM64-compatible image
-
-# Start with ARM configuration
-docker compose up -d
+# Ensure Docker Desktop is configured for your platform
+# Try pulling the image manually
+docker pull redis/redis-stack-server:latest
 ```
 
 **Permission Issues:**
@@ -341,17 +269,17 @@ docker compose exec cli curl -k https://enterprise:9443/v1/bootstrap
 
 ### Development
 
-- Use `make dev` for complete environment setup
-- Use profiles to run only needed services
-- Mount source code for live development
-- Use verbose logging for debugging
+- Use `docker compose up -d` for complete environment setup
+- Build locally with `cargo build --release` for development
+- Use verbose logging (`RUST_LOG=debug`) for debugging
+- Always clean up with `docker compose down -v`
 
 ### Testing
 
 - Always test against real Redis Enterprise
-- Use different profiles for different test scenarios  
+- Test all output formats (JSON, YAML, table)
 - Clean up test data between runs
-- Verify all output formats work correctly
+- Verify error handling with invalid inputs
 
 ### Performance
 
