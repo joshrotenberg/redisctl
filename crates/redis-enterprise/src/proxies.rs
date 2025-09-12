@@ -37,95 +37,95 @@ pub struct Proxy {
     pub threads: Option<u32>,
 
     // Additional fields from API audit
-    /// Backlog size
+    /// Maximum number of pending connections in the listen queue
     #[serde(skip_serializing_if = "Option::is_none")]
     pub backlog: Option<u32>,
 
-    /// Client eviction enabled
+    /// Whether automatic client eviction is enabled when limits are reached
     #[serde(skip_serializing_if = "Option::is_none")]
     pub client_eviction: Option<bool>,
 
-    /// Client TCP keepalive count
+    /// Number of TCP keepalive probes before connection is dropped
     #[serde(skip_serializing_if = "Option::is_none")]
     pub client_keepcnt: Option<u32>,
 
-    /// Client TCP keepalive idle time
+    /// Time in seconds before TCP keepalive probes start
     #[serde(skip_serializing_if = "Option::is_none")]
     pub client_keepidle: Option<u32>,
 
-    /// Client TCP keepalive interval
+    /// Interval in seconds between TCP keepalive probes
     #[serde(skip_serializing_if = "Option::is_none")]
     pub client_keepintvl: Option<u32>,
 
-    /// Number of connections
+    /// Current number of active connections
     #[serde(skip_serializing_if = "Option::is_none")]
     pub conns: Option<u32>,
 
-    /// Core file generation enabled
+    /// Whether core dump files are generated on crash
     #[serde(skip_serializing_if = "Option::is_none")]
     pub corefile: Option<bool>,
 
-    /// Duration usage threshold
+    /// Threshold in milliseconds for slow operation logging
     #[serde(skip_serializing_if = "Option::is_none")]
     pub duration_usage_threshold: Option<u32>,
 
-    /// Dynamic threads scaling enabled
+    /// Whether proxy can dynamically adjust thread count based on load
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dynamic_threads_scaling: Option<bool>,
 
-    /// Ignore BDB client connection limit
+    /// Whether to bypass database connection limit checks
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ignore_bdb_cconn_limit: Option<bool>,
 
-    /// Ignore BDB client connection output buffer limits
+    /// Whether to bypass database output buffer limit checks
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ignore_bdb_cconn_output_buff_limits: Option<bool>,
 
-    /// Incoming connections capacity
+    /// Maximum capacity for incoming connection handling
     #[serde(skip_serializing_if = "Option::is_none")]
     pub incoming_connections_capacity: Option<u32>,
 
-    /// Incoming connections minimum capacity
+    /// Minimum reserved capacity for incoming connections
     #[serde(skip_serializing_if = "Option::is_none")]
     pub incoming_connections_min_capacity: Option<u32>,
 
-    /// Incoming connections rate limit
+    /// Maximum rate of new incoming connections per second
     #[serde(skip_serializing_if = "Option::is_none")]
     pub incoming_connections_rate_limit: Option<u32>,
 
-    /// Log level
+    /// Logging level for proxy (e.g., 'debug', 'info', 'warning', 'error')
     #[serde(skip_serializing_if = "Option::is_none")]
     pub log_level: Option<String>,
 
-    /// Maximum listeners
+    /// Maximum number of listener sockets
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_listeners: Option<u32>,
 
-    /// Maximum servers
+    /// Maximum number of backend server connections
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_servers: Option<u32>,
 
-    /// Maximum threads
+    /// Maximum number of worker threads
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_threads: Option<u32>,
 
-    /// Maximum worker client connections
+    /// Maximum client connections per worker thread
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_worker_client_conns: Option<u32>,
 
-    /// Maximum worker server connections
+    /// Maximum server connections per worker thread
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_worker_server_conns: Option<u32>,
 
-    /// Maximum worker transactions
+    /// Maximum concurrent transactions per worker thread
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_worker_txns: Option<u32>,
 
-    /// Maximum memory for clients
+    /// Maximum memory in bytes allocated for client connections
     #[serde(skip_serializing_if = "Option::is_none")]
     pub maxmemory_clients: Option<u32>,
 
-    /// Threads usage threshold
+    /// CPU usage threshold percentage for thread scaling decisions
     #[serde(skip_serializing_if = "Option::is_none")]
     pub threads_usage_threshold: Option<u32>,
 

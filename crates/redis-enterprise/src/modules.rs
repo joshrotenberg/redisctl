@@ -29,31 +29,31 @@ pub struct Module {
     pub is_bundled: Option<bool>,
 
     // Additional fields from API audit
-    /// BigStore version 2 support
+    /// Whether the module supports BigStore (Auto Tiering) version 2
     pub bigstore_version_2_support: Option<bool>,
 
-    /// Capability name
+    /// Name of the capability this module provides
     pub capability_name: Option<String>,
 
-    /// Config command
+    /// Redis command used to configure this module
     pub config_command: Option<String>,
 
-    /// CRDB support
+    /// Whether the module supports CRDB (Conflict-free Replicated Database)
     pub crdb: Option<bool>,
 
-    /// Module dependencies
+    /// List of other modules this module depends on
     pub dependencies: Option<Vec<Value>>,
 
-    /// Author email
+    /// Contact email address of the module author
     pub email: Option<String>,
 
-    /// Minimum Redis pack version
+    /// Minimum Redis Enterprise version required for this module
     pub min_redis_pack_version: Option<String>,
 
-    /// Supported platforms
+    /// List of platforms this module supports (e.g., 'linux-x64', 'linux-arm64')
     pub platforms: Option<Vec<String>>,
 
-    /// SHA256 checksum
+    /// SHA256 checksum of the module binary for verification
     pub sha256: Option<String>,
 
     #[serde(flatten)]
