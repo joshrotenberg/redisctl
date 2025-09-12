@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 /// Action information
+/// Represents an action (operation) in the cluster
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Action {
     pub action_uid: String,
@@ -27,6 +28,7 @@ pub struct Action {
 }
 
 /// Action handler for tracking async operations
+/// Handler for action-related operations
 pub struct ActionHandler {
     client: RestClient,
 }

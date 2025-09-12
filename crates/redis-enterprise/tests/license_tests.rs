@@ -79,7 +79,7 @@ async fn test_license_get() {
     assert!(result.is_ok());
     let license = result.unwrap();
     assert_eq!(license.license_key, "lic-123-456-789");
-    assert_eq!(license.type_, "production");
+    assert_eq!(license.type_, Some("production".to_string()));
     assert!(!license.expired);
     assert_eq!(
         license.expiration_date,
@@ -122,7 +122,7 @@ async fn test_license_get_expired() {
     assert!(result.is_ok());
     let license = result.unwrap();
     assert_eq!(license.license_key, "lic-expired-123");
-    assert_eq!(license.type_, "trial");
+    assert_eq!(license.type_, Some("trial".to_string()));
     assert!(license.expired);
     assert_eq!(
         license.expiration_date,
@@ -156,7 +156,7 @@ async fn test_license_get_minimal() {
     assert!(result.is_ok());
     let license = result.unwrap();
     assert_eq!(license.license_key, "lic-minimal-789");
-    assert_eq!(license.type_, "dev");
+    assert_eq!(license.type_, Some("dev".to_string()));
     assert!(!license.expired);
     assert!(license.expiration_date.is_none());
     assert!(license.shards_limit.is_none());
@@ -203,7 +203,7 @@ async fn test_license_update() {
     assert!(result.is_ok());
     let license = result.unwrap();
     assert_eq!(license.license_key, "new-license-key-12345");
-    assert_eq!(license.type_, "production");
+    assert_eq!(license.type_, Some("production".to_string()));
     assert!(!license.expired);
     assert_eq!(license.shards_limit, Some(200));
     assert_eq!(license.node_limit, Some(20));
@@ -323,7 +323,7 @@ async fn test_license_validate_valid() {
     assert!(result.is_ok());
     let license = result.unwrap();
     assert_eq!(license.license_key, "valid-license-to-validate");
-    assert_eq!(license.type_, "production");
+    assert_eq!(license.type_, Some("production".to_string()));
     assert!(!license.expired);
     assert_eq!(license.shards_limit, Some(50));
     assert_eq!(license.node_limit, Some(5));
@@ -394,7 +394,7 @@ async fn test_license_cluster_license() {
     assert!(result.is_ok());
     let license = result.unwrap();
     assert_eq!(license.license_key, "cluster-license-789");
-    assert_eq!(license.type_, "enterprise");
+    assert_eq!(license.type_, Some("enterprise".to_string()));
     assert!(!license.expired);
     assert_eq!(license.shards_limit, Some(1000));
     assert_eq!(license.node_limit, Some(100));

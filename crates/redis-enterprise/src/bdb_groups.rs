@@ -10,6 +10,7 @@ use crate::error::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+/// Database group information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BdbGroup {
     pub uid: u32,
@@ -18,6 +19,7 @@ pub struct BdbGroup {
     pub extra: Value,
 }
 
+/// Handler for database group operations
 pub struct BdbGroupsHandler {
     client: RestClient,
 }
@@ -50,11 +52,13 @@ impl BdbGroupsHandler {
     }
 }
 
+/// Request to create a new database group
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateBdbGroupRequest {
     pub name: String,
 }
 
+/// Request to update an existing database group
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateBdbGroupRequest {
     #[serde(skip_serializing_if = "Option::is_none")]

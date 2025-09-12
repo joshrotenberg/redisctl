@@ -83,18 +83,56 @@ pub struct ClusterNode {
 /// Cluster information from the REST API
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClusterInfo {
+    /// Cluster unique ID (read-only)
+    pub uid: Option<u32>,
+
+    /// Cluster's fully qualified domain name (read-only)
     pub name: String,
+
+    /// Cluster creation date (read-only)
+    pub created: Option<String>,
+
+    /// Last changed time (read-only)
+    pub last_changed_time: Option<String>,
+
+    /// Software version
     pub version: Option<String>,
+
+    /// License expiration status
     pub license_expired: Option<bool>,
+
+    /// List of node UIDs in the cluster
     pub nodes: Option<Vec<u32>>,
+
+    /// List of database UIDs in the cluster
     pub databases: Option<Vec<u32>>,
+
+    /// Cluster status
     pub status: Option<String>,
+
+    /// Enables/disables node/cluster email alerts
     pub email_alerts: Option<bool>,
+
+    /// Indicates if cluster operates in rack-aware mode
     pub rack_aware: Option<bool>,
 
+    /// Storage engine for Auto Tiering ('speedb' or 'rocksdb')
+    pub bigstore_driver: Option<String>,
+
+    /// API HTTP listening port (range: 1024-65535)
+    pub cnm_http_port: Option<u16>,
+
+    /// API HTTPS listening port (range: 1024-65535)
+    pub cnm_https_port: Option<u16>,
+
     // Stats
+    /// Total memory available in the cluster
     pub total_memory: Option<u64>,
+
+    /// Total memory used in the cluster
     pub used_memory: Option<u64>,
+
+    /// Total number of shards in the cluster
     pub total_shards: Option<u32>,
 
     #[serde(flatten)]
