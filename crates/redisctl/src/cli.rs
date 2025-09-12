@@ -951,6 +951,9 @@ pub enum CloudCommands {
     /// Fixed subscription operations
     #[command(subcommand, name = "fixed-subscription")]
     FixedSubscription(CloudFixedSubscriptionCommands),
+    /// Workflow operations for multi-step tasks
+    #[command(subcommand)]
+    Workflow(CloudWorkflowCommands),
 }
 
 /// Enterprise-specific commands (placeholder for now)
@@ -1007,6 +1010,16 @@ pub enum EnterpriseCommands {
     /// Statistics and metrics operations
     #[command(subcommand)]
     Stats(EnterpriseStatsCommands),
+}
+
+/// Cloud workflow commands
+#[derive(Debug, Subcommand)]
+pub enum CloudWorkflowCommands {
+    /// List available workflows
+    List,
+    /// Complete subscription setup with optional database
+    #[command(name = "subscription-setup")]
+    SubscriptionSetup(crate::workflows::cloud::subscription_setup::SubscriptionSetupArgs),
 }
 
 /// Enterprise workflow commands

@@ -3,12 +3,15 @@
 //! Workflows orchestrate complex operations that require multiple API calls,
 //! waiting for async operations, and conditional logic.
 
+#![allow(dead_code)]
+
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
 
+pub mod cloud;
 pub mod enterprise;
 
 /// Common trait for all workflows
@@ -120,6 +123,9 @@ impl WorkflowRegistry {
 
         // Register all built-in workflows
         registry.register(Box::new(enterprise::InitClusterWorkflow::new()));
+        registry.register(Box::new(
+            cloud::subscription_setup::SubscriptionSetupWorkflow,
+        ));
 
         registry
     }

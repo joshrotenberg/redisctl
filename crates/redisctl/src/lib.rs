@@ -87,3 +87,4 @@ pub(crate) mod config;
 pub(crate) mod connection;
 pub(crate) mod error;
 pub(crate) mod output;
+pub(crate) mod workflows;
