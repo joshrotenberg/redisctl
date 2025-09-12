@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       dry-run:
-        description: 'Dry run (do not actually publish)'
+        description: "Dry run (do not actually publish)"
         required: false
         default: false
         type: boolean
@@ -59,10 +59,15 @@ jobs:
             echo "Checking $crate v$CRATE_VERSION..."
 
             # Check if this version is already on crates.io
-            if cargo search $crate --limit 1 | grep -q "^$crate = \"$CRATE_VERSION\""; then
+            # Capture both stdout and stderr, ignore stderr output (the "note:" lines)
+            SEARCH_OUTPUT=$(cargo search "$crate" --limit 1 2>/dev/null || true)
+
+            # Check if the exact version is found
+            if echo "$SEARCH_OUTPUT" | grep -q "^${crate} = \"${CRATE_VERSION}\""; then
               echo "  ✓ $crate v$CRATE_VERSION is already published"
             else
               echo "  → $crate v$CRATE_VERSION needs publishing"
+              echo "  Search output was: $SEARCH_OUTPUT"
               NEEDS_PUBLISH="$NEEDS_PUBLISH $crate"
             fi
           done
@@ -141,10 +146,12 @@ jobs:
             CRATE_VERSION=$(grep "^version" crates/$crate/Cargo.toml | sed 's/.*= *"\(.*\)"/\1/')
             echo -n "Checking $crate v$CRATE_VERSION... "
 
-            if cargo search $crate --limit 1 | grep -q "^$crate = \"$CRATE_VERSION\""; then
+            SEARCH_OUTPUT=$(cargo search "$crate" --limit 1 2>/dev/null || true)
+            if echo "$SEARCH_OUTPUT" | grep -q "^${crate} = \"${CRATE_VERSION}\""; then
               echo "✓ Published!"
             else
               echo "✗ Not found!"
+              echo "Search output: $SEARCH_OUTPUT"
               exit 1
             fi
           done
