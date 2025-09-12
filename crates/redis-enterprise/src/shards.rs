@@ -36,6 +36,16 @@ pub struct Shard {
     pub backup_progress: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub import_progress: Option<f64>,
+    /// All nodes that this shard is associated with
+    pub all_nodes: Option<Vec<u32>>,
+    /// Assigned slots for this shard
+    pub assigned_slots: Option<String>,
+    /// Client certificate subject validation type
+    pub client_cert_subject_validation_type: Option<String>,
+    /// Redis info for this shard
+    pub redis_info: Option<Value>,
+    /// Roles assigned to this shard
+    pub roles: Option<Vec<String>>,
 
     #[serde(flatten)]
     pub extra: Value,

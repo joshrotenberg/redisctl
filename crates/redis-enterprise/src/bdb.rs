@@ -193,6 +193,18 @@ pub struct DatabaseInfo {
     pub tls_mode: Option<String>,
     pub enforce_client_authentication: Option<String>,
     pub default_user: Option<bool>,
+    /// ACL configuration
+    pub acl: Option<Value>,
+    /// Client certificate subject validation type
+    pub client_cert_subject_validation_type: Option<String>,
+    /// Compare key hslot
+    pub compare_key_hslot: Option<bool>,
+    /// DNS suffixes for endpoints
+    pub dns_suffixes: Option<Vec<String>>,
+    /// Group UID for the database
+    pub group_uid: Option<u32>,
+    /// Redis cluster mode enabled
+    pub redis_cluster_enabled: Option<bool>,
 
     // CRDT/Active-Active fields
     pub crdt: Option<bool>,

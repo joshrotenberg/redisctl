@@ -36,6 +36,99 @@ pub struct Proxy {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub threads: Option<u32>,
 
+    // Additional fields from API audit
+    /// Backlog size
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub backlog: Option<u32>,
+
+    /// Client eviction enabled
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub client_eviction: Option<bool>,
+
+    /// Client TCP keepalive count
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub client_keepcnt: Option<u32>,
+
+    /// Client TCP keepalive idle time
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub client_keepidle: Option<u32>,
+
+    /// Client TCP keepalive interval
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub client_keepintvl: Option<u32>,
+
+    /// Number of connections
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub conns: Option<u32>,
+
+    /// Core file generation enabled
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub corefile: Option<bool>,
+
+    /// Duration usage threshold
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub duration_usage_threshold: Option<u32>,
+
+    /// Dynamic threads scaling enabled
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dynamic_threads_scaling: Option<bool>,
+
+    /// Ignore BDB client connection limit
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ignore_bdb_cconn_limit: Option<bool>,
+
+    /// Ignore BDB client connection output buffer limits
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ignore_bdb_cconn_output_buff_limits: Option<bool>,
+
+    /// Incoming connections capacity
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub incoming_connections_capacity: Option<u32>,
+
+    /// Incoming connections minimum capacity
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub incoming_connections_min_capacity: Option<u32>,
+
+    /// Incoming connections rate limit
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub incoming_connections_rate_limit: Option<u32>,
+
+    /// Log level
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub log_level: Option<String>,
+
+    /// Maximum listeners
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_listeners: Option<u32>,
+
+    /// Maximum servers
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_servers: Option<u32>,
+
+    /// Maximum threads
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_threads: Option<u32>,
+
+    /// Maximum worker client connections
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_worker_client_conns: Option<u32>,
+
+    /// Maximum worker server connections
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_worker_server_conns: Option<u32>,
+
+    /// Maximum worker transactions
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_worker_txns: Option<u32>,
+
+    /// Maximum memory for clients
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub maxmemory_clients: Option<u32>,
+
+    /// Threads usage threshold
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub threads_usage_threshold: Option<u32>,
+
     #[serde(flatten)]
     pub extra: Value,
 }

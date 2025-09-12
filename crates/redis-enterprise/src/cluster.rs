@@ -135,6 +135,211 @@ pub struct ClusterInfo {
     /// Total number of shards in the cluster
     pub total_shards: Option<u32>,
 
+    // Additional fields from API audit
+    /// Alert settings configuration
+    pub alert_settings: Option<Value>,
+
+    /// Block cluster changes flag
+    pub block_cluster_changes: Option<bool>,
+
+    /// CCS internode encryption enabled
+    pub ccs_internode_encryption: Option<bool>,
+
+    /// Cluster API internal port
+    pub cluster_api_internal_port: Option<u32>,
+
+    /// Cluster SSH public key
+    pub cluster_ssh_public_key: Option<String>,
+
+    /// CM port
+    pub cm_port: Option<u32>,
+
+    /// CM server version
+    pub cm_server_version: Option<u32>,
+
+    /// CM session timeout in minutes
+    pub cm_session_timeout_minutes: Option<u32>,
+
+    /// CNM HTTP max threads per worker
+    pub cnm_http_max_threads_per_worker: Option<u32>,
+
+    /// CNM HTTP workers count
+    pub cnm_http_workers: Option<u32>,
+
+    /// Control cipher suites
+    pub control_cipher_suites: Option<String>,
+
+    /// Control cipher suites for TLS 1.3
+    pub control_cipher_suites_tls_1_3: Option<String>,
+
+    /// CRDB coordinator ignore requests flag
+    pub crdb_coordinator_ignore_requests: Option<bool>,
+
+    /// CRDB coordinator port
+    pub crdb_coordinator_port: Option<u32>,
+
+    /// CRDT supported featureset version
+    pub crdt_supported_featureset_version: Option<u32>,
+
+    /// CRDT supported protocol versions
+    pub crdt_supported_protocol_versions: Option<Vec<String>>,
+
+    /// Cluster creation time
+    pub created_time: Option<String>,
+
+    /// Data cipher list
+    pub data_cipher_list: Option<String>,
+
+    /// Data cipher suites for TLS 1.3
+    pub data_cipher_suites_tls_1_3: Option<Vec<Value>>,
+
+    /// Debug info path
+    pub debuginfo_path: Option<String>,
+
+    /// Encrypt private keys flag
+    pub encrypt_pkeys: Option<bool>,
+
+    /// Entra ID cache TTL
+    pub entra_id_cache_ttl: Option<u32>,
+
+    /// Envoy admin port
+    pub envoy_admin_port: Option<u32>,
+
+    /// Envoy external authorization enabled
+    pub envoy_external_authorization: Option<bool>,
+
+    /// Envoy max downstream connections
+    pub envoy_max_downstream_connections: Option<u32>,
+
+    /// Envoy management server port
+    pub envoy_mgmt_server_port: Option<u32>,
+
+    /// Gossip envoy admin port
+    pub gossip_envoy_admin_port: Option<u32>,
+
+    /// Handle metrics redirects
+    pub handle_metrics_redirects: Option<bool>,
+
+    /// Handle redirects
+    pub handle_redirects: Option<bool>,
+
+    /// HTTP support enabled
+    pub http_support: Option<bool>,
+
+    /// Log rotation settings
+    pub logrotate_settings: Option<Value>,
+
+    /// Mask BDB credentials
+    pub mask_bdb_credentials: Option<bool>,
+
+    /// Metrics system type
+    pub metrics_system: Option<u32>,
+
+    /// Minimum control TLS version
+    #[serde(rename = "min_control_TLS_version")]
+    pub min_control_tls_version: Option<String>,
+
+    /// Minimum data TLS version
+    #[serde(rename = "min_data_TLS_version")]
+    pub min_data_tls_version: Option<String>,
+
+    /// Minimum sentinel TLS version
+    #[serde(rename = "min_sentinel_TLS_version")]
+    pub min_sentinel_tls_version: Option<String>,
+
+    /// Module upload max size in MB
+    pub module_upload_max_size_mb: Option<u32>,
+
+    /// MTLS authorized subjects
+    pub mtls_authorized_subjects: Option<Vec<String>>,
+
+    /// MTLS certificate authentication
+    pub mtls_certificate_authentication: Option<String>,
+
+    /// MTLS client cert subject validation type
+    pub mtls_client_cert_subject_validation_type: Option<String>,
+
+    /// Multi-commands optimization
+    pub multi_commands_opt: Option<String>,
+
+    /// OPTIONS method forbidden flag
+    pub options_method_forbidden: Option<bool>,
+
+    /// Password complexity requirements
+    pub password_complexity: Option<Value>,
+
+    /// Password expiration duration
+    pub password_expiration_duration: Option<u32>,
+
+    /// Password hashing algorithm
+    pub password_hashing_algorithm: Option<String>,
+
+    /// Password minimum length
+    pub password_min_length: Option<u32>,
+
+    /// Proxy certificate
+    pub proxy_certificate: Option<String>,
+
+    /// Reserved ports list
+    pub reserved_ports: Option<Vec<u32>>,
+
+    /// Robust CRDT syncer
+    pub robust_crdt_syncer: Option<bool>,
+
+    /// S3 certificate verification
+    pub s3_certificate_verification: Option<bool>,
+
+    /// Sentinel cipher suites
+    pub sentinel_cipher_suites: Option<String>,
+
+    /// Sentinel cipher suites for TLS 1.3
+    pub sentinel_cipher_suites_tls_1_3: Option<Vec<Value>>,
+
+    /// Sentinel TLS mode
+    pub sentinel_tls_mode: Option<String>,
+
+    /// Slave HA enabled
+    pub slave_ha: Option<bool>,
+
+    /// Slave HA BDB cooldown period
+    pub slave_ha_bdb_cooldown_period: Option<u32>,
+
+    /// Slave HA cooldown period
+    pub slave_ha_cooldown_period: Option<u32>,
+
+    /// Slave HA grace period
+    pub slave_ha_grace_period: Option<u32>,
+
+    /// Slowlog in sanitized support
+    pub slowlog_in_sanitized_support: Option<bool>,
+
+    /// SMTP TLS mode
+    pub smtp_tls_mode: Option<String>,
+
+    /// SMTP use TLS
+    pub smtp_use_tls: Option<bool>,
+
+    /// Syncer certificate
+    pub syncer_certificate: Option<String>,
+
+    /// System reserved ports
+    pub system_reserved_ports: Option<Vec<u32>>,
+
+    /// Upgrade in progress flag
+    pub upgrade_in_progress: Option<bool>,
+
+    /// Upgrade mode
+    pub upgrade_mode: Option<String>,
+
+    /// Use external IPv6
+    pub use_external_ipv6: Option<bool>,
+
+    /// Use IPv6
+    pub use_ipv6: Option<bool>,
+
+    /// Wait command support
+    pub wait_command: Option<bool>,
+
     #[serde(flatten)]
     pub extra: Value,
 }

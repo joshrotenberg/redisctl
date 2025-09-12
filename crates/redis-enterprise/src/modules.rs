@@ -27,6 +27,35 @@ pub struct Module {
     pub compatible_redis_version: Option<String>,
     pub display_name: Option<String>,
     pub is_bundled: Option<bool>,
+
+    // Additional fields from API audit
+    /// BigStore version 2 support
+    pub bigstore_version_2_support: Option<bool>,
+
+    /// Capability name
+    pub capability_name: Option<String>,
+
+    /// Config command
+    pub config_command: Option<String>,
+
+    /// CRDB support
+    pub crdb: Option<bool>,
+
+    /// Module dependencies
+    pub dependencies: Option<Vec<Value>>,
+
+    /// Author email
+    pub email: Option<String>,
+
+    /// Minimum Redis pack version
+    pub min_redis_pack_version: Option<String>,
+
+    /// Supported platforms
+    pub platforms: Option<Vec<String>>,
+
+    /// SHA256 checksum
+    pub sha256: Option<String>,
+
     #[serde(flatten)]
     pub extra: Value,
 }
