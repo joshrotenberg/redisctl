@@ -43,7 +43,6 @@
 - [Async Operations](./features/async-operations.md)
 - [Output Formats](./features/output-formats.md)
 - [Profile Management](./features/profiles.md)
-- [Smart Commands](./features/smart-commands.md)
 - [Workflows](./features/workflows.md)
 
 # Tutorials
