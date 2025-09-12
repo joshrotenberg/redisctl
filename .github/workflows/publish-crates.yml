@@ -1,0 +1,158 @@
+name: Publish to crates.io
+
+on:
+  workflow_run:
+    workflows: ["Release"]
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Dry run (do not actually publish)'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  publish:
+    name: Publish to crates.io
+    runs-on: ubuntu-latest
+    # Only run if the release workflow succeeded or this was manually triggered
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Fetch the tag that triggered the release
+          fetch-depth: 0
+
+      - name: Get version from tag
+        id: get-version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            # For manual runs, use the latest tag
+            VERSION=$(git describe --tags --abbrev=0 || echo "v0.0.0")
+          else
+            # For workflow_run, get the tag from the triggering workflow
+            VERSION="${{ github.event.workflow_run.head_branch }}"
+          fi
+          echo "version=${VERSION#v}" >> $GITHUB_OUTPUT
+          echo "Publishing version: ${VERSION#v}"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-workspaces
+        run: cargo install cargo-workspaces
+
+      - name: Check which crates need publishing
+        id: check-crates
+        run: |
+          echo "Checking which crates need to be published..."
+
+          # Check each crate to see if it's already published
+          NEEDS_PUBLISH=""
+
+          for crate in redis-cloud redis-enterprise redisctl; do
+            CRATE_VERSION=$(grep "^version" crates/$crate/Cargo.toml | sed 's/.*= *"\(.*\)"/\1/')
+            echo "Checking $crate v$CRATE_VERSION..."
+
+            # Check if this version is already on crates.io
+            if cargo search $crate --limit 1 | grep -q "^$crate = \"$CRATE_VERSION\""; then
+              echo "  ✓ $crate v$CRATE_VERSION is already published"
+            else
+              echo "  → $crate v$CRATE_VERSION needs publishing"
+              NEEDS_PUBLISH="$NEEDS_PUBLISH $crate"
+            fi
+          done
+
+          echo "needs_publish=$NEEDS_PUBLISH" >> $GITHUB_OUTPUT
+
+          if [ -z "$NEEDS_PUBLISH" ]; then
+            echo "All crates are already published!"
+          else
+            echo "Crates to publish:$NEEDS_PUBLISH"
+          fi
+
+      - name: Publish redis-cloud
+        if: contains(steps.check-crates.outputs.needs_publish, 'redis-cloud')
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          if [[ "${{ inputs.dry-run }}" == "true" ]]; then
+            echo "DRY RUN: Would publish redis-cloud"
+            cd crates/redis-cloud && cargo publish --dry-run
+          else
+            echo "Publishing redis-cloud..."
+            cd crates/redis-cloud && cargo publish --no-verify
+          fi
+
+      - name: Wait for redis-cloud to be available
+        if: contains(steps.check-crates.outputs.needs_publish, 'redis-cloud')
+        run: |
+          if [[ "${{ inputs.dry-run }}" != "true" ]]; then
+            echo "Waiting for redis-cloud to be available on crates.io..."
+            sleep 30
+          fi
+
+      - name: Publish redis-enterprise
+        if: contains(steps.check-crates.outputs.needs_publish, 'redis-enterprise')
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          if [[ "${{ inputs.dry-run }}" == "true" ]]; then
+            echo "DRY RUN: Would publish redis-enterprise"
+            cd crates/redis-enterprise && cargo publish --dry-run
+          else
+            echo "Publishing redis-enterprise..."
+            cd crates/redis-enterprise && cargo publish --no-verify
+          fi
+
+      - name: Wait for redis-enterprise to be available
+        if: contains(steps.check-crates.outputs.needs_publish, 'redis-enterprise')
+        run: |
+          if [[ "${{ inputs.dry-run }}" != "true" ]]; then
+            echo "Waiting for redis-enterprise to be available on crates.io..."
+            sleep 30
+          fi
+
+      - name: Publish redisctl
+        if: contains(steps.check-crates.outputs.needs_publish, 'redisctl')
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          if [[ "${{ inputs.dry-run }}" == "true" ]]; then
+            echo "DRY RUN: Would publish redisctl"
+            cd crates/redisctl && cargo publish --dry-run
+          else
+            echo "Publishing redisctl..."
+            cd crates/redisctl && cargo publish --no-verify
+          fi
+
+      - name: Verify publication
+        if: ${{ inputs.dry-run != true && steps.check-crates.outputs.needs_publish != '' }}
+        run: |
+          echo "Waiting for crates to be fully available..."
+          sleep 60
+
+          echo "Verifying all crates are published:"
+          for crate in redis-cloud redis-enterprise redisctl; do
+            CRATE_VERSION=$(grep "^version" crates/$crate/Cargo.toml | sed 's/.*= *"\(.*\)"/\1/')
+            echo -n "Checking $crate v$CRATE_VERSION... "
+
+            if cargo search $crate --limit 1 | grep -q "^$crate = \"$CRATE_VERSION\""; then
+              echo "✓ Published!"
+            else
+              echo "✗ Not found!"
+              exit 1
+            fi
+          done
+
+          echo ""
+          echo "All crates successfully published to crates.io!"
+          echo ""
+          echo "View them at:"
+          echo "  - https://crates.io/crates/redis-cloud"
+          echo "  - https://crates.io/crates/redis-enterprise"
+          echo "  - https://crates.io/crates/redisctl"
