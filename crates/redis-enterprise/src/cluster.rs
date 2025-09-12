@@ -135,6 +135,211 @@ pub struct ClusterInfo {
     /// Total number of shards in the cluster
     pub total_shards: Option<u32>,
 
+    // Additional fields from API audit
+    /// Alert settings configuration for cluster and nodes
+    pub alert_settings: Option<Value>,
+
+    /// Whether cluster changes are currently blocked (maintenance mode)
+    pub block_cluster_changes: Option<bool>,
+
+    /// Whether CCS (Cluster Configuration Store) internode encryption is enabled
+    pub ccs_internode_encryption: Option<bool>,
+
+    /// Internal port used by the cluster API
+    pub cluster_api_internal_port: Option<u32>,
+
+    /// SSH public key for cluster authentication
+    pub cluster_ssh_public_key: Option<String>,
+
+    /// Port used by Cluster Manager (CM)
+    pub cm_port: Option<u32>,
+
+    /// Version of the Cluster Manager server
+    pub cm_server_version: Option<u32>,
+
+    /// Session timeout for Cluster Manager in minutes
+    pub cm_session_timeout_minutes: Option<u32>,
+
+    /// Maximum threads per worker for CNM HTTP server
+    pub cnm_http_max_threads_per_worker: Option<u32>,
+
+    /// Number of workers for CNM HTTP server
+    pub cnm_http_workers: Option<u32>,
+
+    /// Cipher suites for control plane TLS connections
+    pub control_cipher_suites: Option<String>,
+
+    /// Cipher suites for control plane TLS 1.3 connections
+    pub control_cipher_suites_tls_1_3: Option<String>,
+
+    /// Whether CRDB coordinator should ignore incoming requests
+    pub crdb_coordinator_ignore_requests: Option<bool>,
+
+    /// Port used by CRDB (Conflict-free Replicated Database) coordinator
+    pub crdb_coordinator_port: Option<u32>,
+
+    /// Supported CRDT featureset version number
+    pub crdt_supported_featureset_version: Option<u32>,
+
+    /// List of supported CRDT protocol versions
+    pub crdt_supported_protocol_versions: Option<Vec<String>>,
+
+    /// Timestamp when the cluster was created
+    pub created_time: Option<String>,
+
+    /// Cipher list for data plane connections
+    pub data_cipher_list: Option<String>,
+
+    /// Cipher suites for data plane TLS 1.3 connections
+    pub data_cipher_suites_tls_1_3: Option<Vec<Value>>,
+
+    /// Path to debug information files
+    pub debuginfo_path: Option<String>,
+
+    /// Whether private keys should be encrypted
+    pub encrypt_pkeys: Option<bool>,
+
+    /// Time-to-live for Entra ID (Azure AD) cache in seconds
+    pub entra_id_cache_ttl: Option<u32>,
+
+    /// Admin port for Envoy proxy
+    pub envoy_admin_port: Option<u32>,
+
+    /// Whether Envoy external authorization is enabled
+    pub envoy_external_authorization: Option<bool>,
+
+    /// Maximum number of downstream connections for Envoy
+    pub envoy_max_downstream_connections: Option<u32>,
+
+    /// Port for Envoy management server
+    pub envoy_mgmt_server_port: Option<u32>,
+
+    /// Admin port for gossip Envoy proxy
+    pub gossip_envoy_admin_port: Option<u32>,
+
+    /// Whether to handle metrics endpoint redirects
+    pub handle_metrics_redirects: Option<bool>,
+
+    /// Whether to handle HTTP redirects
+    pub handle_redirects: Option<bool>,
+
+    /// Whether HTTP support is enabled (in addition to HTTPS)
+    pub http_support: Option<bool>,
+
+    /// Configuration for log rotation
+    pub logrotate_settings: Option<Value>,
+
+    /// Whether to mask database credentials in logs
+    pub mask_bdb_credentials: Option<bool>,
+
+    /// Type of metrics system in use
+    pub metrics_system: Option<u32>,
+
+    /// Minimum TLS version for control plane connections
+    #[serde(rename = "min_control_TLS_version")]
+    pub min_control_tls_version: Option<String>,
+
+    /// Minimum TLS version for data plane connections
+    #[serde(rename = "min_data_TLS_version")]
+    pub min_data_tls_version: Option<String>,
+
+    /// Minimum TLS version for sentinel connections
+    #[serde(rename = "min_sentinel_TLS_version")]
+    pub min_sentinel_tls_version: Option<String>,
+
+    /// Maximum size allowed for module uploads in megabytes
+    pub module_upload_max_size_mb: Option<u32>,
+
+    /// List of authorized subject names for mutual TLS authentication
+    pub mtls_authorized_subjects: Option<Vec<String>>,
+
+    /// Certificate authentication mode for mutual TLS
+    pub mtls_certificate_authentication: Option<String>,
+
+    /// Validation type for MTLS client certificate subjects
+    pub mtls_client_cert_subject_validation_type: Option<String>,
+
+    /// Optimization level for multi-command operations
+    pub multi_commands_opt: Option<String>,
+
+    /// Whether HTTP OPTIONS method is forbidden
+    pub options_method_forbidden: Option<bool>,
+
+    /// Requirements for password complexity
+    pub password_complexity: Option<Value>,
+
+    /// Duration in seconds before passwords expire
+    pub password_expiration_duration: Option<u32>,
+
+    /// Algorithm used for hashing passwords
+    pub password_hashing_algorithm: Option<String>,
+
+    /// Minimum required length for passwords
+    pub password_min_length: Option<u32>,
+
+    /// Certificate used by proxy servers
+    pub proxy_certificate: Option<String>,
+
+    /// List of ports reserved for system use
+    pub reserved_ports: Option<Vec<u32>>,
+
+    /// Whether robust CRDT syncer mode is enabled
+    pub robust_crdt_syncer: Option<bool>,
+
+    /// Whether to verify S3 certificates
+    pub s3_certificate_verification: Option<bool>,
+
+    /// Cipher suites for sentinel TLS connections
+    pub sentinel_cipher_suites: Option<String>,
+
+    /// Cipher suites for sentinel TLS 1.3 connections
+    pub sentinel_cipher_suites_tls_1_3: Option<Vec<Value>>,
+
+    /// TLS mode for sentinel connections
+    pub sentinel_tls_mode: Option<String>,
+
+    /// Whether slave high availability is enabled
+    pub slave_ha: Option<bool>,
+
+    /// Cooldown period for database slave HA in seconds
+    pub slave_ha_bdb_cooldown_period: Option<u32>,
+
+    /// General cooldown period for slave HA in seconds
+    pub slave_ha_cooldown_period: Option<u32>,
+
+    /// Grace period for slave HA operations in seconds
+    pub slave_ha_grace_period: Option<u32>,
+
+    /// Whether slowlog sanitization is supported
+    pub slowlog_in_sanitized_support: Option<bool>,
+
+    /// TLS mode for SMTP connections
+    pub smtp_tls_mode: Option<String>,
+
+    /// Whether to use TLS for SMTP connections
+    pub smtp_use_tls: Option<bool>,
+
+    /// Certificate used by syncer processes
+    pub syncer_certificate: Option<String>,
+
+    /// Ports reserved for system processes
+    pub system_reserved_ports: Option<Vec<u32>>,
+
+    /// Whether a cluster upgrade is currently in progress
+    pub upgrade_in_progress: Option<bool>,
+
+    /// Current upgrade mode for the cluster
+    pub upgrade_mode: Option<String>,
+
+    /// Use external IPv6
+    pub use_external_ipv6: Option<bool>,
+
+    /// Use IPv6
+    pub use_ipv6: Option<bool>,
+
+    /// Wait command support
+    pub wait_command: Option<bool>,
+
     #[serde(flatten)]
     pub extra: Value,
 }

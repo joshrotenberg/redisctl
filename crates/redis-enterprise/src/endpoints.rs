@@ -26,6 +26,12 @@ pub struct Endpoint {
     pub ssl: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub status: Option<String>,
+    /// Description of the endpoint
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    /// Error code if endpoint has an error
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error_code: Option<String>,
 
     #[serde(flatten)]
     pub extra: Value,

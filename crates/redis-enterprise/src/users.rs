@@ -26,6 +26,14 @@ pub struct User {
     pub password_issue_date: Option<String>,
     pub email_alerts: Option<bool>,
     pub bdbs: Option<Vec<u32>>,
+    /// Alert for audit database connections
+    pub alert_audit_db_conns: Option<bool>,
+    /// Alert for BDB backup
+    pub alert_bdb_backup: Option<bool>,
+    /// Alert for BDB CRDT source syncer
+    pub alert_bdb_crdt_src_syncer: Option<bool>,
+    /// Password expiration duration in seconds
+    pub password_expiration_duration: Option<u32>,
 
     #[serde(flatten)]
     pub extra: Value,

@@ -22,6 +22,10 @@ pub struct Action {
     pub end_time: Option<String>,
     pub description: Option<String>,
     pub error: Option<String>,
+    /// Database UID associated with the action
+    pub bdb_uid: Option<u32>,
+    /// Node UID associated with the action
+    pub node_uid: Option<u32>,
 
     #[serde(flatten)]
     pub extra: Value,

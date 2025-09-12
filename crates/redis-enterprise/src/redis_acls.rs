@@ -19,6 +19,9 @@ pub struct RedisAcl {
     pub acl: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+    /// List of database UIDs this ACL is associated with
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bdbs: Option<Vec<u32>>,
 
     #[serde(flatten)]
     pub extra: Value,
