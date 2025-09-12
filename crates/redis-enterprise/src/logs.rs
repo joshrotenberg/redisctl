@@ -13,14 +13,16 @@ use serde_json::Value;
 /// Log entry (cluster event)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LogEntry {
-    /// Timestamp when event happened
+    /// Timestamp when event happened (ISO 8601 format)
     pub time: String,
 
     /// Event type - determines what additional fields are available
+    /// (e.g., "bdb_name_updated", "node_status_changed", etc.)
     #[serde(rename = "type")]
     pub event_type: String,
 
     /// Additional fields based on event type
+    /// May include severity, bdb_uid, old_val, new_val, and other event-specific fields
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -28,14 +30,19 @@ pub struct LogEntry {
 /// Logs query parameters
 #[derive(Debug, Serialize, Default)]
 pub struct LogsQuery {
+    /// Optional start time before which we don't want events
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stime: Option<String>,
+    /// Optional end time after which we don't want events
     #[serde(skip_serializing_if = "Option::is_none")]
     pub etime: Option<String>,
+    /// Order of events: "desc" (descending) or "asc" (ascending, default)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub order: Option<String>,
+    /// Optional maximum number of events to return
     #[serde(skip_serializing_if = "Option::is_none")]
     pub limit: Option<u32>,
+    /// Optional offset - skip this many events before returning results (for pagination)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub offset: Option<u32>,
 }

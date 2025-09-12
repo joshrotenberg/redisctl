@@ -14,11 +14,15 @@ use typed_builder::TypedBuilder;
 /// DNS suffix configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Suffix {
+    /// Unique name identifier for the DNS suffix
     pub name: String,
+    /// The DNS suffix string to be used for database endpoints
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dns_suffix: Option<String>,
+    /// Whether to use internal addresses for this suffix
     #[serde(skip_serializing_if = "Option::is_none")]
     pub use_internal_addr: Option<bool>,
+    /// Whether to use external addresses for this suffix
     #[serde(skip_serializing_if = "Option::is_none")]
     pub use_external_addr: Option<bool>,
 
@@ -29,13 +33,17 @@ pub struct Suffix {
 /// Create suffix request
 #[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
 pub struct CreateSuffixRequest {
+    /// Unique name identifier for the DNS suffix
     #[builder(setter(into))]
     pub name: String,
+    /// The DNS suffix string to be used for database endpoints
     #[builder(setter(into))]
     pub dns_suffix: String,
+    /// Whether to use internal addresses for this suffix
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(strip_option))]
     pub use_internal_addr: Option<bool>,
+    /// Whether to use external addresses for this suffix
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(strip_option))]
     pub use_external_addr: Option<bool>,
