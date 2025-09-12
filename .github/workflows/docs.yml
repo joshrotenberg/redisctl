@@ -2,25 +2,25 @@ name: Documentation
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
-      - '**.md'
-      - 'docs/**'
-      - '.github/workflows/docs.yml'
-      - 'book.toml'
-      - 'CHANGELOG.md'
-      - 'CONTRIBUTING.md'
-      - 'CLAUDE.md'
+      - "**.md"
+      - "docs/**"
+      - ".github/workflows/docs.yml"
+      - "book.toml"
+      - "CHANGELOG.md"
+      - "CONTRIBUTING.md"
+      - "CLAUDE.md"
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
-      - '**.md'
-      - 'docs/**'
-      - '.github/workflows/docs.yml'
-      - 'book.toml'
-      - 'CHANGELOG.md'
-      - 'CONTRIBUTING.md'
-      - 'CLAUDE.md'
+      - "**.md"
+      - "docs/**"
+      - ".github/workflows/docs.yml"
+      - "book.toml"
+      - "CHANGELOG.md"
+      - "CONTRIBUTING.md"
+      - "CLAUDE.md"
 
 # Cancel previous runs of the same workflow
 concurrency:
@@ -33,14 +33,12 @@ jobs:
     name: Markdown Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
+          node-version: "20"
 
       - name: Install markdownlint-cli
         run: npm install -g markdownlint-cli
@@ -52,14 +50,14 @@ jobs:
             --ignore target \
             --ignore docs/book \
             --disable MD013 MD033 MD041
-        continue-on-error: true  # Don't fail CI for markdown issues
+        continue-on-error: true # Don't fail CI for markdown issues
 
   # Build and test mdBook documentation
   mdbook:
     name: Build Documentation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Cache mdBook
         uses: actions/cache@v4
@@ -85,14 +83,14 @@ jobs:
         run: |
           cd docs
           mdbook test
-        continue-on-error: true  # Don't fail CI if examples are outdated
+        continue-on-error: true # Don't fail CI if examples are outdated
 
   # Check for broken links in documentation
   link-check:
     name: Check Links
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Link Checker
         uses: lycheeverse/lychee-action@v2
@@ -109,17 +107,17 @@ jobs:
             --exclude "https://github.com/joshrotenberg/redisctl/pull/.*"
             --exclude "https://github.com/joshrotenberg/redisctl/issues/.*"
             .
-        continue-on-error: true  # Don't fail CI for broken external links
+        continue-on-error: true # Don't fail CI for broken external links
 
   # Validate that documentation is in sync with code
   doc-validation:
     name: Validate Documentation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a  # stable
+        uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a # stable
         with:
           toolchain: stable
 
