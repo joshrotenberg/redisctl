@@ -87,7 +87,7 @@ For interactive testing, you can use a temporary container:
 ```bash
 # Run interactive shell with redisctl
 docker run --rm -it \
-  --network redisctl_radar-network \
+  --network redisctl_redisctl-network \
   -e REDIS_ENTERPRISE_URL="https://redis-enterprise:9443" \
   -e REDIS_ENTERPRISE_INSECURE="true" \
   -e REDIS_ENTERPRISE_USER="admin@redis.local" \
@@ -138,7 +138,7 @@ cargo build --release
 # 3. Test with Docker image
 docker build -t redisctl:dev .
 docker run --rm \
-  --network redisctl_radar-network \
+  --network redisctl_redisctl-network \
   -e REDIS_ENTERPRISE_URL="https://redis-enterprise:9443" \
   -e REDIS_ENTERPRISE_INSECURE="true" \
   -e REDIS_ENTERPRISE_USER="admin@redis.local" \
@@ -184,7 +184,7 @@ RUST_LOG=debug redisctl enterprise cluster info
 
 # Check network connectivity from container
 docker run --rm \
-  --network redisctl_radar-network \
+  --network redisctl_redisctl-network \
   alpine/curl \
   curl -k https://redis-enterprise:9443/v1/bootstrap
 ```
@@ -198,7 +198,7 @@ docker run --rm \
 
 ### Networking
 
-All services use the `radar-network` bridge network:
+All services use the `redisctl-network` bridge network:
 - Redis Enterprise API: `https://redis-enterprise:9443` (external: `https://localhost:9443`)
 - Web UI: `https://redis-enterprise:8443` (external: `https://localhost:8443`)  
 - Database ports: `12000-12010`

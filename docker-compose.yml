@@ -12,7 +12,7 @@ services:
       - "9443:9443"
       - "8443:8443"
     networks:
-      - radar-network
+      - redisctl-network
     healthcheck:
       test: ["CMD", "curl", "-f", "-k", "https://localhost:9443/v1/bootstrap"]
       interval: 5s
@@ -28,7 +28,7 @@ services:
       redis-enterprise:
         condition: service_healthy
     networks:
-      - radar-network
+      - redisctl-network
     environment:
       REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
       REDIS_ENTERPRISE_INSECURE: "true"
@@ -46,5 +46,5 @@ services:
       ]
 
 networks:
-  radar-network:
+  redisctl-network:
     driver: bridge
