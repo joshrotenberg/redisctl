@@ -95,10 +95,10 @@ redisctl api enterprise get /v1/cluster
 
 ```bash
 # Use default profile
-redisctl database list
+redisctl cloud database list
 
 # Use specific profile
-redisctl database list --profile cloud-staging
+redisctl cloud database list --profile cloud-staging
 
 # List all profiles
 redisctl profile list

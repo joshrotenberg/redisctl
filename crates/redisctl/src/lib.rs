@@ -57,7 +57,7 @@
 //! redisctl enterprise database list
 //!
 //! # Smart routing (auto-detects based on profile)
-//! redisctl database list --profile prod-cloud
+//! redisctl cloud database list --profile prod-cloud
 //! ```
 //!
 //! ## Features

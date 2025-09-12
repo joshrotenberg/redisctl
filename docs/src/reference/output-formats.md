@@ -7,18 +7,19 @@
 ### JSON (Default)
 
 ```bash
-redisctl database list
+redisctl cloud database list
 # or explicitly:
-redisctl database list -o json
+redisctl cloud database list -o json
 ```
 
 Output:
 ```json
 [
   {
-    "id": "12345",
+    "databaseId": 12345,
     "name": "cache-db",
-    "status": "active"
+    "status": "active",
+    "planMemoryLimit": 250.0
   }
 ]
 ```
@@ -26,14 +27,15 @@ Output:
 ### YAML
 
 ```bash
-redisctl database list -o yaml
+redisctl cloud database list -o yaml
 ```
 
 Output:
 ```yaml
-- id: "12345"
+- databaseId: 12345
   name: cache-db
   status: active
+  planMemoryLimit: 250.0
 ```
 
 ### Table
@@ -41,15 +43,15 @@ Output:
 Human-readable table format:
 
 ```bash
-redisctl database list -o table
+redisctl cloud database list -o table
 ```
 
 Output:
 ```
-ID     NAME      STATUS
------- --------- -------
-12345  cache-db  active
-67890  user-db   active
+ID       NAME      STATUS   MEMORY(MB)
+-------- --------- -------- ----------
+12345    cache-db  active   250
+67890    user-db   active   500
 ```
 
 ## JMESPath Filtering
@@ -60,41 +62,41 @@ Use `-q` or `--query` to filter output with JMESPath expressions:
 
 ```bash
 # Get only names
-redisctl database list -q "[].name"
+redisctl cloud database list -q "[].name"
 
 # Get specific fields
-redisctl database list -q "[].{name:name,port:port}"
+redisctl cloud database list -q "[].{name:name,endpoint:publicEndpoint}"
 ```
 
 ### Filtering
 
 ```bash
 # Active databases only
-redisctl database list -q "[?status=='active']"
+redisctl cloud database list -q "[?status=='active']"
 
-# Databases using more than 1GB
-redisctl database list -q "[?memory_size > `1073741824`]"
+# Databases using more than 250MB
+redisctl cloud database list -q "[?planMemoryLimit > `250`]"
 ```
 
 ### Sorting
 
 ```bash
 # Sort by name
-redisctl database list -q "sort_by([], &name)"
+redisctl cloud database list -q "sort_by([], &name)"
 
 # Sort by memory, descending
-redisctl database list -q "reverse(sort_by([], &memory_size))"
+redisctl cloud database list -q "reverse(sort_by([], &planMemoryLimit))"
 ```
 
 ### Complex Queries
 
 ```bash
 # Get top 5 databases by memory
-redisctl database list \
-  -q "reverse(sort_by([], &memory_size))[:5].{name:name,memory:memory_size}"
+redisctl cloud database list \
+  -q "reverse(sort_by([], &planMemoryLimit))[:5].{name:name,memory:planMemoryLimit}"
 
 # Count active databases
-redisctl database list -q "[?status=='active'] | length(@)"
+redisctl cloud database list -q "[?status=='active'] | length(@)"
 ```
 
 ## Raw Output
@@ -103,12 +105,12 @@ For scripting, use `-r` or `--raw` to get unformatted output:
 
 ```bash
 # Get database IDs only
-redisctl database list -q "[].id" -r
+redisctl cloud database list -q "[].databaseId" -r
 12345
 67890
 
 # Use in scripts
-for db_id in $(redisctl database list -q "[].id" -r); do
+for db_id in $(redisctl cloud database list -q "[].databaseId" -r); do
   echo "Processing database $db_id"
 done
 ```
@@ -117,13 +119,13 @@ done
 
 ```bash
 # Query then format as table
-redisctl database list \
-  -q "[?status=='active'].{name:name,memory:memory_size}" \
+redisctl cloud database list \
+  -q "[?status=='active'].{name:name,memory:planMemoryLimit}" \
   -o table
 
 # Query and output as YAML
-redisctl database list \
-  -q "[?memory_size > `1073741824`]" \
+redisctl cloud database list \
+  -q "[?planMemoryLimit > `250`]" \
   -o yaml
 ```
 

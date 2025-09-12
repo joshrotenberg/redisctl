@@ -1,219 +1,251 @@
 # Output Formats
 
-redisctl supports multiple output formats and filtering options for maximum flexibility.
+redisctl supports multiple output formats to suit different use cases.
 
 ## Available Formats
 
-### JSON (Default)
+### Auto (Default)
+Automatically selects the best format based on context:
 ```bash
-# Default JSON output
-redisctl database list
+# Auto-detects format
+redisctl cloud database list
+```
 
-# Pretty-printed JSON
-redisctl database list -o json
+### JSON
+Machine-readable JSON output:
+```bash
+redisctl cloud database list -o json
 ```
 
 ### YAML
+Human-readable structured format:
 ```bash
-# YAML output for better readability
-redisctl database list -o yaml
+redisctl cloud database list -o yaml
 ```
 
 ### Table
+Formatted tables for human consumption:
 ```bash
-# Human-readable table format
-redisctl database list -o table
+redisctl cloud database list -o table
 ```
 
 ## JMESPath Filtering
 
-Use the `-q` or `--query` flag with JMESPath expressions to filter and transform output.
+Use the `-q` flag for powerful JSON queries:
 
-### Basic Filtering
 ```bash
-# Get only database names
-redisctl database list -q "[].name"
+# Get all database names
+redisctl cloud database list -q "[].name"
 
-# Get active databases
-redisctl database list -q "[?status=='active']"
+# Filter by status
+redisctl cloud database list -q "[?status=='active']"
 
-# Get specific fields
-redisctl database list -q "[].{name: name, memory: memoryLimitInGb}"
+# Custom projections
+redisctl cloud database list -q "[].{name: name, memory: planMemoryLimit}"
 ```
 
 ### Advanced Queries
 ```bash
-# Sort by memory size
-redisctl database list -q "sort_by(@, &memoryLimitInGb)"
+# Sort by memory
+redisctl cloud database list -q "sort_by(@, &planMemoryLimit)"
 
-# Get databases with specific modules
-redisctl database list -q "[?modules[?name=='RediSearch']]"
+# Find databases with specific modules
+redisctl cloud database list -q "[?modules[?name=='RediSearch']]"
 
-# Complex filtering and projection
-redisctl database list -q "[?memoryLimitInGb > `5`].{name: name, region: region, memory: memoryLimitInGb}"
+# Complex filtering (memory > 250MB)
+redisctl cloud database list -q "[?planMemoryLimit > `250`].{name: name, region: region, memory: planMemoryLimit}"
 ```
 
-## Integration with Other Tools
+## Working with Other Tools
 
-### Using with jq
+### jq Integration
 ```bash
-# JSON processing with jq
-redisctl database list -o json | jq '.[] | select(.name | contains("prod"))'
+# Filter with jq
+redisctl cloud database list -o json | jq '.[] | select(.name | contains("prod"))'
 
-# Extract specific values
-redisctl database list -o json | jq -r '.[].id'
+# Extract IDs
+redisctl cloud database list -o json | jq -r '.[].databaseId'
 ```
 
-### Using with yq
+### yq for YAML
 ```bash
-# YAML processing with yq
-redisctl database list -o yaml | yq '.[] | select(.status == "active")'
+redisctl cloud database list -o yaml | yq '.[] | select(.status == "active")'
 ```
 
-### Shell Scripting
-```bash
-#!/bin/bash
-# Get database IDs into array
-IDS=($(redisctl database list -q "[].id" -o json | jq -r '.[]'))
+## Scripting Examples
 
+### Batch Operations
+```bash
+# Get all database IDs
+IDS=($(redisctl cloud database list -q "[].databaseId" -o json | jq -r '.[]'))
+
+# Process each database
 for ID in "${IDS[@]}"; do
-  echo "Processing database $ID"
-  redisctl database get $ID
+  redisctl cloud database get $ID
 done
 ```
 
-## Output Format Examples
+### Output Redirection
+```bash
+# Save to file
+redisctl cloud database list -o json > databases.json
 
-### JSON Output
+# Append to log
+redisctl cloud database list >> operations.log
+
+# Error handling
+redisctl cloud database list 2> errors.log || echo "Failed"
+```
+
+## Environment Detection
+
+redisctl automatically detects the output environment:
+
+- **Terminal**: Defaults to table format for readability
+- **Pipe**: Defaults to JSON for processing
+- **Redirect**: Defaults to JSON for storage
+
+Override with `-o` flag when needed.
+
+## Format-Specific Features
+
+### Table Features
+- Automatic column width adjustment
+- Row highlighting for important data
+- Pagination for large datasets
+- Color support when terminal supports it
+
+### JSON Features
+- Pretty-printed by default
+- Compact mode available with `--compact`
+- Proper escaping for special characters
+- Null values handled correctly
+
+### YAML Features
+- Comments for clarity
+- Multi-line string support
+- Proper indentation
+- Type preservation
+
+## Error Handling
+
+Different formats handle errors differently:
+
+### JSON Errors
 ```json
-[
-  {
-    "id": 12345,
-    "name": "production-db",
-    "status": "active",
-    "memoryLimitInGb": 10,
-    "region": "us-east-1"
-  },
-  {
-    "id": 67890,
-    "name": "staging-db",
-    "status": "active",
-    "memoryLimitInGb": 5,
-    "region": "us-west-2"
-  }
-]
-```
-
-### YAML Output
-```yaml
-- id: 12345
-  name: production-db
-  status: active
-  memoryLimitInGb: 10
-  region: us-east-1
-- id: 67890
-  name: staging-db
-  status: active
-  memoryLimitInGb: 5
-  region: us-west-2
-```
-
-### Table Output
-```
-┌───────┬────────────────┬────────┬────────┬────────────┐
-│ ID    │ Name           │ Status │ Memory │ Region     │
-├───────┼────────────────┼────────┼────────┼────────────┤
-│ 12345 │ production-db  │ active │ 10 GB  │ us-east-1  │
-│ 67890 │ staging-db     │ active │ 5 GB   │ us-west-2  │
-└───────┴────────────────┴────────┴────────┴────────────┘
-```
-
-## Formatting Best Practices
-
-### Choosing the Right Format
-
-- **JSON**: Best for programmatic processing and automation
-- **YAML**: More readable for configuration and documentation
-- **Table**: Best for human consumption and quick reviews
-
-### Common Use Cases
-
-#### Export Configuration
-```bash
-# Export database configuration
-redisctl database get 12345 -o yaml > database-config.yaml
-```
-
-#### Generate Reports
-```bash
-# Create CSV report
-redisctl database list -o json | \
-  jq -r '.[] | [.id, .name, .status, .memoryLimitInGb] | @csv' > databases.csv
-```
-
-#### Monitor Resources
-```bash
-# Watch database status
-watch -n 10 'redisctl database list -o table -q "[?status!='"'"'active'"'"']"'
-```
-
-## Pagination Support
-
-For commands that return large result sets:
-
-```bash
-# Get first 10 results
-redisctl cloud subscription list --limit 10
-
-# Get next page
-redisctl cloud subscription list --limit 10 --offset 10
-```
-
-## Error Output
-
-Errors are always output to stderr in a consistent format:
-
-```bash
-# Redirect errors to file
-redisctl database create --data @invalid.json 2> errors.log
-
-# Suppress errors
-redisctl database list 2>/dev/null
-```
-
-## Custom Formatting Examples
-
-### Dashboard Script
-```bash
-#!/bin/bash
-# Generate dashboard data
 {
-  echo "=== Database Status ==="
-  redisctl database list -o table -q "[?status!='active']"
-  
-  echo -e "\n=== Resource Usage ==="
-  redisctl database list -o json | \
-    jq -r '"Total Memory: \(map(.memoryLimitInGb) | add) GB"'
-  
-  echo -e "\n=== Recent Tasks ==="
-  redisctl cloud task list --limit 5 -o table
-} | tee dashboard.txt
+  "error": "Authentication failed",
+  "details": "Invalid API key"
+}
 ```
 
-### Monitoring Script
+### Table Errors
+```
+Error: Authentication failed
+Details: Invalid API key
+```
+
+### YAML Errors
+```yaml
+error: Authentication failed
+details: Invalid API key
+```
+
+## Performance Considerations
+
+- **JSON**: Fastest parsing, smallest size
+- **YAML**: Human-readable, larger size
+- **Table**: Terminal rendering overhead
+
+## Examples
+
+### Save Configuration
+```bash
+redisctl cloud database get 12345 -o yaml > database-config.yaml
+```
+
+### Generate Reports
+```bash
+# CSV-like output for spreadsheets
+redisctl cloud database list -o json | \
+  jq -r '.[] | [.name, .status, .memory] | @csv'
+```
+
+### Monitor Changes
+```bash
+# Watch for inactive databases
+watch -n 10 'redisctl cloud database list -o table -q "[?status!='"'"'active'"'"']"'
+```
+
+## Tips and Tricks
+
+1. **Default Format**: Set `REDISCTL_OUTPUT` environment variable
+   ```bash
+   export REDISCTL_OUTPUT=json
+   ```
+
+2. **Raw Output**: Use `-r` or `--raw` for unformatted output
+   ```bash
+   redisctl cloud database list -q "[].id" -r
+   ```
+
+3. **Silent Mode**: Suppress non-essential output
+   ```bash
+   redisctl cloud database create --data @db.json 2> errors.log
+   ```
+
+4. **Pretty Print**: Control JSON formatting
+   ```bash
+   redisctl cloud database list 2>/dev/null
+   ```
+
+## Complex Workflows
+
+### Health Dashboard
 ```bash
 #!/bin/bash
-# Monitor specific metrics
 while true; do
   clear
-  echo "Database Monitor - $(date)"
-  echo "========================"
-  
-  redisctl database list -o json | jq -r '
-    .[] | 
-    "\(.name): \(.status) - Memory: \(.memoryUsedInMb // 0)/\(.memoryLimitInGb * 1024) MB"
-  '
-  
-  sleep 30
+  echo "=== Database Health ==="
+  redisctl cloud database list -o table -q "[?status!='active']"
+  echo ""
+  echo "=== Resource Usage ==="
+  redisctl cloud database list -o json | \
+    jq -r '.[] | "\(.name): \(.usedMemoryInMb)MB / \(.memoryLimitInGb)GB"'
+  sleep 60
 done
 ```
+
+### Automated Reporting
+```bash
+#!/bin/bash
+REPORT_DATE=$(date +%Y-%m-%d)
+REPORT_FILE="database-report-${REPORT_DATE}.json"
+
+# Collect all database information
+{
+  echo "{"
+  echo "  \"report_date\": \"${REPORT_DATE}\","
+  echo "  \"databases\": "
+  redisctl cloud database list -o json | jq -r '
+    map({
+      name: .name,
+      status: .status,
+      region: .region,
+      memory_gb: .memoryLimitInGb,
+      throughput: .throughputMeasurement
+    })
+  '
+  echo "}"
+} > "$REPORT_FILE"
+
+echo "Report saved to $REPORT_FILE"
+```
+
+## Best Practices
+
+1. **Use JSON for automation** - Most reliable for parsing
+2. **Use Table for human review** - Easiest to read
+3. **Use YAML for configuration** - Best for config files
+4. **Use JMESPath for filtering** - More powerful than jq for simple queries
+5. **Combine tools** - Use redisctl with jq, yq, awk for complex processing

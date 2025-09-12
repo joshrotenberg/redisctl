@@ -25,10 +25,10 @@ export REDIS_CLOUD_API_KEY="your-key"
 export REDIS_CLOUD_API_SECRET="your-secret"
 
 # List all databases
-redisctl database list
+redisctl cloud database list
 
 # Get specific database details
-redisctl database get 12345
+redisctl cloud database get 12345
 
 # Direct API call
 redisctl api cloud get /subscriptions
