@@ -90,13 +90,13 @@ redisctl profile list           # Show all profiles
 redisctl profile path           # Show config file location
 
 # Common first commands
-redisctl database list          # List all databases
+redisctl cloud database list      # List Cloud databases
 redisctl cloud subscription list  # List Cloud subscriptions
-redisctl enterprise node list   # List Enterprise nodes
+redisctl enterprise node list      # List Enterprise nodes
 
 # Get detailed output
-redisctl database get 12345 --output table  # Table format
-redisctl database list -o json | jq         # JSON with jq
+redisctl cloud database get 12345 --output table  # Table format
+redisctl cloud database list -o json | jq         # JSON with jq
 
 # Create resources and wait for completion
 redisctl cloud database create --data @database.json --wait

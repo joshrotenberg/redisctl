@@ -46,23 +46,23 @@ redisctl api enterprise get /v1/cluster
 
 ```bash
 # List all databases
-redisctl database list
+redisctl cloud database list
 
 # List in table format
-redisctl database list -o table
+redisctl cloud database list -o table
 
 # Filter active databases only
-redisctl database list -q "[?status=='active']"
+redisctl cloud database list -q "[?status=='active']"
 ```
 
 ### Get Details
 
 ```bash
 # Get database details
-redisctl database get 12345
+redisctl cloud database get 12345
 
 # Get as YAML
-redisctl database get 12345 -o yaml
+redisctl cloud database get 12345 -o yaml
 ```
 
 ### Direct API Access
@@ -119,16 +119,16 @@ redisctl enterprise node list
 
 ```bash
 # JSON (default)
-redisctl database list
+redisctl enterprise database list
 
 # Table format
-redisctl database list -o table
+redisctl enterprise database list -o table
 
 # YAML
-redisctl database list -o yaml
+redisctl enterprise database list -o yaml
 
 # Filter with JMESPath
-redisctl database list -q "[].{name:name,memory:memory_size}"
+redisctl enterprise database list -q "[].{name:name,memory:memory_size}"
 ```
 
 ## What's Next?

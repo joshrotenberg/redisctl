@@ -94,7 +94,7 @@ redisctl profile remove old-profile
 ### Explicit Profile Selection
 ```bash
 # Use specific profile for a command
-redisctl database list --profile cloud-dev
+redisctl cloud database list --profile cloud-dev
 
 # Override default profile
 redisctl --profile enterprise-prod cluster info
@@ -130,7 +130,7 @@ export REDIS_CLOUD_SECRET="my-secret"
 export REDIS_API_URL="https://custom-api.example.com"
 
 # Use profile with variable expansion
-redisctl database list --profile cloud-dynamic
+redisctl cloud database list --profile cloud-dynamic
 ```
 
 ### Default Values
