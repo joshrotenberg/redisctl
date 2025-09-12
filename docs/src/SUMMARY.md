@@ -21,6 +21,7 @@
 - [Users](./cloud/users.md)
 - [Provider Accounts](./cloud/provider-accounts.md)
 - [Tasks](./cloud/tasks.md)
+- [Workflows](./cloud/workflows.md)
 - [Raw API Access](./cloud/api-access.md)
 
 # Redis Enterprise Commands

@@ -268,6 +268,119 @@ async fn execute_enterprise_command(
     }
 }
 
+async fn handle_cloud_workflow_command(
+    conn_mgr: &ConnectionManager,
+    cli: &cli::Cli,
+    workflow_cmd: &cli::CloudWorkflowCommands,
+) -> Result<(), RedisCtlError> {
+    use cli::CloudWorkflowCommands::*;
+    use workflows::{WorkflowArgs, WorkflowContext, WorkflowRegistry};
+
+    let output = cli.output;
+    let profile = cli.profile.as_deref();
+
+    match workflow_cmd {
+        List => {
+            let registry = WorkflowRegistry::new();
+            let workflows = registry.list();
+
+            // Filter to show only cloud workflows
+            let cloud_workflows: Vec<_> = workflows
+                .into_iter()
+                .filter(|(name, _)| name.contains("subscription") || name.contains("cloud"))
+                .collect();
+
+            match output {
+                cli::OutputFormat::Json | cli::OutputFormat::Yaml => {
+                    let workflow_list: Vec<serde_json::Value> = cloud_workflows
+                        .into_iter()
+                        .map(|(name, description)| {
+                            serde_json::json!({
+                                "name": name,
+                                "description": description
+                            })
+                        })
+                        .collect();
+                    let output_format = match output {
+                        cli::OutputFormat::Json => output::OutputFormat::Json,
+                        cli::OutputFormat::Yaml => output::OutputFormat::Yaml,
+                        _ => output::OutputFormat::Table,
+                    };
+                    crate::output::print_output(
+                        serde_json::json!(workflow_list),
+                        output_format,
+                        None,
+                    )?;
+                }
+                _ => {
+                    println!("Available Cloud Workflows:");
+                    println!();
+                    for (name, description) in cloud_workflows {
+                        println!("  {} - {}", name, description);
+                    }
+                }
+            }
+            Ok(())
+        }
+        SubscriptionSetup(args) => {
+            let mut workflow_args = WorkflowArgs::new();
+            workflow_args.insert("args", args);
+
+            let output_format = match output {
+                cli::OutputFormat::Json => output::OutputFormat::Json,
+                cli::OutputFormat::Yaml => output::OutputFormat::Yaml,
+                cli::OutputFormat::Table | cli::OutputFormat::Auto => output::OutputFormat::Table,
+            };
+
+            let context = WorkflowContext {
+                conn_mgr: conn_mgr.clone(),
+                profile_name: profile.map(String::from),
+                output_format,
+                wait_timeout: args.wait_timeout as u64,
+            };
+
+            let registry = WorkflowRegistry::new();
+            let workflow =
+                registry
+                    .get("subscription-setup")
+                    .ok_or_else(|| RedisCtlError::ApiError {
+                        message: "Workflow not found".to_string(),
+                    })?;
+
+            let result = workflow
+                .execute(context, workflow_args)
+                .await
+                .map_err(|e| RedisCtlError::ApiError {
+                    message: e.to_string(),
+                })?;
+
+            if !result.success {
+                return Err(RedisCtlError::ApiError {
+                    message: result.message,
+                });
+            }
+
+            // Print result as JSON/YAML if requested
+            match output {
+                cli::OutputFormat::Json | cli::OutputFormat::Yaml => {
+                    let result_json = serde_json::json!({
+                        "success": result.success,
+                        "message": result.message,
+                        "outputs": result.outputs,
+                    });
+                    crate::output::print_output(&result_json, output_format, None)?;
+                }
+                _ => {
+                    // Human output
+                    println!("{}", result.message);
+                }
+            }
+
+            Ok(())
+        }
+    }
+}
+
 async fn handle_enterprise_workflow_command(
     conn_mgr: &ConnectionManager,
     profile: Option<&str>,
@@ -817,5 +930,6 @@ async fn execute_cloud_command(
             )
             .await
         }
+        Workflow(workflow_cmd) => handle_cloud_workflow_command(conn_mgr, cli, workflow_cmd).await,
     }
 }

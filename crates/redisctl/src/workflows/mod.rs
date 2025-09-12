@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
 
+pub mod cloud;
 pub mod enterprise;
 
 /// Common trait for all workflows
@@ -120,6 +121,9 @@ impl WorkflowRegistry {
 
         // Register all built-in workflows
         registry.register(Box::new(enterprise::InitClusterWorkflow::new()));
+        registry.register(Box::new(
+            cloud::subscription_setup::SubscriptionSetupWorkflow,
+        ));
 
         registry
     }

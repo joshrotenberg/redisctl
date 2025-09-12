@@ -19,6 +19,16 @@ impl Default for OutputFormat {
     }
 }
 
+impl OutputFormat {
+    pub fn is_json(&self) -> bool {
+        matches!(self, Self::Json)
+    }
+
+    pub fn is_yaml(&self) -> bool {
+        matches!(self, Self::Yaml)
+    }
+}
+
 pub fn print_output<T: Serialize>(
     data: T,
     format: OutputFormat,
