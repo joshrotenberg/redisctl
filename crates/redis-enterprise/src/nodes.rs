@@ -26,72 +26,102 @@ pub struct NodeActionResponse {
 /// Node information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Node {
+    /// Cluster unique ID of node (read-only)
     pub uid: u32,
 
-    /// IP address of the node (renamed from 'address' to match API)
+    /// Internal IP address of node
     #[serde(rename = "addr")]
     pub addr: Option<String>,
 
+    /// Node status (read-only)
     pub status: String,
 
-    /// Whether node accepts new shards
+    /// Node accepts new shards if true
     pub accept_servers: Option<bool>,
 
-    /// System architecture (e.g., "aarch64", "x86_64")
+    /// Hardware architecture (read-only)
     pub architecture: Option<String>,
 
-    /// CPU cores (renamed from 'cpu_cores' to match API)
+    /// Total number of CPU cores (read-only)
     #[serde(rename = "cores")]
     pub cores: Option<u32>,
 
-    /// External IP addresses
+    /// External IP addresses of node
     pub external_addr: Option<Vec<String>>,
 
     /// Total memory in bytes
     pub total_memory: Option<u64>,
 
-    /// OS version information
+    /// Installed OS version (read-only)
     pub os_version: Option<String>,
+    /// Operating system name (read-only)
     pub os_name: Option<String>,
+    /// Operating system family (read-only)
     pub os_family: Option<String>,
+    /// Full version number (read-only)
     pub os_semantic_version: Option<String>,
 
-    /// Storage sizes (API returns f64, not u64)
+    /// Ephemeral storage size in bytes (read-only)
     pub ephemeral_storage_size: Option<f64>,
+    /// Persistent storage size in bytes (read-only)
     pub persistent_storage_size: Option<f64>,
 
-    /// Storage paths
+    /// Ephemeral storage path (read-only)
     pub ephemeral_storage_path: Option<String>,
+    /// Persistent storage path (read-only)
     pub persistent_storage_path: Option<String>,
+    /// Flash storage path (read-only)
     pub bigredis_storage_path: Option<String>,
 
-    /// Rack configuration
+    /// Rack ID where node is installed
     pub rack_id: Option<String>,
+    /// Second rack ID where node is installed
     pub second_rack_id: Option<String>,
 
-    /// Shard information
+    /// Number of shards on the node (read-only)
     pub shard_count: Option<u32>,
+    /// Cluster unique IDs of all node shards
     pub shard_list: Option<Vec<u32>>,
+    /// RAM shard count
     pub ram_shard_count: Option<u32>,
+    /// Flash shard count
     pub flash_shard_count: Option<u32>,
 
-    /// Features and capabilities
+    /// Flash storage enabled for Auto Tiering databases
     pub bigstore_enabled: Option<bool>,
+    /// FIPS mode enabled
     pub fips_enabled: Option<bool>,
+    /// Use internal IPv6
     pub use_internal_ipv6: Option<bool>,
 
-    /// Limits and settings
+    /// Maximum number of listeners on the node
     pub max_listeners: Option<u32>,
+    /// Maximum number of shards on the node
     pub max_redis_servers: Option<u32>,
+    /// Maximum background processes forked from shards
     pub max_redis_forks: Option<i32>,
+    /// Maximum simultaneous replica full syncs
     pub max_slave_full_syncs: Option<i32>,
 
-    /// Runtime information
+    /// Node uptime in seconds
     pub uptime: Option<u64>,
+    /// Installed Redis Enterprise cluster software version (read-only)
     pub software_version: Option<String>,
 
-    /// Supported Redis versions
+    /// Supported database versions
     pub supported_database_versions: Option<Vec<Value>>,
+
+    /// Bigstore driver name (deprecated)
+    pub bigstore_driver: Option<String>,
+
+    /// Storage size of bigstore storage (read-only)
+    pub bigstore_size: Option<u64>,
+
+    /// Public IP address (deprecated)
+    pub public_addr: Option<String>,
+
+    /// Recovery files path
+    pub recovery_path: Option<String>,
 
     /// Capture any additional fields not explicitly defined
     #[serde(flatten)]

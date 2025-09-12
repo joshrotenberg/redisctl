@@ -14,19 +14,66 @@ use typed_builder::TypedBuilder;
 /// License information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct License {
+    /// License key string
     pub license_key: String,
-    pub type_: String,
+
+    /// Key field (some endpoints may return this instead of license_key)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub key: Option<String>,
+
+    /// License string
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub license: Option<String>,
+
+    /// License type
+    pub type_: Option<String>,
+
+    /// Mark license expired or not
     pub expired: bool,
+
+    /// License activation date
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub activation_date: Option<String>,
+
+    /// License expiration date
     #[serde(skip_serializing_if = "Option::is_none")]
     pub expiration_date: Option<String>,
+
+    /// The cluster name as appears in the license
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub shards_limit: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub node_limit: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub features: Option<Vec<String>>,
+    pub cluster_name: Option<String>,
+
+    /// Owner of license
     #[serde(skip_serializing_if = "Option::is_none")]
     pub owner: Option<String>,
+
+    /// Shards limit
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub shards_limit: Option<u32>,
+
+    /// Amount of RAM shards in use
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ram_shards_in_use: Option<u32>,
+
+    /// Amount of RAM shards allowed
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ram_shards_limit: Option<u32>,
+
+    /// Amount of flash shards in use
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub flash_shards_in_use: Option<u32>,
+
+    /// Amount of flash shards allowed
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub flash_shards_limit: Option<u32>,
+
+    /// Node limit (deprecated in favor of shards_limit)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub node_limit: Option<u32>,
+
+    /// List of features supported by license
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub features: Option<Vec<String>>,
 
     #[serde(flatten)]
     pub extra: Value,
