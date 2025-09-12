@@ -315,21 +315,20 @@ impl Workflow for SubscriptionSetupWorkflow {
                         .await
                         .context("Failed to get databases")?;
 
-                    if let Some(db_array) = databases.as_array() {
-                        if let Some(first_db) = db_array.first() {
-                            if let Some(db_id) = first_db["databaseId"].as_u64() {
-                                outputs.database_id = Some(db_id as u32);
-                                outputs.database_name = Some(setup_args.database_name.clone());
+                    if let Some(db_array) = databases.as_array()
+                        && let Some(first_db) = db_array.first()
+                        && let Some(db_id) = first_db["databaseId"].as_u64()
+                    {
+                        outputs.database_id = Some(db_id as u32);
+                        outputs.database_name = Some(setup_args.database_name.clone());
 
-                                if let Some(public_endpoint) = first_db["publicEndpoint"].as_str() {
-                                    outputs.connection_string =
-                                        Some(format!("redis://{}", public_endpoint));
-                                }
+                        if let Some(public_endpoint) = first_db["publicEndpoint"].as_str() {
+                            outputs.connection_string =
+                                Some(format!("redis://{}", public_endpoint));
+                        }
 
-                                if !quiet {
-                                    println!("Database created successfully (ID: {})", db_id);
-                                }
-                            }
+                        if !quiet {
+                            println!("Database created successfully (ID: {})", db_id);
                         }
                     }
                 }

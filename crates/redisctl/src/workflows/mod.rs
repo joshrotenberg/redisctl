@@ -3,6 +3,8 @@
 //! Workflows orchestrate complex operations that require multiple API calls,
 //! waiting for async operations, and conditional logic.
 
+#![allow(dead_code)]
+
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
