@@ -10,8 +10,8 @@ A unified command-line interface for managing Redis Cloud and Redis Enterprise d
 ## Features
 
 - **Unified Interface** - Single CLI for both Redis Cloud and Redis Enterprise
-- **Async Operations** - Full support for long-running operations with `--wait` flags
-- **Smart Routing** - Automatically detects which API to use based on context
+- **Async Operations** - Full support for long-running operations with `--wait` flags  
+- **Explicit Commands** - Clear separation between Cloud and Enterprise operations
 - **Multiple Output Formats** - JSON, YAML, and Table output with JMESPath filtering
 - **Profile Management** - Secure credential storage with environment variable support
 

@@ -5,7 +5,7 @@
 ## Why redisctl?
 
 - **Single Tool** - One CLI for both Cloud and Enterprise deployments
-- **Smart Routing** - Automatically uses the right API based on your configuration
+- **Explicit Commands** - Clear separation between Cloud and Enterprise operations
 - **Multiple Interfaces** - Raw API access, human-friendly commands, and orchestrated workflows
 - **Flexible Output** - JSON, YAML, or formatted tables with JMESPath filtering
 
