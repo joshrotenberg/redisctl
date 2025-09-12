@@ -63,3 +63,12 @@ jobs:
             ghcr.io/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Update Docker Hub README
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: joshrotenberg/redisctl
+          readme-filepath: ./README.md
+          short-description: "Unified CLI for Redis Cloud and Redis Enterprise management"
