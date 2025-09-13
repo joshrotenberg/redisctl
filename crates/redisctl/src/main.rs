@@ -274,6 +274,16 @@ async fn execute_enterprise_command(
             )
             .await
         }
+        CrdbTask(crdb_task_cmd) => {
+            commands::enterprise::crdb_task::handle_crdb_task_command(
+                conn_mgr,
+                profile,
+                crdb_task_cmd.clone(),
+                output,
+                query,
+            )
+            .await
+        }
         JobScheduler(job_scheduler_cmd) => {
             commands::enterprise::job_scheduler::handle_job_scheduler_command(
                 conn_mgr,
