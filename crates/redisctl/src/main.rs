@@ -186,6 +186,16 @@ async fn execute_enterprise_command(
     use cli::EnterpriseCommands::*;
 
     match enterprise_cmd {
+        Action(action_cmd) => {
+            commands::enterprise::actions::handle_action_command(
+                conn_mgr,
+                profile,
+                action_cmd.clone(),
+                output,
+                query,
+            )
+            .await
+        }
         Cluster(cluster_cmd) => {
             commands::enterprise::cluster::handle_cluster_command(
                 conn_mgr,
