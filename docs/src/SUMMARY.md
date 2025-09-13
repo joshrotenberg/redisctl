@@ -28,6 +28,7 @@
 
 - [Overview](./enterprise/overview.md)
 - [Cluster](./enterprise/cluster.md)
+- [CM Settings](./enterprise/cm-settings.md)
 - [Databases](./enterprise/databases.md)
 - [Database Groups](./enterprise/bdb-groups.md)
 - [Nodes](./enterprise/nodes.md)

@@ -4,6 +4,7 @@ pub mod actions;
 pub mod bdb_group;
 pub mod cluster;
 pub mod cluster_impl;
+pub mod cm_settings;
 pub mod crdb;
 pub mod crdb_impl;
 pub mod crdb_task;

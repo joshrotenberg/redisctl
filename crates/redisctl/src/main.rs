@@ -216,6 +216,16 @@ async fn execute_enterprise_command(
             )
             .await
         }
+        CmSettings(cm_settings_cmd) => {
+            commands::enterprise::cm_settings::handle_cm_settings_command(
+                conn_mgr,
+                profile,
+                cm_settings_cmd.clone(),
+                output,
+                query,
+            )
+            .await
+        }
         Database(db_cmd) => {
             commands::enterprise::database::handle_database_command(
                 conn_mgr, profile, db_cmd, output, query,

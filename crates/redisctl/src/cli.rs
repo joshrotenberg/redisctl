@@ -968,6 +968,9 @@ pub enum EnterpriseCommands {
     /// Cluster operations
     #[command(subcommand)]
     Cluster(EnterpriseClusterCommands),
+    /// Cluster manager settings
+    #[command(subcommand, name = "cm-settings")]
+    CmSettings(crate::commands::enterprise::cm_settings::CmSettingsCommands),
 
     /// Database operations
     #[command(subcommand)]
