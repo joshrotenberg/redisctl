@@ -36,6 +36,7 @@
 - [Modules](./enterprise/modules.md)
 - [Logs](./enterprise/logs.md)
 - [Active-Active (CRDB)](./enterprise/crdb.md)
+- [CRDB Tasks](./enterprise/crdb-tasks.md)
 - [Actions (Tasks)](./enterprise/actions.md)
 - [Diagnostics](./enterprise/diagnostics.md)
 - [Job Scheduler](./enterprise/job-scheduler.md)

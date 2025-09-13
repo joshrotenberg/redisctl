@@ -1004,6 +1004,9 @@ pub enum EnterpriseCommands {
     /// Active-Active database (CRDB) operations
     #[command(subcommand)]
     Crdb(EnterpriseCrdbCommands),
+    /// CRDB task operations
+    #[command(subcommand, name = "crdb-task")]
+    CrdbTask(crate::commands::enterprise::crdb_task::CrdbTaskCommands),
 
     /// Job scheduler operations
     #[command(subcommand, name = "job-scheduler")]
