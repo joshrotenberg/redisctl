@@ -202,6 +202,16 @@ async fn execute_enterprise_command(
             )
             .await
         }
+        Diagnostics(diagnostics_cmd) => {
+            commands::enterprise::diagnostics::handle_diagnostics_command(
+                conn_mgr,
+                profile,
+                diagnostics_cmd.clone(),
+                output,
+                query,
+            )
+            .await
+        }
         Node(node_cmd) => {
             commands::enterprise::node::handle_node_command(
                 conn_mgr, profile, node_cmd, output, query,

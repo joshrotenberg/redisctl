@@ -967,6 +967,10 @@ pub enum EnterpriseCommands {
     #[command(subcommand)]
     Database(EnterpriseDatabaseCommands),
 
+    /// Diagnostics operations
+    #[command(subcommand)]
+    Diagnostics(crate::commands::enterprise::diagnostics::DiagnosticsCommands),
+
     /// Node operations
     #[command(subcommand)]
     Node(EnterpriseNodeCommands),
