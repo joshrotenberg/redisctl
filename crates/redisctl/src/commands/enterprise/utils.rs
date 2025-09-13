@@ -92,12 +92,22 @@ pub fn confirm_action(message: &str) -> CliResult<bool> {
     }
 }
 
-/// Read JSON data from string or file
+/// Read JSON data from string, file, or stdin
 pub fn read_json_data(data: &str) -> CliResult<Value> {
-    let json_str = if let Some(file_path) = data.strip_prefix('@') {
+    let json_str = if data == "-" {
+        // Read from stdin
+        use std::io::Read;
+        let mut buffer = String::new();
+        std::io::stdin()
+            .read_to_string(&mut buffer)
+            .map_err(|e| anyhow::anyhow!("Failed to read from stdin: {}", e))?;
+        buffer
+    } else if let Some(file_path) = data.strip_prefix('@') {
+        // Read from file
         std::fs::read_to_string(file_path)
             .map_err(|e| anyhow::anyhow!("Failed to read file {}: {}", file_path, e))?
     } else {
+        // Direct JSON string
         data.to_string()
     };
 

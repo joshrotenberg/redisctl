@@ -186,6 +186,16 @@ async fn execute_enterprise_command(
     use cli::EnterpriseCommands::*;
 
     match enterprise_cmd {
+        Action(action_cmd) => {
+            commands::enterprise::actions::handle_action_command(
+                conn_mgr,
+                profile,
+                action_cmd.clone(),
+                output,
+                query,
+            )
+            .await
+        }
         Cluster(cluster_cmd) => {
             commands::enterprise::cluster::handle_cluster_command(
                 conn_mgr,
@@ -251,6 +261,16 @@ async fn execute_enterprise_command(
         Crdb(crdb_cmd) => {
             commands::enterprise::crdb::handle_crdb_command(
                 conn_mgr, profile, crdb_cmd, output, query,
+            )
+            .await
+        }
+        JobScheduler(job_scheduler_cmd) => {
+            commands::enterprise::job_scheduler::handle_job_scheduler_command(
+                conn_mgr,
+                profile,
+                job_scheduler_cmd.clone(),
+                output,
+                query,
             )
             .await
         }
