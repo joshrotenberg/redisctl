@@ -995,6 +995,10 @@ pub enum EnterpriseCommands {
     #[command(subcommand)]
     Crdb(EnterpriseCrdbCommands),
 
+    /// Job scheduler operations
+    #[command(subcommand, name = "job-scheduler")]
+    JobScheduler(crate::commands::enterprise::job_scheduler::JobSchedulerCommands),
+
     /// Log operations
     #[command(subcommand)]
     Logs(crate::commands::enterprise::logs::LogsCommands),

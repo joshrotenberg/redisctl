@@ -244,6 +244,16 @@ async fn execute_enterprise_command(
             )
             .await
         }
+        JobScheduler(job_scheduler_cmd) => {
+            commands::enterprise::job_scheduler::handle_job_scheduler_command(
+                conn_mgr,
+                profile,
+                job_scheduler_cmd.clone(),
+                output,
+                query,
+            )
+            .await
+        }
         Logs(logs_cmd) => {
             commands::enterprise::logs_impl::handle_logs_commands(
                 conn_mgr, profile, logs_cmd, output, query,
