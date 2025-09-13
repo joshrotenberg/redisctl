@@ -959,6 +959,9 @@ pub enum CloudCommands {
 /// Enterprise-specific commands (placeholder for now)
 #[derive(Subcommand, Debug)]
 pub enum EnterpriseCommands {
+    /// Action (task) operations
+    #[command(subcommand)]
+    Action(crate::commands::enterprise::actions::ActionCommands),
     /// Cluster operations
     #[command(subcommand)]
     Cluster(EnterpriseClusterCommands),
