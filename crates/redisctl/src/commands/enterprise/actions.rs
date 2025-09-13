@@ -58,6 +58,7 @@ pub enum ActionCommands {
 }
 
 impl ActionCommands {
+    #[allow(dead_code)]
     pub async fn execute(
         &self,
         conn_mgr: &ConnectionManager,
@@ -87,35 +88,32 @@ impl ActionCommands {
                 let mut response = serde_json::to_value(&actions)?;
 
                 // Apply filters if provided
-                if status.is_some() || action_type.is_some() {
-                    if let Some(actions) = response.as_array_mut() {
-                        actions.retain(|action| {
-                            let mut keep = true;
+                if (status.is_some() || action_type.is_some())
+                    && let Some(actions) = response.as_array_mut()
+                {
+                    actions.retain(|action| {
+                        let mut keep = true;
 
-                            if let Some(status_filter) = status {
-                                if let Some(action_status) =
-                                    action.get("status").and_then(|s| s.as_str())
-                                {
-                                    keep =
-                                        keep && action_status.eq_ignore_ascii_case(status_filter);
-                                } else {
-                                    keep = false;
-                                }
+                        if let Some(status_filter) = status {
+                            if let Some(action_status) =
+                                action.get("status").and_then(|s| s.as_str())
+                            {
+                                keep = keep && action_status.eq_ignore_ascii_case(status_filter);
+                            } else {
+                                keep = false;
                             }
+                        }
 
-                            if let Some(type_filter) = action_type {
-                                if let Some(action_type) =
-                                    action.get("type").and_then(|t| t.as_str())
-                                {
-                                    keep = keep && action_type.eq_ignore_ascii_case(type_filter);
-                                } else {
-                                    keep = false;
-                                }
+                        if let Some(type_filter) = action_type {
+                            if let Some(action_type) = action.get("type").and_then(|t| t.as_str()) {
+                                keep = keep && action_type.eq_ignore_ascii_case(type_filter);
+                            } else {
+                                keep = false;
                             }
+                        }
 
-                            keep
-                        });
-                    }
+                        keep
+                    });
                 }
 
                 let output_data = if let Some(q) = query {
@@ -240,6 +238,7 @@ impl ActionCommands {
     }
 }
 
+#[allow(dead_code)]
 pub async fn handle_action_command(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
