@@ -962,6 +962,9 @@ pub enum EnterpriseCommands {
     /// Action (task) operations
     #[command(subcommand)]
     Action(crate::commands::enterprise::actions::ActionCommands),
+    /// Database group operations
+    #[command(subcommand, name = "bdb-group")]
+    BdbGroup(crate::commands::enterprise::bdb_group::BdbGroupCommands),
     /// Cluster operations
     #[command(subcommand)]
     Cluster(EnterpriseClusterCommands),
