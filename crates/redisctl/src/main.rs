@@ -196,6 +196,16 @@ async fn execute_enterprise_command(
             )
             .await
         }
+        BdbGroup(bdb_group_cmd) => {
+            commands::enterprise::bdb_group::handle_bdb_group_command(
+                conn_mgr,
+                profile,
+                bdb_group_cmd.clone(),
+                output,
+                query,
+            )
+            .await
+        }
         Cluster(cluster_cmd) => {
             commands::enterprise::cluster::handle_cluster_command(
                 conn_mgr,

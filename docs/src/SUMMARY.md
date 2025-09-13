@@ -29,6 +29,7 @@
 - [Overview](./enterprise/overview.md)
 - [Cluster](./enterprise/cluster.md)
 - [Databases](./enterprise/databases.md)
+- [Database Groups](./enterprise/bdb-groups.md)
 - [Nodes](./enterprise/nodes.md)
 - [Users & RBAC](./enterprise/users.md)
 - [Statistics](./enterprise/stats.md)

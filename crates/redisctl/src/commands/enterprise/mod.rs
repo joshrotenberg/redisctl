@@ -1,6 +1,7 @@
 //! Enterprise command implementations
 
 pub mod actions;
+pub mod bdb_group;
 pub mod cluster;
 pub mod cluster_impl;
 pub mod crdb;
