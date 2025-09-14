@@ -315,6 +315,16 @@ async fn execute_enterprise_command(
             )
             .await
         }
+        UsageReport(usage_report_cmd) => {
+            commands::enterprise::usage_report::handle_usage_report_command(
+                conn_mgr,
+                profile,
+                usage_report_cmd.clone(),
+                output,
+                query,
+            )
+            .await
+        }
     }
 }
 
