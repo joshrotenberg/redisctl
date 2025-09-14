@@ -216,6 +216,16 @@ async fn execute_enterprise_command(
             )
             .await
         }
+        CmSettings(cm_settings_cmd) => {
+            commands::enterprise::cm_settings::handle_cm_settings_command(
+                conn_mgr,
+                profile,
+                cm_settings_cmd.clone(),
+                output,
+                query,
+            )
+            .await
+        }
         Database(db_cmd) => {
             commands::enterprise::database::handle_database_command(
                 conn_mgr, profile, db_cmd, output, query,
@@ -232,9 +242,29 @@ async fn execute_enterprise_command(
             )
             .await
         }
+        Endpoint(endpoint_cmd) => {
+            commands::enterprise::endpoint::handle_endpoint_command(
+                conn_mgr,
+                profile,
+                endpoint_cmd.clone(),
+                output,
+                query,
+            )
+            .await
+        }
         Node(node_cmd) => {
             commands::enterprise::node::handle_node_command(
                 conn_mgr, profile, node_cmd, output, query,
+            )
+            .await
+        }
+        Proxy(proxy_cmd) => {
+            commands::enterprise::proxy::handle_proxy_command(
+                conn_mgr,
+                profile,
+                proxy_cmd.clone(),
+                output,
+                query,
             )
             .await
         }
@@ -309,6 +339,16 @@ async fn execute_enterprise_command(
         Workflow(workflow_cmd) => {
             handle_enterprise_workflow_command(conn_mgr, profile, workflow_cmd, output).await
         }
+        Shard(shard_cmd) => {
+            commands::enterprise::shard::handle_shard_command(
+                conn_mgr,
+                profile,
+                shard_cmd.clone(),
+                output,
+                query,
+            )
+            .await
+        }
         Stats(stats_cmd) => {
             commands::enterprise::stats::handle_stats_command(
                 conn_mgr, profile, stats_cmd, output, query,
@@ -320,6 +360,16 @@ async fn execute_enterprise_command(
                 conn_mgr,
                 profile,
                 suffix_cmd.clone(),
+                output,
+                query,
+            )
+            .await
+        }
+        UsageReport(usage_report_cmd) => {
+            commands::enterprise::usage_report::handle_usage_report_command(
+                conn_mgr,
+                profile,
+                usage_report_cmd.clone(),
                 output,
                 query,
             )

@@ -968,6 +968,9 @@ pub enum EnterpriseCommands {
     /// Cluster operations
     #[command(subcommand)]
     Cluster(EnterpriseClusterCommands),
+    /// Cluster manager settings
+    #[command(subcommand, name = "cm-settings")]
+    CmSettings(crate::commands::enterprise::cm_settings::CmSettingsCommands),
 
     /// Database operations
     #[command(subcommand)]
@@ -977,9 +980,17 @@ pub enum EnterpriseCommands {
     #[command(subcommand)]
     Diagnostics(crate::commands::enterprise::diagnostics::DiagnosticsCommands),
 
+    /// Endpoint operations
+    #[command(subcommand)]
+    Endpoint(crate::commands::enterprise::endpoint::EndpointCommands),
+
     /// Node operations
     #[command(subcommand)]
     Node(EnterpriseNodeCommands),
+
+    /// Proxy management
+    #[command(subcommand)]
+    Proxy(crate::commands::enterprise::proxy::ProxyCommands),
 
     /// User operations
     #[command(subcommand)]
@@ -1024,6 +1035,10 @@ pub enum EnterpriseCommands {
     #[command(subcommand)]
     Workflow(EnterpriseWorkflowCommands),
 
+    /// Shard management operations
+    #[command(subcommand)]
+    Shard(crate::commands::enterprise::shard::ShardCommands),
+
     /// Statistics and metrics operations
     #[command(subcommand)]
     Stats(EnterpriseStatsCommands),
@@ -1031,6 +1046,10 @@ pub enum EnterpriseCommands {
     /// DNS suffix management
     #[command(subcommand)]
     Suffix(crate::commands::enterprise::suffix::SuffixCommands),
+
+    /// Usage report operations
+    #[command(subcommand, name = "usage-report")]
+    UsageReport(crate::commands::enterprise::usage_report::UsageReportCommands),
 }
 
 /// Cloud workflow commands
