@@ -10,6 +10,7 @@ pub mod crdb_task;
 pub mod database;
 pub mod database_impl;
 pub mod diagnostics;
+pub mod endpoint;
 pub mod job_scheduler;
 pub mod logs;
 pub mod logs_impl;

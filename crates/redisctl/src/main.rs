@@ -232,6 +232,16 @@ async fn execute_enterprise_command(
             )
             .await
         }
+        Endpoint(endpoint_cmd) => {
+            commands::enterprise::endpoint::handle_endpoint_command(
+                conn_mgr,
+                profile,
+                endpoint_cmd.clone(),
+                output,
+                query,
+            )
+            .await
+        }
         Node(node_cmd) => {
             commands::enterprise::node::handle_node_command(
                 conn_mgr, profile, node_cmd, output, query,

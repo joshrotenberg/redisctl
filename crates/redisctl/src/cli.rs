@@ -977,6 +977,10 @@ pub enum EnterpriseCommands {
     #[command(subcommand)]
     Diagnostics(crate::commands::enterprise::diagnostics::DiagnosticsCommands),
 
+    /// Endpoint operations
+    #[command(subcommand)]
+    Endpoint(crate::commands::enterprise::endpoint::EndpointCommands),
+
     /// Node operations
     #[command(subcommand)]
     Node(EnterpriseNodeCommands),
