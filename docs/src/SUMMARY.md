@@ -31,6 +31,7 @@
 - [Databases](./enterprise/databases.md)
 - [Database Groups](./enterprise/bdb-groups.md)
 - [Nodes](./enterprise/nodes.md)
+- [Proxy Management](./enterprise/proxy.md)
 - [Users & RBAC](./enterprise/users.md)
 - [Statistics](./enterprise/stats.md)
 - [Modules](./enterprise/modules.md)

@@ -17,6 +17,7 @@ pub mod module;
 pub mod module_impl;
 pub mod node;
 pub mod node_impl;
+pub mod proxy;
 pub mod rbac;
 pub mod rbac_impl;
 pub mod stats;
