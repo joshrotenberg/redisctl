@@ -1027,6 +1027,10 @@ pub enum EnterpriseCommands {
     #[command(subcommand)]
     Logs(crate::commands::enterprise::logs::LogsCommands),
 
+    /// Migration operations
+    #[command(subcommand)]
+    Migration(crate::commands::enterprise::migration::MigrationCommands),
+
     /// Module management operations
     #[command(subcommand)]
     Module(crate::commands::enterprise::module::ModuleCommands),

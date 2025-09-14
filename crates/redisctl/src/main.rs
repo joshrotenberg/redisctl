@@ -330,6 +330,16 @@ async fn execute_enterprise_command(
             )
             .await
         }
+        Migration(migration_cmd) => {
+            commands::enterprise::migration::handle_migration_command(
+                conn_mgr,
+                profile,
+                migration_cmd.clone(),
+                output,
+                query,
+            )
+            .await
+        }
         Module(module_cmd) => {
             commands::enterprise::module_impl::handle_module_commands(
                 conn_mgr, profile, module_cmd, output, query,
