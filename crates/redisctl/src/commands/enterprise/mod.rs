@@ -19,5 +19,6 @@ pub mod node;
 pub mod node_impl;
 pub mod rbac;
 pub mod rbac_impl;
+pub mod shard;
 pub mod stats;
 pub mod utils;

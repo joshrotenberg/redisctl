@@ -309,6 +309,16 @@ async fn execute_enterprise_command(
         Workflow(workflow_cmd) => {
             handle_enterprise_workflow_command(conn_mgr, profile, workflow_cmd, output).await
         }
+        Shard(shard_cmd) => {
+            commands::enterprise::shard::handle_shard_command(
+                conn_mgr,
+                profile,
+                shard_cmd.clone(),
+                output,
+                query,
+            )
+            .await
+        }
         Stats(stats_cmd) => {
             commands::enterprise::stats::handle_stats_command(
                 conn_mgr, profile, stats_cmd, output, query,
