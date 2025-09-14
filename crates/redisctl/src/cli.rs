@@ -1028,6 +1028,10 @@ pub enum EnterpriseCommands {
     #[command(subcommand)]
     Workflow(EnterpriseWorkflowCommands),
 
+    /// Shard management operations
+    #[command(subcommand)]
+    Shard(crate::commands::enterprise::shard::ShardCommands),
+
     /// Statistics and metrics operations
     #[command(subcommand)]
     Stats(EnterpriseStatsCommands),

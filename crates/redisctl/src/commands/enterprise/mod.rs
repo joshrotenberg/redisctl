@@ -20,6 +20,7 @@ pub mod node_impl;
 pub mod proxy;
 pub mod rbac;
 pub mod rbac_impl;
+pub mod shard;
 pub mod stats;
 pub mod usage_report;
 pub mod utils;
