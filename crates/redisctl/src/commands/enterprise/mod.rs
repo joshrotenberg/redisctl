@@ -15,6 +15,7 @@ pub mod endpoint;
 pub mod job_scheduler;
 pub mod logs;
 pub mod logs_impl;
+pub mod migration;
 pub mod module;
 pub mod module_impl;
 pub mod node;

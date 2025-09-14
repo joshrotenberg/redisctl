@@ -39,6 +39,7 @@
 - [Usage Reports](./enterprise/usage-report.md)
 - [Modules](./enterprise/modules.md)
 - [Logs](./enterprise/logs.md)
+- [Database Migration](./enterprise/migration.md)
 - [Active-Active (CRDB)](./enterprise/crdb.md)
 - [CRDB Tasks](./enterprise/crdb-tasks.md)
 - [Actions (Tasks)](./enterprise/actions.md)
