@@ -1027,6 +1027,10 @@ pub enum EnterpriseCommands {
     /// Statistics and metrics operations
     #[command(subcommand)]
     Stats(EnterpriseStatsCommands),
+
+    /// DNS suffix management
+    #[command(subcommand)]
+    Suffix(crate::commands::enterprise::suffix::SuffixCommands),
 }
 
 /// Cloud workflow commands

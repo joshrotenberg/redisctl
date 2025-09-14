@@ -315,6 +315,16 @@ async fn execute_enterprise_command(
             )
             .await
         }
+        Suffix(suffix_cmd) => {
+            commands::enterprise::suffix::handle_suffix_command(
+                conn_mgr,
+                profile,
+                suffix_cmd.clone(),
+                output,
+                query,
+            )
+            .await
+        }
     }
 }
 

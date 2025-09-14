@@ -40,6 +40,7 @@
 - [Actions (Tasks)](./enterprise/actions.md)
 - [Diagnostics](./enterprise/diagnostics.md)
 - [Job Scheduler](./enterprise/job-scheduler.md)
+- [DNS Suffixes](./enterprise/suffix.md)
 - [Workflows](./enterprise/workflows.md)
 - [Raw API Access](./enterprise/api-access.md)
 
