@@ -43,6 +43,7 @@
 - [CRDB Tasks](./enterprise/crdb-tasks.md)
 - [Actions (Tasks)](./enterprise/actions.md)
 - [Diagnostics](./enterprise/diagnostics.md)
+- [Endpoints](./enterprise/endpoints.md)
 - [Job Scheduler](./enterprise/job-scheduler.md)
 - [Workflows](./enterprise/workflows.md)
 - [Raw API Access](./enterprise/api-access.md)
