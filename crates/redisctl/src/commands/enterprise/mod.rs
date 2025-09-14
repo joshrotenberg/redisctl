@@ -26,5 +26,6 @@ pub mod rbac;
 pub mod rbac_impl;
 pub mod shard;
 pub mod stats;
+pub mod suffix;
 pub mod usage_report;
 pub mod utils;

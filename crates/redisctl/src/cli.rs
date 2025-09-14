@@ -1051,6 +1051,10 @@ pub enum EnterpriseCommands {
     #[command(subcommand)]
     Stats(EnterpriseStatsCommands),
 
+    /// DNS suffix management
+    #[command(subcommand)]
+    Suffix(crate::commands::enterprise::suffix::SuffixCommands),
+
     /// Usage report operations
     #[command(subcommand, name = "usage-report")]
     UsageReport(crate::commands::enterprise::usage_report::UsageReportCommands),
