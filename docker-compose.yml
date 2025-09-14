@@ -1,3 +1,8 @@
+# For Apple Silicon (M1/M2/M3), copy .env.example to .env to use ARM image
+# Or set these environment variables:
+#   REDIS_ENTERPRISE_IMAGE=kurtfm/rs-arm:latest
+#   REDIS_ENTERPRISE_PLATFORM=linux/arm64
+
 services:
   redis-enterprise:
     image: ${REDIS_ENTERPRISE_IMAGE:-redislabs/redis:latest}
