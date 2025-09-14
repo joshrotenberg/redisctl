@@ -45,6 +45,7 @@
 - [Diagnostics](./enterprise/diagnostics.md)
 - [Endpoints](./enterprise/endpoints.md)
 - [Job Scheduler](./enterprise/job-scheduler.md)
+- [JSON Schema](./enterprise/jsonschema.md)
 - [Workflows](./enterprise/workflows.md)
 - [Raw API Access](./enterprise/api-access.md)
 

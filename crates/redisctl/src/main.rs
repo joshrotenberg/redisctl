@@ -324,6 +324,16 @@ async fn execute_enterprise_command(
             )
             .await
         }
+        Jsonschema(jsonschema_cmd) => {
+            commands::enterprise::jsonschema::handle_jsonschema_command(
+                conn_mgr,
+                profile,
+                jsonschema_cmd.clone(),
+                output,
+                query,
+            )
+            .await
+        }
         Logs(logs_cmd) => {
             commands::enterprise::logs_impl::handle_logs_commands(
                 conn_mgr, profile, logs_cmd, output, query,
