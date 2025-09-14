@@ -1027,6 +1027,10 @@ pub enum EnterpriseCommands {
     /// Statistics and metrics operations
     #[command(subcommand)]
     Stats(EnterpriseStatsCommands),
+
+    /// Usage report operations
+    #[command(subcommand, name = "usage-report")]
+    UsageReport(crate::commands::enterprise::usage_report::UsageReportCommands),
 }
 
 /// Cloud workflow commands

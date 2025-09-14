@@ -33,6 +33,7 @@
 - [Nodes](./enterprise/nodes.md)
 - [Users & RBAC](./enterprise/users.md)
 - [Statistics](./enterprise/stats.md)
+- [Usage Reports](./enterprise/usage-report.md)
 - [Modules](./enterprise/modules.md)
 - [Logs](./enterprise/logs.md)
 - [Active-Active (CRDB)](./enterprise/crdb.md)
