@@ -1023,9 +1023,17 @@ pub enum EnterpriseCommands {
     #[command(subcommand, name = "job-scheduler")]
     JobScheduler(crate::commands::enterprise::job_scheduler::JobSchedulerCommands),
 
+    /// JSON schema operations
+    #[command(subcommand)]
+    Jsonschema(crate::commands::enterprise::jsonschema::JsonSchemaCommands),
+
     /// Log operations
     #[command(subcommand)]
     Logs(crate::commands::enterprise::logs::LogsCommands),
+
+    /// Migration operations
+    #[command(subcommand)]
+    Migration(crate::commands::enterprise::migration::MigrationCommands),
 
     /// Module management operations
     #[command(subcommand)]
