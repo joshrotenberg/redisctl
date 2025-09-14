@@ -21,29 +21,31 @@ services:
       start_period: 10s
 
   # Auto-initialize Redis Enterprise cluster using our workflow
-  redis-enterprise-init:
-    image: joshrotenberg/redisctl:latest
-    container_name: redis-enterprise-init
-    depends_on:
-      redis-enterprise:
-        condition: service_healthy
-    networks:
-      - redisctl-network
-    environment:
-      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
-      REDIS_ENTERPRISE_INSECURE: "true"
-    command:
-      [
-        "enterprise",
-        "workflow",
-        "init-cluster",
-        "--name",
-        "docker-cluster",
-        "--username",
-        "admin@redis.local",
-        "--password",
-        "Redis123!",
-      ]
+  # NOTE: Workflow command not yet implemented in CLI
+  # Uncomment when enterprise workflow init-cluster is available
+  # redis-enterprise-init:
+  #   image: joshrotenberg/redisctl:latest
+  #   container_name: redis-enterprise-init
+  #   depends_on:
+  #     redis-enterprise:
+  #       condition: service_healthy
+  #   networks:
+  #     - redisctl-network
+  #   environment:
+  #     REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
+  #     REDIS_ENTERPRISE_INSECURE: "true"
+  #   command:
+  #     [
+  #       "enterprise",
+  #       "workflow",
+  #       "init-cluster",
+  #       "--name",
+  #       "docker-cluster",
+  #       "--username",
+  #       "admin@redis.local",
+  #       "--password",
+  #       "Redis123!",
+  #     ]
 
 networks:
   redisctl-network:
