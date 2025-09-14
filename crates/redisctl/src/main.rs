@@ -238,6 +238,16 @@ async fn execute_enterprise_command(
             )
             .await
         }
+        Proxy(proxy_cmd) => {
+            commands::enterprise::proxy::handle_proxy_command(
+                conn_mgr,
+                profile,
+                proxy_cmd.clone(),
+                output,
+                query,
+            )
+            .await
+        }
         User(user_cmd) => {
             commands::enterprise::rbac::handle_user_command(
                 conn_mgr, profile, user_cmd, output, query,

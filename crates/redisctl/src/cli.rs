@@ -981,6 +981,10 @@ pub enum EnterpriseCommands {
     #[command(subcommand)]
     Node(EnterpriseNodeCommands),
 
+    /// Proxy management
+    #[command(subcommand)]
+    Proxy(crate::commands::enterprise::proxy::ProxyCommands),
+
     /// User operations
     #[command(subcommand)]
     User(EnterpriseUserCommands),
