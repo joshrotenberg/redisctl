@@ -62,12 +62,22 @@ impl Workflow for InitClusterWorkflow {
                 .unwrap_or_else(|| "default-db".to_string());
             let db_memory_gb = args.get_i64("database_memory_gb").unwrap_or(1);
 
-            // Create client
-            let client = context
-                .conn_mgr
-                .create_enterprise_client(context.profile_name.as_deref())
-                .await
-                .context("Failed to create Enterprise client")?;
+            // Create unauthenticated client for bootstrap operations
+            // Bootstrap doesn't require auth, but we need the URL from the environment/profile
+            let base_url = std::env::var("REDIS_ENTERPRISE_URL")
+                .unwrap_or_else(|_| "https://localhost:9443".to_string());
+            let insecure = std::env::var("REDIS_ENTERPRISE_INSECURE")
+                .unwrap_or_else(|_| "false".to_string())
+                .parse::<bool>()
+                .unwrap_or(false);
+
+            let client = redis_enterprise::EnterpriseClient::builder()
+                .base_url(base_url)
+                .username("") // Bootstrap doesn't require auth
+                .password("") // Bootstrap doesn't require auth
+                .insecure(insecure)
+                .build()
+                .context("Failed to create Enterprise client for bootstrap")?;
 
             // Step 1: Check if cluster is already initialized
             let needs_bootstrap = check_if_needs_bootstrap(&client).await?;

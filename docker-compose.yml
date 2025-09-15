@@ -22,7 +22,9 @@ services:
 
   # Auto-initialize Redis Enterprise cluster using our workflow
   redis-enterprise-init:
-    image: joshrotenberg/redisctl:0.5.0
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: redis-enterprise-init
     depends_on:
       redis-enterprise:
