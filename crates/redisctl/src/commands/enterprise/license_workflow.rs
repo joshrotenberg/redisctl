@@ -116,7 +116,7 @@ async fn handle_license_audit(
                             .unwrap_or("unknown");
                         let days_remaining =
                             super::license::calculate_days_remaining(Some(expiration_date));
-                        let is_expiring = days_remaining >= 0 && days_remaining <= 30;
+                        let is_expiring = (0..=30).contains(&days_remaining);
 
                         // Apply filters
                         if expired_only && !expired {

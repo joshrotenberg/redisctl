@@ -330,19 +330,19 @@ async fn handle_license_usage(
 
 // Helper functions
 pub fn calculate_days_remaining(expiration_date: Option<&str>) -> i64 {
-    if let Some(date_str) = expiration_date {
-        if let Ok(exp_date) = chrono::NaiveDate::parse_from_str(date_str, "%Y-%m-%d") {
-            let today = chrono::Local::now().naive_local().date();
-            let duration = exp_date.signed_duration_since(today);
-            return duration.num_days();
-        }
+    if let Some(date_str) = expiration_date
+        && let Ok(exp_date) = chrono::NaiveDate::parse_from_str(date_str, "%Y-%m-%d")
+    {
+        let today = chrono::Local::now().naive_local().date();
+        let duration = exp_date.signed_duration_since(today);
+        return duration.num_days();
     }
     -1
 }
 
 pub fn should_warn_expiry(expiration_date: Option<&str>) -> bool {
     let days = calculate_days_remaining(expiration_date);
-    days >= 0 && days <= 30
+    (0..=30).contains(&days)
 }
 
 pub fn calculate_available(limit: Option<i64>, used: Option<i64>) -> i64 {
