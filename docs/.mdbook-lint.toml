@@ -13,42 +13,42 @@ fail-on-warnings = false
 fail-on-errors = false
 
 # Enable rules that should be fixable
-[rules.MD022]
+[MD022]
 # Require blank lines around headings 
 enabled = true
 
-[rules.MD032]
+[MD032]
 # Require blank lines around lists
 enabled = true
 
-[rules.MD031]
+[MD031]
 # Require blank lines around fenced code blocks
 enabled = true
 
-[rules.MD006]
+[MD006]
 # Lists should start at beginning of line
 enabled = true
 
-[rules.MD047]
+[MD047]
 # Files should end with single newline
 enabled = true
 
 # Configure specific rules
-[rules.MD013]
+[MD013]
 # Allow longer lines for code examples and CLI output
 line_length = 120
 
-[rules.MD024]
+[MD024]
 # Allow duplicate headings in different sections
 enabled = true
 
-[rules.MD041]
+[MD041]
 # Require first line to be a heading
 enabled = true
 
 # Future configuration options when issues are resolved:
-# [rules.MDBOOK005]
+# [MDBOOK005]
 # search-path = "src"  # Only check within src directory
 # 
-# [rules.MDBOOK010]  
+# [MDBOOK010]  
 # skip-code-blocks = true  # Skip math detection in code blocks
