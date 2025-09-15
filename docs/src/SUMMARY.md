@@ -43,6 +43,7 @@
 - [Active-Active (CRDB)](./enterprise/crdb.md)
 - [CRDB Tasks](./enterprise/crdb-tasks.md)
 - [Actions (Tasks)](./enterprise/actions.md)
+- [Alerts](./enterprise/alerts.md)
 - [Diagnostics](./enterprise/diagnostics.md)
 - [Endpoints](./enterprise/endpoints.md)
 - [Job Scheduler](./enterprise/job-scheduler.md)
