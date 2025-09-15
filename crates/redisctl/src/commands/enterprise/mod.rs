@@ -15,6 +15,8 @@ pub mod diagnostics;
 pub mod endpoint;
 pub mod job_scheduler;
 pub mod jsonschema;
+pub mod license;
+pub mod license_workflow;
 pub mod logs;
 pub mod logs_impl;
 pub mod migration;

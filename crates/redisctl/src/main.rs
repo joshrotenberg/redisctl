@@ -344,6 +344,10 @@ async fn execute_enterprise_command(
             )
             .await
         }
+        License(license_cmd) => license_cmd
+            .execute(&conn_mgr.config, profile, output, query)
+            .await
+            .map_err(|e| RedisCtlError::Configuration(e.to_string())),
         Migration(migration_cmd) => {
             commands::enterprise::migration::handle_migration_command(
                 conn_mgr,
@@ -561,6 +565,10 @@ async fn handle_enterprise_workflow_command(
             }
             Ok(())
         }
+        License(license_workflow_cmd) => license_workflow_cmd
+            .execute(&conn_mgr.config, output, None)
+            .await
+            .map_err(|e| RedisCtlError::Configuration(e.to_string())),
         InitCluster {
             name,
             username,
