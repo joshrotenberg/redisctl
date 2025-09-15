@@ -19,8 +19,8 @@ use typed_builder::TypedBuilder;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct User {
     pub uid: u32,
-    pub username: String,
-    pub email: Option<String>,
+    pub email: String, // Primary identifier - was incorrectly named 'username'
+    pub name: Option<String>, // Display name
     pub role: String,
     pub status: Option<String>,
     pub password_issue_date: Option<String>,

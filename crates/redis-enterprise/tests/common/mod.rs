@@ -1,8 +1,10 @@
 //! Common test utilities for unit tests
 
-use wiremock::{MockServer, Mock, ResponseTemplate};
-use wiremock::matchers::{method, path, basic_auth, header};
+pub mod fixtures;
+
 use serde_json::json;
+use wiremock::matchers::{basic_auth, header, method, path};
+use wiremock::{Mock, MockServer, ResponseTemplate};
 
 /// Create a mock server with default configuration
 pub async fn setup_mock_server() -> MockServer {
@@ -11,17 +13,15 @@ pub async fn setup_mock_server() -> MockServer {
 
 /// Create a standard success response
 pub fn success_response(body: serde_json::Value) -> ResponseTemplate {
-    ResponseTemplate::new(200)
-        .set_body_json(body)
+    ResponseTemplate::new(200).set_body_json(body)
 }
 
 /// Create a standard error response
 pub fn error_response(code: u16, message: &str) -> ResponseTemplate {
-    ResponseTemplate::new(code)
-        .set_body_json(json!({
-            "error": message,
-            "code": code
-        }))
+    ResponseTemplate::new(code).set_body_json(json!({
+        "error": message,
+        "code": code
+    }))
 }
 
 /// Create a 204 No Content response
@@ -31,8 +31,7 @@ pub fn no_content_response() -> ResponseTemplate {
 
 /// Create a 201 Created response
 pub fn created_response(body: serde_json::Value) -> ResponseTemplate {
-    ResponseTemplate::new(201)
-        .set_body_json(body)
+    ResponseTemplate::new(201).set_body_json(body)
 }
 
 /// Mock Enterprise auth header matcher

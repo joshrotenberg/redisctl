@@ -1,6 +1,8 @@
 //! User endpoint tests for Redis Enterprise
 
-use redis_enterprise::{CreateUserRequest, EnterpriseClient, UpdateUserRequest, UserHandler};
+mod common;
+
+use redis_enterprise::{CreateUserRequest, EnterpriseClient, UpdateUserRequest, User, UserHandler};
 use serde_json::json;
 use wiremock::matchers::{basic_auth, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -19,13 +21,7 @@ fn no_content_response() -> ResponseTemplate {
 }
 
 fn test_user() -> serde_json::Value {
-    json!({
-        "uid": 1,
-        "username": "test-user",
-        "email": "test@example.com",
-        "role": "admin",
-        "status": "active"
-    })
+    common::fixtures::user_response()
 }
 
 #[tokio::test]
@@ -39,8 +35,8 @@ async fn test_user_list() {
             test_user(),
             {
                 "uid": 2,
-                "username": "user-2",
                 "email": "user2@example.com",
+                "name": "User Two",
                 "role": "viewer",
                 "status": "active"
             }
@@ -87,7 +83,7 @@ async fn test_user_get() {
     assert!(result.is_ok());
     let user = result.unwrap();
     assert_eq!(user.uid, 1);
-    assert_eq!(user.username, "test-user");
+    assert_eq!(user.email, "admin@cluster.local");
 }
 
 #[tokio::test]
@@ -119,7 +115,24 @@ async fn test_user_create() {
     assert!(result.is_ok());
     let user = result.unwrap();
     assert_eq!(user.uid, 1);
-    assert_eq!(user.username, "test-user");
+    assert_eq!(user.email, "admin@cluster.local");
+}
+
+#[tokio::test]
+async fn test_user_deserialization() {
+    // This test validates that User struct can deserialize actual API responses
+    let user_json = common::fixtures::user_response();
+
+    // This would panic if deserialization fails with type mismatches
+    let user: User = serde_json::from_value(user_json.clone()).unwrap();
+
+    // Verify fields - email is now the primary identifier (was incorrectly 'username')
+    assert_eq!(user.uid, 1);
+    assert_eq!(user.email, "admin@cluster.local");
+    assert_eq!(user.name, Some("Administrator".to_string()));
+    assert_eq!(user.role, "admin");
+    assert_eq!(user.status, Some("active".to_string()));
+    assert_eq!(user.email_alerts, Some(true));
 }
 
 #[tokio::test]
