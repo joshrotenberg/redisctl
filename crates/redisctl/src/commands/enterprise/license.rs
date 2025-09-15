@@ -330,12 +330,20 @@ async fn handle_license_usage(
 
 // Helper functions
 pub fn calculate_days_remaining(expiration_date: Option<&str>) -> i64 {
-    if let Some(date_str) = expiration_date
-        && let Ok(exp_date) = chrono::NaiveDate::parse_from_str(date_str, "%Y-%m-%d")
-    {
-        let today = chrono::Local::now().naive_local().date();
-        let duration = exp_date.signed_duration_since(today);
-        return duration.num_days();
+    if let Some(date_str) = expiration_date {
+        // Try parsing as ISO8601 datetime first (e.g., "2025-10-15T00:18:29Z")
+        if let Ok(datetime) = chrono::DateTime::parse_from_rfc3339(date_str) {
+            let today = chrono::Local::now().naive_local().date();
+            let exp_date = datetime.naive_local().date();
+            let duration = exp_date.signed_duration_since(today);
+            return duration.num_days();
+        }
+        // Fall back to parsing as date only (e.g., "2025-10-15")
+        if let Ok(exp_date) = chrono::NaiveDate::parse_from_str(date_str, "%Y-%m-%d") {
+            let today = chrono::Local::now().naive_local().date();
+            let duration = exp_date.signed_duration_since(today);
+            return duration.num_days();
+        }
     }
     -1
 }
