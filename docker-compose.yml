@@ -19,31 +19,19 @@ services:
       timeout: 3s
       retries: 5
       start_period: 10s
-
-  # Auto-initialize Redis Enterprise cluster using our workflow
-  redis-enterprise-init:
-    image: joshrotenberg/redisctl:latest
-    container_name: redis-enterprise-init
-    depends_on:
-      redis-enterprise:
-        condition: service_healthy
-    networks:
-      - redisctl-network
     environment:
-      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
-      REDIS_ENTERPRISE_INSECURE: "true"
-    command:
-      [
-        "enterprise",
-        "workflow",
-        "init-cluster",
-        "--name",
-        "docker-cluster",
-        "--username",
-        "admin@redis.local",
-        "--password",
-        "Redis123!",
-      ]
+      # Default credentials for manual initialization
+      # Use redisctl enterprise bootstrap create-cluster after container starts
+      REDIS_ENTERPRISE_USERNAME: "admin@redis.local"
+      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
+
+  # Note: Auto-initialization removed - workflow commands not yet implemented
+  # To initialize the cluster manually after starting:
+  # docker exec -it redis-enterprise /opt/redislabs/bin/rladmin cluster create name docker-cluster username admin@redis.local password Redis123!
+  # OR use redisctl:
+  # export REDIS_ENTERPRISE_URL="https://localhost:9443"
+  # export REDIS_ENTERPRISE_INSECURE="true"
+  # redisctl enterprise bootstrap create-cluster --data '{"name":"docker-cluster","username":"admin@redis.local","password":"Redis123!"}'
 
 networks:
   redisctl-network:
