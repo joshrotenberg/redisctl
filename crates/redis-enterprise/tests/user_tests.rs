@@ -21,10 +21,15 @@ fn no_content_response() -> ResponseTemplate {
 fn test_user() -> serde_json::Value {
     json!({
         "uid": 1,
-        "username": "test-user",
         "email": "test@example.com",
+        "name": "Test User",
         "role": "admin",
-        "status": "active"
+        "status": "active",
+        "auth_method": "regular",
+        "certificate_subject_line": "",
+        "email_alerts": true,
+        "password_issue_date": "2025-01-01T00:00:00Z",
+        "role_uids": [1]
     })
 }
 
@@ -39,10 +44,14 @@ async fn test_user_list() {
             test_user(),
             {
                 "uid": 2,
-                "username": "user-2",
                 "email": "user2@example.com",
+                "name": "User 2",
                 "role": "viewer",
-                "status": "active"
+                "status": "active",
+                "auth_method": "regular",
+                "certificate_subject_line": "",
+                "email_alerts": false,
+                "role_uids": [2]
             }
         ])))
         .mount(&mock_server)
@@ -87,7 +96,7 @@ async fn test_user_get() {
     assert!(result.is_ok());
     let user = result.unwrap();
     assert_eq!(user.uid, 1);
-    assert_eq!(user.username, "test-user");
+    assert_eq!(user.email, "test@example.com");
 }
 
 #[tokio::test]
@@ -119,7 +128,7 @@ async fn test_user_create() {
     assert!(result.is_ok());
     let user = result.unwrap();
     assert_eq!(user.uid, 1);
-    assert_eq!(user.username, "test-user");
+    assert_eq!(user.email, "test@example.com");
 }
 
 #[tokio::test]
