@@ -979,6 +979,10 @@ pub enum EnterpriseCommands {
     #[command(subcommand)]
     Database(EnterpriseDatabaseCommands),
 
+    /// Debug info collection
+    #[command(subcommand)]
+    DebugInfo(crate::commands::enterprise::debuginfo::DebugInfoCommands),
+
     /// Diagnostics operations
     #[command(subcommand)]
     Diagnostics(crate::commands::enterprise::diagnostics::DiagnosticsCommands),
@@ -1009,11 +1013,18 @@ pub enum EnterpriseCommands {
 
     /// LDAP integration
     #[command(subcommand)]
-    Ldap(EnterpriseLdapCommands),
+    Ldap(crate::commands::enterprise::ldap::LdapCommands),
+
+    /// LDAP mappings management
+    #[command(subcommand, name = "ldap-mappings")]
+    LdapMappings(crate::commands::enterprise::ldap::LdapMappingsCommands),
 
     /// Authentication & sessions
     #[command(subcommand)]
     Auth(EnterpriseAuthCommands),
+    /// Bootstrap and initialization operations
+    #[command(subcommand)]
+    Bootstrap(crate::commands::enterprise::bootstrap::BootstrapCommands),
 
     /// Active-Active database (CRDB) operations
     #[command(subcommand)]
@@ -1044,6 +1055,14 @@ pub enum EnterpriseCommands {
     /// Module management operations
     #[command(subcommand)]
     Module(crate::commands::enterprise::module::ModuleCommands),
+
+    /// OCSP certificate validation
+    #[command(subcommand)]
+    Ocsp(crate::commands::enterprise::ocsp::OcspCommands),
+
+    /// Service management
+    #[command(subcommand)]
+    Services(crate::commands::enterprise::services::ServicesCommands),
 
     /// Workflow operations for multi-step tasks
     #[command(subcommand)]

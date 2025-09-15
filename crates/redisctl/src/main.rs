@@ -236,6 +236,16 @@ async fn execute_enterprise_command(
             )
             .await
         }
+        DebugInfo(debuginfo_cmd) => {
+            commands::enterprise::debuginfo::handle_debuginfo_command(
+                conn_mgr,
+                profile,
+                debuginfo_cmd.clone(),
+                output,
+                query,
+            )
+            .await
+        }
         Diagnostics(diagnostics_cmd) => {
             commands::enterprise::diagnostics::handle_diagnostics_command(
                 conn_mgr,
@@ -291,14 +301,38 @@ async fn execute_enterprise_command(
             .await
         }
         Ldap(ldap_cmd) => {
-            commands::enterprise::rbac::handle_ldap_command(
-                conn_mgr, profile, ldap_cmd, output, query,
+            commands::enterprise::ldap::handle_ldap_command(
+                conn_mgr,
+                profile,
+                ldap_cmd.clone(),
+                output,
+                query,
+            )
+            .await
+        }
+        LdapMappings(ldap_mappings_cmd) => {
+            commands::enterprise::ldap::handle_ldap_mappings_command(
+                conn_mgr,
+                profile,
+                ldap_mappings_cmd.clone(),
+                output,
+                query,
             )
             .await
         }
         Auth(auth_cmd) => {
             commands::enterprise::rbac::handle_auth_command(
                 conn_mgr, profile, auth_cmd, output, query,
+            )
+            .await
+        }
+        Bootstrap(bootstrap_cmd) => {
+            commands::enterprise::bootstrap::handle_bootstrap_command(
+                conn_mgr,
+                profile,
+                bootstrap_cmd.clone(),
+                output,
+                query,
             )
             .await
         }
@@ -361,6 +395,26 @@ async fn execute_enterprise_command(
         Module(module_cmd) => {
             commands::enterprise::module_impl::handle_module_commands(
                 conn_mgr, profile, module_cmd, output, query,
+            )
+            .await
+        }
+        Ocsp(ocsp_cmd) => {
+            commands::enterprise::ocsp::handle_ocsp_command(
+                conn_mgr,
+                profile,
+                ocsp_cmd.clone(),
+                output,
+                query,
+            )
+            .await
+        }
+        Services(services_cmd) => {
+            commands::enterprise::services::handle_services_command(
+                conn_mgr,
+                profile,
+                services_cmd.clone(),
+                output,
+                query,
             )
             .await
         }
