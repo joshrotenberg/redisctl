@@ -1030,6 +1030,9 @@ pub enum EnterpriseCommands {
     /// Log operations
     #[command(subcommand)]
     Logs(crate::commands::enterprise::logs::LogsCommands),
+    /// License management
+    #[command(subcommand)]
+    License(crate::commands::enterprise::license::LicenseCommands),
 
     /// Migration operations
     #[command(subcommand)]
@@ -1075,6 +1078,9 @@ pub enum CloudWorkflowCommands {
 pub enum EnterpriseWorkflowCommands {
     /// List available workflows
     List,
+    /// License management workflows
+    #[command(subcommand)]
+    License(crate::commands::enterprise::license_workflow::LicenseWorkflowCommands),
 
     /// Initialize a Redis Enterprise cluster
     #[command(name = "init-cluster")]

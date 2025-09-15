@@ -47,6 +47,7 @@
 - [Endpoints](./enterprise/endpoints.md)
 - [Job Scheduler](./enterprise/job-scheduler.md)
 - [JSON Schema](./enterprise/jsonschema.md)
+- [License Management](./enterprise/license.md)
 - [DNS Suffixes](./enterprise/suffix.md)
 - [Workflows](./enterprise/workflows.md)
 - [Raw API Access](./enterprise/api-access.md)
