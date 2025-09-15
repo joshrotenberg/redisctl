@@ -21,6 +21,7 @@ pub enum DebugInfoCommands {
     },
 }
 
+#[allow(dead_code)]
 pub async fn handle_debuginfo_command(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
@@ -41,6 +42,7 @@ pub async fn handle_debuginfo_command(
     }
 }
 
+#[allow(dead_code)]
 async fn handle_debuginfo_all(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
@@ -63,6 +65,7 @@ async fn handle_debuginfo_all(
     utils::print_formatted_output(result, output_format)
 }
 
+#[allow(dead_code)]
 async fn handle_debuginfo_node(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
@@ -85,6 +88,7 @@ async fn handle_debuginfo_node(
     utils::print_formatted_output(result, output_format)
 }
 
+#[allow(dead_code)]
 async fn handle_debuginfo_database(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
