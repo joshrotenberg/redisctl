@@ -101,8 +101,9 @@ async fn handle_services_list(
 ) -> Result<(), RedisCtlError> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
+    // Use /v1/local/services endpoint - /v1/services doesn't exist for GET
     let response = client
-        .get::<Value>("/v1/services")
+        .get::<Value>("/v1/local/services")
         .await
         .context("Failed to list services")?;
 
