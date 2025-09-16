@@ -28,7 +28,8 @@ fn test_database() -> serde_json::Value {
         "port": 12000,
         "status": "active",
         "master_persistence": false,
-        "data_persistence": "disabled"
+        "data_persistence": "disabled",
+        "max_aof_file_size": 322122547200u64
     })
 }
 

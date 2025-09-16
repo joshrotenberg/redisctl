@@ -247,7 +247,7 @@ pub struct DatabaseInfo {
 
     // AOF (Append Only File) settings
     pub aof_policy: Option<String>,
-    pub max_aof_file_size: Option<String>,
+    pub max_aof_file_size: Option<u64>,
     pub max_aof_load_time: Option<u32>,
 
     // Active defragmentation settings
