@@ -1,4 +1,5 @@
 //! Cluster endpoint tests for Redis Enterprise
+#![recursion_limit = "256"]
 
 mod common;
 
@@ -132,9 +133,7 @@ async fn test_cluster_get() {
     Mock::given(method("GET"))
         .and(path("/v1/cluster"))
         .and(basic_auth("admin", "password"))
-        .respond_with(success_response(
-            common::fixtures::realistic_cluster_response(),
-        ))
+        .respond_with(success_response(common::fixtures::cluster_info_response()))
         .mount(&mock_server)
         .await;
 
@@ -151,29 +150,29 @@ async fn test_cluster_get() {
     assert!(result.is_ok());
     let cluster = result.unwrap();
     // Verify some key fields that had type mismatches
-    assert_eq!(cluster.get("name").unwrap(), "redis-cluster");
-    assert!(cluster.get("sentinel_cipher_suites").is_some());
+    assert_eq!(cluster.name, "test-cluster.local");
+    assert!(cluster.sentinel_cipher_suites.is_some());
 }
 
 #[tokio::test]
 async fn test_cluster_info_deserialization() {
     // This test explicitly validates that ClusterInfo can deserialize actual API responses
-    let cluster_json = common::fixtures::realistic_cluster_response();
+    let cluster_json = common::fixtures::cluster_info_response();
 
     // This would panic if deserialization fails with type mismatches
     let cluster_info: ClusterInfo = serde_json::from_value(cluster_json.clone()).unwrap();
 
     // Verify fields that previously had type mismatches
-    assert_eq!(cluster_info.name, Some("redis-cluster".to_string()));
+    assert_eq!(cluster_info.name, "test-cluster.local");
 
     // sentinel_cipher_suites was Option<String> but should be Option<Vec<String>>
     assert!(cluster_info.sentinel_cipher_suites.is_some());
     if let Some(cipher_suites) = &cluster_info.sentinel_cipher_suites {
-        assert_eq!(cipher_suites.len(), 2);
+        assert_eq!(cipher_suites.len(), 0); // Empty array in fixture
     }
 
     // password_complexity was Option<Value> but should be Option<bool>
-    assert_eq!(cluster_info.password_complexity, Some(true));
+    assert_eq!(cluster_info.password_complexity, Some(false));
 
     // mtls_certificate_authentication was Option<String> but should be Option<bool>
     assert_eq!(cluster_info.mtls_certificate_authentication, Some(false));

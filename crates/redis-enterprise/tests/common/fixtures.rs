@@ -2,6 +2,7 @@
 //!
 //! These fixtures are based on actual Redis Enterprise API responses
 //! to ensure our mock tests catch type mismatches.
+#![allow(dead_code)]
 
 use serde_json::json;
 
