@@ -502,16 +502,15 @@ async fn generate_node_package(
 
     // Try to get node info for display
     let mut node_address = None;
-    if let Some(node_uid) = uid {
-        if let Ok(node_info) = client
+    if let Some(node_uid) = uid
+        && let Ok(node_info) = client
             .get::<serde_json::Value>(&format!("/v1/nodes/{}", node_uid))
             .await
-        {
-            node_address = node_info
-                .get("addr")
-                .and_then(|v| v.as_str())
-                .map(String::from);
-        }
+    {
+        node_address = node_info
+            .get("addr")
+            .and_then(|v| v.as_str())
+            .map(String::from);
     }
 
     // Only show interactive output if not in JSON mode
@@ -570,18 +569,16 @@ async fn generate_node_package(
                 .await
                 .context("Failed to collect node debug info")?
         }
+    } else if use_new_api {
+        debuginfo_handler
+            .nodes_debuginfo_binary()
+            .await
+            .context("Failed to collect all nodes debug info")?
     } else {
-        if use_new_api {
-            debuginfo_handler
-                .nodes_debuginfo_binary()
-                .await
-                .context("Failed to collect all nodes debug info")?
-        } else {
-            debuginfo_handler
-                .node_binary()
-                .await
-                .context("Failed to collect node debug info")?
-        }
+        debuginfo_handler
+            .node_binary()
+            .await
+            .context("Failed to collect node debug info")?
     };
 
     if let Some(spinner) = spinner {

@@ -337,13 +337,11 @@ impl Config {
     /// api_url = "${REDIS_CLOUD_API_URL:-https://api.redislabs.com/v1}"
     /// ```
     fn expand_env_vars(content: &str) -> Result<String> {
-        match shellexpand::env(content) {
-            Ok(expanded) => Ok(expanded.to_string()),
-            Err(e) => Err(anyhow::anyhow!(
-                "Environment variable expansion failed: {}",
-                e
-            )),
-        }
+        // Use shellexpand::env_with_context_no_errors which returns unexpanded vars as-is
+        // This prevents errors when env vars for unused profiles aren't set
+        let expanded =
+            shellexpand::env_with_context_no_errors(content, |var| std::env::var(var).ok());
+        Ok(expanded.to_string())
     }
 }
 
