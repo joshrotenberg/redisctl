@@ -437,6 +437,16 @@ async fn execute_enterprise_command(
             )
             .await
         }
+        SupportPackage(support_cmd) => {
+            commands::enterprise::support_package::handle_support_package_command(
+                conn_mgr,
+                profile,
+                support_cmd.clone(),
+                output,
+                query,
+            )
+            .await
+        }
         Suffix(suffix_cmd) => {
             commands::enterprise::suffix::handle_suffix_command(
                 conn_mgr,

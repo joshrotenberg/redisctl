@@ -1076,6 +1076,10 @@ pub enum EnterpriseCommands {
     #[command(subcommand)]
     Stats(EnterpriseStatsCommands),
 
+    /// Support package generation for troubleshooting
+    #[command(subcommand, name = "support-package")]
+    SupportPackage(crate::commands::enterprise::support_package::SupportPackageCommands),
+
     /// DNS suffix management
     #[command(subcommand)]
     Suffix(crate::commands::enterprise::suffix::SuffixCommands),
