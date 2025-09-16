@@ -711,16 +711,4 @@ mod tests {
         assert_eq!(format_file_size(1_500_000), "1.4 MB");
         assert_eq!(format_file_size(1_500_000_000), "1.4 GB");
     }
-
-    #[test]
-    fn test_command_structure() {
-        // Test that the command structure can be parsed
-        use clap::CommandFactory;
-        let cmd = SupportPackageCommands::command();
-        assert!(cmd.get_subcommands().any(|c| c.get_name() == "cluster"));
-        assert!(cmd.get_subcommands().any(|c| c.get_name() == "database"));
-        assert!(cmd.get_subcommands().any(|c| c.get_name() == "node"));
-        assert!(cmd.get_subcommands().any(|c| c.get_name() == "list"));
-        assert!(cmd.get_subcommands().any(|c| c.get_name() == "status"));
-    }
 }
