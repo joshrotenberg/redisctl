@@ -35,5 +35,6 @@ pub mod services;
 pub mod shard;
 pub mod stats;
 pub mod suffix;
+pub mod support_package;
 pub mod usage_report;
 pub mod utils;

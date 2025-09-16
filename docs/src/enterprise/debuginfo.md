@@ -1,153 +1,247 @@
 # Debug Info Commands
 
-Collect diagnostic information for troubleshooting Redis Enterprise clusters.
+Collect diagnostic information and support packages for troubleshooting Redis Enterprise clusters.
 
 ## Overview
 
-Debug info commands gather comprehensive diagnostic data from Redis Enterprise clusters, nodes, and databases. This information is essential for troubleshooting issues and working with Redis support.
+Debug info commands gather comprehensive diagnostic data from Redis Enterprise clusters, nodes, and databases. As of Phase 1 improvements, these commands now properly download binary tar.gz support packages that can be directly uploaded to Redis Support.
 
 ## Available Commands
 
-### Collect All Debug Info
+### Collect Cluster Support Package
 
 ```bash
+# Download cluster-wide support package (recommended)
 redisctl enterprise debug-info all
+
+# With custom output file
+redisctl enterprise debug-info all --file /tmp/cluster-support.tar.gz
+
+# Use new API endpoint (for Redis Enterprise 7.4+)
+redisctl enterprise debug-info all --use-new-api
 ```
 
-Collects complete diagnostic information from the entire cluster, including:
-- Cluster configuration and state
-- All node information
+**Output**: Downloads a tar.gz file containing:
+- Complete cluster configuration
+- All node information and logs
 - Database configurations
-- Log files
-- Performance metrics
+- System metrics and diagnostics
+- Network configuration
+- Performance data
 
-**Note**: This can generate large amounts of data and may take several minutes.
+**Default filename**: `support-package-cluster-{timestamp}.tar.gz`
 
-### Collect Node Debug Info
+### Collect Node Support Package
 
 ```bash
+# Download support package for all nodes
 redisctl enterprise debug-info node
+
+# Download for specific node
+redisctl enterprise debug-info node 1
+
+# With custom output
+redisctl enterprise debug-info node 1 --file /tmp/node1-support.tar.gz
 ```
 
-Collects diagnostic information from the current node only:
-- Node configuration
-- System resources
+**Output**: Downloads a tar.gz file containing:
+- Node configuration and state
+- System resources and metrics
 - Local log files
 - Process information
 - Network configuration
 
-### Collect Database Debug Info
+**Default filename**: 
+- All nodes: `support-package-nodes-{timestamp}.tar.gz`
+- Specific node: `support-package-node-{uid}-{timestamp}.tar.gz`
+
+### Collect Database Support Package
 
 ```bash
-redisctl enterprise debug-info database <bdb_uid>
+# Download support package for specific database
+redisctl enterprise debug-info database 1
+
+# With custom output
+redisctl enterprise debug-info database 1 --file /tmp/db1-support.tar.gz
+
+# Use new API endpoint
+redisctl enterprise debug-info database 1 --use-new-api
 ```
 
-Collects diagnostic information for a specific database:
+**Output**: Downloads a tar.gz file containing:
 - Database configuration
-- Shard distribution
-- Replication state
+- Shard distribution and state
+- Replication information
 - Performance metrics
-- Recent operations
+- Recent operations and logs
 
-## Output Options
+**Default filename**: `support-package-db-{uid}-{timestamp}.tar.gz`
 
-### Save to File
+## Binary Download Support (Phase 1)
 
-```bash
-# Save debug info to file
-redisctl enterprise debug-info all > debug-$(date +%Y%m%d-%H%M%S).json
-
-# Compress large debug outputs
-redisctl enterprise debug-info all | gzip > debug-$(date +%Y%m%d-%H%M%S).json.gz
-```
-
-### Filter Output
+Starting with v0.5.1, all debug-info commands properly handle binary responses:
 
 ```bash
-# Get specific sections with JMESPath
-redisctl enterprise debug-info all -q 'cluster_info'
-redisctl enterprise debug-info node -q 'system_info.memory'
+# Downloads actual tar.gz file (not JSON)
+redisctl enterprise debug-info all
+
+# Verify the downloaded file
+file support-package-cluster-*.tar.gz
+# Output: gzip compressed data, from Unix
+
+# Extract and view contents
+tar -tzf support-package-cluster-*.tar.gz | head
 ```
+
+### API Endpoint Compatibility
+
+The tool supports both old (deprecated) and new API endpoints:
+
+| Command | Old Endpoint (default) | New Endpoint (--use-new-api) |
+|---------|------------------------|------------------------------|
+| `all` | `/v1/debuginfo/all` | `/v1/cluster/debuginfo` |
+| `node` | `/v1/debuginfo/node` | `/v1/nodes/{uid}/debuginfo` |
+| `database` | `/v1/debuginfo/all/bdb/{uid}` | `/v1/bdbs/{uid}/debuginfo` |
+
+**Note**: Old endpoints are deprecated as of Redis Enterprise 7.4. Use `--use-new-api` for newer clusters.
 
 ## Common Use Cases
 
-### Troubleshooting Cluster Issues
+### Quick Support Package for Troubleshooting
 
 ```bash
-# Collect full cluster diagnostics
-redisctl enterprise debug-info all > cluster-debug.json
+# Generate support package with automatic naming
+redisctl enterprise debug-info all
 
-# Check specific node
-redisctl enterprise debug-info node -q 'errors'
+# Output shows:
+# ✓ Support package created successfully
+#   File: support-package-cluster-20250916-110539.tar.gz
+#   Size: 305.7 KB
 ```
 
-### Database Performance Issues
+### Preparing for Support Ticket
 
 ```bash
-# Collect database-specific diagnostics
-redisctl enterprise debug-info database 1 > db1-debug.json
+# 1. Generate cluster support package
+redisctl enterprise debug-info all --file support-case-12345.tar.gz
 
-# Check shard distribution
-redisctl enterprise debug-info database 1 -q 'shards'
+# 2. Verify the file
+ls -lh support-case-12345.tar.gz
+file support-case-12345.tar.gz
+
+# 3. Upload to Redis Support portal
+# Reference your case number: 12345
 ```
 
-### Preparing Support Tickets
+### Database-Specific Issues
 
 ```bash
-# Collect and compress all diagnostics
-redisctl enterprise debug-info all | gzip > support-$(date +%Y%m%d).json.gz
+# Generate package for problematic database
+redisctl enterprise debug-info database 1
 
-# Include cluster and node info
-echo "=== Cluster Info ===" > support-info.txt
-redisctl enterprise cluster info >> support-info.txt
-echo "=== Debug Info ===" >> support-info.txt
-redisctl enterprise debug-info node >> support-info.txt
+# The package includes database-specific logs and metrics
+# Upload directly to support ticket
+```
+
+### Automated Collection Script
+
+```bash
+#!/bin/bash
+# Collect support packages for all components
+
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+OUTPUT_DIR="./support-$TIMESTAMP"
+mkdir -p "$OUTPUT_DIR"
+
+echo "Collecting cluster support package..."
+redisctl enterprise debug-info all \
+  --file "$OUTPUT_DIR/cluster.tar.gz"
+
+echo "Collecting node support packages..."
+for node_id in 1 2 3; do
+  redisctl enterprise debug-info node $node_id \
+    --file "$OUTPUT_DIR/node-$node_id.tar.gz"
+done
+
+echo "Support packages saved to $OUTPUT_DIR"
 ```
 
 ## Important Notes
 
-- Debug info may contain sensitive information (hostnames, IPs, configuration)
-- Large clusters can generate gigabytes of debug data
-- Collection may impact cluster performance during execution
-- Always review debug info before sharing with support
-- Some debug operations require admin privileges
+### Security Considerations
+- Support packages contain sensitive information (hostnames, IPs, configurations)
+- Review contents before sharing if needed
+- Delete local copies after uploading to support
+- Use secure channels for transmission
 
-## Output Example
+### Performance Impact
+- Package generation may temporarily impact cluster performance
+- Large clusters can generate packages over 1GB
+- Run during maintenance windows when possible
+- Network bandwidth considerations for remote clusters
 
-```json
-{
-  "collection_time": "2025-09-15T10:30:00Z",
-  "cluster_info": {
-    "name": "prod-cluster",
-    "nodes": 3,
-    "databases": 5,
-    "version": "7.2.4-92"
-  },
-  "system_info": {
-    "total_memory": "64GB",
-    "cpu_cores": 16,
-    "storage": {
-      "persistent": "/var/opt/redislabs/persist",
-      "ephemeral": "/var/opt/redislabs/tmp"
-    }
-  },
-  "diagnostics": {
-    "warnings": [],
-    "errors": [],
-    "recommendations": []
-  }
-}
+### File Management
+- Files are saved in current directory by default
+- Use `--file` to specify custom location
+- Automatic timestamp prevents overwriting
+- Clean up old support packages regularly
+
+## Progress Indicators
+
+The tool now shows progress during package generation:
+
+```
+⠋ Generating support package...
+✓ Support package created successfully
+  File: support-package-cluster-20250916-110539.tar.gz
+  Size: 305.7 KB
 ```
 
-## Performance Considerations
+## Troubleshooting
 
-- Use `node` or `database` specific commands when possible
-- Run during maintenance windows for production clusters
-- Consider network bandwidth when collecting from remote clusters
-- Compress output for large datasets
+### Authentication Errors
+
+If you get authentication errors, ensure correct credentials:
+
+```bash
+# Check your profile
+redisctl profile list
+
+# Use environment variables for testing
+export REDIS_ENTERPRISE_URL="https://localhost:9443"
+export REDIS_ENTERPRISE_USER="admin@redis.local"
+export REDIS_ENTERPRISE_PASSWORD="your_password"
+export REDIS_ENTERPRISE_INSECURE="true"
+```
+
+### Large File Sizes
+
+For very large support packages:
+
+```bash
+# Stream directly to compressed file
+redisctl enterprise debug-info all --file >(gzip -9 > support.tar.gz)
+
+# Split large files for upload
+split -b 100M support-package.tar.gz support-part-
+```
+
+### Verify Package Contents
+
+```bash
+# List contents without extracting
+tar -tzf support-package-cluster-*.tar.gz
+
+# Extract specific files
+tar -xzf support-package-cluster-*.tar.gz logs/
+
+# View package info
+gzip -l support-package-cluster-*.tar.gz
+```
 
 ## Related Commands
 
-- [Logs Commands](logs.md) - View cluster logs
+- [Support Package Commands](support-package.md) - Enhanced support package workflow (Phase 2)
+- [Logs Commands](logs.md) - View cluster logs directly
 - [Stats Commands](stats.md) - Monitor performance metrics
 - [Cluster Commands](cluster.md) - Check cluster health
