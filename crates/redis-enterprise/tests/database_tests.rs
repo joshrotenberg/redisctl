@@ -30,7 +30,9 @@ fn test_database() -> serde_json::Value {
         "master_persistence": false,
         "data_persistence": "disabled",
         "max_aof_file_size": 322122547200u64,
-        "recovery_wait_time": -1
+        "recovery_wait_time": -1,
+        "skip_import_analyze": "disabled",
+        "sync_dedicated_threads": 5
     })
 }
 

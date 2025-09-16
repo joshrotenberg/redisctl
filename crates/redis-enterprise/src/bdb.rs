@@ -277,7 +277,7 @@ pub struct DatabaseInfo {
     pub export_failure_reason: Option<String>,
     pub export_progress: Option<f64>,
     pub export_status: Option<String>,
-    pub skip_import_analyze: Option<bool>,
+    pub skip_import_analyze: Option<String>,
 
     // Monitoring and metrics
     pub metrics_export_all: Option<bool>,
@@ -330,7 +330,7 @@ pub struct DatabaseInfo {
     // Sync and replication control
     pub sync: Option<String>,
     pub sync_sources: Option<Vec<Value>>,
-    pub sync_dedicated_threads: Option<bool>,
+    pub sync_dedicated_threads: Option<u32>,
     pub syncer_mode: Option<String>,
     pub syncer_log_level: Option<String>,
     pub support_syncer_reconf: Option<bool>,
