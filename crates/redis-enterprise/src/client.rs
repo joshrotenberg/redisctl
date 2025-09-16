@@ -512,7 +512,19 @@ impl EnterpriseClient {
     /// Handle HTTP response
     async fn handle_response<T: DeserializeOwned>(&self, response: Response) -> Result<T> {
         if response.status().is_success() {
-            response.json::<T>().await.map_err(Into::into)
+            // Get the response bytes for better error reporting
+            let bytes = response.bytes().await.map_err(Into::<RestError>::into)?;
+
+            // Use serde_path_to_error for better deserialization error messages
+            let deserializer = &mut serde_json::Deserializer::from_slice(&bytes);
+            serde_path_to_error::deserialize(deserializer).map_err(|err| {
+                let path = err.path().to_string();
+                RestError::ParseError(format!(
+                    "Failed to deserialize field '{}': {}",
+                    path,
+                    err.inner()
+                ))
+            })
         } else {
             let status = response.status();
             let text = response.text().await.unwrap_or_default();
