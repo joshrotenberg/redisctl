@@ -227,7 +227,7 @@ pub struct DatabaseInfo {
     pub crdt_repl_backlog_size: Option<String>,
 
     // Replication settings
-    pub master_persistence: Option<String>,
+    pub master_persistence: Option<bool>,
     pub slave_ha: Option<bool>,
     pub slave_ha_priority: Option<u32>,
     pub replica_read_only: Option<bool>,
