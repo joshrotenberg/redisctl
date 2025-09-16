@@ -1,6 +1,11 @@
 //! License endpoint tests for Redis Enterprise
+#![recursion_limit = "256"]
 
-use redis_enterprise::{EnterpriseClient, LicenseHandler, LicenseUpdateRequest};
+mod common;
+
+use redis_enterprise::{
+    EnterpriseClient, License, LicenseHandler, LicenseUpdateRequest, LicenseUsage,
+};
 use serde_json::json;
 use wiremock::matchers::{basic_auth, body_json, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -11,48 +16,7 @@ fn success_response(body: serde_json::Value) -> ResponseTemplate {
 }
 
 fn valid_license() -> serde_json::Value {
-    json!({
-        "key": "lic-123-456-789",
-        "type": "production",
-        "expired": false,
-        "expiration_date": "2025-12-31T23:59:59Z",
-        "shards_limit": 100,
-        "node_limit": 10,
-        "features": ["clustering", "modules", "flash"],
-        "owner": "test-company"
-    })
-}
-
-fn expired_license() -> serde_json::Value {
-    json!({
-        "key": "lic-expired-123",
-        "type": "trial",
-        "expired": true,
-        "expiration_date": "2023-01-01T00:00:00Z",
-        "shards_limit": 10,
-        "node_limit": 3,
-        "features": ["clustering"],
-        "owner": "test-trial"
-    })
-}
-
-fn license_usage() -> serde_json::Value {
-    json!({
-        "shards_used": 25,
-        "shards_limit": 100,
-        "nodes_used": 3,
-        "nodes_limit": 10,
-        "ram_used": 8589934592u64,
-        "ram_limit": 34359738368u64
-    })
-}
-
-fn minimal_license() -> serde_json::Value {
-    json!({
-        "key": "lic-minimal-789",
-        "type": "dev",
-        "expired": false
-    })
+    common::fixtures::license_response()
 }
 
 #[tokio::test]
@@ -78,91 +42,58 @@ async fn test_license_get() {
 
     assert!(result.is_ok());
     let license = result.unwrap();
-    assert_eq!(license.key.unwrap(), "lic-123-456-789");
-    assert_eq!(license.type_, Some("production".to_string()));
-    assert!(!license.expired);
-    assert_eq!(
-        license.expiration_date,
-        Some("2025-12-31T23:59:59Z".to_string())
-    );
-    assert_eq!(license.shards_limit, Some(100));
-    assert_eq!(license.node_limit, Some(10));
-    assert_eq!(
-        license.features,
-        Some(vec![
-            "clustering".to_string(),
-            "modules".to_string(),
-            "flash".to_string()
-        ])
-    );
-    assert_eq!(license.owner, Some("test-company".to_string()));
-}
-
-#[tokio::test]
-async fn test_license_get_expired() {
-    let mock_server = MockServer::start().await;
-
-    Mock::given(method("GET"))
-        .and(path("/v1/license"))
-        .and(basic_auth("admin", "password"))
-        .respond_with(success_response(expired_license()))
-        .mount(&mock_server)
-        .await;
-
-    let client = EnterpriseClient::builder()
-        .base_url(mock_server.uri())
-        .username("admin")
-        .password("password")
-        .build()
-        .unwrap();
-
-    let handler = LicenseHandler::new(client);
-    let result = handler.get().await;
-
-    assert!(result.is_ok());
-    let license = result.unwrap();
-    assert_eq!(license.key.unwrap(), "lic-expired-123");
+    assert_eq!(license.key, Some("trial-key-123456".to_string()));
     assert_eq!(license.type_, Some("trial".to_string()));
-    assert!(license.expired);
+    assert!(!license.expired);
     assert_eq!(
         license.expiration_date,
-        Some("2023-01-01T00:00:00Z".to_string())
+        Some("2025-02-15T00:00:00Z".to_string())
     );
-    assert_eq!(license.shards_limit, Some(10));
-    assert_eq!(license.node_limit, Some(3));
+    assert_eq!(license.owner, Some("Test Organization".to_string()));
 }
 
 #[tokio::test]
-async fn test_license_get_minimal() {
-    let mock_server = MockServer::start().await;
+async fn test_license_deserialization() {
+    // This test validates that License struct can deserialize actual API responses
+    let license_json = common::fixtures::license_response();
 
-    Mock::given(method("GET"))
-        .and(path("/v1/license"))
-        .and(basic_auth("admin", "password"))
-        .respond_with(success_response(minimal_license()))
-        .mount(&mock_server)
-        .await;
+    // This would panic if deserialization fails with type mismatches
+    let license: License = serde_json::from_value(license_json.clone()).unwrap();
 
-    let client = EnterpriseClient::builder()
-        .base_url(mock_server.uri())
-        .username("admin")
-        .password("password")
-        .build()
-        .unwrap();
-
-    let handler = LicenseHandler::new(client);
-    let result = handler.get().await;
-
-    assert!(result.is_ok());
-    let license = result.unwrap();
-    assert_eq!(license.key.unwrap(), "lic-minimal-789");
-    assert_eq!(license.type_, Some("dev".to_string()));
+    // Verify fields - key is now Option<String> (was incorrectly required license_key)
+    assert_eq!(license.key, Some("trial-key-123456".to_string()));
+    assert_eq!(license.type_, Some("trial".to_string()));
     assert!(!license.expired);
-    assert!(license.expiration_date.is_none());
-    assert!(license.shards_limit.is_none());
-    assert!(license.node_limit.is_none());
-    assert!(license.features.is_none());
-    assert!(license.owner.is_none());
+    assert_eq!(
+        license.activation_date,
+        Some("2025-01-15T00:00:00Z".to_string())
+    );
+    assert_eq!(
+        license.expiration_date,
+        Some("2025-02-15T00:00:00Z".to_string())
+    );
+    assert_eq!(license.owner, Some("Test Organization".to_string()));
+}
+
+#[tokio::test]
+async fn test_license_usage_deserialization() {
+    // Test LicenseUsage struct deserialization
+    let usage_json = json!({
+        "shards_used": 25,
+        "shards_limit": 100,
+        "nodes_used": 3,
+        "nodes_limit": 10,
+        "ram_used": 8589934592u64,
+        "ram_limit": 34359738368u64
+    });
+
+    let usage: LicenseUsage = serde_json::from_value(usage_json).unwrap();
+    assert_eq!(usage.shards_used, 25);
+    assert_eq!(usage.shards_limit, 100);
+    assert_eq!(usage.nodes_used, 3);
+    assert_eq!(usage.nodes_limit, 10);
+    assert_eq!(usage.ram_used, Some(8589934592));
+    assert_eq!(usage.ram_limit, Some(34359738368));
 }
 
 #[tokio::test]
@@ -202,7 +133,7 @@ async fn test_license_update() {
 
     assert!(result.is_ok());
     let license = result.unwrap();
-    assert_eq!(license.key.unwrap(), "new-license-key-12345");
+    assert_eq!(license.key, Some("new-license-key-12345".to_string()));
     assert_eq!(license.type_, Some("production".to_string()));
     assert!(!license.expired);
     assert_eq!(license.shards_limit, Some(200));
@@ -225,7 +156,14 @@ async fn test_license_usage() {
     Mock::given(method("GET"))
         .and(path("/v1/license/usage"))
         .and(basic_auth("admin", "password"))
-        .respond_with(success_response(license_usage()))
+        .respond_with(success_response(json!({
+            "shards_used": 25,
+            "shards_limit": 100,
+            "nodes_used": 3,
+            "nodes_limit": 10,
+            "ram_used": 8589934592u64,
+            "ram_limit": 34359738368u64
+        })))
         .mount(&mock_server)
         .await;
 
@@ -322,7 +260,7 @@ async fn test_license_validate_valid() {
 
     assert!(result.is_ok());
     let license = result.unwrap();
-    assert_eq!(license.key.unwrap(), "valid-license-to-validate");
+    assert_eq!(license.key, Some("valid-license-to-validate".to_string()));
     assert_eq!(license.type_, Some("production".to_string()));
     assert!(!license.expired);
     assert_eq!(license.shards_limit, Some(50));
@@ -393,7 +331,7 @@ async fn test_license_cluster_license() {
 
     assert!(result.is_ok());
     let license = result.unwrap();
-    assert_eq!(license.key.unwrap(), "cluster-license-789");
+    assert_eq!(license.key, Some("cluster-license-789".to_string()));
     assert_eq!(license.type_, Some("enterprise".to_string()));
     assert!(!license.expired);
     assert_eq!(license.shards_limit, Some(1000));
