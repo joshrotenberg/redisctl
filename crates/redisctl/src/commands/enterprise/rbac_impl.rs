@@ -129,7 +129,7 @@ pub async fn reset_user_password(
 
     // Get the user to get their email
     let user = handler.get(id).await?;
-    let email = user.email.unwrap_or(user.username);
+    let email = user.email.clone();
 
     let new_password = if let Some(pwd) = password {
         pwd.to_string()

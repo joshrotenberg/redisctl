@@ -14,10 +14,7 @@ use typed_builder::TypedBuilder;
 /// License information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct License {
-    /// License key string
-    pub license_key: String,
-
-    /// Key field (some endpoints may return this instead of license_key)
+    /// License key - the actual field name returned by API
     #[serde(skip_serializing_if = "Option::is_none")]
     pub key: Option<String>,
 

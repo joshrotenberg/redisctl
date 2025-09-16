@@ -254,7 +254,7 @@ pub struct ClusterInfo {
     pub mtls_authorized_subjects: Option<Vec<String>>,
 
     /// Certificate authentication mode for mutual TLS
-    pub mtls_certificate_authentication: Option<String>,
+    pub mtls_certificate_authentication: Option<bool>,
 
     /// Validation type for MTLS client certificate subjects
     pub mtls_client_cert_subject_validation_type: Option<String>,
@@ -266,7 +266,7 @@ pub struct ClusterInfo {
     pub options_method_forbidden: Option<bool>,
 
     /// Requirements for password complexity
-    pub password_complexity: Option<Value>,
+    pub password_complexity: Option<bool>,
 
     /// Duration in seconds before passwords expire
     pub password_expiration_duration: Option<u32>,
@@ -290,10 +290,10 @@ pub struct ClusterInfo {
     pub s3_certificate_verification: Option<bool>,
 
     /// Cipher suites for sentinel TLS connections
-    pub sentinel_cipher_suites: Option<String>,
+    pub sentinel_cipher_suites: Option<Vec<String>>,
 
     /// Cipher suites for sentinel TLS 1.3 connections
-    pub sentinel_cipher_suites_tls_1_3: Option<Vec<Value>>,
+    pub sentinel_cipher_suites_tls_1_3: Option<String>,
 
     /// TLS mode for sentinel connections
     pub sentinel_tls_mode: Option<String>,
@@ -329,7 +329,7 @@ pub struct ClusterInfo {
     pub upgrade_in_progress: Option<bool>,
 
     /// Current upgrade mode for the cluster
-    pub upgrade_mode: Option<String>,
+    pub upgrade_mode: Option<bool>,
 
     /// Use external IPv6
     pub use_external_ipv6: Option<bool>,

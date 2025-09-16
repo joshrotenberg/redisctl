@@ -1,6 +1,9 @@
 //! Cluster endpoint tests for Redis Enterprise
+#![recursion_limit = "256"]
 
-use redis_enterprise::{ClusterHandler, EnterpriseClient};
+mod common;
+
+use redis_enterprise::{ClusterHandler, ClusterInfo, EnterpriseClient};
 use serde_json::json;
 use wiremock::matchers::{basic_auth, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -8,15 +11,6 @@ use wiremock::{Mock, MockServer, ResponseTemplate};
 // Test helper functions
 fn success_response(body: serde_json::Value) -> ResponseTemplate {
     ResponseTemplate::new(200).set_body_json(body)
-}
-
-fn test_cluster() -> serde_json::Value {
-    json!({
-        "name": "test-cluster",
-        "nodes_count": 3,
-        "version": "6.4.2-30",
-        "license": "valid"
-    })
 }
 
 #[tokio::test]
@@ -139,7 +133,7 @@ async fn test_cluster_get() {
     Mock::given(method("GET"))
         .and(path("/v1/cluster"))
         .and(basic_auth("admin", "password"))
-        .respond_with(success_response(test_cluster()))
+        .respond_with(success_response(common::fixtures::cluster_info_response()))
         .mount(&mock_server)
         .await;
 
@@ -154,8 +148,37 @@ async fn test_cluster_get() {
     let result = handler.info().await;
 
     assert!(result.is_ok());
-    let _cluster = result.unwrap();
-    // ClusterInfo struct would have these fields available
+    let cluster = result.unwrap();
+    // Verify some key fields that had type mismatches
+    assert_eq!(cluster.name, "test-cluster.local");
+    assert!(cluster.sentinel_cipher_suites.is_some());
+}
+
+#[tokio::test]
+async fn test_cluster_info_deserialization() {
+    // This test explicitly validates that ClusterInfo can deserialize actual API responses
+    let cluster_json = common::fixtures::cluster_info_response();
+
+    // This would panic if deserialization fails with type mismatches
+    let cluster_info: ClusterInfo = serde_json::from_value(cluster_json.clone()).unwrap();
+
+    // Verify fields that previously had type mismatches
+    assert_eq!(cluster_info.name, "test-cluster.local");
+
+    // sentinel_cipher_suites was Option<String> but should be Option<Vec<String>>
+    assert!(cluster_info.sentinel_cipher_suites.is_some());
+    if let Some(cipher_suites) = &cluster_info.sentinel_cipher_suites {
+        assert_eq!(cipher_suites.len(), 0); // Empty array in fixture
+    }
+
+    // password_complexity was Option<Value> but should be Option<bool>
+    assert_eq!(cluster_info.password_complexity, Some(false));
+
+    // mtls_certificate_authentication was Option<String> but should be Option<bool>
+    assert_eq!(cluster_info.mtls_certificate_authentication, Some(false));
+
+    // upgrade_mode was Option<String> but should be Option<bool>
+    assert_eq!(cluster_info.upgrade_mode, Some(false));
 }
 
 #[tokio::test]
