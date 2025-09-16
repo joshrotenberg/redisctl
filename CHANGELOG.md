@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.1] - 2025-09-16
+
+### Bug Fixes
+
+- Add workflow_dispatch trigger to crates publish workflow (#313)
+- Init-cluster workflow authentication and docker-compose setup (#314)
+- **enterprise**: Fix deserialization errors in cluster, user, and license structs (#327)
+- **enterprise**: Use correct endpoint for services list command (#328)
+- **enterprise**: Improve mock tests with realistic API responses
+
 ## [0.2.1] - 2025-09-08
 
 ### 📚 Documentation
