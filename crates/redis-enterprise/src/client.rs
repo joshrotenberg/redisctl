@@ -110,6 +110,11 @@ impl EnterpriseClient {
         EnterpriseClientBuilder::new()
     }
 
+    /// Get a reference to the underlying client (for use with handlers)
+    pub fn client(&self) -> Arc<Client> {
+        self.client.clone()
+    }
+
     /// Normalize URL path concatenation to avoid double slashes
     fn normalize_url(&self, path: &str) -> String {
         let base = self.base_url.trim_end_matches('/');
@@ -184,6 +189,44 @@ impl EnterpriseClient {
                 .await
                 .map_err(crate::error::RestError::RequestFailed)?;
             Ok(text)
+        } else {
+            let status = response.status();
+            let error_text = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "Unknown error".to_string());
+            Err(crate::error::RestError::ApiError {
+                code: status.as_u16(),
+                message: error_text,
+            })
+        }
+    }
+
+    /// Make a GET request for binary content (e.g., tar.gz files)
+    pub async fn get_binary(&self, path: &str) -> Result<Vec<u8>> {
+        let url = self.normalize_url(path);
+        debug!("GET {} (binary)", url);
+
+        let response = self
+            .client
+            .get(&url)
+            .basic_auth(&self.username, Some(&self.password))
+            .send()
+            .await
+            .map_err(|e| self.map_reqwest_error(e, &url))?;
+
+        trace!("Response status: {}", response.status());
+        trace!(
+            "Response content-type: {:?}",
+            response.headers().get("content-type")
+        );
+
+        if response.status().is_success() {
+            let bytes = response
+                .bytes()
+                .await
+                .map_err(crate::error::RestError::RequestFailed)?;
+            Ok(bytes.to_vec())
         } else {
             let status = response.status();
             let error_text = response

@@ -39,3 +39,4 @@ tmp/
 
 # mdBook build output
 docs/book/
+support-package-*.tar.gz

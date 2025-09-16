@@ -21,36 +21,29 @@ services:
       start_period: 10s
 
   # Auto-initialize Redis Enterprise cluster using our workflow
-  # DISABLED UNTIL v0.5.1: The init-cluster workflow requires unauthenticated bootstrap fix
-  # which is not in v0.5.0. For now, manually initialize the cluster:
-  #
-  # docker exec redis-enterprise /opt/redislabs/bin/rladmin cluster create \
-  #   name docker-cluster username admin@redis.local password Redis123!
-  #
-  # Uncomment this block after v0.5.1 is released:
-  # redis-enterprise-init:
-  #   image: joshrotenberg/redisctl:0.5.1
-  #   container_name: redis-enterprise-init
-  #   depends_on:
-  #     redis-enterprise:
-  #       condition: service_healthy
-  #   networks:
-  #     - redisctl-network
-  #   environment:
-  #     REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
-  #     REDIS_ENTERPRISE_INSECURE: "true"
-  #   command:
-  #     [
-  #       "enterprise",
-  #       "workflow",
-  #       "init-cluster",
-  #       "--name",
-  #       "docker-cluster",
-  #       "--username",
-  #       "admin@redis.local",
-  #       "--password",
-  #       "Redis123!",
-  #     ]
+  redis-enterprise-init:
+    image: joshrotenberg/redisctl:0.5.1
+    container_name: redis-enterprise-init
+    depends_on:
+      redis-enterprise:
+        condition: service_healthy
+    networks:
+      - redisctl-network
+    environment:
+      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
+      REDIS_ENTERPRISE_INSECURE: "true"
+    command:
+      [
+        "enterprise",
+        "workflow",
+        "init-cluster",
+        "--name",
+        "docker-cluster",
+        "--username",
+        "admin@redis.local",
+        "--password",
+        "Redis123!",
+      ]
 
 networks:
   redisctl-network:

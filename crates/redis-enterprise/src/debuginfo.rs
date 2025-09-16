@@ -109,27 +109,97 @@ impl DebugInfoHandler {
             .await
     }
 
-    /// Get all debug info across nodes - GET /v1/debuginfo/all
+    /// Get all debug info across nodes - GET /v1/debuginfo/all (DEPRECATED)
+    /// Use cluster_debuginfo_binary() for the new endpoint
     pub async fn all(&self) -> Result<Value> {
         self.client.get("/v1/debuginfo/all").await
     }
 
-    /// Get all debug info for a specific database - GET /v1/debuginfo/all/bdb/{uid}
+    /// Get all debug info for a specific database - GET /v1/debuginfo/all/bdb/{uid} (DEPRECATED)
+    /// Use database_debuginfo_binary() for the new endpoint
     pub async fn all_bdb(&self, bdb_uid: u32) -> Result<Value> {
         self.client
             .get(&format!("/v1/debuginfo/all/bdb/{}", bdb_uid))
             .await
     }
 
-    /// Get node debug info - GET /v1/debuginfo/node
+    /// Get node debug info - GET /v1/debuginfo/node (DEPRECATED)
+    /// Use nodes_debuginfo_binary() for the new endpoint
     pub async fn node(&self) -> Result<Value> {
         self.client.get("/v1/debuginfo/node").await
     }
 
-    /// Get node debug info for a specific database - GET /v1/debuginfo/node/bdb/{uid}
+    /// Get node debug info for a specific database - GET /v1/debuginfo/node/bdb/{uid} (DEPRECATED)
+    /// Use database_debuginfo_binary() for the new endpoint
     pub async fn node_bdb(&self, bdb_uid: u32) -> Result<Value> {
         self.client
             .get(&format!("/v1/debuginfo/node/bdb/{}", bdb_uid))
+            .await
+    }
+
+    // New binary endpoints (current API)
+
+    /// Get cluster debug info package as binary - GET /v1/cluster/debuginfo
+    /// Returns a tar.gz file containing all cluster debug information
+    pub async fn cluster_debuginfo_binary(&self) -> Result<Vec<u8>> {
+        self.client.get_binary("/v1/cluster/debuginfo").await
+    }
+
+    /// Get all nodes debug info package as binary - GET /v1/nodes/debuginfo
+    /// Returns a tar.gz file containing debug information from all nodes
+    pub async fn nodes_debuginfo_binary(&self) -> Result<Vec<u8>> {
+        self.client.get_binary("/v1/nodes/debuginfo").await
+    }
+
+    /// Get specific node debug info package as binary - GET /v1/nodes/{uid}/debuginfo
+    /// Returns a tar.gz file containing debug information from a specific node
+    pub async fn node_debuginfo_binary(&self, node_uid: u32) -> Result<Vec<u8>> {
+        self.client
+            .get_binary(&format!("/v1/nodes/{}/debuginfo", node_uid))
+            .await
+    }
+
+    /// Get all databases debug info package as binary - GET /v1/bdbs/debuginfo
+    /// Returns a tar.gz file containing debug information from all databases
+    pub async fn databases_debuginfo_binary(&self) -> Result<Vec<u8>> {
+        self.client.get_binary("/v1/bdbs/debuginfo").await
+    }
+
+    /// Get specific database debug info package as binary - GET /v1/bdbs/{uid}/debuginfo
+    /// Returns a tar.gz file containing debug information from a specific database
+    pub async fn database_debuginfo_binary(&self, bdb_uid: u32) -> Result<Vec<u8>> {
+        self.client
+            .get_binary(&format!("/v1/bdbs/{}/debuginfo", bdb_uid))
+            .await
+    }
+
+    // Deprecated binary endpoints (for backward compatibility)
+
+    /// Get all debug info as binary - GET /v1/debuginfo/all (DEPRECATED)
+    /// Returns a tar.gz file - Use cluster_debuginfo_binary() instead
+    pub async fn all_binary(&self) -> Result<Vec<u8>> {
+        self.client.get_binary("/v1/debuginfo/all").await
+    }
+
+    /// Get all debug info for a specific database as binary - GET /v1/debuginfo/all/bdb/{uid} (DEPRECATED)
+    /// Returns a tar.gz file - Use database_debuginfo_binary() instead
+    pub async fn all_bdb_binary(&self, bdb_uid: u32) -> Result<Vec<u8>> {
+        self.client
+            .get_binary(&format!("/v1/debuginfo/all/bdb/{}", bdb_uid))
+            .await
+    }
+
+    /// Get node debug info as binary - GET /v1/debuginfo/node (DEPRECATED)
+    /// Returns a tar.gz file - Use nodes_debuginfo_binary() instead
+    pub async fn node_binary(&self) -> Result<Vec<u8>> {
+        self.client.get_binary("/v1/debuginfo/node").await
+    }
+
+    /// Get node debug info for a specific database as binary - GET /v1/debuginfo/node/bdb/{uid} (DEPRECATED)
+    /// Returns a tar.gz file - Use database_debuginfo_binary() instead
+    pub async fn node_bdb_binary(&self, bdb_uid: u32) -> Result<Vec<u8>> {
+        self.client
+            .get_binary(&format!("/v1/debuginfo/node/bdb/{}", bdb_uid))
             .await
     }
 }
