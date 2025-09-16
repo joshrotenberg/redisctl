@@ -309,15 +309,21 @@ impl CloudClient {
         let status = response.status();
 
         if status.is_success() {
-            // Try to get the response text first for debugging
-            let text = response.text().await.map_err(|e| {
+            // Get the response bytes for better error reporting
+            let bytes = response.bytes().await.map_err(|e| {
                 RestError::ConnectionError(format!("Failed to read response: {}", e))
             })?;
 
-            // Try to parse as JSON
-            serde_json::from_str::<T>(&text).map_err(|e| {
-                // If parsing fails, include the actual response for debugging
-                RestError::JsonError(e)
+            // Use serde_path_to_error for better deserialization error messages
+            let deserializer = &mut serde_json::Deserializer::from_slice(&bytes);
+            serde_path_to_error::deserialize(deserializer).map_err(|err| {
+                let path = err.path().to_string();
+                // Use ConnectionError to provide detailed error message with field path
+                RestError::ConnectionError(format!(
+                    "Failed to deserialize field '{}': {}",
+                    path,
+                    err.inner()
+                ))
             })
         } else {
             let text = response.text().await.unwrap_or_default();
