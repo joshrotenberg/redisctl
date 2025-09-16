@@ -349,7 +349,7 @@ pub struct DatabaseInfo {
 
     // Scheduling and recovery
     pub sched_policy: Option<String>,
-    pub recovery_wait_time: Option<u32>,
+    pub recovery_wait_time: Option<i32>,
 
     // Performance and optimization
     pub multi_commands_opt: Option<String>,
