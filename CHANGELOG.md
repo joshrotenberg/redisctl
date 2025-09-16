@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0] - 2025-09-16
+
+### ✨ Features
+
+- **enterprise**: Add dedicated `support-package` command group for generating Redis Enterprise support packages (#341)
+  - Smart file naming with timestamps
+  - JSON output support for CI/CD automation
+  - Pre-flight checks for disk space and permissions
+  - Commands for cluster, database, and node-specific packages
+- **enterprise**: Binary download support for debug-info endpoints
+
+### 🔧 Improvements
+
+- **config**: More resilient environment variable handling - allows profiles with missing env vars
+- **docs**: Comprehensive documentation for support package workflows with CI/CD examples
+
 ## [0.5.1] - 2025-09-16
 
 ### Bug Fixes
