@@ -98,7 +98,7 @@ impl DebugInfoHandler {
     /// Download debug info package
     pub async fn download(&self, task_id: &str) -> Result<Vec<u8>> {
         self.client
-            .get(&format!("/v1/debuginfo/{}/download", task_id))
+            .get_binary(&format!("/v1/debuginfo/{}/download", task_id))
             .await
     }
 
