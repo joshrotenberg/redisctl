@@ -26,7 +26,9 @@ fn test_database() -> serde_json::Value {
         "type": "redis",
         "memory_size": 1073741824,
         "port": 12000,
-        "status": "active"
+        "status": "active",
+        "master_persistence": false,
+        "data_persistence": "disabled"
     })
 }
 
