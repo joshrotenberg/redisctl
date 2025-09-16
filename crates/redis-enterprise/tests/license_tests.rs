@@ -1,4 +1,5 @@
 //! License endpoint tests for Redis Enterprise
+#![recursion_limit = "256"]
 
 mod common;
 

@@ -19,12 +19,25 @@ use typed_builder::TypedBuilder;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct User {
     pub uid: u32,
-    pub email: String, // Primary identifier - was incorrectly named 'username'
-    pub name: Option<String>, // Display name
+    /// User's email address (used as login identifier) - was incorrectly named 'username'
+    pub email: String,
+    /// User's display name
+    pub name: Option<String>,
+    /// User's role
     pub role: String,
+    /// User status (e.g., "active")
     pub status: Option<String>,
+    /// Authentication method (e.g., "regular")
+    pub auth_method: Option<String>,
+    /// Certificate subject line for certificate auth
+    pub certificate_subject_line: Option<String>,
+    /// Password issue date
     pub password_issue_date: Option<String>,
+    /// Whether user receives email alerts
     pub email_alerts: Option<bool>,
+    /// List of role UIDs
+    pub role_uids: Option<Vec<u32>>,
+    /// Database IDs for alerts
     pub bdbs: Option<Vec<u32>>,
     /// Alert for audit database connections
     pub alert_audit_db_conns: Option<bool>,

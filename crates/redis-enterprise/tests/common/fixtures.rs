@@ -171,13 +171,13 @@ pub fn node_response() -> serde_json::Value {
         "bigstore_free": 0,
         "cores": 8,
         "ephemeral_storage_path": "/var/opt/redislabs/tmp",
-        "ephemeral_storage_size": 10737418240,
+        "ephemeral_storage_size": 10737418240i64,
         "external_addr": ["192.168.1.100"],
         "hostname": "node1.cluster.local",
         "os_semantic_version": "6.1.2",
         "os_version": "Ubuntu 22.04.3 LTS",
         "persistent_storage_path": "/var/opt/redislabs/persist",
-        "persistent_storage_size": 107374182400,
+        "persistent_storage_size": 107374182400i64,
         "rack_id": "",
         "shard_count": 0,
         "shard_list": [],
@@ -187,7 +187,7 @@ pub fn node_response() -> serde_json::Value {
             {"db_type": "redis", "version": "6.2.14"},
             {"db_type": "redis", "version": "7.2.4"}
         ],
-        "total_memory": 16777216000,
+        "total_memory": 16777216000i64,
         "uptime": 3600
     })
 }
@@ -243,7 +243,7 @@ pub fn database_response() -> serde_json::Value {
         "import_status": null,
         "internal": false,
         "last_changed_time": "2025-01-15T10:00:00Z",
-        "max_aof_file_size": 322122547200,
+        "max_aof_file_size": 322122547200i64,
         "max_aof_load_time": 3600,
         "max_clients": 10000,
         "max_connections": 0,

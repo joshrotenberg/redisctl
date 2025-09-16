@@ -1,4 +1,5 @@
 //! User endpoint tests for Redis Enterprise
+#![recursion_limit = "256"]
 
 mod common;
 
@@ -38,7 +39,11 @@ async fn test_user_list() {
                 "email": "user2@example.com",
                 "name": "User Two",
                 "role": "viewer",
-                "status": "active"
+                "status": "active",
+                "auth_method": "regular",
+                "certificate_subject_line": "",
+                "email_alerts": false,
+                "role_uids": [2]
             }
         ])))
         .mount(&mock_server)

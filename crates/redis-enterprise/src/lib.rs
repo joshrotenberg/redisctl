@@ -194,7 +194,7 @@
 //! // List all users
 //! let users = handler.list().await?;
 //! for user in users {
-//!     println!("User: {} ({})", user.username, user.role);
+//!     println!("User: {} ({})", user.email, user.role);
 //! }
 //!
 //! // Create a new user
