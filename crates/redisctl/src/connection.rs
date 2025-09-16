@@ -1,6 +1,6 @@
 //! Connection management for Redis Cloud and Enterprise clients
 
-use crate::config::{Config, Profile};
+use crate::config::Config;
 use crate::error::Result as CliResult;
 use anyhow::Context;
 use tracing::{debug, info, trace};
@@ -17,24 +17,6 @@ impl ConnectionManager {
     #[allow(dead_code)] // Used by binary target
     pub fn new(config: Config) -> Self {
         Self { config }
-    }
-
-    /// Get a profile by name, or the default profile if no name provided
-    #[allow(dead_code)] // Used by binary target
-    pub fn get_profile(&self, profile_name: Option<&str>) -> CliResult<&Profile> {
-        let name = match profile_name {
-            Some(name) => name,
-            None => self.config.default_profile.as_ref().context(
-                "No profile specified and no default profile set. Use 'redisctl profile set' to create one."
-            )?,
-        };
-
-        Ok(self.config.profiles.get(name).with_context(|| {
-            format!(
-                "Profile '{}' not found. Use 'redisctl profile list' to see available profiles.",
-                name
-            )
-        })?)
     }
 
     /// Create a Cloud client from profile credentials with environment variable override support
@@ -68,9 +50,29 @@ impl ConnectionManager {
                 let url = env_api_url.unwrap_or_else(|| "https://api.redislabs.com/v1".to_string());
                 (key.clone(), secret.clone(), url)
             } else {
-                // Fall back to profile credentials
-                info!("Using Redis Cloud credentials from profile");
-                let profile = self.get_profile(profile_name)?;
+                // Resolve the profile using type-specific logic
+                let resolved_profile_name = self.config.resolve_cloud_profile(profile_name)?;
+                info!("Using Redis Cloud profile: {}", resolved_profile_name);
+
+                let profile = self
+                    .config
+                    .profiles
+                    .get(&resolved_profile_name)
+                    .with_context(|| format!("Profile '{}' not found", resolved_profile_name))?;
+
+                // Verify it's a cloud profile
+                if profile.deployment_type != crate::config::DeploymentType::Cloud {
+                    return Err(crate::error::RedisCtlError::ProfileTypeMismatch {
+                        name: resolved_profile_name.to_string(),
+                        actual_type: match profile.deployment_type {
+                            crate::config::DeploymentType::Cloud => "cloud",
+                            crate::config::DeploymentType::Enterprise => "enterprise",
+                        }
+                        .to_string(),
+                        expected_type: "cloud".to_string(),
+                    });
+                }
+
                 let (api_key, api_secret, api_url) = profile
                     .cloud_credentials()
                     .context("Profile is not configured for Redis Cloud")?;
@@ -148,9 +150,29 @@ impl ConnectionManager {
                     .unwrap_or(false);
                 (url.clone(), user.clone(), password, insecure)
             } else {
-                // Fall back to profile credentials
-                info!("Using Redis Enterprise credentials from profile");
-                let profile = self.get_profile(profile_name)?;
+                // Resolve the profile using type-specific logic
+                let resolved_profile_name = self.config.resolve_enterprise_profile(profile_name)?;
+                info!("Using Redis Enterprise profile: {}", resolved_profile_name);
+
+                let profile = self
+                    .config
+                    .profiles
+                    .get(&resolved_profile_name)
+                    .with_context(|| format!("Profile '{}' not found", resolved_profile_name))?;
+
+                // Verify it's an enterprise profile
+                if profile.deployment_type != crate::config::DeploymentType::Enterprise {
+                    return Err(crate::error::RedisCtlError::ProfileTypeMismatch {
+                        name: resolved_profile_name.to_string(),
+                        actual_type: match profile.deployment_type {
+                            crate::config::DeploymentType::Cloud => "cloud",
+                            crate::config::DeploymentType::Enterprise => "enterprise",
+                        }
+                        .to_string(),
+                        expected_type: "enterprise".to_string(),
+                    });
+                }
+
                 let (url, username, password, insecure) = profile
                     .enterprise_credentials()
                     .context("Profile is not configured for Redis Enterprise")?;

@@ -210,10 +210,17 @@ pub enum ProfileCommands {
         name: String,
     },
 
-    /// Set the default profile
-    #[command(visible_alias = "def")]
-    Default {
-        /// Profile name to set as default
+    /// Set the default profile for enterprise commands
+    #[command(name = "default-enterprise", visible_alias = "def-ent")]
+    DefaultEnterprise {
+        /// Profile name to set as default for enterprise commands
+        name: String,
+    },
+
+    /// Set the default profile for cloud commands
+    #[command(name = "default-cloud", visible_alias = "def-cloud")]
+    DefaultCloud {
+        /// Profile name to set as default for cloud commands
         name: String,
     },
 }

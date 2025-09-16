@@ -13,14 +13,17 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
-use tracing::{debug, info, trace, warn};
+use tracing::{debug, info, trace};
 
 /// Main configuration structure
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct Config {
-    /// Name of the default profile to use when none is specified
-    #[serde(default, rename = "default_profile")]
-    pub default_profile: Option<String>,
+    /// Default profile for enterprise commands
+    #[serde(default, rename = "default_enterprise")]
+    pub default_enterprise: Option<String>,
+    /// Default profile for cloud commands
+    #[serde(default, rename = "default_cloud")]
+    pub default_cloud: Option<String>,
     /// Map of profile name -> profile configuration
     #[serde(default)]
     pub profiles: HashMap<String, Profile>,
@@ -116,6 +119,89 @@ impl Profile {
 }
 
 impl Config {
+    /// Get the first profile of the specified deployment type (sorted alphabetically by name)
+    pub fn find_first_profile_of_type(&self, deployment_type: DeploymentType) -> Option<&str> {
+        let mut profiles: Vec<_> = self
+            .profiles
+            .iter()
+            .filter(|(_, p)| p.deployment_type == deployment_type)
+            .map(|(name, _)| name.as_str())
+            .collect();
+        profiles.sort();
+        profiles.first().copied()
+    }
+
+    /// Get all profiles of the specified deployment type
+    pub fn get_profiles_of_type(&self, deployment_type: DeploymentType) -> Vec<&str> {
+        let mut profiles: Vec<_> = self
+            .profiles
+            .iter()
+            .filter(|(_, p)| p.deployment_type == deployment_type)
+            .map(|(name, _)| name.as_str())
+            .collect();
+        profiles.sort();
+        profiles
+    }
+
+    /// Resolve the profile to use for enterprise commands
+    pub fn resolve_enterprise_profile(&self, explicit_profile: Option<&str>) -> Result<String> {
+        if let Some(profile_name) = explicit_profile {
+            // Explicitly specified profile
+            return Ok(profile_name.to_string());
+        }
+
+        if let Some(ref default) = self.default_enterprise {
+            // Type-specific default
+            return Ok(default.clone());
+        }
+
+        if let Some(profile_name) = self.find_first_profile_of_type(DeploymentType::Enterprise) {
+            // First enterprise profile
+            return Ok(profile_name.to_string());
+        }
+
+        // No enterprise profiles available
+        let cloud_profiles = self.get_profiles_of_type(DeploymentType::Cloud);
+        if !cloud_profiles.is_empty() {
+            anyhow::bail!(
+                "No enterprise profiles found. Available cloud profiles: {}. \
+                Use 'redisctl profile set' to create an enterprise profile.",
+                cloud_profiles.join(", ")
+            )
+        } else {
+            anyhow::bail!("No profiles configured. Use 'redisctl profile set' to create a profile.")
+        }
+    }
+
+    /// Resolve the profile to use for cloud commands
+    pub fn resolve_cloud_profile(&self, explicit_profile: Option<&str>) -> Result<String> {
+        if let Some(profile_name) = explicit_profile {
+            // Explicitly specified profile
+            return Ok(profile_name.to_string());
+        }
+
+        if let Some(ref default) = self.default_cloud {
+            // Type-specific default
+            return Ok(default.clone());
+        }
+
+        if let Some(profile_name) = self.find_first_profile_of_type(DeploymentType::Cloud) {
+            // First cloud profile
+            return Ok(profile_name.to_string());
+        }
+
+        // No cloud profiles available
+        let enterprise_profiles = self.get_profiles_of_type(DeploymentType::Enterprise);
+        if !enterprise_profiles.is_empty() {
+            anyhow::bail!(
+                "No cloud profiles found. Available enterprise profiles: {}. \
+                Use 'redisctl profile set' to create a cloud profile.",
+                enterprise_profiles.join(", ")
+            )
+        } else {
+            anyhow::bail!("No profiles configured. Use 'redisctl profile set' to create a profile.")
+        }
+    }
     /// Load configuration from the standard location
     pub fn load() -> Result<Self> {
         debug!("Loading configuration");
@@ -151,9 +237,10 @@ impl Config {
             .with_context(|| format!("Failed to parse config from {:?}", config_path))?;
 
         info!(
-            "Configuration loaded: {} profiles, default: {:?}",
+            "Configuration loaded: {} profiles, enterprise default: {:?}, cloud default: {:?}",
             config.profiles.len(),
-            config.default_profile
+            config.default_enterprise,
+            config.default_cloud
         );
 
         for (name, profile) in &config.profiles {
@@ -181,65 +268,6 @@ impl Config {
         Ok(())
     }
 
-    /// Get a profile by name, considering environment variables and defaults
-    pub fn get_profile(&self, name: Option<&str>) -> Option<&Profile> {
-        debug!("Resolving profile: explicit={:?}", name);
-
-        let env_profile = std::env::var("REDISCTL_PROFILE").ok();
-        if let Some(ref env_name) = env_profile {
-            debug!("Found REDISCTL_PROFILE environment variable: {}", env_name);
-        }
-
-        let profile_name = name
-            .or(env_profile.as_deref())
-            .or(self.default_profile.as_deref())?;
-
-        info!(
-            "Selected profile: {} (source: {})",
-            profile_name,
-            if name.is_some() {
-                "explicit"
-            } else if env_profile.is_some() {
-                "environment"
-            } else {
-                "default"
-            }
-        );
-
-        let profile = self.profiles.get(profile_name);
-        if profile.is_none() {
-            warn!("Profile '{}' not found in configuration", profile_name);
-        }
-        profile
-    }
-
-    /// Get the active profile, returning an error if none is configured
-    pub fn get_active_profile(&self) -> Result<&Profile> {
-        debug!("Getting active profile");
-
-        let env_profile = std::env::var("REDISCTL_PROFILE").ok();
-        if let Some(ref env_name) = env_profile {
-            debug!("REDISCTL_PROFILE environment variable: {}", env_name);
-        }
-
-        let profile_name = env_profile
-            .as_deref()
-            .or(self.default_profile.as_deref())
-            .ok_or_else(|| {
-                warn!("No profile configured - no environment variable or default profile");
-                anyhow::anyhow!(
-                    "No profile configured. Use 'redisctl profile' commands to configure."
-                )
-            })?;
-
-        info!("Active profile: {}", profile_name);
-
-        self.profiles.get(profile_name).ok_or_else(|| {
-            warn!("Profile '{}' not found in configuration", profile_name);
-            anyhow::anyhow!("Profile '{}' not found", profile_name)
-        })
-    }
-
     /// Set or update a profile
     pub fn set_profile(&mut self, name: String, profile: Profile) {
         self.profiles.insert(name, profile);
@@ -247,20 +275,14 @@ impl Config {
 
     /// Remove a profile by name
     pub fn remove_profile(&mut self, name: &str) -> Option<Profile> {
-        // Don't allow removing the default profile
-        if self.default_profile.as_deref() == Some(name) {
-            self.default_profile = None;
+        // Clear type-specific defaults if this profile was set as default
+        if self.default_enterprise.as_deref() == Some(name) {
+            self.default_enterprise = None;
+        }
+        if self.default_cloud.as_deref() == Some(name) {
+            self.default_cloud = None;
         }
         self.profiles.remove(name)
-    }
-
-    /// Set the default profile
-    pub fn set_default_profile(&mut self, name: String) -> Result<()> {
-        if !self.profiles.contains_key(&name) {
-            anyhow::bail!("Profile '{}' does not exist", name);
-        }
-        self.default_profile = Some(name);
-        Ok(())
     }
 
     /// List all profiles sorted by name
@@ -367,12 +389,12 @@ mod tests {
         };
 
         config.set_profile("test".to_string(), cloud_profile);
-        config.default_profile = Some("test".to_string());
+        config.default_cloud = Some("test".to_string());
 
         let serialized = toml::to_string(&config).unwrap();
         let deserialized: Config = toml::from_str(&serialized).unwrap();
 
-        assert_eq!(config.default_profile, deserialized.default_profile);
+        assert_eq!(config.default_cloud, deserialized.default_cloud);
         assert_eq!(config.profiles.len(), deserialized.profiles.len());
     }
 
@@ -478,7 +500,7 @@ api_url = "${MISSING_VAR:-https://api.redislabs.com/v1}"
         }
 
         let config_content = r#"
-default_profile = "test"
+default_cloud = "test"
 
 [profiles.test]
 deployment_type = "cloud"
@@ -490,7 +512,7 @@ api_url = "${REDIS_TEST_URL:-https://api.redislabs.com/v1}"
         let expanded = Config::expand_env_vars(config_content).unwrap();
         let config: Config = toml::from_str(&expanded).unwrap();
 
-        assert_eq!(config.default_profile, Some("test".to_string()));
+        assert_eq!(config.default_cloud, Some("test".to_string()));
 
         let profile = config.profiles.get("test").unwrap();
         let (key, secret, url) = profile.cloud_credentials().unwrap();
@@ -503,5 +525,136 @@ api_url = "${REDIS_TEST_URL:-https://api.redislabs.com/v1}"
             std::env::remove_var("REDIS_TEST_KEY");
             std::env::remove_var("REDIS_TEST_SECRET");
         }
+    }
+
+    #[test]
+    fn test_enterprise_profile_resolution() {
+        let mut config = Config::default();
+
+        // Add an enterprise profile
+        let enterprise_profile = Profile {
+            deployment_type: DeploymentType::Enterprise,
+            credentials: ProfileCredentials::Enterprise {
+                url: "https://localhost:9443".to_string(),
+                username: "admin".to_string(),
+                password: Some("password".to_string()),
+                insecure: false,
+            },
+        };
+        config.set_profile("ent1".to_string(), enterprise_profile);
+
+        // Test explicit profile
+        assert_eq!(
+            config.resolve_enterprise_profile(Some("ent1")).unwrap(),
+            "ent1"
+        );
+
+        // Test first enterprise profile (no default set)
+        assert_eq!(config.resolve_enterprise_profile(None).unwrap(), "ent1");
+
+        // Set default enterprise
+        config.default_enterprise = Some("ent1".to_string());
+        assert_eq!(config.resolve_enterprise_profile(None).unwrap(), "ent1");
+    }
+
+    #[test]
+    fn test_cloud_profile_resolution() {
+        let mut config = Config::default();
+
+        // Add a cloud profile
+        let cloud_profile = Profile {
+            deployment_type: DeploymentType::Cloud,
+            credentials: ProfileCredentials::Cloud {
+                api_key: "key".to_string(),
+                api_secret: "secret".to_string(),
+                api_url: "https://api.redislabs.com/v1".to_string(),
+            },
+        };
+        config.set_profile("cloud1".to_string(), cloud_profile);
+
+        // Test explicit profile
+        assert_eq!(
+            config.resolve_cloud_profile(Some("cloud1")).unwrap(),
+            "cloud1"
+        );
+
+        // Test first cloud profile (no default set)
+        assert_eq!(config.resolve_cloud_profile(None).unwrap(), "cloud1");
+
+        // Set default cloud
+        config.default_cloud = Some("cloud1".to_string());
+        assert_eq!(config.resolve_cloud_profile(None).unwrap(), "cloud1");
+    }
+
+    #[test]
+    fn test_mixed_profile_resolution() {
+        let mut config = Config::default();
+
+        // Add a cloud profile
+        let cloud_profile = Profile {
+            deployment_type: DeploymentType::Cloud,
+            credentials: ProfileCredentials::Cloud {
+                api_key: "key".to_string(),
+                api_secret: "secret".to_string(),
+                api_url: "https://api.redislabs.com/v1".to_string(),
+            },
+        };
+        config.set_profile("cloud1".to_string(), cloud_profile.clone());
+        config.set_profile("cloud2".to_string(), cloud_profile);
+
+        // Add enterprise profiles
+        let enterprise_profile = Profile {
+            deployment_type: DeploymentType::Enterprise,
+            credentials: ProfileCredentials::Enterprise {
+                url: "https://localhost:9443".to_string(),
+                username: "admin".to_string(),
+                password: Some("password".to_string()),
+                insecure: false,
+            },
+        };
+        config.set_profile("ent1".to_string(), enterprise_profile.clone());
+        config.set_profile("ent2".to_string(), enterprise_profile);
+
+        // Without defaults, should use first of each type
+        assert_eq!(config.resolve_cloud_profile(None).unwrap(), "cloud1");
+        assert_eq!(config.resolve_enterprise_profile(None).unwrap(), "ent1");
+
+        // Set type-specific defaults
+        config.default_cloud = Some("cloud2".to_string());
+        config.default_enterprise = Some("ent2".to_string());
+
+        // Should now use the type-specific defaults
+        assert_eq!(config.resolve_cloud_profile(None).unwrap(), "cloud2");
+        assert_eq!(config.resolve_enterprise_profile(None).unwrap(), "ent2");
+    }
+
+    #[test]
+    fn test_no_profile_errors() {
+        let config = Config::default();
+
+        // No profiles at all
+        assert!(config.resolve_enterprise_profile(None).is_err());
+        assert!(config.resolve_cloud_profile(None).is_err());
+    }
+
+    #[test]
+    fn test_wrong_profile_type_help() {
+        let mut config = Config::default();
+
+        // Only add cloud profiles
+        let cloud_profile = Profile {
+            deployment_type: DeploymentType::Cloud,
+            credentials: ProfileCredentials::Cloud {
+                api_key: "key".to_string(),
+                api_secret: "secret".to_string(),
+                api_url: "https://api.redislabs.com/v1".to_string(),
+            },
+        };
+        config.set_profile("cloud1".to_string(), cloud_profile);
+
+        // Try to resolve enterprise profile - should get helpful error
+        let err = config.resolve_enterprise_profile(None).unwrap_err();
+        assert!(err.to_string().contains("No enterprise profiles found"));
+        assert!(err.to_string().contains("Available cloud profiles: cloud1"));
     }
 }

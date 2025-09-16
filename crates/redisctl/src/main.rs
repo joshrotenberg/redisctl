@@ -160,7 +160,8 @@ fn format_command(command: &Commands) -> String {
                 Show { name } => format!("profile show {}", name),
                 Set { name, .. } => format!("profile set {} [credentials redacted]", name),
                 Remove { name } => format!("profile remove {}", name),
-                Default { name } => format!("profile default {}", name),
+                DefaultEnterprise { name } => format!("profile default-enterprise {}", name),
+                DefaultCloud { name } => format!("profile default-cloud {}", name),
             }
         }
         Commands::Api {
@@ -757,8 +758,10 @@ async fn execute_profile_command(
                     }
                 }
 
-                let is_default = conn_mgr.config.default_profile.as_deref() == Some(name);
-                let name_display = if is_default {
+                let is_default_enterprise =
+                    conn_mgr.config.default_enterprise.as_deref() == Some(name);
+                let is_default_cloud = conn_mgr.config.default_cloud.as_deref() == Some(name);
+                let name_display = if is_default_enterprise || is_default_cloud {
                     format!("{}*", name)
                 } else {
                     name.to_string()
@@ -813,9 +816,14 @@ async fn execute_profile_command(
                     }
                 }
 
-                let is_default = conn_mgr.config.default_profile.as_deref() == Some(name);
-                if is_default {
-                    println!("Default: yes");
+                let is_default_enterprise =
+                    conn_mgr.config.default_enterprise.as_deref() == Some(name);
+                let is_default_cloud = conn_mgr.config.default_cloud.as_deref() == Some(name);
+                if is_default_enterprise {
+                    println!("Default for enterprise: yes");
+                }
+                if is_default_cloud {
+                    println!("Default for cloud: yes");
                 }
 
                 Ok(())
@@ -917,20 +925,19 @@ async fn execute_profile_command(
                 println!("Profile '{}' saved successfully.", name);
             }
 
-            // Ask if this should be the default profile
-            if config.default_profile.is_none() || config.profiles.len() == 1 {
-                print!("Set '{}' as the default profile? (Y/n): ", name);
-                use std::io::{self, Write};
-                io::stdout().flush().unwrap();
-
-                let mut input = String::new();
-                io::stdin().read_line(&mut input).unwrap();
-                let input = input.trim().to_lowercase();
-
-                if input.is_empty() || input == "y" || input == "yes" {
-                    config.default_profile = Some(name.clone());
-                    config.save().context("Failed to save default profile")?;
-                    println!("Profile '{}' set as default.", name);
+            // Suggest setting as default if it's the only profile of its type
+            let profiles_of_type = config.get_profiles_of_type(*deployment);
+            if profiles_of_type.len() == 1 {
+                println!();
+                match deployment {
+                    config::DeploymentType::Enterprise => {
+                        println!("Tip: Set as default for enterprise commands with:");
+                        println!("  redisctl profile default-enterprise {}", name);
+                    }
+                    config::DeploymentType::Cloud => {
+                        println!("Tip: Set as default for cloud commands with:");
+                        println!("  redisctl profile default-cloud {}", name);
+                    }
                 }
             }
 
@@ -944,10 +951,20 @@ async fn execute_profile_command(
                 return Err(RedisCtlError::ProfileNotFound { name: name.clone() });
             }
 
-            // Check if it's the default profile
-            let is_default = conn_mgr.config.default_profile.as_ref() == Some(name);
-            if is_default {
-                println!("Warning: '{}' is the default profile.", name);
+            // Check if it's a default profile
+            let is_default_enterprise = conn_mgr.config.default_enterprise.as_ref() == Some(name);
+            let is_default_cloud = conn_mgr.config.default_cloud.as_ref() == Some(name);
+            if is_default_enterprise {
+                println!(
+                    "Warning: '{}' is the default profile for enterprise commands.",
+                    name
+                );
+            }
+            if is_default_cloud {
+                println!(
+                    "Warning: '{}' is the default profile for cloud commands.",
+                    name
+                );
             }
 
             // Ask for confirmation
@@ -971,10 +988,14 @@ async fn execute_profile_command(
             let mut config = conn_mgr.config.clone();
             config.profiles.remove(name);
 
-            // Clear default if this was the default profile
-            if is_default {
-                config.default_profile = None;
-                println!("Default profile cleared.");
+            // Clear defaults if this was a default profile
+            if is_default_enterprise {
+                config.default_enterprise = None;
+                println!("Default enterprise profile cleared.");
+            }
+            if is_default_cloud {
+                config.default_cloud = None;
+                println!("Default cloud profile cleared.");
             }
 
             // Save the configuration
@@ -983,22 +1004,58 @@ async fn execute_profile_command(
             println!("Profile '{}' removed successfully.", name);
             Ok(())
         }
-        Default { name } => {
-            debug!("Setting default profile: {}", name);
+        DefaultEnterprise { name } => {
+            debug!("Setting default enterprise profile: {}", name);
 
-            // Check if profile exists
-            if !conn_mgr.config.profiles.contains_key(name) {
-                return Err(RedisCtlError::ProfileNotFound { name: name.clone() });
+            // Check if profile exists and is an enterprise profile
+            match conn_mgr.config.profiles.get(name) {
+                Some(profile) => {
+                    if profile.deployment_type != config::DeploymentType::Enterprise {
+                        return Err(anyhow::anyhow!(
+                            "Profile '{}' is a cloud profile, not an enterprise profile",
+                            name
+                        )
+                        .into());
+                    }
+                }
+                None => return Err(RedisCtlError::ProfileNotFound { name: name.clone() }),
             }
 
             // Update the configuration
             let mut config = conn_mgr.config.clone();
-            config.default_profile = Some(name.clone());
+            config.default_enterprise = Some(name.clone());
 
             // Save the configuration
             config.save().context("Failed to save configuration")?;
 
-            println!("Default profile set to '{}'.", name);
+            println!("Default enterprise profile set to '{}'.", name);
+            Ok(())
+        }
+        DefaultCloud { name } => {
+            debug!("Setting default cloud profile: {}", name);
+
+            // Check if profile exists and is a cloud profile
+            match conn_mgr.config.profiles.get(name) {
+                Some(profile) => {
+                    if profile.deployment_type != config::DeploymentType::Cloud {
+                        return Err(anyhow::anyhow!(
+                            "Profile '{}' is an enterprise profile, not a cloud profile",
+                            name
+                        )
+                        .into());
+                    }
+                }
+                None => return Err(RedisCtlError::ProfileNotFound { name: name.clone() }),
+            }
+
+            // Update the configuration
+            let mut config = conn_mgr.config.clone();
+            config.default_cloud = Some(name.clone());
+
+            // Save the configuration
+            config.save().context("Failed to save configuration")?;
+
+            println!("Default cloud profile set to '{}'.", name);
             Ok(())
         }
     }

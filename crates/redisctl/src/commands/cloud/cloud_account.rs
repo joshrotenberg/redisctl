@@ -2,7 +2,6 @@
 
 use crate::cli::{CloudProviderAccountCommands, OutputFormat};
 use crate::commands::cloud::cloud_account_impl::{self, CloudAccountOperationParams};
-use crate::commands::cloud::utils::create_cloud_client_raw;
 use crate::connection::ConnectionManager;
 use crate::error::Result as CliResult;
 
@@ -13,8 +12,7 @@ pub async fn handle_cloud_account_command(
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
-    let profile = conn_mgr.get_profile(profile_name)?;
-    let client = create_cloud_client_raw(profile).await?;
+    let client = conn_mgr.create_cloud_client(profile_name).await?;
 
     match command {
         CloudProviderAccountCommands::List => {

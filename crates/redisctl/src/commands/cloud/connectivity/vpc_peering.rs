@@ -22,8 +22,7 @@ pub async fn handle_vpc_peering_command(
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
-    let profile = conn_mgr.get_profile(profile_name)?;
-    let client = crate::commands::cloud::utils::create_cloud_client_raw(profile).await?;
+    let client = conn_mgr.create_cloud_client(profile_name).await?;
 
     match command {
         VpcPeeringCommands::Get { subscription } => {
