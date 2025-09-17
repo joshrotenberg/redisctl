@@ -49,6 +49,9 @@ toml = { workspace = true }
 directories = { workspace = true }
 shellexpand = "3.1"
 
+# Secure storage
+keyring = { version = "3.6", optional = true }
+
 [target.'cfg(unix)'.dependencies]
 pager = "0.16"
 
@@ -58,6 +61,7 @@ default = ["full"]
 full = ["cloud", "enterprise"]
 cloud = []
 enterprise = []
+secure-storage = ["dep:keyring"]
 
 [dev-dependencies]
 assert_cmd = "2.0"

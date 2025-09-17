@@ -48,18 +48,53 @@ export REDIS_ENTERPRISE_PASSWORD="your-password"
 Or use profiles for multiple environments:
 
 ```bash
-# Create a profile
+# Create a profile with plaintext storage (default)
 redisctl profile set cloud-prod \
-  --cloud-api-key="$REDIS_CLOUD_API_KEY" \
-  --cloud-secret-key="$REDIS_CLOUD_SECRET_KEY"
+  --deployment cloud \
+  --api-key "$REDIS_CLOUD_API_KEY" \
+  --api-secret "$REDIS_CLOUD_SECRET_KEY"
+
+# Create a profile with secure OS keyring storage (recommended)
+redisctl profile set cloud-secure \
+  --deployment cloud \
+  --api-key "$REDIS_CLOUD_API_KEY" \
+  --api-secret "$REDIS_CLOUD_SECRET_KEY" \
+  --use-keyring  # Requires 'secure-storage' feature
 
 # Use the profile
 redisctl --profile cloud-prod cloud database list
 ```
 
+### Profile Storage
+
 Profiles are stored in:
 - **Linux/macOS**: `~/.config/redisctl/config.toml`
 - **Windows**: `%APPDATA%\redis\redisctl\config.toml`
+
+### Secure Credential Storage
+
+When compiled with the `secure-storage` feature, redisctl can store sensitive credentials in your OS keyring:
+
+- **macOS**: Keychain
+- **Windows**: Windows Credential Store
+- **Linux**: Secret Service (GNOME Keyring, KWallet)
+
+To use secure storage:
+```bash
+# Install with secure storage support
+cargo install redisctl --features secure-storage
+
+# Create profile with keyring storage
+redisctl profile set prod \
+  --deployment cloud \
+  --api-key "your-key" \
+  --api-secret "your-secret" \
+  --use-keyring
+
+# The config file will contain references like:
+# api_key = "keyring:prod-api-key"
+# api_secret = "keyring:prod-api-secret"
+```
 
 Example configuration file:
 ```toml

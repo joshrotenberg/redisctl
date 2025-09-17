@@ -8,6 +8,7 @@ mod cli;
 mod commands;
 mod config;
 mod connection;
+mod credential_store;
 mod error;
 mod output;
 mod workflows;
@@ -841,6 +842,8 @@ async fn execute_profile_command(
             username,
             password,
             insecure,
+            #[cfg(feature = "secure-storage")]
+            use_keyring,
         } => {
             debug!("Setting profile: {}", name);
 
@@ -872,11 +875,34 @@ async fn execute_profile_command(
                         anyhow::anyhow!("API secret is required for Cloud profiles")
                     })?;
 
+                    // Handle keyring storage if requested
+                    #[cfg(feature = "secure-storage")]
+                    let (stored_key, stored_secret) = if *use_keyring {
+                        use crate::credential_store::CredentialStore;
+                        let store = CredentialStore::new();
+
+                        // Store credentials in keyring and get references
+                        let key_ref = store
+                            .store_credential(&format!("{}-api-key", name), &api_key)
+                            .context("Failed to store API key in keyring")?;
+                        let secret_ref = store
+                            .store_credential(&format!("{}-api-secret", name), &api_secret)
+                            .context("Failed to store API secret in keyring")?;
+
+                        println!("Credentials stored securely in OS keyring");
+                        (key_ref, secret_ref)
+                    } else {
+                        (api_key.clone(), api_secret.clone())
+                    };
+
+                    #[cfg(not(feature = "secure-storage"))]
+                    let (stored_key, stored_secret) = (api_key.clone(), api_secret.clone());
+
                     config::Profile {
                         deployment_type: config::DeploymentType::Cloud,
                         credentials: config::ProfileCredentials::Cloud {
-                            api_key: api_key.clone(),
-                            api_secret: api_secret.clone(),
+                            api_key: stored_key,
+                            api_secret: stored_secret,
                             api_url: api_url.clone(),
                         },
                     }
@@ -899,12 +925,42 @@ async fn execute_profile_command(
                         }
                     };
 
+                    // Handle keyring storage if requested
+                    #[cfg(feature = "secure-storage")]
+                    let (stored_username, stored_password) = if *use_keyring {
+                        use crate::credential_store::CredentialStore;
+                        let store = CredentialStore::new();
+
+                        // Store credentials in keyring and get references
+                        let user_ref = store
+                            .store_credential(&format!("{}-username", name), &username)
+                            .context("Failed to store username in keyring")?;
+
+                        let pass_ref = if let Some(ref p) = password {
+                            Some(
+                                store
+                                    .store_credential(&format!("{}-password", name), p)
+                                    .context("Failed to store password in keyring")?,
+                            )
+                        } else {
+                            None
+                        };
+
+                        println!("Credentials stored securely in OS keyring");
+                        (user_ref, pass_ref)
+                    } else {
+                        (username.clone(), password.clone())
+                    };
+
+                    #[cfg(not(feature = "secure-storage"))]
+                    let (stored_username, stored_password) = (username.clone(), password.clone());
+
                     config::Profile {
                         deployment_type: config::DeploymentType::Enterprise,
                         credentials: config::ProfileCredentials::Enterprise {
                             url: url.clone(),
-                            username: username.clone(),
-                            password,
+                            username: stored_username,
+                            password: stored_password,
                             insecure: *insecure,
                         },
                     }
