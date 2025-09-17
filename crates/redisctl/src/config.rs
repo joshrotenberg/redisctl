@@ -15,6 +15,8 @@ use std::fs;
 use std::path::PathBuf;
 use tracing::{debug, info, trace};
 
+use crate::credential_store::CredentialStore;
+
 /// Main configuration structure
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct Config {
@@ -115,6 +117,74 @@ impl Profile {
                 ..
             }
         )
+    }
+
+    /// Get resolved Cloud credentials (with keyring support)
+    pub fn resolve_cloud_credentials(&self) -> Result<Option<(String, String, String)>> {
+        match &self.credentials {
+            ProfileCredentials::Cloud {
+                api_key,
+                api_secret,
+                api_url,
+            } => {
+                let store = CredentialStore::new();
+
+                // Resolve each credential with environment variable fallback
+                let resolved_key = store
+                    .get_credential(api_key, Some("REDIS_CLOUD_API_KEY"))
+                    .context("Failed to resolve API key")?;
+                let resolved_secret = store
+                    .get_credential(api_secret, Some("REDIS_CLOUD_API_SECRET"))
+                    .context("Failed to resolve API secret")?;
+                let resolved_url = store
+                    .get_credential(api_url, Some("REDIS_CLOUD_API_URL"))
+                    .context("Failed to resolve API URL")?;
+
+                Ok(Some((resolved_key, resolved_secret, resolved_url)))
+            }
+            _ => Ok(None),
+        }
+    }
+
+    /// Get resolved Enterprise credentials (with keyring support)
+    #[allow(clippy::type_complexity)]
+    pub fn resolve_enterprise_credentials(
+        &self,
+    ) -> Result<Option<(String, String, Option<String>, bool)>> {
+        match &self.credentials {
+            ProfileCredentials::Enterprise {
+                url,
+                username,
+                password,
+                insecure,
+            } => {
+                let store = CredentialStore::new();
+
+                // Resolve each credential with environment variable fallback
+                let resolved_url = store
+                    .get_credential(url, Some("REDIS_ENTERPRISE_URL"))
+                    .context("Failed to resolve URL")?;
+                let resolved_username = store
+                    .get_credential(username, Some("REDIS_ENTERPRISE_USER"))
+                    .context("Failed to resolve username")?;
+                let resolved_password = password
+                    .as_ref()
+                    .map(|p| {
+                        store
+                            .get_credential(p, Some("REDIS_ENTERPRISE_PASSWORD"))
+                            .context("Failed to resolve password")
+                    })
+                    .transpose()?;
+
+                Ok(Some((
+                    resolved_url,
+                    resolved_username,
+                    resolved_password,
+                    *insecure,
+                )))
+            }
+            _ => Ok(None),
+        }
     }
 }
 

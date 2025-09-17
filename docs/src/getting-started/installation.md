@@ -24,15 +24,35 @@ Download the `.zip` file from the releases page and extract to a directory in yo
 If you have Rust installed:
 
 ```bash
+# Basic installation
 cargo install redisctl
+
+# With secure credential storage support (recommended)
+cargo install redisctl --features secure-storage
 ```
+
+### Feature Flags
+
+| Feature | Description |
+|---------|-------------|
+| `secure-storage` | Enables OS keyring support for secure credential storage (recommended) |
+| `cloud-only` | Builds only Cloud functionality (smaller binary) |
+| `enterprise-only` | Builds only Enterprise functionality (smaller binary) |
 
 ## From Source
 
 ```bash
 git clone https://github.com/joshrotenberg/redisctl.git
 cd redisctl
+
+# Basic installation
 cargo install --path crates/redisctl
+
+# With secure storage support (recommended)
+cargo install --path crates/redisctl --features secure-storage
+
+# Development build with all features
+cargo build --release --all-features
 ```
 
 ## Docker

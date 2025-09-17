@@ -78,6 +78,7 @@
 
 - [Environment Variables](./reference/environment-variables.md)
 - [Configuration File](./reference/config-file.md)
+- [Security Best Practices](./reference/security.md)
 - [Troubleshooting](./reference/troubleshooting.md)
 - [Best Practices](./reference/best-practices.md)
 - [API Reference](./reference/api.md)

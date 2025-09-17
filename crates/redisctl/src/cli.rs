@@ -201,6 +201,11 @@ pub enum ProfileCommands {
         /// Allow insecure connections (for Enterprise profiles)
         #[arg(long)]
         insecure: bool,
+
+        /// Store credentials in OS keyring instead of config file
+        #[cfg(feature = "secure-storage")]
+        #[arg(long)]
+        use_keyring: bool,
     },
 
     /// Remove a profile

@@ -73,8 +73,10 @@ impl ConnectionManager {
                     });
                 }
 
+                // Use the new resolve method which handles keyring lookup
                 let (api_key, api_secret, api_url) = profile
-                    .cloud_credentials()
+                    .resolve_cloud_credentials()
+                    .context("Failed to resolve Cloud credentials")?
                     .context("Profile is not configured for Redis Cloud")?;
 
                 // Check for partial overrides before consuming the Options
@@ -82,9 +84,9 @@ impl ConnectionManager {
                     env_api_key.is_some() || env_api_secret.is_some() || env_api_url.is_some();
 
                 // Allow partial environment variable overrides
-                let key = env_api_key.unwrap_or_else(|| api_key.to_string());
-                let secret = env_api_secret.unwrap_or_else(|| api_secret.to_string());
-                let url = env_api_url.unwrap_or_else(|| api_url.to_string());
+                let key = env_api_key.unwrap_or(api_key);
+                let secret = env_api_secret.unwrap_or(api_secret);
+                let url = env_api_url.unwrap_or(api_url);
 
                 if has_overrides {
                     debug!("Applied partial environment variable overrides");
@@ -173,8 +175,10 @@ impl ConnectionManager {
                     });
                 }
 
+                // Use the new resolve method which handles keyring lookup
                 let (url, username, password, insecure) = profile
-                    .enterprise_credentials()
+                    .resolve_enterprise_credentials()
+                    .context("Failed to resolve Enterprise credentials")?
                     .context("Profile is not configured for Redis Enterprise")?;
 
                 // Check for partial overrides before consuming the Options
@@ -184,9 +188,9 @@ impl ConnectionManager {
                     || env_insecure.is_some();
 
                 // Allow partial environment variable overrides
-                let final_url = env_url.unwrap_or_else(|| url.to_string());
-                let final_user = env_user.unwrap_or_else(|| username.to_string());
-                let final_password = env_password.or_else(|| password.map(|p| p.to_string()));
+                let final_url = env_url.unwrap_or(url);
+                let final_user = env_user.unwrap_or(username);
+                let final_password = env_password.or(password);
                 let final_insecure = env_insecure
                     .as_ref()
                     .map(|s| s.to_lowercase() == "true" || s == "1")

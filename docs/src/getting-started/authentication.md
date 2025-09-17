@@ -17,7 +17,36 @@ Redis Cloud uses API key authentication:
 
 ### Setting Up Authentication
 
-Use environment variables:
+#### Option 1: Secure OS Keyring (Recommended)
+
+When compiled with the `secure-storage` feature, store credentials securely in your OS keyring:
+
+```bash
+# Install with secure storage support
+cargo install redisctl --features secure-storage
+
+# Create secure profile
+redisctl profile set cloud \
+  --deployment cloud \
+  --api-key "your-account-key" \
+  --api-secret "your-secret-key" \
+  --use-keyring  # Stores in OS keyring
+
+# Test it works
+redisctl --profile cloud api cloud get /
+```
+
+Your config will contain secure references:
+```toml
+[profiles.cloud]
+deployment_type = "cloud"
+api_key = "keyring:cloud-api-key"      # Actual value in OS keyring
+api_secret = "keyring:cloud-api-secret" # Actual value in OS keyring
+```
+
+#### Option 2: Environment Variables
+
+Use environment variables (good for CI/CD):
 
 ```bash
 export REDIS_CLOUD_API_KEY="your-account-key"
@@ -27,7 +56,9 @@ export REDIS_CLOUD_API_SECRET="your-secret-key"
 redisctl api cloud get /
 ```
 
-Or create a configuration file at `~/.config/redisctl/config.toml`:
+#### Option 3: Configuration File (Development Only)
+
+For development only, you can use plaintext config at `~/.config/redisctl/config.toml`:
 
 ```toml
 [profiles.cloud]
@@ -35,6 +66,8 @@ deployment_type = "cloud"
 api_key = "your-account-key"
 api_secret = "your-secret-key"
 ```
+
+⚠️ **Warning**: This stores credentials in plaintext. Use keyring or environment variables for production!
 
 ## Redis Enterprise
 
@@ -46,6 +79,38 @@ Redis Enterprise uses basic authentication with username/password.
 - **Password**: Set during cluster setup
 
 ### Setting Up Authentication
+
+#### Option 1: Secure OS Keyring (Recommended)
+
+Store credentials securely in your OS keyring:
+
+```bash
+# Create secure profile
+redisctl profile set enterprise \
+  --deployment enterprise \
+  --url "https://cluster.example.com:9443" \
+  --username "admin@cluster.local" \
+  --password "your-password" \
+  --use-keyring  # Stores in OS keyring
+
+# For self-signed certificates
+redisctl profile set enterprise --insecure true
+
+# Test it works
+redisctl --profile enterprise api enterprise get /v1/cluster
+```
+
+Your config will contain secure references:
+```toml
+[profiles.enterprise]
+deployment_type = "enterprise"
+url = "https://cluster.example.com:9443"
+username = "keyring:enterprise-username"  # Actual value in OS keyring
+password = "keyring:enterprise-password"  # Actual value in OS keyring
+insecure = false
+```
+
+#### Option 2: Environment Variables
 
 Use environment variables:
 
@@ -61,7 +126,9 @@ export REDIS_ENTERPRISE_INSECURE="true"
 redisctl api enterprise get /v1/cluster
 ```
 
-Or add to `~/.config/redisctl/config.toml`:
+#### Option 3: Configuration File (Development Only)
+
+For development only, add to `~/.config/redisctl/config.toml`:
 
 ```toml
 [profiles.enterprise]
@@ -71,6 +138,8 @@ username = "admin@cluster.local"
 password = "your-password"
 insecure = true  # For self-signed certs
 ```
+
+⚠️ **Warning**: This stores credentials in plaintext. Use keyring or environment variables for production!
 
 ## Security Tips
 
