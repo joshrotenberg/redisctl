@@ -6,13 +6,16 @@
 //! - Plaintext storage (fallback)
 //! - Environment variable override
 
-use anyhow::{Context, Result};
+use anyhow::Result;
+#[cfg(feature = "secure-storage")]
+use anyhow::{Context, anyhow};
 use std::env;
 
 /// Prefix that indicates a value should be retrieved from the keyring
 const KEYRING_PREFIX: &str = "keyring:";
 
 /// Service name for keyring entries
+#[cfg(feature = "secure-storage")]
 const SERVICE_NAME: &str = "redisctl";
 
 /// Storage backend for credentials
@@ -97,6 +100,7 @@ impl CredentialStore {
         #[cfg(not(feature = "secure-storage"))]
         {
             // Without secure-storage feature, always use plaintext
+            let _ = key; // Not used without secure-storage
             Ok(value.to_string())
         }
     }
@@ -150,7 +154,9 @@ impl CredentialStore {
                     match entry.delete_credential() {
                         Ok(()) => Ok(()),
                         Err(keyring::Error::NoEntry) => Ok(()), // Already deleted
-                        Err(e) => Err(e).context("Failed to delete credential from keyring"),
+                        Err(e) => {
+                            Err(anyhow!(e)).context("Failed to delete credential from keyring")
+                        }
                     }
                 }
                 CredentialStorage::Plaintext => Ok(()), // Nothing to delete for plaintext
@@ -158,6 +164,7 @@ impl CredentialStore {
         }
         #[cfg(not(feature = "secure-storage"))]
         {
+            let _ = key; // Not used without secure-storage
             Ok(()) // Nothing to delete for plaintext
         }
     }
