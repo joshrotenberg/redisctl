@@ -215,29 +215,150 @@ jobs:
             --data @database.json --wait
 ```
 
+## Secure Credential Storage
+
+### Using OS Keyring (Recommended)
+
+When compiled with the `secure-storage` feature, redisctl can store credentials in your operating system's secure keyring instead of plaintext in the config file.
+
+#### Supported Platforms
+- **macOS**: Keychain
+- **Windows**: Windows Credential Store  
+- **Linux**: Secret Service (GNOME Keyring, KWallet)
+
+#### Installation with Secure Storage
+```bash
+# Install from source with secure storage
+cargo install redisctl --features secure-storage
+
+# Or build locally
+cargo build --release --features secure-storage
+```
+
+#### Creating Secure Profiles
+```bash
+# Create profile with keyring storage
+redisctl profile set prod-secure \
+  --deployment cloud \
+  --api-key "your-api-key" \
+  --api-secret "your-api-secret" \
+  --use-keyring  # Store in OS keyring
+
+# For Enterprise profiles
+redisctl profile set enterprise-secure \
+  --deployment enterprise \
+  --url "https://cluster.example.com:9443" \
+  --username "admin@example.com" \
+  --password "your-password" \
+  --use-keyring
+```
+
+#### How It Works
+When using `--use-keyring`, credentials are:
+1. Stored securely in your OS keyring
+2. Referenced in config.toml with `keyring:` prefix
+3. Retrieved automatically when needed
+
+Example config.toml with keyring references:
+```toml
+[profiles.prod-secure]
+deployment_type = "cloud"
+api_key = "keyring:prod-secure-api-key"      # Stored in keyring
+api_secret = "keyring:prod-secure-api-secret" # Stored in keyring  
+api_url = "https://api.redislabs.com/v1"     # Non-sensitive, plaintext
+```
+
+#### Storage Priority
+Credentials are resolved in this order:
+1. **Environment variables** (highest priority)
+2. **OS keyring** (if value starts with `keyring:`)
+3. **Plaintext** in config file (fallback)
+
+#### Managing Keyring Credentials
+```bash
+# Update credentials (will update keyring if already using it)
+redisctl profile set prod-secure \
+  --api-key "new-key" \
+  --use-keyring
+
+# View profile (keyring values are masked)
+redisctl profile show prod-secure
+# Output:
+# Profile: prod-secure
+# Type: cloud
+# API Key: keyring:...
+# API URL: https://api.redislabs.com/v1
+```
+
 ## Security Best Practices
 
-### Protecting Credentials
+### Credential Storage Options
 
-1. **Never commit credentials**: Keep config.toml in .gitignore
-2. **Use environment variables**: Store secrets in environment
-3. **Restrict file permissions**: 
+Choose the appropriate storage method based on your security requirements:
+
+1. **OS Keyring (Most Secure)**
+   - Use `--use-keyring` when creating profiles
+   - Credentials encrypted by OS
+   - Requires `secure-storage` feature
+   ```bash
+   redisctl profile set prod --use-keyring ...
+   ```
+
+2. **Environment Variables (CI/CD Friendly)**
+   - No storage, runtime only
+   - Good for automation
+   ```bash
+   export REDIS_CLOUD_API_KEY="key"
+   export REDIS_CLOUD_API_SECRET="secret"
+   ```
+
+3. **Plaintext Config (Development Only)**
+   - Simple but insecure
+   - Only for development/testing
+   - Protect with file permissions:
    ```bash
    chmod 600 ~/.config/redisctl/config.toml
    ```
-4. **Rotate credentials regularly**: Update API keys periodically
 
-### Secure Profile Template
+### Security Checklist
+
+1. **Never commit credentials**: Add config.toml to .gitignore
+2. **Use keyring for production**: Store production credentials securely
+3. **Rotate credentials regularly**: Update API keys periodically
+4. **Audit profile usage**: Monitor credential access
+5. **Use environment variables in CI/CD**: Keep secrets out of config files
+
+### Secure Profile Templates
+
+#### Production with Keyring
+```bash
+# Create secure production profile
+redisctl profile set production \
+  --deployment cloud \
+  --api-key "$PROD_KEY" \
+  --api-secret "$PROD_SECRET" \
+  --use-keyring
+```
+
+#### CI/CD with Environment Variables
 ```toml
-# Use environment variables for sensitive data
-[profiles.secure]
+# config.toml for CI/CD
+[profiles.ci]
 deployment_type = "cloud"
 api_key = "${REDIS_CLOUD_API_KEY}"
 api_secret = "${REDIS_CLOUD_API_SECRET}"
+api_url = "${REDIS_API_URL:-https://api.redislabs.com/v1}"
+```
 
-# Store in secure vault
-# export REDIS_CLOUD_API_KEY=$(vault read -field=key secret/redis)
-# export REDIS_CLOUD_API_SECRET=$(vault read -field=secret secret/redis)
+#### Development with Mixed Storage
+```toml
+# Development profile with mixed storage
+[profiles.dev]
+deployment_type = "enterprise"
+url = "https://dev-cluster:9443"     # Non-sensitive
+username = "dev@example.com"         # Non-sensitive
+password = "keyring:dev-password"    # Sensitive, in keyring
+insecure = true                      # Dev setting
 ```
 
 ### Profile Audit
