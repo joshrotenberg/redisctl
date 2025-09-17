@@ -23,6 +23,7 @@
 - [Tasks](./cloud/tasks.md)
 - [Workflows](./cloud/workflows.md)
 - [Raw API Access](./cloud/api-access.md)
+- [Examples](./cloud/examples.md)
 
 # Redis Enterprise Commands
 
@@ -57,6 +58,7 @@
 - [DNS Suffixes](./enterprise/suffix.md)
 - [Workflows](./enterprise/workflows.md)
 - [Raw API Access](./enterprise/api-access.md)
+- [Examples](./enterprise/examples.md)
 
 # Core Features
 
