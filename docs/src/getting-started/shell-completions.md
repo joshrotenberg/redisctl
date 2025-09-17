@@ -187,6 +187,6 @@ source /path/to/redisctl.fish
 
 ## See Also
 
-- [Installation Guide](installation.md) - Installing redisctl
-- [Configuration](configuration.md) - Setting up profiles
-- [Quick Start](quickstart.md) - Getting started with redisctl
+- [Installation Guide](./installation.md) - Installing redisctl
+- [Configuration](./configuration.md) - Setting up profiles
+- [Quick Start](./quickstart.md) - Getting started with redisctl
