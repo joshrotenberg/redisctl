@@ -2,6 +2,27 @@
 
 Redis Enterprise is a self-managed database platform that can be deployed on-premises or in your cloud account. `redisctl` provides comprehensive access to the Redis Enterprise REST API.
 
+## Key Features
+
+### 🎯 Support Package Management
+Generate and download support packages for troubleshooting with Redis support:
+
+```bash
+# Download support package for entire cluster
+redisctl enterprise support-package get
+
+# Download for specific database
+redisctl enterprise support-package get --database-uid 1
+
+# Download for specific node
+redisctl enterprise support-package get --node-uid 2
+
+# Download and extract locally
+redisctl enterprise support-package get --extract
+```
+
+See [Support Package documentation](./support-package.md) for detailed usage.
+
 ## Authentication
 
 Redis Enterprise uses basic authentication:

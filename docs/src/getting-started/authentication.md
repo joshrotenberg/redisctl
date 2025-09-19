@@ -174,5 +174,5 @@ export REDIS_ENTERPRISE_INSECURE=true
 
 ## See Also
 
-- [Configuration](../cli/configuration.md) - Profile management
-- [Environment Variables](../cli/environment-variables.md) - All supported variables
+- [Configuration](./configuration.md) - Profile management
+- [Environment Variables](../reference/environment-variables.md) - All supported variables

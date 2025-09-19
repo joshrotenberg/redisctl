@@ -135,5 +135,5 @@ redisctl enterprise database list -q "[].{name:name,memory:memory_size}"
 
 - [Redis Cloud Guide](../cloud/overview.md) - Cloud-specific operations
 - [Redis Enterprise Guide](../enterprise/overview.md) - Enterprise-specific operations
-- [Workflows](../features/workflows.md) - Automating complex operations
-- [Examples](../cloud/examples.md) - More detailed examples
+- [Cloud Workflows](../cloud/operations/workflows.md) - Cloud automation
+- [Examples](./examples.md) - More detailed examples
