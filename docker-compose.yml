@@ -9,6 +9,7 @@ services:
     ports:
       - "12000:12000"
       - "12001:12001"
+      - "12002:12002"
       - "9443:9443"
       - "8443:8443"
     networks:
@@ -22,7 +23,7 @@ services:
 
   # Auto-initialize Redis Enterprise cluster using our workflow
   redis-enterprise-init:
-    image: joshrotenberg/redisctl:0.5.1
+    image: joshrotenberg/redisctl:latest
     container_name: redis-enterprise-init
     depends_on:
       redis-enterprise:
@@ -43,6 +44,338 @@ services:
         "admin@redis.local",
         "--password",
         "Redis123!",
+      ]
+
+  # Create first test database - basic ephemeral cache
+  redis-enterprise-create-db1:
+    image: joshrotenberg/redisctl:latest
+    container_name: redis-enterprise-create-db1
+    depends_on:
+      redis-enterprise-init:
+        condition: service_completed_successfully
+    networks:
+      - redisctl-network
+    environment:
+      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
+      REDIS_ENTERPRISE_USER: "admin@redis.local"
+      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
+      REDIS_ENTERPRISE_INSECURE: "true"
+    command:
+      [
+        "enterprise",
+        "database",
+        "create",
+        "--data",
+        '{"name": "cache-db", "memory_size": 104857600, "port": 12001, "replication": false, "data_persistence": "disabled", "eviction_policy": "allkeys-lru"}',
+      ]
+
+  # Create second test database - persistent with AOF
+  redis-enterprise-create-db2:
+    image: joshrotenberg/redisctl:latest
+    container_name: redis-enterprise-create-db2
+    depends_on:
+      redis-enterprise-init:
+        condition: service_completed_successfully
+    networks:
+      - redisctl-network
+    environment:
+      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
+      REDIS_ENTERPRISE_USER: "admin@redis.local"
+      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
+      REDIS_ENTERPRISE_INSECURE: "true"
+    command:
+      [
+        "enterprise",
+        "database",
+        "create",
+        "--data",
+        '{"name": "persistent-db", "memory_size": 209715200, "port": 12002, "replication": false, "data_persistence": "aof", "aof_policy": "appendfsync-every-sec"}',
+      ]
+
+  # List all databases to verify creation
+  redis-enterprise-list-dbs:
+    image: joshrotenberg/redisctl:latest
+    container_name: redis-enterprise-list-dbs
+    depends_on:
+      redis-enterprise-create-db1:
+        condition: service_completed_successfully
+      redis-enterprise-create-db2:
+        condition: service_completed_successfully
+    networks:
+      - redisctl-network
+    environment:
+      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
+      REDIS_ENTERPRISE_USER: "admin@redis.local"
+      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
+      REDIS_ENTERPRISE_INSECURE: "true"
+    command: ["enterprise", "database", "list", "-o", "table"]
+
+  # Get cache database details
+  redis-enterprise-get-cache-db:
+    image: joshrotenberg/redisctl:latest
+    container_name: redis-enterprise-get-cache-db
+    depends_on:
+      redis-enterprise-create-db1:
+        condition: service_completed_successfully
+    networks:
+      - redisctl-network
+    environment:
+      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
+      REDIS_ENTERPRISE_USER: "admin@redis.local"
+      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
+      REDIS_ENTERPRISE_INSECURE: "true"
+    command: [
+        "enterprise",
+        "database",
+        "get",
+        "2", # Assuming cache-db gets ID 2 (default-db from init is 1)
+        "-o",
+        "json",
+        "-q",
+        "{name: name, status: status, port: port, memory: memory_size, eviction: eviction_policy, persistence: data_persistence}",
+      ]
+
+  # Get persistent database details
+  redis-enterprise-get-persistent-db:
+    image: joshrotenberg/redisctl:latest
+    container_name: redis-enterprise-get-persistent-db
+    depends_on:
+      redis-enterprise-create-db2:
+        condition: service_completed_successfully
+    networks:
+      - redisctl-network
+    environment:
+      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
+      REDIS_ENTERPRISE_USER: "admin@redis.local"
+      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
+      REDIS_ENTERPRISE_INSECURE: "true"
+    command: [
+        "enterprise",
+        "database",
+        "get",
+        "3", # Assuming persistent-db gets ID 3
+        "-o",
+        "json",
+        "-q",
+        "{name: name, status: status, port: port, memory: memory_size, persistence: data_persistence, replication: replication}",
+      ]
+
+  # Check cluster information
+  redis-enterprise-cluster-info:
+    image: joshrotenberg/redisctl:latest
+    container_name: redis-enterprise-cluster-info
+    depends_on:
+      redis-enterprise-init:
+        condition: service_completed_successfully
+    networks:
+      - redisctl-network
+    environment:
+      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
+      REDIS_ENTERPRISE_USER: "admin@redis.local"
+      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
+      REDIS_ENTERPRISE_INSECURE: "true"
+    command: ["enterprise", "cluster", "get", "-o", "table"]
+
+  # List nodes in the cluster
+  redis-enterprise-list-nodes:
+    image: joshrotenberg/redisctl:latest
+    container_name: redis-enterprise-list-nodes
+    depends_on:
+      redis-enterprise-init:
+        condition: service_completed_successfully
+    networks:
+      - redisctl-network
+    environment:
+      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
+      REDIS_ENTERPRISE_USER: "admin@redis.local"
+      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
+      REDIS_ENTERPRISE_INSECURE: "true"
+    command: ["enterprise", "node", "list", "-o", "table"]
+
+  # Check cluster stats
+  redis-enterprise-stats:
+    image: joshrotenberg/redisctl:latest
+    container_name: redis-enterprise-stats
+    depends_on:
+      redis-enterprise-create-db1:
+        condition: service_completed_successfully
+      redis-enterprise-create-db2:
+        condition: service_completed_successfully
+    networks:
+      - redisctl-network
+    environment:
+      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
+      REDIS_ENTERPRISE_USER: "admin@redis.local"
+      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
+      REDIS_ENTERPRISE_INSECURE: "true"
+    command:
+      [
+        "enterprise",
+        "cluster",
+        "stats",
+        "-o",
+        "json",
+        "-q",
+        "{cpu: cpu_usage, memory: memory_usage, databases: total_databases, nodes: total_nodes}",
+      ]
+
+  # Get license information
+  redis-enterprise-license:
+    image: joshrotenberg/redisctl:latest
+    container_name: redis-enterprise-license
+    depends_on:
+      redis-enterprise-init:
+        condition: service_completed_successfully
+    networks:
+      - redisctl-network
+    environment:
+      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
+      REDIS_ENTERPRISE_USER: "admin@redis.local"
+      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
+      REDIS_ENTERPRISE_INSECURE: "true"
+    command: ["enterprise", "license", "get", "-o", "json"]
+
+  # List available modules
+  redis-enterprise-modules:
+    image: joshrotenberg/redisctl:latest
+    container_name: redis-enterprise-modules
+    depends_on:
+      redis-enterprise-init:
+        condition: service_completed_successfully
+    networks:
+      - redisctl-network
+    environment:
+      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
+      REDIS_ENTERPRISE_USER: "admin@redis.local"
+      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
+      REDIS_ENTERPRISE_INSECURE: "true"
+    command: ["enterprise", "module", "list", "-o", "table"]
+
+  # Get detailed node information
+  redis-enterprise-node-details:
+    image: joshrotenberg/redisctl:latest
+    container_name: redis-enterprise-node-details
+    depends_on:
+      redis-enterprise-init:
+        condition: service_completed_successfully
+    networks:
+      - redisctl-network
+    environment:
+      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
+      REDIS_ENTERPRISE_USER: "admin@redis.local"
+      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
+      REDIS_ENTERPRISE_INSECURE: "true"
+    command:
+      [
+        "enterprise",
+        "node",
+        "get",
+        "1",
+        "-o",
+        "json",
+        "-q",
+        "{address: addr, status: status, cores: cores, memory: total_memory, version: software_version, shards: shard_count}",
+      ]
+
+  # List all users
+  redis-enterprise-users:
+    image: joshrotenberg/redisctl:latest
+    container_name: redis-enterprise-users
+    depends_on:
+      redis-enterprise-init:
+        condition: service_completed_successfully
+    networks:
+      - redisctl-network
+    environment:
+      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
+      REDIS_ENTERPRISE_USER: "admin@redis.local"
+      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
+      REDIS_ENTERPRISE_INSECURE: "true"
+    command: ["enterprise", "user", "list", "-o", "table"]
+
+  # Get cluster policy
+  redis-enterprise-policy:
+    image: joshrotenberg/redisctl:latest
+    container_name: redis-enterprise-policy
+    depends_on:
+      redis-enterprise-init:
+        condition: service_completed_successfully
+    networks:
+      - redisctl-network
+    environment:
+      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
+      REDIS_ENTERPRISE_USER: "admin@redis.local"
+      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
+      REDIS_ENTERPRISE_INSECURE: "true"
+    command:
+      [
+        "api",
+        "enterprise",
+        "get",
+        "/v1/cluster/policy",
+        "-o",
+        "json",
+        "-q",
+        "{default_db_config: default_non_sharded_proxy_policy, rack_aware: rack_aware, redis_upgrade: redis_upgrade_policy}",
+      ]
+
+  # Check for any cluster alerts
+  redis-enterprise-alerts:
+    image: joshrotenberg/redisctl:latest
+    container_name: redis-enterprise-alerts
+    depends_on:
+      redis-enterprise-init:
+        condition: service_completed_successfully
+    networks:
+      - redisctl-network
+    environment:
+      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
+      REDIS_ENTERPRISE_USER: "admin@redis.local"
+      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
+      REDIS_ENTERPRISE_INSECURE: "true"
+    command: ["api", "enterprise", "get", "/v1/cluster/alerts", "-o", "json"]
+
+  # Get comprehensive cluster information
+  redis-enterprise-cluster-full:
+    image: joshrotenberg/redisctl:latest
+    container_name: redis-enterprise-cluster-full
+    depends_on:
+      redis-enterprise-init:
+        condition: service_completed_successfully
+    networks:
+      - redisctl-network
+    environment:
+      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
+      REDIS_ENTERPRISE_USER: "admin@redis.local"
+      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
+      REDIS_ENTERPRISE_INSECURE: "true"
+    command:
+      [
+        "enterprise",
+        "cluster",
+        "get",
+        "-o",
+        "json",
+        "-q",
+        "{name: name, license: license_expired, nodes: nodes, databases: databases, version: software_version, created: created_time}",
+      ]
+
+  # Test database connectivity
+  redis-enterprise-test-connectivity:
+    image: redis:7-alpine
+    container_name: redis-enterprise-test-connectivity
+    depends_on:
+      redis-enterprise-create-db1:
+        condition: service_completed_successfully
+      redis-enterprise-create-db2:
+        condition: service_completed_successfully
+    networks:
+      - redisctl-network
+    command:
+      [
+        "sh",
+        "-c",
+        "echo 'Testing cache-db on port 12001...' && redis-cli -h redis-enterprise -p 12001 ping && echo 'Testing persistent-db on port 12002...' && redis-cli -h redis-enterprise -p 12002 ping && echo 'All databases responding!'",
       ]
 
 networks:
