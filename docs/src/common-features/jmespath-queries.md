@@ -8,6 +8,30 @@ JMESPath is a query language for JSON that allows you to extract and transform d
 redisctl [command] -o json -q "query_expression"
 ```
 
+## Quick Start Examples
+
+```bash
+# Get just one field
+redisctl enterprise cluster get -o json -q 'name'
+# Output: "docker-cluster"
+
+# Get multiple fields as object
+redisctl enterprise database get 1 -o json -q '{name: name, port: port}'
+# Output: {"name": "default-db", "port": 12000}
+
+# Get field from all items in a list
+redisctl enterprise database list -o json -q '[].name'
+# Output: ["default-db", "cache-db", "persistent-db"]
+
+# Filter list by condition
+redisctl enterprise database list -o json -q "[?port > `12000`].name"
+# Output: ["cache-db", "persistent-db"]
+
+# Count items
+redisctl enterprise database list -o json -q 'length(@)'
+# Output: 3
+```
+
 ## Common Query Patterns
 
 ### Select Specific Fields
@@ -103,7 +127,89 @@ redisctl cloud subscription list -o json \
   }"
 ```
 
-## Practical Examples
+## Enterprise-Specific Examples
+
+### Database Management
+
+```bash
+# Get all database names and their persistence settings
+redisctl enterprise database list -o json \
+  -q '[].{name: name, persistence: data_persistence}'
+
+# Find databases using AOF persistence
+redisctl enterprise database list -o json \
+  -q "[?data_persistence=='aof'].name"
+
+# Get database endpoints for connection strings
+redisctl enterprise database get 1 -o json \
+  -q 'endpoints[0].{host: addr[0], port: port}'
+
+# Monitor database creation status
+redisctl enterprise database list -o json \
+  -q "[?status!='active'].{name: name, status: status}"
+```
+
+### Node and Cluster Monitoring
+
+```bash
+# Get node addresses with their status
+redisctl enterprise node list -o json \
+  -q '[].{address: addr, status: status, shards: shard_count}'
+
+# Extract specific node details
+redisctl enterprise node get 1 -o json \
+  -q '{address: addr, cores: cores, memory_gb: total_memory / `1073741824`}'
+
+# Check cluster resource usage
+redisctl enterprise cluster stats -o json \
+  -q '{cpu: cpu_usage, memory: memory_usage, databases: total_databases}'
+
+# Get cluster version and license status
+redisctl enterprise cluster get -o json \
+  -q '{name: name, version: software_version, licensed: !license_expired}'
+```
+
+### Module Management
+
+```bash
+# List all module names and versions
+redisctl enterprise module list -o json \
+  -q '[].{name: module_name, version: semantic_version}'
+
+# Find specific module version
+redisctl enterprise module list -o json \
+  -q "[?module_name=='search'].semantic_version | [0]"
+
+# Get modules configured for a database
+redisctl enterprise database get 1 -o json \
+  -q 'module_list[].{name: module_name, args: module_args}'
+```
+
+### License and Compliance
+
+```bash
+# Check license expiration
+redisctl enterprise license get -o json \
+  -q '{expired: expired, expires_on: expiration_date}'
+
+# Count total shards across all databases
+redisctl enterprise database list -o json \
+  -q 'sum([].shards_count)'
+```
+
+### Alert Monitoring
+
+```bash
+# Count active alerts
+redisctl api enterprise get /v1/cluster/alerts -o json \
+  -q 'length(@)'
+
+# Get alert details if any exist
+redisctl api enterprise get /v1/cluster/alerts -o json \
+  -q '[].{severity: severity, message: message}'
+```
+
+## Cloud-Specific Examples
 
 ### Find Resources by Tags
 
