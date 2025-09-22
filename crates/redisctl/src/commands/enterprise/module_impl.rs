@@ -164,10 +164,7 @@ async fn handle_delete(
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
     let handler = ModuleHandler::new(client);
 
-    handler
-        .delete(uid)
-        .await
-        .map_err(RedisCtlError::from)?;
+    handler.delete(uid).await.map_err(RedisCtlError::from)?;
 
     // Print success message
     let result = serde_json::json!({

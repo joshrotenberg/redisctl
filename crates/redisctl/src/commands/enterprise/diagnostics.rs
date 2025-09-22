@@ -68,10 +68,7 @@ impl DiagnosticsCommands {
 
         match self {
             DiagnosticsCommands::Get => {
-                let config = handler
-                    .get_config()
-                    .await
-                    .map_err(RedisCtlError::from)?;
+                let config = handler.get_config().await.map_err(RedisCtlError::from)?;
 
                 let output_data = if let Some(q) = query {
                     super::utils::apply_jmespath(&config, q)?
@@ -131,10 +128,7 @@ impl DiagnosticsCommands {
             }
 
             DiagnosticsCommands::ListChecks => {
-                let checks = handler
-                    .list_checks()
-                    .await
-                    .map_err(RedisCtlError::from)?;
+                let checks = handler.list_checks().await.map_err(RedisCtlError::from)?;
 
                 // Convert to JSON Value for output
                 let response = serde_json::to_value(&checks)?;
@@ -182,10 +176,7 @@ impl DiagnosticsCommands {
             }
 
             DiagnosticsCommands::ListReports => {
-                let reports = handler
-                    .list_reports()
-                    .await
-                    .map_err(RedisCtlError::from)?;
+                let reports = handler.list_reports().await.map_err(RedisCtlError::from)?;
 
                 // Convert to JSON Value for output
                 let response = serde_json::to_value(&reports)?;

@@ -393,10 +393,7 @@ pub async fn get_database_metrics(
         path.push_str(&format!("?interval={}", interval));
     }
 
-    let response = client
-        .get_raw(&path)
-        .await
-        .map_err(RedisCtlError::from)?;
+    let response = client.get_raw(&path).await.map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -418,10 +415,7 @@ pub async fn get_database_slowlog(
         path.push_str(&format!("?limit={}", limit));
     }
 
-    let response = client
-        .get_raw(&path)
-        .await
-        .map_err(RedisCtlError::from)?;
+    let response = client.get_raw(&path).await.map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;

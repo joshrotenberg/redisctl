@@ -605,10 +605,7 @@ pub async fn get_conflicts(
         format!("/v1/crdbs/{}/conflicts", id)
     };
 
-    let result = client
-        .get_raw(&url)
-        .await
-        .map_err(RedisCtlError::from)?;
+    let result = client.get_raw(&url).await.map_err(RedisCtlError::from)?;
 
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
