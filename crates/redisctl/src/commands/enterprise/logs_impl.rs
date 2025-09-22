@@ -75,7 +75,7 @@ async fn handle_list_logs(
     let logs = handler
         .list(logs_query)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     // Convert to JSON value for output
     let logs_json = serde_json::to_value(&logs)?;

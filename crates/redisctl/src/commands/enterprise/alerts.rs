@@ -284,7 +284,7 @@ async fn handle_cluster_alerts(
     let response = client
         .get::<Value>(&endpoint)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let response = if let Some(q) = query {
         super::utils::apply_jmespath(&response, q)?
@@ -315,7 +315,7 @@ async fn handle_node_alerts(
     let response = client
         .get::<Value>(&endpoint)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let response = if let Some(q) = query {
         super::utils::apply_jmespath(&response, q)?
@@ -346,7 +346,7 @@ async fn handle_database_alerts(
     let response = client
         .get::<Value>(&endpoint)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let response = if let Some(q) = query {
         super::utils::apply_jmespath(&response, q)?
@@ -369,7 +369,7 @@ async fn handle_get_alert_settings(
     let response = client
         .get::<Value>("/v1/cluster")
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     // Extract alert_settings from the cluster config
     let alert_settings = response
@@ -405,7 +405,7 @@ async fn handle_update_alert_settings(
     let response = client
         .put::<_, Value>("/v1/cluster", &update_payload)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let response = if let Some(q) = query {
         super::utils::apply_jmespath(&response, q)?

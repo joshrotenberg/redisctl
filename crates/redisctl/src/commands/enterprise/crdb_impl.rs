@@ -23,7 +23,7 @@ pub async fn list_crdbs(
     let response = client
         .get_raw("/v1/crdbs")
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -63,7 +63,7 @@ pub async fn create_crdb(
     let response = client
         .post_raw("/v1/crdbs", json_data)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -582,7 +582,7 @@ pub async fn update_cluster_in_crdb(
             update_data,
         )
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -608,7 +608,7 @@ pub async fn get_conflicts(
     let result = client
         .get_raw(&url)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -627,7 +627,7 @@ pub async fn get_conflict_policy(
     let result = client
         .get_raw(&format!("/v1/crdbs/{}/conflict_policy", id))
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -649,7 +649,7 @@ pub async fn update_conflict_policy(
     let result = client
         .put_raw(&format!("/v1/crdbs/{}/conflict_policy", id), policy_data)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -677,7 +677,7 @@ pub async fn resolve_conflict(
             resolution_data,
         )
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -696,7 +696,7 @@ pub async fn get_crdb_connections(
     let result = client
         .get_raw(&format!("/v1/crdbs/{}/connections", id))
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -715,7 +715,7 @@ pub async fn get_crdb_throughput(
     let result = client
         .get_raw(&format!("/v1/crdbs/{}/throughput", id))
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -737,7 +737,7 @@ pub async fn backup_crdb(
     let result = client
         .post_raw(&format!("/v1/crdbs/{}/backup", id), backup_data)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -759,7 +759,7 @@ pub async fn restore_crdb(
     let result = client
         .post_raw(&format!("/v1/crdbs/{}/restore", id), restore_data)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -778,7 +778,7 @@ pub async fn get_crdb_backups(
     let result = client
         .get_raw(&format!("/v1/crdbs/{}/backups", id))
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -800,7 +800,7 @@ pub async fn export_crdb(
     let result = client
         .post_raw(&format!("/v1/crdbs/{}/export", id), export_data)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;

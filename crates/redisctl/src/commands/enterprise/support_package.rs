@@ -320,12 +320,12 @@ async fn generate_cluster_package(
         debuginfo_handler
             .cluster_debuginfo_binary()
             .await
-        .map_err(|e| RedisCtlError::from(e))?
+            .map_err(RedisCtlError::from)?
     } else {
         debuginfo_handler
             .all_binary()
             .await
-        .map_err(|e| RedisCtlError::from(e))?
+            .map_err(RedisCtlError::from)?
     };
 
     if let Some(spinner) = spinner {
@@ -569,18 +569,18 @@ async fn generate_node_package(
             debuginfo_handler
                 .node_binary()
                 .await
-        .map_err(|e| RedisCtlError::from(e))?
+                .map_err(RedisCtlError::from)?
         }
     } else if use_new_api {
         debuginfo_handler
             .nodes_debuginfo_binary()
             .await
-        .map_err(|e| RedisCtlError::from(e))?
+            .map_err(RedisCtlError::from)?
     } else {
         debuginfo_handler
             .node_binary()
             .await
-        .map_err(|e| RedisCtlError::from(e))?
+            .map_err(RedisCtlError::from)?
     };
 
     if let Some(spinner) = spinner {

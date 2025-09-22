@@ -75,7 +75,7 @@ async fn handle_bootstrap_status(
     let response = client
         .get::<Value>("/v1/bootstrap")
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let result = if let Some(q) = query {
         utils::apply_jmespath(&response, q)?
@@ -102,7 +102,7 @@ async fn handle_create_cluster(
     let response = client
         .post_raw("/v1/bootstrap/create_cluster", payload)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let result = if let Some(q) = query {
         utils::apply_jmespath(&response, q)?
@@ -129,7 +129,7 @@ async fn handle_join_cluster(
     let response = client
         .post_raw("/v1/bootstrap/join_cluster", payload)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let result = if let Some(q) = query {
         utils::apply_jmespath(&response, q)?

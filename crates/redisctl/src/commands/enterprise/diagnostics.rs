@@ -71,7 +71,7 @@ impl DiagnosticsCommands {
                 let config = handler
                     .get_config()
                     .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                    .map_err(RedisCtlError::from)?;
 
                 let output_data = if let Some(q) = query {
                     super::utils::apply_jmespath(&config, q)?
@@ -86,7 +86,7 @@ impl DiagnosticsCommands {
                 let result = handler
                     .update_config(json_data)
                     .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                    .map_err(RedisCtlError::from)?;
 
                 let output_data = if let Some(q) = query {
                     super::utils::apply_jmespath(&result, q)?
@@ -120,7 +120,7 @@ impl DiagnosticsCommands {
                 let report: serde_json::Value = client
                     .post("/v1/diagnostics", &request)
                     .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                    .map_err(RedisCtlError::from)?;
 
                 let output_data = if let Some(q) = query {
                     super::utils::apply_jmespath(&report, q)?
@@ -134,7 +134,7 @@ impl DiagnosticsCommands {
                 let checks = handler
                     .list_checks()
                     .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                    .map_err(RedisCtlError::from)?;
 
                 // Convert to JSON Value for output
                 let response = serde_json::to_value(&checks)?;
@@ -151,7 +151,7 @@ impl DiagnosticsCommands {
                 let report = handler
                     .get_last_report()
                     .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                    .map_err(RedisCtlError::from)?;
 
                 // Convert to JSON Value for output
                 let response = serde_json::to_value(&report)?;
@@ -185,7 +185,7 @@ impl DiagnosticsCommands {
                 let reports = handler
                     .list_reports()
                     .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                    .map_err(RedisCtlError::from)?;
 
                 // Convert to JSON Value for output
                 let response = serde_json::to_value(&reports)?;

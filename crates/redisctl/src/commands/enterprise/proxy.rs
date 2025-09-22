@@ -74,7 +74,7 @@ async fn handle_proxy_command_impl(
             let response: serde_json::Value = client
                 .get("/v1/proxies")
                 .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                .map_err(RedisCtlError::from)?;
 
             let output_data = if let Some(q) = query {
                 super::utils::apply_jmespath(&response, q)?
@@ -120,7 +120,7 @@ async fn handle_proxy_command_impl(
             let response: serde_json::Value = client
                 .put("/v1/proxies", &payload)
                 .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                .map_err(RedisCtlError::from)?;
 
             let output_data = if let Some(q) = query {
                 super::utils::apply_jmespath(&response, q)?

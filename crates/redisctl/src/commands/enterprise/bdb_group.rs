@@ -82,7 +82,7 @@ impl BdbGroupCommands {
                 let response: serde_json::Value = client
                     .get("/v1/bdb_groups")
                     .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                    .map_err(RedisCtlError::from)?;
 
                 let output_data = if let Some(q) = query {
                     super::utils::apply_jmespath(&response, q)?
@@ -96,7 +96,7 @@ impl BdbGroupCommands {
                 let response: serde_json::Value = client
                     .get(&format!("/v1/bdb_groups/{}", uid))
                     .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                    .map_err(RedisCtlError::from)?;
 
                 let output_data = if let Some(q) = query {
                     super::utils::apply_jmespath(&response, q)?
@@ -112,7 +112,7 @@ impl BdbGroupCommands {
                 let response: serde_json::Value = client
                     .post("/v1/bdb_groups", &json_data)
                     .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                    .map_err(RedisCtlError::from)?;
 
                 let output_data = if let Some(q) = query {
                     super::utils::apply_jmespath(&response, q)?
@@ -128,7 +128,7 @@ impl BdbGroupCommands {
                 let response: serde_json::Value = client
                     .put(&format!("/v1/bdb_groups/{}", uid), &json_data)
                     .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                    .map_err(RedisCtlError::from)?;
 
                 let output_data = if let Some(q) = query {
                     super::utils::apply_jmespath(&response, q)?
@@ -148,7 +148,7 @@ impl BdbGroupCommands {
                 client
                     .delete(&format!("/v1/bdb_groups/{}", uid))
                     .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                    .map_err(RedisCtlError::from)?;
 
                 println!("Database group {} deleted successfully", uid);
             }
@@ -161,7 +161,7 @@ impl BdbGroupCommands {
                 let mut group_data: serde_json::Value = client
                     .get(&format!("/v1/bdb_groups/{}", group_uid))
                     .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                    .map_err(RedisCtlError::from)?;
 
                 // Add database to the group
                 if let Some(bdbs) = group_data["bdbs"].as_array_mut() {
@@ -179,7 +179,7 @@ impl BdbGroupCommands {
                 let response: serde_json::Value = client
                     .put(&format!("/v1/bdb_groups/{}", group_uid), &group_data)
                     .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                    .map_err(RedisCtlError::from)?;
 
                 println!("Database {} added to group {}", database, group_uid);
 
@@ -199,7 +199,7 @@ impl BdbGroupCommands {
                 let mut group_data: serde_json::Value = client
                     .get(&format!("/v1/bdb_groups/{}", group_uid))
                     .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                    .map_err(RedisCtlError::from)?;
 
                 // Remove database from the group
                 if let Some(bdbs) = group_data["bdbs"].as_array_mut() {
@@ -218,7 +218,7 @@ impl BdbGroupCommands {
                 let response: serde_json::Value = client
                     .put(&format!("/v1/bdb_groups/{}", group_uid), &group_data)
                     .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                    .map_err(RedisCtlError::from)?;
 
                 println!("Database {} removed from group {}", database, group_uid);
 
@@ -234,7 +234,7 @@ impl BdbGroupCommands {
                 let response: serde_json::Value = client
                     .get(&format!("/v1/bdb_groups/{}", group_uid))
                     .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                    .map_err(RedisCtlError::from)?;
 
                 // Extract just the databases list
                 let databases = &response["bdbs"];

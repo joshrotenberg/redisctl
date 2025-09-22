@@ -20,7 +20,7 @@ pub async fn list_databases(
     let response = client
         .get_raw("/v1/bdbs")
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -39,7 +39,7 @@ pub async fn get_database(
     let response = client
         .get_raw(&format!("/v1/bdbs/{}", id))
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -67,7 +67,7 @@ pub async fn create_database(
     let response = client
         .post_raw(path, json_data)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -89,7 +89,7 @@ pub async fn update_database(
     let response = client
         .put_raw(&format!("/v1/bdbs/{}", id), json_data)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -114,7 +114,7 @@ pub async fn delete_database(
     let response = client
         .delete_raw(&format!("/v1/bdbs/{}", id))
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -136,7 +136,7 @@ pub async fn export_database(
     let response = client
         .post_raw(&format!("/v1/bdbs/{}/export", id), json_data)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -158,7 +158,7 @@ pub async fn import_database(
     let response = client
         .post_raw(&format!("/v1/bdbs/{}/import", id), json_data)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -177,7 +177,7 @@ pub async fn backup_database(
     let response = client
         .post_raw(&format!("/v1/bdbs/{}/backup", id), Value::Null)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -199,7 +199,7 @@ pub async fn restore_database(
     let response = client
         .post_raw(&format!("/v1/bdbs/{}/restore", id), json_data)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -229,7 +229,7 @@ pub async fn flush_database(
     let response = client
         .put_raw(&format!("/v1/bdbs/{}/flush", id), Value::Null)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -248,7 +248,7 @@ pub async fn get_database_shards(
     let response = client
         .get_raw(&format!("/v1/bdbs/{}/shards", id))
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -270,7 +270,7 @@ pub async fn update_database_shards(
     let response = client
         .put_raw(&format!("/v1/bdbs/{}/shards", id), json_data)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -289,7 +289,7 @@ pub async fn get_database_modules(
     let response = client
         .get_raw(&format!("/v1/bdbs/{}/modules", id))
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -311,7 +311,7 @@ pub async fn update_database_modules(
     let response = client
         .put_raw(&format!("/v1/bdbs/{}/modules", id), json_data)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -330,7 +330,7 @@ pub async fn get_database_acl(
     let response = client
         .get_raw(&format!("/v1/bdbs/{}/acl", id))
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -352,7 +352,7 @@ pub async fn update_database_acl(
     let response = client
         .put_raw(&format!("/v1/bdbs/{}/acl", id), json_data)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -371,7 +371,7 @@ pub async fn get_database_stats(
     let response = client
         .get_raw(&format!("/v1/bdbs/{}/stats", id))
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -396,7 +396,7 @@ pub async fn get_database_metrics(
     let response = client
         .get_raw(&path)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -421,7 +421,7 @@ pub async fn get_database_slowlog(
     let response = client
         .get_raw(&path)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -440,7 +440,7 @@ pub async fn get_database_clients(
     let response = client
         .get_raw(&format!("/v1/bdbs/{}/clients", id))
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;

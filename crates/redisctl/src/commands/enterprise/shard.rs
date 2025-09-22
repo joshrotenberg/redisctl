@@ -145,7 +145,7 @@ impl ShardCommands {
                 let mut response: serde_json::Value = client
                     .get("/v1/shards")
                     .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                    .map_err(RedisCtlError::from)?;
 
                 // Apply filters if provided
                 if (node.is_some() || database.is_some() || role.is_some())
@@ -182,7 +182,7 @@ impl ShardCommands {
                 let response: serde_json::Value = client
                     .get(&format!("/v1/shards/{}", uid))
                     .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                    .map_err(RedisCtlError::from)?;
 
                 let output_data = if let Some(q) = query {
                     super::utils::apply_jmespath(&response, q)?
@@ -196,7 +196,7 @@ impl ShardCommands {
                 let response: serde_json::Value = client
                     .get(&format!("/v1/bdbs/{}/shards", bdb_uid))
                     .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                    .map_err(RedisCtlError::from)?;
 
                 let output_data = if let Some(q) = query {
                     super::utils::apply_jmespath(&response, q)?
@@ -217,7 +217,7 @@ impl ShardCommands {
                         &serde_json::json!({}),
                     )
                     .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                    .map_err(RedisCtlError::from)?;
 
                 println!("Shard {} failover initiated successfully", uid);
             }
@@ -246,7 +246,7 @@ impl ShardCommands {
                         &migrate_data,
                     )
                     .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                    .map_err(RedisCtlError::from)?;
 
                 println!("Shard {} migration to node {} initiated", uid, target_node);
             }
@@ -261,7 +261,7 @@ impl ShardCommands {
                 let _: serde_json::Value = client
                     .post("/v1/shards/actions/failover", &json_data)
                     .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                    .map_err(RedisCtlError::from)?;
 
                 println!("Bulk shard failover initiated successfully");
             }
@@ -276,7 +276,7 @@ impl ShardCommands {
                 let _: serde_json::Value = client
                     .post("/v1/shards/actions/migrate", &json_data)
                     .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                    .map_err(RedisCtlError::from)?;
 
                 println!("Bulk shard migration initiated successfully");
             }
@@ -306,10 +306,8 @@ impl ShardCommands {
                     url.push_str(&format!("?{}", params.join("&")));
                 }
 
-                let response: serde_json::Value = client
-                    .get(&url)
-                    .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                let response: serde_json::Value =
+                    client.get(&url).await.map_err(RedisCtlError::from)?;
 
                 let output_data = if let Some(q) = query {
                     super::utils::apply_jmespath(&response, q)?
@@ -326,10 +324,8 @@ impl ShardCommands {
                     format!("/v1/shards/stats/last?interval={}", interval)
                 };
 
-                let response: serde_json::Value = client
-                    .get(&url)
-                    .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                let response: serde_json::Value =
+                    client.get(&url).await.map_err(RedisCtlError::from)?;
 
                 let output_data = if let Some(q) = query {
                     super::utils::apply_jmespath(&response, q)?
@@ -344,7 +340,7 @@ impl ShardCommands {
                 let response: serde_json::Value = client
                     .get(&format!("/v1/shards/{}", uid))
                     .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                    .map_err(RedisCtlError::from)?;
 
                 // Extract health-relevant fields
                 let health = serde_json::json!({
@@ -371,7 +367,7 @@ impl ShardCommands {
                 let response: serde_json::Value = client
                     .get(&format!("/v1/shards/{}", uid))
                     .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                    .map_err(RedisCtlError::from)?;
 
                 // Extract configuration-relevant fields
                 let config = serde_json::json!({

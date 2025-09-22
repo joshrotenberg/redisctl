@@ -165,7 +165,7 @@ pub async fn bootstrap_cluster(
     let result = client
         .post_raw("/v1/bootstrap", bootstrap_data)
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
     Ok(())

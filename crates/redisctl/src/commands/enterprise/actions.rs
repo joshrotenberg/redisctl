@@ -82,8 +82,7 @@ impl ActionCommands {
                         .await
                         .context("Failed to list actions (v2)")?
                 } else {
-                    handler.list().await
-        .map_err(|e| RedisCtlError::from(e))?
+                    handler.list().await.map_err(RedisCtlError::from)?
                 };
 
                 // Convert to JSON Value for filtering and output

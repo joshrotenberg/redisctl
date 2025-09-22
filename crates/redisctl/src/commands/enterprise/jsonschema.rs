@@ -50,7 +50,7 @@ async fn handle_jsonschema_command_impl(
             let response: serde_json::Value = client
                 .get("/v1/jsonschema")
                 .await
-        .map_err(|e| RedisCtlError::from(e))?;
+                .map_err(RedisCtlError::from)?;
 
             let output_data = if let Some(q) = query {
                 super::utils::apply_jmespath(&response, q)?

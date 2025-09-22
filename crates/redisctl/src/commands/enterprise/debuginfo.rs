@@ -122,7 +122,7 @@ async fn handle_debuginfo_all(
     let response = client
         .get::<Value>("/v1/debuginfo/all")
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let result = if let Some(q) = query {
         utils::apply_jmespath(&response, q)?
@@ -145,7 +145,7 @@ async fn handle_debuginfo_node(
     let response = client
         .get::<Value>("/v1/debuginfo/node")
         .await
-        .map_err(|e| RedisCtlError::from(e))?;
+        .map_err(RedisCtlError::from)?;
 
     let result = if let Some(q) = query {
         utils::apply_jmespath(&response, q)?
@@ -210,12 +210,12 @@ async fn handle_debuginfo_all_binary(
         debuginfo_handler
             .cluster_debuginfo_binary()
             .await
-        .map_err(|e| RedisCtlError::from(e))?
+            .map_err(RedisCtlError::from)?
     } else {
         debuginfo_handler
             .all_binary()
             .await
-        .map_err(|e| RedisCtlError::from(e))?
+            .map_err(RedisCtlError::from)?
     };
 
     spinner.finish_and_clear();
@@ -276,7 +276,7 @@ async fn handle_debuginfo_node_binary(
             debuginfo_handler
                 .node_binary()
                 .await
-        .map_err(|e| RedisCtlError::from(e))?
+                .map_err(RedisCtlError::from)?
         }
     } else {
         // All nodes
@@ -284,12 +284,12 @@ async fn handle_debuginfo_node_binary(
             debuginfo_handler
                 .nodes_debuginfo_binary()
                 .await
-        .map_err(|e| RedisCtlError::from(e))?
+                .map_err(RedisCtlError::from)?
         } else {
             debuginfo_handler
                 .node_binary()
                 .await
-        .map_err(|e| RedisCtlError::from(e))?
+                .map_err(RedisCtlError::from)?
         }
     };
 
