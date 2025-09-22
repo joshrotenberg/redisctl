@@ -2,6 +2,7 @@
 
 #![allow(dead_code)]
 
+
 use crate::cli::OutputFormat;
 use crate::connection::ConnectionManager;
 use crate::error::Result as CliResult;

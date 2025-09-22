@@ -1,4 +1,4 @@
-use anyhow::Context;
+use crate::error::RedisCtlError;
 use clap::Subcommand;
 
 use crate::{cli::OutputFormat, connection::ConnectionManager, error::Result as CliResult};
@@ -50,7 +50,7 @@ async fn handle_jsonschema_command_impl(
             let response: serde_json::Value = client
                 .get("/v1/jsonschema")
                 .await
-                .context("Failed to get JSON schema")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
             let output_data = if let Some(q) = query {
                 super::utils::apply_jmespath(&response, q)?

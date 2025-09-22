@@ -105,7 +105,7 @@ async fn handle_services_list(
     let response = client
         .get::<Value>("/v1/local/services")
         .await
-        .context("Failed to list services")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
     let result = if let Some(q) = query {
         utils::apply_jmespath(&response, q)?

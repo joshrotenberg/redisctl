@@ -1,3 +1,4 @@
+use crate::error::RedisCtlError;
 use anyhow::{Context, Result as AnyhowResult};
 use clap::Subcommand;
 use serde_json::Value;
@@ -84,7 +85,7 @@ async fn handle_get_license(
     let response = client
         .get::<Value>("/v1/license")
         .await
-        .context("Failed to get license information")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
     let response = if let Some(q) = query {
         super::utils::apply_jmespath(&response, q)?
@@ -109,7 +110,7 @@ async fn handle_update_license(
     let response = client
         .put::<_, Value>("/v1/license", &json_data)
         .await
-        .context("Failed to update license")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
     let response = if let Some(q) = query {
         super::utils::apply_jmespath(&response, q)?
@@ -151,7 +152,7 @@ async fn handle_upload_license(
     let response = client
         .put::<_, Value>("/v1/license", &license_data)
         .await
-        .context("Failed to upload license")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
     let response = if let Some(q) = query {
         super::utils::apply_jmespath(&response, q)?
@@ -207,7 +208,7 @@ async fn handle_license_expiry(
     let license = client
         .get::<Value>("/v1/license")
         .await
-        .context("Failed to get license information")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
     // Extract expiration information
     let expiry_info = serde_json::json!({
@@ -237,7 +238,7 @@ async fn handle_license_features(
     let license = client
         .get::<Value>("/v1/license")
         .await
-        .context("Failed to get license information")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
     // Extract feature information
     let features = if let Some(features) = license.get("features") {
@@ -277,13 +278,13 @@ async fn handle_license_usage(
     let license = client
         .get::<Value>("/v1/license")
         .await
-        .context("Failed to get license information")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
     // Get cluster stats for current usage
     let cluster = client
         .get::<Value>("/v1/cluster")
         .await
-        .context("Failed to get cluster information")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
     // Calculate usage vs limits
     let usage_info = serde_json::json!({

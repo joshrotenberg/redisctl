@@ -1,3 +1,4 @@
+use crate::error::RedisCtlError;
 use anyhow::Context;
 use clap::Subcommand;
 
@@ -56,7 +57,7 @@ async fn handle_endpoint_command_impl(
             let response: serde_json::Value = client
                 .get("/v1/endpoints/stats")
                 .await
-                .context("Failed to get endpoint statistics")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
             let output_data = if let Some(q) = query {
                 super::utils::apply_jmespath(&response, q)?

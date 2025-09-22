@@ -1,3 +1,4 @@
+use crate::error::RedisCtlError;
 use anyhow::Context;
 use clap::Subcommand;
 
@@ -61,7 +62,7 @@ async fn handle_usage_report_command_impl(
             let response: serde_json::Value = client
                 .get("/v1/usage_report")
                 .await
-                .context("Failed to get usage report")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
             let output_data = if let Some(q) = query {
                 super::utils::apply_jmespath(&response, q)?
@@ -75,7 +76,7 @@ async fn handle_usage_report_command_impl(
             let response: serde_json::Value = client
                 .get("/v1/usage_report")
                 .await
-                .context("Failed to get usage report for export")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
             let output_data = if let Some(q) = query {
                 super::utils::apply_jmespath(&response, q)?

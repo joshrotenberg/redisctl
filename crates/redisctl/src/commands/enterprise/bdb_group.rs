@@ -1,4 +1,4 @@
-use anyhow::Context;
+use crate::error::RedisCtlError;
 use clap::Subcommand;
 
 use crate::cli::OutputFormat;
@@ -82,7 +82,7 @@ impl BdbGroupCommands {
                 let response: serde_json::Value = client
                     .get("/v1/bdb_groups")
                     .await
-                    .context("Failed to list database groups")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 let output_data = if let Some(q) = query {
                     super::utils::apply_jmespath(&response, q)?
@@ -96,7 +96,7 @@ impl BdbGroupCommands {
                 let response: serde_json::Value = client
                     .get(&format!("/v1/bdb_groups/{}", uid))
                     .await
-                    .context("Failed to get database group")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 let output_data = if let Some(q) = query {
                     super::utils::apply_jmespath(&response, q)?
@@ -112,7 +112,7 @@ impl BdbGroupCommands {
                 let response: serde_json::Value = client
                     .post("/v1/bdb_groups", &json_data)
                     .await
-                    .context("Failed to create database group")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 let output_data = if let Some(q) = query {
                     super::utils::apply_jmespath(&response, q)?
@@ -128,7 +128,7 @@ impl BdbGroupCommands {
                 let response: serde_json::Value = client
                     .put(&format!("/v1/bdb_groups/{}", uid), &json_data)
                     .await
-                    .context("Failed to update database group")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 let output_data = if let Some(q) = query {
                     super::utils::apply_jmespath(&response, q)?
@@ -148,7 +148,7 @@ impl BdbGroupCommands {
                 client
                     .delete(&format!("/v1/bdb_groups/{}", uid))
                     .await
-                    .context("Failed to delete database group")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 println!("Database group {} deleted successfully", uid);
             }
@@ -161,7 +161,7 @@ impl BdbGroupCommands {
                 let mut group_data: serde_json::Value = client
                     .get(&format!("/v1/bdb_groups/{}", group_uid))
                     .await
-                    .context("Failed to get database group")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 // Add database to the group
                 if let Some(bdbs) = group_data["bdbs"].as_array_mut() {
@@ -179,7 +179,7 @@ impl BdbGroupCommands {
                 let response: serde_json::Value = client
                     .put(&format!("/v1/bdb_groups/{}", group_uid), &group_data)
                     .await
-                    .context("Failed to add database to group")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 println!("Database {} added to group {}", database, group_uid);
 
@@ -199,7 +199,7 @@ impl BdbGroupCommands {
                 let mut group_data: serde_json::Value = client
                     .get(&format!("/v1/bdb_groups/{}", group_uid))
                     .await
-                    .context("Failed to get database group")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 // Remove database from the group
                 if let Some(bdbs) = group_data["bdbs"].as_array_mut() {
@@ -218,7 +218,7 @@ impl BdbGroupCommands {
                 let response: serde_json::Value = client
                     .put(&format!("/v1/bdb_groups/{}", group_uid), &group_data)
                     .await
-                    .context("Failed to remove database from group")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 println!("Database {} removed from group {}", database, group_uid);
 
@@ -234,7 +234,7 @@ impl BdbGroupCommands {
                 let response: serde_json::Value = client
                     .get(&format!("/v1/bdb_groups/{}", group_uid))
                     .await
-                    .context("Failed to get database group")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 // Extract just the databases list
                 let databases = &response["bdbs"];

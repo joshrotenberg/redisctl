@@ -1,4 +1,4 @@
-use anyhow::Context;
+use crate::error::RedisCtlError;
 use clap::Subcommand;
 
 use crate::cli::OutputFormat;
@@ -145,7 +145,7 @@ impl ShardCommands {
                 let mut response: serde_json::Value = client
                     .get("/v1/shards")
                     .await
-                    .context("Failed to list shards")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 // Apply filters if provided
                 if (node.is_some() || database.is_some() || role.is_some())
@@ -182,7 +182,7 @@ impl ShardCommands {
                 let response: serde_json::Value = client
                     .get(&format!("/v1/shards/{}", uid))
                     .await
-                    .context("Failed to get shard details")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 let output_data = if let Some(q) = query {
                     super::utils::apply_jmespath(&response, q)?
@@ -196,7 +196,7 @@ impl ShardCommands {
                 let response: serde_json::Value = client
                     .get(&format!("/v1/bdbs/{}/shards", bdb_uid))
                     .await
-                    .context("Failed to list shards for database")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 let output_data = if let Some(q) = query {
                     super::utils::apply_jmespath(&response, q)?
@@ -217,7 +217,7 @@ impl ShardCommands {
                         &serde_json::json!({}),
                     )
                     .await
-                    .context("Failed to failover shard")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 println!("Shard {} failover initiated successfully", uid);
             }
@@ -246,7 +246,7 @@ impl ShardCommands {
                         &migrate_data,
                     )
                     .await
-                    .context("Failed to migrate shard")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 println!("Shard {} migration to node {} initiated", uid, target_node);
             }
@@ -261,7 +261,7 @@ impl ShardCommands {
                 let _: serde_json::Value = client
                     .post("/v1/shards/actions/failover", &json_data)
                     .await
-                    .context("Failed to perform bulk failover")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 println!("Bulk shard failover initiated successfully");
             }
@@ -276,7 +276,7 @@ impl ShardCommands {
                 let _: serde_json::Value = client
                     .post("/v1/shards/actions/migrate", &json_data)
                     .await
-                    .context("Failed to perform bulk migration")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 println!("Bulk shard migration initiated successfully");
             }
@@ -309,7 +309,7 @@ impl ShardCommands {
                 let response: serde_json::Value = client
                     .get(&url)
                     .await
-                    .context("Failed to get shard statistics")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 let output_data = if let Some(q) = query {
                     super::utils::apply_jmespath(&response, q)?
@@ -329,7 +329,7 @@ impl ShardCommands {
                 let response: serde_json::Value = client
                     .get(&url)
                     .await
-                    .context("Failed to get latest shard statistics")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 let output_data = if let Some(q) = query {
                     super::utils::apply_jmespath(&response, q)?
@@ -344,7 +344,7 @@ impl ShardCommands {
                 let response: serde_json::Value = client
                     .get(&format!("/v1/shards/{}", uid))
                     .await
-                    .context("Failed to get shard health")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 // Extract health-relevant fields
                 let health = serde_json::json!({
@@ -371,7 +371,7 @@ impl ShardCommands {
                 let response: serde_json::Value = client
                     .get(&format!("/v1/shards/{}", uid))
                     .await
-                    .context("Failed to get shard configuration")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 // Extract configuration-relevant fields
                 let config = serde_json::json!({

@@ -1,3 +1,4 @@
+use crate::error::RedisCtlError;
 use anyhow::Context;
 use clap::Subcommand;
 use redis_enterprise::ActionHandler;
@@ -81,7 +82,8 @@ impl ActionCommands {
                         .await
                         .context("Failed to list actions (v2)")?
                 } else {
-                    handler.list().await.context("Failed to list actions")?
+                    handler.list().await
+        .map_err(|e| RedisCtlError::from(e))?
                 };
 
                 // Convert to JSON Value for filtering and output

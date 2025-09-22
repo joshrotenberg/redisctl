@@ -1,3 +1,4 @@
+use crate::error::RedisCtlError;
 use anyhow::Context;
 use clap::Subcommand;
 
@@ -73,7 +74,7 @@ async fn handle_proxy_command_impl(
             let response: serde_json::Value = client
                 .get("/v1/proxies")
                 .await
-                .context("Failed to list proxies")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
             let output_data = if let Some(q) = query {
                 super::utils::apply_jmespath(&response, q)?
@@ -119,7 +120,7 @@ async fn handle_proxy_command_impl(
             let response: serde_json::Value = client
                 .put("/v1/proxies", &payload)
                 .await
-                .context("Failed to update all proxies")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
             let output_data = if let Some(q) = query {
                 super::utils::apply_jmespath(&response, q)?

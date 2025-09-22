@@ -1,7 +1,8 @@
 //! Utility functions for Enterprise commands
+use crate::error::RedisCtlError;
 
 use crate::cli::OutputFormat;
-use crate::error::{RedisCtlError, Result as CliResult};
+use crate::error::Result as CliResult;
 use crate::output::print_output;
 use anyhow::Context;
 use dialoguer::Confirm;

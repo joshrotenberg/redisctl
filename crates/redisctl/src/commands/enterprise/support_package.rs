@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+use crate::error::RedisCtlError;
+
 use anyhow::{Context, Result as AnyhowResult};
 use chrono::Local;
 use clap::Subcommand;
@@ -318,12 +320,12 @@ async fn generate_cluster_package(
         debuginfo_handler
             .cluster_debuginfo_binary()
             .await
-            .context("Failed to collect cluster debug info")?
+        .map_err(|e| RedisCtlError::from(e))?
     } else {
         debuginfo_handler
             .all_binary()
             .await
-            .context("Failed to collect all debug info")?
+        .map_err(|e| RedisCtlError::from(e))?
     };
 
     if let Some(spinner) = spinner {
@@ -567,18 +569,18 @@ async fn generate_node_package(
             debuginfo_handler
                 .node_binary()
                 .await
-                .context("Failed to collect node debug info")?
+        .map_err(|e| RedisCtlError::from(e))?
         }
     } else if use_new_api {
         debuginfo_handler
             .nodes_debuginfo_binary()
             .await
-            .context("Failed to collect all nodes debug info")?
+        .map_err(|e| RedisCtlError::from(e))?
     } else {
         debuginfo_handler
             .node_binary()
             .await
-            .context("Failed to collect node debug info")?
+        .map_err(|e| RedisCtlError::from(e))?
     };
 
     if let Some(spinner) = spinner {

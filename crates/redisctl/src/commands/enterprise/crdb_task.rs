@@ -1,4 +1,4 @@
-use anyhow::Context;
+use crate::error::RedisCtlError;
 use clap::Subcommand;
 
 use crate::cli::OutputFormat;
@@ -111,7 +111,7 @@ impl CrdbTaskCommands {
                 let mut response: serde_json::Value = client
                     .get("/crdb_tasks")
                     .await
-                    .context("Failed to list CRDB tasks")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 // Apply filters if provided
                 if (status.is_some() || task_type.is_some() || crdb_uid.is_some())
@@ -153,7 +153,7 @@ impl CrdbTaskCommands {
                 let response: serde_json::Value = client
                     .get(&format!("/crdb_tasks/{}", task_id))
                     .await
-                    .context("Failed to get CRDB task")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 let output_data = if let Some(q) = query {
                     super::utils::apply_jmespath(&response, q)?
@@ -167,7 +167,7 @@ impl CrdbTaskCommands {
                 let response: serde_json::Value = client
                     .get(&format!("/crdb_tasks/{}", task_id))
                     .await
-                    .context("Failed to get task status")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 // Extract just the status field
                 let status = &response["status"];
@@ -184,7 +184,7 @@ impl CrdbTaskCommands {
                 let response: serde_json::Value = client
                     .get(&format!("/crdb_tasks/{}", task_id))
                     .await
-                    .context("Failed to get task progress")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 // Extract progress information
                 let progress = serde_json::json!({
@@ -207,7 +207,7 @@ impl CrdbTaskCommands {
                 let response: serde_json::Value = client
                     .get(&format!("/crdb_tasks/{}", task_id))
                     .await
-                    .context("Failed to get task logs")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 // Extract logs if available
                 let logs = if response["logs"].is_null() {
@@ -237,7 +237,7 @@ impl CrdbTaskCommands {
                 let mut response: serde_json::Value = client
                     .get("/crdb_tasks")
                     .await
-                    .context("Failed to list CRDB tasks")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 // Filter by CRDB UID and optional status/type
                 if let Some(tasks) = response["tasks"].as_array_mut() {
@@ -280,7 +280,7 @@ impl CrdbTaskCommands {
                         &serde_json::json!({}),
                     )
                     .await
-                    .context("Failed to cancel task")?;
+        .map_err(|e| RedisCtlError::from(e))?;
 
                 println!("Task {} cancelled successfully", task_id);
             }
