@@ -1,3 +1,4 @@
+use crate::error::RedisCtlError;
 use anyhow::Context;
 use clap::Subcommand;
 
@@ -100,7 +101,7 @@ impl CmSettingsCommands {
                 let response: serde_json::Value = client
                     .get("/v1/cm_settings")
                     .await
-                    .context("Failed to get cluster manager settings")?;
+                    .map_err(RedisCtlError::from)?;
 
                 let output_data = if let Some(s) = setting {
                     // Use the setting parameter as a JMESPath query
@@ -120,11 +121,10 @@ impl CmSettingsCommands {
 
                 let json_data = super::utils::read_json_data(data)?;
 
-                let response: serde_json::Value =
-                    client
-                        .put("/v1/cm_settings", &json_data)
-                        .await
-                        .context("Failed to update cluster manager settings")?;
+                let response: serde_json::Value = client
+                    .put("/v1/cm_settings", &json_data)
+                    .await
+                    .map_err(RedisCtlError::from)?;
 
                 println!("Cluster manager settings updated successfully");
 
@@ -146,7 +146,7 @@ impl CmSettingsCommands {
                 let mut settings: serde_json::Value = client
                     .get("/v1/cm_settings")
                     .await
-                    .context("Failed to get current settings")?;
+                    .map_err(RedisCtlError::from)?;
 
                 // Parse value as JSON if possible, otherwise as string
                 let parsed_value: serde_json::Value =
@@ -173,7 +173,7 @@ impl CmSettingsCommands {
                 let response: serde_json::Value = client
                     .put("/v1/cm_settings", &settings)
                     .await
-                    .context("Failed to update setting")?;
+                    .map_err(RedisCtlError::from)?;
 
                 println!("Setting '{}' updated to: {}", name, value);
 
@@ -198,7 +198,7 @@ impl CmSettingsCommands {
                 let response: serde_json::Value = client
                     .put("/v1/cm_settings", &serde_json::json!({}))
                     .await
-                    .context("Failed to reset settings")?;
+                    .map_err(RedisCtlError::from)?;
 
                 println!("Cluster manager settings reset to defaults");
 
@@ -214,7 +214,7 @@ impl CmSettingsCommands {
                 let settings: serde_json::Value = client
                     .get("/v1/cm_settings")
                     .await
-                    .context("Failed to get settings for export")?;
+                    .map_err(RedisCtlError::from)?;
 
                 if output == "-" {
                     // Output to stdout
@@ -240,7 +240,7 @@ impl CmSettingsCommands {
                 let response: serde_json::Value = client
                     .put("/v1/cm_settings", &json_data)
                     .await
-                    .context("Failed to import settings")?;
+                    .map_err(RedisCtlError::from)?;
 
                 println!("Settings imported successfully");
 
@@ -279,7 +279,7 @@ impl CmSettingsCommands {
                 let settings: serde_json::Value = client
                     .get("/v1/cm_settings")
                     .await
-                    .context("Failed to get settings")?;
+                    .map_err(RedisCtlError::from)?;
 
                 // Extract top-level keys as categories
                 let categories = if let Some(obj) = settings.as_object() {
@@ -301,7 +301,7 @@ impl CmSettingsCommands {
                 let settings: serde_json::Value = client
                     .get("/v1/cm_settings")
                     .await
-                    .context("Failed to get settings")?;
+                    .map_err(RedisCtlError::from)?;
 
                 // Extract specific category
                 let category_data = &settings[category];

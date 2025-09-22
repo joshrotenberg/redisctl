@@ -81,10 +81,29 @@ impl From<redis_enterprise::RestError> for RedisCtlError {
                     message: "Authentication failed".to_string(),
                 }
             }
+            redis_enterprise::RestError::Unauthorized => RedisCtlError::AuthenticationFailed {
+                message: "401 Unauthorized: Invalid username or password. Check your credentials."
+                    .to_string(),
+            },
+            redis_enterprise::RestError::NotFound => RedisCtlError::ApiError {
+                message: "404 Not Found: The requested resource does not exist".to_string(),
+            },
+            redis_enterprise::RestError::ApiError { code, message } => RedisCtlError::ApiError {
+                message: format!("HTTP {}: {}", code, message),
+            },
+            redis_enterprise::RestError::ServerError(msg) => RedisCtlError::ApiError {
+                message: format!("Server error (5xx): {}", msg),
+            },
             redis_enterprise::RestError::RequestFailed(reqwest_err) => {
                 RedisCtlError::ConnectionError {
                     message: reqwest_err.to_string(),
                 }
+            }
+            redis_enterprise::RestError::ConnectionError(msg) => {
+                RedisCtlError::ConnectionError { message: msg }
+            }
+            redis_enterprise::RestError::ValidationError(msg) => {
+                RedisCtlError::InvalidInput { message: msg }
             }
             _ => RedisCtlError::ApiError {
                 message: err.to_string(),

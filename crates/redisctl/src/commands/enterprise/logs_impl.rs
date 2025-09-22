@@ -1,11 +1,12 @@
 //! Implementation of enterprise logs commands
 #![allow(dead_code)]
 
+use crate::error::RedisCtlError;
+
 use crate::cli::OutputFormat;
 use crate::commands::enterprise::logs::LogsCommands;
 use crate::connection::ConnectionManager;
 use crate::error::Result as CliResult;
-use anyhow::Context;
 use redis_enterprise::logs::LogsQuery;
 
 /// Parameters for log list operation
@@ -74,7 +75,7 @@ async fn handle_list_logs(
     let logs = handler
         .list(logs_query)
         .await
-        .context("Failed to retrieve cluster logs")?;
+        .map_err(RedisCtlError::from)?;
 
     // Convert to JSON value for output
     let logs_json = serde_json::to_value(&logs)?;

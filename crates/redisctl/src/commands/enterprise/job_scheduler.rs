@@ -1,4 +1,4 @@
-use anyhow::Context;
+use crate::error::RedisCtlError;
 use clap::Subcommand;
 
 use crate::cli::OutputFormat;
@@ -35,7 +35,7 @@ impl JobSchedulerCommands {
                 let response: serde_json::Value = client
                     .get("/v1/job_scheduler")
                     .await
-                    .context("Failed to get job scheduler settings")?;
+                    .map_err(RedisCtlError::from)?;
 
                 let output_data = if let Some(q) = query {
                     super::utils::apply_jmespath(&response, q)?
@@ -51,7 +51,7 @@ impl JobSchedulerCommands {
                 let response: serde_json::Value = client
                     .put("/v1/job_scheduler", &json_data)
                     .await
-                    .context("Failed to update job scheduler settings")?;
+                    .map_err(RedisCtlError::from)?;
 
                 let output_data = if let Some(q) = query {
                     super::utils::apply_jmespath(&response, q)?

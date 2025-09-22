@@ -2,6 +2,8 @@
 
 #![allow(dead_code)]
 
+use crate::error::RedisCtlError;
+
 use crate::cli::OutputFormat;
 use crate::connection::ConnectionManager;
 use crate::error::Result as CliResult;
@@ -21,7 +23,7 @@ pub async fn list_crdbs(
     let response = client
         .get_raw("/v1/crdbs")
         .await
-        .context("Failed to list CRDBs")?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -61,7 +63,7 @@ pub async fn create_crdb(
     let response = client
         .post_raw("/v1/crdbs", json_data)
         .await
-        .context("Failed to create CRDB")?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(response, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -580,7 +582,7 @@ pub async fn update_cluster_in_crdb(
             update_data,
         )
         .await
-        .context("Failed to update cluster configuration")?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -603,10 +605,7 @@ pub async fn get_conflicts(
         format!("/v1/crdbs/{}/conflicts", id)
     };
 
-    let result = client
-        .get_raw(&url)
-        .await
-        .context("Failed to get conflicts")?;
+    let result = client.get_raw(&url).await.map_err(RedisCtlError::from)?;
 
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -625,7 +624,7 @@ pub async fn get_conflict_policy(
     let result = client
         .get_raw(&format!("/v1/crdbs/{}/conflict_policy", id))
         .await
-        .context("Failed to get conflict policy")?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -647,7 +646,7 @@ pub async fn update_conflict_policy(
     let result = client
         .put_raw(&format!("/v1/crdbs/{}/conflict_policy", id), policy_data)
         .await
-        .context("Failed to update conflict policy")?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -675,7 +674,7 @@ pub async fn resolve_conflict(
             resolution_data,
         )
         .await
-        .context("Failed to resolve conflict")?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -694,7 +693,7 @@ pub async fn get_crdb_connections(
     let result = client
         .get_raw(&format!("/v1/crdbs/{}/connections", id))
         .await
-        .context("Failed to get CRDB connections")?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -713,7 +712,7 @@ pub async fn get_crdb_throughput(
     let result = client
         .get_raw(&format!("/v1/crdbs/{}/throughput", id))
         .await
-        .context("Failed to get CRDB throughput")?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -735,7 +734,7 @@ pub async fn backup_crdb(
     let result = client
         .post_raw(&format!("/v1/crdbs/{}/backup", id), backup_data)
         .await
-        .context("Failed to create CRDB backup")?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -757,7 +756,7 @@ pub async fn restore_crdb(
     let result = client
         .post_raw(&format!("/v1/crdbs/{}/restore", id), restore_data)
         .await
-        .context("Failed to restore CRDB")?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -776,7 +775,7 @@ pub async fn get_crdb_backups(
     let result = client
         .get_raw(&format!("/v1/crdbs/{}/backups", id))
         .await
-        .context("Failed to get CRDB backups")?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
@@ -798,7 +797,7 @@ pub async fn export_crdb(
     let result = client
         .post_raw(&format!("/v1/crdbs/{}/export", id), export_data)
         .await
-        .context("Failed to export CRDB data")?;
+        .map_err(RedisCtlError::from)?;
 
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;

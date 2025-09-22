@@ -1,4 +1,5 @@
-use anyhow::{Context, Result as AnyhowResult};
+use crate::error::RedisCtlError;
+use anyhow::Result as AnyhowResult;
 use clap::Subcommand;
 use serde_json::Value;
 
@@ -283,7 +284,7 @@ async fn handle_cluster_alerts(
     let response = client
         .get::<Value>(&endpoint)
         .await
-        .context("Failed to get cluster alerts")?;
+        .map_err(RedisCtlError::from)?;
 
     let response = if let Some(q) = query {
         super::utils::apply_jmespath(&response, q)?
@@ -314,7 +315,7 @@ async fn handle_node_alerts(
     let response = client
         .get::<Value>(&endpoint)
         .await
-        .context("Failed to get node alerts")?;
+        .map_err(RedisCtlError::from)?;
 
     let response = if let Some(q) = query {
         super::utils::apply_jmespath(&response, q)?
@@ -345,7 +346,7 @@ async fn handle_database_alerts(
     let response = client
         .get::<Value>(&endpoint)
         .await
-        .context("Failed to get database alerts")?;
+        .map_err(RedisCtlError::from)?;
 
     let response = if let Some(q) = query {
         super::utils::apply_jmespath(&response, q)?
@@ -368,7 +369,7 @@ async fn handle_get_alert_settings(
     let response = client
         .get::<Value>("/v1/cluster")
         .await
-        .context("Failed to get cluster configuration")?;
+        .map_err(RedisCtlError::from)?;
 
     // Extract alert_settings from the cluster config
     let alert_settings = response
@@ -404,7 +405,7 @@ async fn handle_update_alert_settings(
     let response = client
         .put::<_, Value>("/v1/cluster", &update_payload)
         .await
-        .context("Failed to update alert settings")?;
+        .map_err(RedisCtlError::from)?;
 
     let response = if let Some(q) = query {
         super::utils::apply_jmespath(&response, q)?

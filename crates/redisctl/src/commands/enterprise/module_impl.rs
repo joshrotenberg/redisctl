@@ -1,6 +1,8 @@
 //! Implementation of enterprise module commands
 #![allow(dead_code)]
 
+use crate::error::RedisCtlError;
+
 use crate::cli::OutputFormat;
 use crate::commands::enterprise::module::ModuleCommands;
 use crate::connection::ConnectionManager;
@@ -43,7 +45,7 @@ async fn handle_list(
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
     let handler = ModuleHandler::new(client);
 
-    let modules = handler.list().await.context("Failed to list modules")?;
+    let modules = handler.list().await.map_err(RedisCtlError::from)?;
 
     let modules_json = serde_json::to_value(&modules)?;
     let output_data = if let Some(q) = query {
@@ -66,7 +68,7 @@ async fn handle_get(
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
     let handler = ModuleHandler::new(client);
 
-    let module = handler.get(uid).await.context("Failed to get module")?;
+    let module = handler.get(uid).await.map_err(RedisCtlError::from)?;
 
     let module_json = serde_json::to_value(&module)?;
     let output_data = if let Some(q) = query {
@@ -116,7 +118,7 @@ async fn handle_upload(
     let response = handler
         .upload(module_data, file_name)
         .await
-        .context("Failed to upload module")?;
+        .map_err(RedisCtlError::from)?;
 
     // Check if response contains action_uid (v2 async operation)
     if response.get("action_uid").is_some() {
@@ -162,10 +164,7 @@ async fn handle_delete(
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
     let handler = ModuleHandler::new(client);
 
-    handler
-        .delete(uid)
-        .await
-        .context("Failed to delete module")?;
+    handler.delete(uid).await.map_err(RedisCtlError::from)?;
 
     // Print success message
     let result = serde_json::json!({
@@ -194,7 +193,7 @@ async fn handle_config_bdb(
     let result = handler
         .config_bdb(bdb_uid, config)
         .await
-        .context("Failed to configure module for database")?;
+        .map_err(RedisCtlError::from)?;
 
     let result_json = serde_json::to_value(&result)?;
     let output_data = if let Some(q) = query {

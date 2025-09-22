@@ -1,3 +1,4 @@
+use crate::error::RedisCtlError;
 use anyhow::Context;
 use clap::Subcommand;
 
@@ -56,7 +57,7 @@ async fn handle_suffix_command_impl(
             let response: serde_json::Value = client
                 .get("/v1/suffixes")
                 .await
-                .context("Failed to list DNS suffixes")?;
+                .map_err(RedisCtlError::from)?;
 
             let output_data = if let Some(q) = query {
                 super::utils::apply_jmespath(&response, q)?

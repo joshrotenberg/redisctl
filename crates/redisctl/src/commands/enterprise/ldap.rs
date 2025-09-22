@@ -130,7 +130,7 @@ async fn handle_ldap_get(
     let response = client
         .get::<Value>("/v1/cluster/ldap")
         .await
-        .context("Failed to get LDAP configuration")?;
+        .map_err(RedisCtlError::from)?;
 
     let result = if let Some(q) = query {
         utils::apply_jmespath(&response, q)?
@@ -156,7 +156,7 @@ async fn handle_ldap_update(
     let response = client
         .put_raw("/v1/cluster/ldap", payload)
         .await
-        .context("Failed to update LDAP configuration")?;
+        .map_err(RedisCtlError::from)?;
 
     let result = if let Some(q) = query {
         utils::apply_jmespath(&response, q)?
@@ -178,7 +178,7 @@ async fn handle_ldap_delete(
     let response = client
         .delete_raw("/v1/cluster/ldap")
         .await
-        .context("Failed to delete LDAP configuration")?;
+        .map_err(RedisCtlError::from)?;
 
     let result = if let Some(q) = query {
         utils::apply_jmespath(&response, q)?
@@ -207,7 +207,7 @@ async fn handle_ldap_test(
     let response = client
         .post_raw("/v1/cluster/ldap/test", payload)
         .await
-        .context("Failed to test LDAP connection")?;
+        .map_err(RedisCtlError::from)?;
 
     let result = if let Some(q) = query {
         utils::apply_jmespath(&response, q)?
@@ -230,7 +230,7 @@ async fn handle_mappings_list(
     let response = client
         .get::<Value>("/v1/ldap_mappings")
         .await
-        .context("Failed to list LDAP mappings")?;
+        .map_err(RedisCtlError::from)?;
 
     let result = if let Some(q) = query {
         utils::apply_jmespath(&response, q)?
@@ -280,7 +280,7 @@ async fn handle_mappings_create(
     let response = client
         .post_raw("/v1/ldap_mappings", payload)
         .await
-        .context("Failed to create LDAP mapping")?;
+        .map_err(RedisCtlError::from)?;
 
     let result = if let Some(q) = query {
         utils::apply_jmespath(&response, q)?

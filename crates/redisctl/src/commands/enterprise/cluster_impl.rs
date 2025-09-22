@@ -4,6 +4,7 @@
 
 use crate::cli::OutputFormat;
 use crate::connection::ConnectionManager;
+use crate::error::RedisCtlError;
 use crate::error::Result as CliResult;
 use anyhow::Context;
 use redis_enterprise::alerts::AlertHandler;
@@ -164,7 +165,7 @@ pub async fn bootstrap_cluster(
     let result = client
         .post_raw("/v1/bootstrap", bootstrap_data)
         .await
-        .context("Failed to bootstrap cluster")?;
+        .map_err(RedisCtlError::from)?;
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
     Ok(())

@@ -82,7 +82,7 @@ async fn handle_ocsp_get(
     let response = client
         .get::<Value>("/v1/ocsp")
         .await
-        .context("Failed to get OCSP configuration")?;
+        .map_err(RedisCtlError::from)?;
 
     let result = if let Some(q) = query {
         utils::apply_jmespath(&response, q)?
@@ -108,7 +108,7 @@ async fn handle_ocsp_update(
     let response = client
         .put_raw("/v1/ocsp", payload)
         .await
-        .context("Failed to update OCSP configuration")?;
+        .map_err(RedisCtlError::from)?;
 
     let result = if let Some(q) = query {
         utils::apply_jmespath(&response, q)?
@@ -130,7 +130,7 @@ async fn handle_ocsp_status(
     let response = client
         .get::<Value>("/v1/ocsp/status")
         .await
-        .context("Failed to get OCSP status")?;
+        .map_err(RedisCtlError::from)?;
 
     let result = if let Some(q) = query {
         utils::apply_jmespath(&response, q)?
@@ -159,7 +159,7 @@ async fn handle_ocsp_test(
     let response = client
         .post_raw("/v1/ocsp/test", payload)
         .await
-        .context("Failed to test OCSP validation")?;
+        .map_err(RedisCtlError::from)?;
 
     let result = if let Some(q) = query {
         utils::apply_jmespath(&response, q)?
@@ -185,7 +185,7 @@ async fn handle_ocsp_enable(
     let response = client
         .put_raw("/v1/ocsp", payload)
         .await
-        .context("Failed to enable OCSP")?;
+        .map_err(RedisCtlError::from)?;
 
     let result = if let Some(q) = query {
         utils::apply_jmespath(&response, q)?
@@ -211,7 +211,7 @@ async fn handle_ocsp_disable(
     let response = client
         .put_raw("/v1/ocsp", payload)
         .await
-        .context("Failed to disable OCSP")?;
+        .map_err(RedisCtlError::from)?;
 
     let result = if let Some(q) = query {
         utils::apply_jmespath(&response, q)?
