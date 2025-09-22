@@ -2001,7 +2001,7 @@ dependencies = [
 
 [[package]]
 name = "redis-cloud"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2023,7 +2023,7 @@ dependencies = [
 
 [[package]]
 name = "redis-enterprise"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2047,7 +2047,7 @@ dependencies = [
 
 [[package]]
 name = "redisctl"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "anyhow",
  "assert_cmd",
