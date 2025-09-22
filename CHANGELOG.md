@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.2] - 2025-09-22
+
+### 🐛 Bug Fixes
+
+- **error-handling**: Improve error messages to include HTTP status codes (#363)
+  - Show specific messages like "401 Unauthorized: Invalid username or password" 
+  - Display "404 Not Found: The requested resource does not exist"
+  - Preserve HTTP status codes through the entire error chain
+  - Replace generic "Configuration error" with actionable error details
+
+### 🚀 Features
+
+- **docker**: Enhance Docker Compose setup with comprehensive redisctl examples (#363)
+  - Add extensive examples demonstrating redisctl usage
+  - Replace curl commands with redisctl equivalents
+  - Include proper authentication patterns
+
+## [0.6.1] - 2025-09-17
+
+### 🚀 Features
+
+- Add secure credential storage using OS keyring (#360)
+- Add workflow_dispatch to Docker workflow for manual triggers (#358)
+
+### 🐛 Bug Fixes
+
+- Docker workflow version extraction for manual dispatch (#359)
+
+### 📚 Documentation
+
+- Reorganize documentation structure for better navigation (#362)
+
 ## [0.6.0] - 2025-09-16
 
 ### ✨ Features
