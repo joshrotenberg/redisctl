@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "v*"
+      - "redisctl-v*"
   workflow_dispatch:
 
 env:
