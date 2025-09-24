@@ -1,6 +1,6 @@
 # Redis Enterprise Demo - Working with Redis Enterprise clusters
 
-Output img/enterprise-demo.gif
+Output imgimg/enterprise-demo.gif
 Set FontSize 16
 Set Width 1200
 Set Height 700
@@ -9,8 +9,12 @@ Set Padding 20
 Set TypingSpeed 40ms
 Set LineHeight 1.3
 
-Hide
-Type "clear"
+Type "# Redis Enterprise Management with redisctl"
+Enter
+Sleep 1s
+Enter
+
+Type "# Setting up environment variables"
 Enter
 Type "export REDIS_ENTERPRISE_URL='https://localhost:9443'"
 Enter
@@ -19,12 +23,6 @@ Enter
 Type "export REDIS_ENTERPRISE_PASSWORD='Redis123!'"
 Enter
 Type "export REDIS_ENTERPRISE_INSECURE='true'"
-Enter
-Type "clear"
-Enter
-Show
-
-Type "# Redis Enterprise Management with redisctl"
 Enter
 Sleep 1s
 Enter
@@ -59,9 +57,9 @@ Enter
 
 Type "# Create a new database"
 Enter
-Type 'redisctl enterprise database create \\'
+Type 'redisctl enterprise database create \'
 Enter
-Type '  --data \'{"name":"demo-db","memory_size":1073741824,"type":"redis"}\' \\'
+Type '  --data \'{"name":"demo-db","memory_size":1073741824,"type":"redis"}\' \'
 Enter
 Type '  --wait'
 Enter
@@ -87,10 +85,3 @@ Enter
 Type "redisctl api enterprise get /v1/cluster -q 'name'"
 Enter
 Sleep 2s
-
-Hide
-Type "clear"
-Enter
-Show
-
-Sleep 500ms

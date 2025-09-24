@@ -1,6 +1,6 @@
 # Redis Cloud Demo - Managing Redis Cloud resources
 
-Output img/cloud-demo.gif
+Output imgimg/cloud-demo.gif
 Set FontSize 16
 Set Width 1200
 Set Height 700
@@ -9,20 +9,16 @@ Set Padding 20
 Set TypingSpeed 40ms
 Set LineHeight 1.3
 
-Hide
-Type "clear"
+Type "# Redis Cloud Management with redisctl"
 Enter
+Sleep 1s
+Enter
+
 Type "# Using mock API credentials for demo"
 Enter
 Type "export REDIS_CLOUD_API_KEY='demo-key-123'"
 Enter
 Type "export REDIS_CLOUD_SECRET_KEY='demo-secret-456'"
-Enter
-Type "clear"
-Enter
-Show
-
-Type "# Redis Cloud Management with redisctl"
 Enter
 Sleep 1s
 Enter
@@ -57,9 +53,9 @@ Enter
 
 Type "# Create a new database with async tracking"
 Enter
-Type 'redisctl cloud database create --subscription-id 12345 \\'
+Type 'redisctl cloud database create --subscription-id 12345 \'
 Enter
-Type '  --data \'{"name":"api-cache","memoryLimitInGb":1,"datasetSizeInGb":1}\' \\'
+Type '  --data \'{"name":"api-cache","memoryLimitInGb":1,"datasetSizeInGb":1}\' \'
 Enter
 Type '  --wait --wait-timeout 300'
 Enter
@@ -85,10 +81,3 @@ Enter
 Type "redisctl api cloud get /subscriptions -q 'subscriptions[0].name'"
 Enter
 Sleep 2s
-
-Hide
-Type "clear"
-Enter
-Show
-
-Sleep 500ms

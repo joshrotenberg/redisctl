@@ -1,6 +1,6 @@
 # Async Operations Demo - Tracking long-running operations
 
-Output img/async-operations.gif
+Output imgimg/async-operations.gif
 Set FontSize 16
 Set Width 1200
 Set Height 700
@@ -8,11 +8,6 @@ Set Theme "Monokai Pro"
 Set Padding 20
 Set TypingSpeed 40ms
 Set LineHeight 1.3
-
-Hide
-Type "clear"
-Enter
-Show
 
 Type "# Async Operations with redisctl"
 Enter
@@ -26,9 +21,9 @@ Enter
 
 Type "# Create a database and wait for completion"
 Enter
-Type 'redisctl cloud database create --subscription-id 12345 \\'
+Type 'redisctl cloud database create --subscription-id 12345 \'
 Enter
-Type '  --data \'{"name":"production-cache","memoryLimitInGb":2}\' \\'
+Type '  --data \'{"name":"production-cache","memoryLimitInGb":2}\' \'
 Enter
 Type '  --wait'
 Enter
@@ -52,9 +47,9 @@ Enter
 
 Type "# Custom timeout and polling interval"
 Enter
-Type 'redisctl enterprise database update 1 \\'
+Type 'redisctl enterprise database update 1 \'
 Enter
-Type '  --data \'{"memory_size":2147483648}\' \\'
+Type '  --data \'{"memory_size":2147483648}\' \'
 Enter
 Type '  --wait --wait-timeout 600 --wait-interval 5'
 Enter
@@ -88,9 +83,9 @@ Enter
 
 Type "# Network connectivity operations also support async"
 Enter
-Type 'redisctl cloud peering create --subscription-id 12345 \\'
+Type 'redisctl cloud peering create --subscription-id 12345 \'
 Enter
-Type '  --data \'{"provider":"AWS","region":"us-east-1"}\' \\'
+Type '  --data \'{"provider":"AWS","region":"us-east-1"}\' \'
 Enter
 Type '  --wait'
 Enter
@@ -104,30 +99,3 @@ Backspace 39
 Type "# ✓ VPC peering created (id: vpc-12345)"
 Enter
 Sleep 2s
-Enter
-
-Type "# Backup operations with progress"
-Enter
-Type 'redisctl enterprise database backup 1 \\'
-Enter
-Type '  --location "s3://backups/redis/" \\'
-Enter
-Type '  --wait'
-Enter
-Sleep 500ms
-Type "# ⠴ Creating backup..."
-Sleep 500ms
-Backspace 21
-Type "# ⠦ Creating backup..."
-Sleep 500ms
-Backspace 21
-Type "# ✓ Backup completed successfully"
-Enter
-Sleep 2s
-
-Hide
-Type "clear"
-Enter
-Show
-
-Sleep 500ms

@@ -9,11 +9,6 @@ Set Padding 20
 Set TypingSpeed 45ms
 Set LineHeight 1.3
 
-Hide
-Type "clear"
-Enter
-Show
-
 Type "# Profile Management with redisctl"
 Enter
 Sleep 1s
@@ -28,11 +23,11 @@ Enter
 
 Type "# Add a Redis Cloud profile with environment variables"
 Enter
-Type 'redisctl profile set cloud-prod \\'
+Type 'redisctl profile set cloud-prod \'
 Enter
-Type '  --deployment-type cloud \\'
+Type '  --deployment-type cloud \'
 Enter
-Type '  --api-key "${REDIS_CLOUD_KEY}" \\'
+Type '  --api-key "${REDIS_CLOUD_KEY}" \'
 Enter
 Type '  --api-secret "${REDIS_CLOUD_SECRET}"'
 Enter
@@ -41,15 +36,15 @@ Enter
 
 Type "# Add a Redis Enterprise profile for local testing"
 Enter
-Type 'redisctl profile set enterprise-local \\'
+Type 'redisctl profile set enterprise-local \'
 Enter
-Type '  --deployment-type enterprise \\'
+Type '  --deployment-type enterprise \'
 Enter
-Type '  --url "https://localhost:9443" \\'
+Type '  --url "https://localhost:9443" \'
 Enter
-Type '  --username "admin@redis.local" \\'
+Type '  --username "admin@redis.local" \'
 Enter
-Type '  --password "Redis123!" \\'
+Type '  --password "Redis123!" \'
 Enter
 Type '  --insecure'
 Enter
@@ -82,10 +77,3 @@ Enter
 Type "redisctl profile remove cloud-dev"
 Enter
 Sleep 1.5s
-
-Hide
-Type "clear"
-Enter
-Show
-
-Sleep 500ms
