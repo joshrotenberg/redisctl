@@ -7,6 +7,8 @@
 
 A unified command-line interface for managing Redis Cloud and Redis Enterprise deployments through their REST APIs.
 
+![Quick Start Demo](vhs/quick-start.gif)
+
 ## Features
 
 - **Unified Interface** - Single CLI for both Redis Cloud and Redis Enterprise
