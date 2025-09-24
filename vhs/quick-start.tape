@@ -1,6 +1,6 @@
 # Quick Start Demo - Getting started with redisctl
 
-Output vhs/quick-start.gif
+Output img/quick-start.gif
 Set FontSize 16
 Set Width 1000
 Set Height 600

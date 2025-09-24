@@ -1,6 +1,6 @@
 # Redis Enterprise Demo - Working with Redis Enterprise clusters
 
-Output vhs/enterprise-demo.gif
+Output img/enterprise-demo.gif
 Set FontSize 16
 Set Width 1200
 Set Height 700

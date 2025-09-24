@@ -1,6 +1,6 @@
 # Async Operations Demo - Tracking long-running operations
 
-Output vhs/async-operations.gif
+Output img/async-operations.gif
 Set FontSize 16
 Set Width 1200
 Set Height 700

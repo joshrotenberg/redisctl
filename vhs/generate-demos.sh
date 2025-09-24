@@ -73,11 +73,11 @@ echo
 echo -e "${GREEN}✨ Demo generation complete!${NC}"
 echo
 echo "Generated files:"
-ls -lh *.gif 2>/dev/null || echo "No GIF files generated"
+ls -lh img/*.gif 2>/dev/null || echo "No GIF files generated"
 
 echo
 echo "To view a demo:"
-echo "  open vhs/quick-start.gif"
+echo "  open vhs/img/quick-start.gif"
 echo
 echo "To create a new demo:"
 echo "  1. Create a new .tape file"

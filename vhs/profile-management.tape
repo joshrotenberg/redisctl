@@ -1,6 +1,6 @@
 # Profile Management Demo - Managing authentication profiles
 
-Output vhs/profile-management.gif
+Output img/profile-management.gif
 Set FontSize 16
 Set Width 1100
 Set Height 650

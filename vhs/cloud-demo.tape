@@ -1,6 +1,6 @@
 # Redis Cloud Demo - Managing Redis Cloud resources
 
-Output vhs/cloud-demo.gif
+Output img/cloud-demo.gif
 Set FontSize 16
 Set Width 1200
 Set Height 700
