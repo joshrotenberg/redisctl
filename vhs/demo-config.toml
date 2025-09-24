@@ -1,0 +1,20 @@
+default_profile = "production"
+
+[profiles.production]
+deployment_type = "cloud"
+api_key = "prod-api-key-123"
+api_secret = "prod-secret-456"
+api_url = "https://api.redislabs.com/v1"
+
+[profiles.staging]
+deployment_type = "cloud"
+api_key = "staging-api-key-789"
+api_secret = "staging-secret-012"
+api_url = "https://api.redislabs.com/v1"
+
+[profiles.local]
+deployment_type = "enterprise"
+url = "https://localhost:9443"
+username = "admin@redis.local"
+password = "Redis123!"
+insecure = true

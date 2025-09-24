@@ -14,68 +14,38 @@ Enter
 Sleep 1s
 Enter
 
-Type "# List existing profiles"
+Type "# ListList existingexisting profilesprofiles"
+Enter
+Type "redisctl"redisctl profile listprofile list"
+Enter
+SleepSleep 2.5s2.5s
+Enter
+
+Type "## Add a development profileAdd a development profile"
+Enter
+Type "redisctl profile set development --deployment cloud --api-key DEV-KEY --api-secret DEV-SECRET"
+Type "redisctl profile set development --deployment cloud --api-key DEV-KEY --api-secret DEV-SECRET"
+Enter
+Sleep 2s
+Enter
+
+Type "# AddAdd aa test cluster profile"
+Enter
+Type "redisctl profile set test-cluster --deployment enterprise --url https://test.local:9443 --username test@redis.local --password TestPass123 --insecure"
+Enter
+Sleep 2s
+Enter
+
+Type "# ViewView updated profileupdated profile list"
 Enter
 Type "redisctl profile list"
 Enter
-Type "NAME         TYPE         DETAILS"
-Enter
-Type "-----------  ------------ ------------------------------"
-Enter
-Type "production   cloud        URL: https://api.redislabs.com/v1"
-Enter
-Type "staging      cloud        URL: https://api.redislabs.com/v1"
-Enter
-Type "local        enterprise   URL: https://localhost:9443 (insecure)"
-Enter
-Sleep 2s
+Sleep 2.5s
 Enter
 
-Type "# Add a new Redis Cloud profile with environment variables"
-Enter
-Type 'redisctl profile set development \'
-Enter
-Type '  --deployment cloud \'
-Enter
-Type '  --api-key "${REDIS_CLOUD_KEY}" \'
-Enter
-Type '  --api-secret "${REDIS_CLOUD_SECRET}"'
-Enter
-Type "Profile 'development' saved successfully"
-Enter
-Sleep 2s
-Enter
-
-Type "# Add a Redis Enterprise profile for testing"
-Enter
-Type 'redisctl profile set test-cluster \'
-Enter
-Type '  --deployment enterprise \'
-Enter
-Type '  --url "https://test.redis.local:9443" \'
-Enter
-Type '  --username "admin@redis.local" \'
-Enter
-Type '  --password "${REDIS_PASSWORD}" \'
-Enter
-Type '  --insecure'
-Enter
-Type "Profile 'test-cluster' saved successfully"
-Enter
-Sleep 2s
-Enter
-
-Type "# View a specific profile"
+Type "# View specific profile"
 Enter
 Type "redisctl profile get development"
-Enter
-Type "Profile: development"
-Enter
-Type "Type: cloud"
-Enter
-Type "API URL: https://api.redislabs.com/v1"
-Enter
-Type "API Key: ****KEY (from environment)"
 Enter
 Sleep 2s
 Enter
@@ -84,28 +54,9 @@ Type "# Set default profile"
 Enter
 Type "redisctl profile default production"
 Enter
-Type "Default profile set to: production"
-Enter
 Sleep 1.5s
 Enter
 
-Type "# Test authentication"
+Type "# RemoveRemove test profile"
 Enter
-Type "redisctl auth test --profile production"
-Enter
-Type "✓ Authentication successful for profile 'production'"
-Enter
-Type "  Account ID: 12345"
-Enter
-Type "  Account Name: ACME Corp"
-Enter
-Sleep 2s
-Enter
-
-Type "# Remove a profile"
-Enter
-Type "redisctl profile remove test-cluster"
-Enter
-Type "Profile 'test-cluster' removed successfully"
-Enter
-Sleep 1.5s
+Type "redisctl profile removeremove test-clusterSleep 1.5sEOF </dev/null
