@@ -1,6 +1,7 @@
 # Summary
 
 [Introduction](./introduction.md)
+[Live Demos](./demos.md)
 
 # Getting Started
 
