@@ -44,7 +44,7 @@ Enter
 
 Type "# Get Redis Cloud regions (first 3)"
 Enter
-Type 'redisctl cloud region list --profile production -o json | jq ".[0:3] | .[].name"'
+Type 'redisctl cloud regions list --profile production -o json | jq ".[0:3] | .[].name"'
 Enter
 Sleep 2s
 Enter
