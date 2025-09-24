@@ -14,9 +14,10 @@ Enter
 Sleep 1s
 Enter
 
-Type "# ListList existingprofilesprofilesnew developmentprofiles"
+Type "# ListListList existingexistingprofilesprofilesprofilesnew developmentprofiles"
 Enter
 Type "redisctl profile set dev-cloud --deployment cloud --api-key \${REDIS_DEV_KEY} --api-secret \${REDIS_DEV_SECRET}"
+Type "redisctl profile list"
 
 Type "redisctl profile set prod --deployment cloud --api-key \${REDIS_CLOUD_KEY} --api-secret \${REDIS_CLOUD_SECRET}"
 Type "redisctl profile set development --deployment cloud --api-key DEV-KEY --api-secret DEV-SECRET"
@@ -24,12 +25,12 @@ Enter
 Sleep 2s
 Enter
 
-Type "# AddAdd aanEnterprise cluster profile"
+Type "# AddAddAdd aastaging cluster profile"
 Enter
-Type "redisctl profile set devdev --deployment enterprise --url https://dev.redisdev.local:9443 --username adminadmin --password pass123\${REDIS_PASSWORD} --insecureSleep 2s
+Type "redisctl profile set devstagingdev --deployment cloud --apikeySTAGE_KEY--api-secret STAGE_SECRETSleep 2s
 Enter
 
-Type "# ViewView updated profileprofilesallupdated profile profiles(filtered)"
+Type "# ViewAddView updated profileaprofilesallupdated profile profileslocal dev profile(filtered)"
 Enter
 Type "redisctl profile list"
 Enter
@@ -39,19 +40,19 @@ Enter
 Type "# View specific profile"
 Enter
 Type "redisctl profile list"
- detailsget prodlist| grep devSleep 2s
+ detailsget prodsetlocal-dev --deployment enterprise --url https://dev.local:9443 --username dev@redis.local --password DevPass123 --insecureSleep2s
+#View updated profile listredisctlprofile detailsget staginglist| grep devSleep 2s
  details (credentials are masked)get cloudSleep 2s
 Enter
 
 Type "# Set default profile"
 Enter
-Type "redisctl profile default prodcloudSleep 1.5s
+Type "redisctl profile default prodstagingcloudSleep 1.5s
 Enter
 
-Type "# RemoveTestTestauthentication configuration"
+Type "# RemoveRemoveTestTestauthenticationa configuration"
 Enter
-Type "redisctl auth test --profile removecloudSleepprodSleepremove test-cluster2s
-#Removea profileredisctlprofileremovedev2.5s
+Type "redisctl auth test --profile removeremove local-dev2.5s
 #Removetest profilesredisctlprofileremovedev-cloudType "redisctl profile remove dev-cluster"
 Enter
 Sleep 1.5sEOF </dev/null

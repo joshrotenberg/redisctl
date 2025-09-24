@@ -21,79 +21,45 @@ Enter
 Sleep 1.5s
 Enter
 
-Type "# View available commands"
+Type "# Create a Cloud profile"
 Enter
-Type "redisctl --help | head -20"
+Type "redisctl profile set prod --deployment cloud --api-key KEY123 --api-secret SECRET456"
 Enter
-Sleep 2.5s
-Enter
-
-Type "# Create profiles for different environments"
-Enter
-Type "redisctl profile set prod --deployment cloud --api-key PROD_KEY --api-secret PROD_SECRET"
-Enter
-Sleep 1.5s
+Sleep 2s
 Enter
 
-Type "redisctl profile set dev --deployment enterprise --url https://dev.local:9443 --username admin --password pass123 --insecure"
+Type "# Create an Enterprise profile"
 Enter
-Sleep 1.5s
+Type "redisctl profile set dev --deployment enterprise --url https://localhost:9443 --username admin --password pass123 --insecure"
 Enter
-
-Type "# List all profiles"
-configuredType "# Create profiles for different environments"
-Enter
-Type "redisctl profile set production --deployment cloud --api-key PROD_KEY --api-secret PROD_SECRET"
-Enter
-Sleep 1.5s
-Enter
-
-Type "redisctl profile set staging --deployment cloud --api-key STAGE_KEY --api-secret STAGE_SECRET"
-Enter
-Sleep 1.5s
-Enter
-
-Type "redisctl profile set local --deployment enterprise --url https://localhost:9443 --username admin@redis.local --password Redis123! --insecure"
-Enter
-Sleep 1.5s
+Sleep 2s
 Enter
 
 Type "# List all profiles"
 Enter
-Type "redisctl profile list | grep -E '^(cloud|production|staging|local)'"
-Enter
-Sleep 2s
-Enter
-
-Type "# View Cloud account info"
-Enter
-Type "redisctl cloud account get --profile cloud -o json | jq '{id: .accountId, name: .name}'"
-Enter
-Sleep 2s
-Enter
-
-Type "# List Cloud regions"
-Enter
-Type "redisctl cloud regions list --profile cloud -o json | jq '.[0:3] | .[] | .provider + \": \" + .name'"
-Enter
-Sleep 2s
-Enter
-
-Type "# List subscriptions"
-Enter
-Type "redisctl cloud subscription list --profile cloud -o table"
+Type "redisctl profile list"
 Enter
 Sleep 2.5s
 Enter
 
-Type "# SetDirectAPIaccesswithfilteringapi/payment-methods --profile cloud -o json | jq '.paymentMethods | length'ViewavailableEnterprisecommands"enterprisehelphead12Setdefaultprofile"default 1.5sRemoveaprofile"profile remove staging"
+Type "# View specific profile"
+Enter
+Type "redisctl profile get prod"
+Enter
+Sleep 2s
+Enter
+
+Type "# Set default profile"
+Enter
+Type "redisctl profile default prod"
 Enter
 Sleep 1.5s
 Enter
 
 Type "# Show available commands"
 Enter
-Type "redisctlhelp|head15Enter
+Type "redisctl --help | head -15"
+Enter
 Sleep 2s
 
 Sleep 500ms
