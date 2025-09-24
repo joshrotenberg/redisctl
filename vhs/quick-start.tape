@@ -41,23 +41,41 @@ Sleep 1.5s
 Enter
 
 Type "# List all profiles"
+Type "# Create profiles for different environments"
+Enter
+Type "redisctl profile set production --deployment cloud --api-key PROD_KEY --api-secret PROD_SECRET"
+Enter
+Sleep 1.5s
+Enter
+
+Type "redisctl profile set staging --deployment cloud --api-key STAGE_KEY --api-secret STAGE_SECRET"
+Enter
+Sleep 1.5s
+Enter
+
+Type "redisctl profile set local --deployment enterprise --url https://localhost:9443 --username admin@redis.local --password Redis123! --insecure"
+Enter
+Sleep 1.5s
+Enter
+
+Type "# List all profiles"
 Enter
 Type "redisctl profile list"
 Enter
 Sleep 2.5s
 Enter
 
-Type "# Set default profile"
+Type "# SetView specific profile"
 Enter
-Type "redisctl profile default prod"
+Type "redisctl profile get prod"
+Setdefaultprofile"default 1.5sRemoveaprofile"profile remove staging"
 Enter
 Sleep 1.5s
 Enter
 
-Type "# View profile details"
+Type "# Show available commands"
 Enter
-Type "redisctl profile get prod"
-Enter
+Type "redisctlhelp|head15Enter
 Sleep 2s
 
 Sleep 500ms

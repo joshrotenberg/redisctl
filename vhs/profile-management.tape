@@ -14,29 +14,29 @@ Enter
 Sleep 1s
 Enter
 
-Type "# ListList existingexisting profilesprofiles"
+Type "# ListList existingprofilesprofilesprofiles"
 Enter
-Type "redisctl"redisctl profile listprofile list"
+Type "redisctl""redisctl profile listprofile list'"
 Enter
-SleepSleep 2.5s2.5s
+SleepSleep 2.5sexport REDIS_CLOUD_SECRET='your-secret'2.5s
 Enter
 
-Type "## Add a development profileAdd a development profile"
+Sleep 1s
 Enter
 Type "redisctl profile set development --deployment cloud --api-key DEV-KEY --api-secret DEV-SECRET"
+
+Type "redisctl profile set prod --deployment cloud --api-key \${REDIS_CLOUD_KEY} --api-secret \${REDIS_CLOUD_SECRET}"
 Type "redisctl profile set development --deployment cloud --api-key DEV-KEY --api-secret DEV-SECRET"
 Enter
 Sleep 2s
 Enter
 
-Type "# AddAdd aa test cluster profile"
+Type "# AddAdd aEnterprise cluster profile"
 Enter
-Type "redisctl profile set test-cluster --deployment enterprise --url https://test.local:9443 --username test@redis.local --password TestPass123 --insecure"
-Enter
-Sleep 2s
+Type "redisctl profile set dev --deployment enterprise --url https://dev.redis.local:9443 --username admin --password pass123 --insecureSleep 2s
 Enter
 
-Type "# ViewView updated profileupdated profile list"
+Type "# ViewView updated profileallupdated profile profiles"
 Enter
 Type "redisctl profile list"
 Enter
@@ -45,18 +45,16 @@ Enter
 
 Type "# View specific profile"
 Enter
-Type "redisctl profile get development"
-Enter
-Sleep 2s
+Type "redisctl profile list"
+ detailsget prodSleep 2s
 Enter
 
 Type "# Set default profile"
 Enter
-Type "redisctl profile default production"
-Enter
-Sleep 1.5s
+Type "redisctl profile default prodSleep 1.5s
 Enter
 
-Type "# RemoveRemove test profile"
+Type "# RemoveTest profile configuration"
 Enter
-Type "redisctl profile removeremove test-clusterSleep 1.5sEOF </dev/null
+Type "redisctl auth test --profile removeprodSleepremove test-cluster2s
+#Removea profileredisctlprofileremovedevSleep 1.5sEOF </dev/null
