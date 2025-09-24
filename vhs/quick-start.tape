@@ -41,7 +41,7 @@ Sleep 1.5s
 Enter
 
 Type "# List all profiles"
-Type "# Create profiles for different environments"
+configuredType "# Create profiles for different environments"
 Enter
 Type "redisctl profile set production --deployment cloud --api-key PROD_KEY --api-secret PROD_SECRET"
 Enter
@@ -60,15 +60,33 @@ Enter
 
 Type "# List all profiles"
 Enter
-Type "redisctl profile list"
+Type "redisctl profile list | grep -E '^(cloud|production|staging|local)'"
+Enter
+Sleep 2s
+Enter
+
+Type "# View Cloud account info"
+Enter
+Type "redisctl cloud account get --profile cloud -o json | jq '{id: .accountId, name: .name}'"
+Enter
+Sleep 2s
+Enter
+
+Type "# List Cloud regions"
+Enter
+Type "redisctl cloud regions list --profile cloud -o json | jq '.[0:3] | .[] | .provider + \": \" + .name'"
+Enter
+Sleep 2s
+Enter
+
+Type "# List subscriptions"
+Enter
+Type "redisctl cloud subscription list --profile cloud -o table"
 Enter
 Sleep 2.5s
 Enter
 
-Type "# SetView specific profile"
-Enter
-Type "redisctl profile get prod"
-Setdefaultprofile"default 1.5sRemoveaprofile"profile remove staging"
+Type "# SetDirectAPIaccesswithfilteringapi/payment-methods --profile cloud -o json | jq '.paymentMethods | length'ViewavailableEnterprisecommands"enterprisehelphead12Setdefaultprofile"default 1.5sRemoveaprofile"profile remove staging"
 Enter
 Sleep 1.5s
 Enter
