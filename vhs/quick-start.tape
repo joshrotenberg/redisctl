@@ -21,37 +21,42 @@ Enter
 Sleep 1.5s
 Enter
 
-Type "# List existing profiles"
+Type "# View available commands"
+Enter
+Type "redisctl --help | head -20"
+Enter
+Sleep 2.5s
+Enter
+
+Type "# Create profiles for different environments"
+Enter
+Type "redisctl profile set prod --deployment cloud --api-key PROD_KEY --api-secret PROD_SECRET"
+Enter
+Sleep 1.5s
+Enter
+
+Type "redisctl profile set dev --deployment enterprise --url https://dev.local:9443 --username admin --password pass123 --insecure"
+Enter
+Sleep 1.5s
+Enter
+
+Type "# List all profiles"
 Enter
 Type "redisctl profile list"
 Enter
 Sleep 2.5s
 Enter
 
-Type "# Create a new Cloud profile"
+Type "# Set default profile"
 Enter
-Type "redisctl profile set development --deployment cloud --api-key DEV-KEY --api-secret DEV-SECRET"
+Type "redisctl profile default prod"
 Enter
-Sleep 2s
+Sleep 1.5s
 Enter
 
 Type "# View profile details"
 Enter
-Type "redisctl profile get production"
-Enter
-Sleep 2s
-Enter
-
-Type "# Get Redis Cloud regions (first 3)"
-Enter
-Type 'redisctl cloud regions list --profile production -o json | jq ".[0:3] | .[].name"'
-Enter
-Sleep 2s
-Enter
-
-Type "# Direct API with JMESPath filtering"
-Enter
-Type 'redisctl api cloud get /payment-methods --profile production -o json -q "paymentMethods[0].cardType"'
+Type "redisctl profile get prod"
 Enter
 Sleep 2s
 
