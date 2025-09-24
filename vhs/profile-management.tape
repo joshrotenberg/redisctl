@@ -18,62 +18,94 @@ Type "# List existing profiles"
 Enter
 Type "redisctl profile list"
 Enter
+Type "NAME         TYPE         DETAILS"
+Enter
+Type "-----------  ------------ ------------------------------"
+Enter
+Type "production   cloud        URL: https://api.redislabs.com/v1"
+Enter
+Type "staging      cloud        URL: https://api.redislabs.com/v1"
+Enter
+Type "local        enterprise   URL: https://localhost:9443 (insecure)"
+Enter
 Sleep 2s
 Enter
 
-Type "# Add a Redis Cloud profile with environment variables"
+Type "# Add a new Redis Cloud profile with environment variables"
 Enter
-Type 'redisctl profile set cloud-prod \'
+Type 'redisctl profile set development \'
 Enter
-Type '  --deployment-type cloud \'
+Type '  --deployment cloud \'
 Enter
 Type '  --api-key "${REDIS_CLOUD_KEY}" \'
 Enter
 Type '  --api-secret "${REDIS_CLOUD_SECRET}"'
 Enter
+Type "Profile 'development' saved successfully"
+Enter
 Sleep 2s
 Enter
 
-Type "# Add a Redis Enterprise profile for local testing"
+Type "# Add a Redis Enterprise profile for testing"
 Enter
-Type 'redisctl profile set enterprise-local \'
+Type 'redisctl profile set test-cluster \'
 Enter
-Type '  --deployment-type enterprise \'
+Type '  --deployment enterprise \'
 Enter
-Type '  --url "https://localhost:9443" \'
+Type '  --url "https://test.redis.local:9443" \'
 Enter
 Type '  --username "admin@redis.local" \'
 Enter
-Type '  --password "Redis123!" \'
+Type '  --password "${REDIS_PASSWORD}" \'
 Enter
 Type '  --insecure'
+Enter
+Type "Profile 'test-cluster' saved successfully"
 Enter
 Sleep 2s
 Enter
 
 Type "# View a specific profile"
 Enter
-Type "redisctl profile get enterprise-local"
+Type "redisctl profile get development"
+Enter
+Type "Profile: development"
+Enter
+Type "Type: cloud"
+Enter
+Type "API URL: https://api.redislabs.com/v1"
+Enter
+Type "API Key: ****KEY (from environment)"
 Enter
 Sleep 2s
 Enter
 
-Type "# Set a default profile"
+Type "# Set default profile"
 Enter
-Type "redisctl profile default enterprise-local"
+Type "redisctl profile default production"
+Enter
+Type "Default profile set to: production"
 Enter
 Sleep 1.5s
 Enter
 
 Type "# Test authentication"
 Enter
-Type "redisctl auth test --profile enterprise-local"
+Type "redisctl auth test --profile production"
+Enter
+Type "✓ Authentication successful for profile 'production'"
+Enter
+Type "  Account ID: 12345"
+Enter
+Type "  Account Name: ACME Corp"
 Enter
 Sleep 2s
 Enter
 
 Type "# Remove a profile"
 Enter
-Type "redisctl profile remove cloud-dev"
+Type "redisctl profile remove test-cluster"
+Enter
+Type "Profile 'test-cluster' removed successfully"
 Enter
 Sleep 1.5s

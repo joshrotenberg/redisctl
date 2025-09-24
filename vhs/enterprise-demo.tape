@@ -29,7 +29,7 @@ Enter
 
 Type "# Get cluster information"
 Enter
-Type "redisctl enterprise cluster info -o table"
+Type "redisctl enterprise cluster get -o table"
 Enter
 Sleep 2.5s
 Enter
