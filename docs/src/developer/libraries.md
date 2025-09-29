@@ -24,8 +24,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "your-api-secret",
     )?;
 
-    // Get account info
-    let account = client.get_raw("/account").await?;
+    // Get account info (root endpoint)
+    let account = client.get_raw("/").await?;
     println!("{}", account);
 
     Ok(())
