@@ -117,7 +117,7 @@ redisctl api cloud get /subscriptions | jq '.' > subscriptions.json
 ## Common Endpoints
 
 ### Account & Billing
-- `/account` - Account information
+- `/` - Account information (root endpoint)
 - `/payment-methods` - Payment methods
 - `/cloud-accounts` - Cloud provider accounts
 
