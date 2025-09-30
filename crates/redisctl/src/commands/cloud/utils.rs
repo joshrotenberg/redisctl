@@ -7,6 +7,7 @@ use serde_json::Value;
 use std::fs;
 use std::io::{self, Write};
 use tabled::Tabled;
+use unicode_segmentation::UnicodeSegmentation;
 
 #[cfg(unix)]
 use std::io::IsTerminal;
@@ -25,14 +26,17 @@ pub struct DetailRow {
     pub value: String,
 }
 
-/// Truncate string to max length with ellipsis
+/// Truncate string to max length with ellipsis (Unicode-safe)
 pub fn truncate_string(s: &str, max_len: usize) -> String {
-    if s.len() <= max_len {
+    let graphemes: Vec<&str> = s.graphemes(true).collect();
+
+    if graphemes.len() <= max_len {
         s.to_string()
     } else if max_len > 3 {
-        format!("{}...", &s[..max_len - 3])
+        let truncated: String = graphemes[..max_len - 3].join("");
+        format!("{}...", truncated)
     } else {
-        s[..max_len].to_string()
+        graphemes[..max_len].join("")
     }
 }
 
@@ -263,5 +267,89 @@ pub fn read_file_input(input: &str) -> CliResult<String> {
             })
     } else {
         Ok(input.to_string())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_truncate_string_ascii() {
+        // Test basic ASCII truncation
+        assert_eq!(truncate_string("hello", 10), "hello");
+        assert_eq!(truncate_string("hello world", 8), "hello...");
+        assert_eq!(truncate_string("hello", 5), "hello");
+        assert_eq!(truncate_string("hello", 4), "h...");
+        assert_eq!(truncate_string("abc", 2), "ab");
+    }
+
+    #[test]
+    fn test_truncate_string_unicode() {
+        // Test with emoji (each emoji is one grapheme cluster)
+        assert_eq!(truncate_string("Hello 👋 World", 10), "Hello 👋...");
+        assert_eq!(truncate_string("🚀🎉🎊🎈", 6), "🚀🎉🎊🎈");
+        assert_eq!(truncate_string("🚀🎉🎊🎈", 3), "🚀🎉🎊");
+        assert_eq!(truncate_string("🚀🎉🎊🎈", 2), "🚀🎉");
+
+        // Test with combined emoji (family emoji is one grapheme)
+        assert_eq!(truncate_string("👨‍👩‍👧‍👦👋", 2), "👨‍👩‍👧‍👦👋");
+        assert_eq!(truncate_string("👨‍👩‍👧‍👦👋🎉", 3), "👨‍👩‍👧‍👦👋🎉");
+        assert_eq!(truncate_string("👨‍👩‍👧‍👦👋🎉", 2), "👨‍👩‍👧‍👦👋");
+    }
+
+    #[test]
+    fn test_truncate_string_cjk() {
+        // Test with Chinese characters
+        assert_eq!(truncate_string("你好世界", 10), "你好世界");
+        assert_eq!(truncate_string("你好世界", 3), "你好世");
+        assert_eq!(truncate_string("你好世界", 2), "你好");
+
+        // Test with Japanese
+        assert_eq!(truncate_string("こんにちは", 10), "こんにちは");
+        assert_eq!(truncate_string("こんにちは", 4), "こ...");
+
+        // Test with Korean
+        assert_eq!(truncate_string("안녕하세요", 10), "안녕하세요");
+        assert_eq!(truncate_string("안녕하세요", 4), "안...");
+    }
+
+    #[test]
+    fn test_truncate_string_mixed() {
+        // Test with mixed ASCII and Unicode
+        assert_eq!(truncate_string("Hello 世界", 10), "Hello 世界");
+        assert_eq!(truncate_string("Hello 世界", 8), "Hello 世界");
+        assert_eq!(truncate_string("Hello 世界", 7), "Hell...");
+        assert_eq!(truncate_string("Redis🚀Fast", 10), "Redis🚀Fast");
+    }
+
+    #[test]
+    fn test_truncate_string_edge_cases() {
+        // Empty string
+        assert_eq!(truncate_string("", 10), "");
+
+        // Very short max length
+        assert_eq!(truncate_string("hello", 0), "");
+        assert_eq!(truncate_string("hello", 1), "h");
+        assert_eq!(truncate_string("hello", 2), "he");
+        assert_eq!(truncate_string("hello", 3), "hel");
+
+        // Exactly at boundary
+        assert_eq!(truncate_string("abc", 3), "abc");
+        assert_eq!(truncate_string("abcd", 4), "abcd");
+    }
+
+    #[test]
+    fn test_truncate_string_doesnt_panic() {
+        // These used to panic with the old byte-based implementation
+        let _ = truncate_string("Hello 👋 World 🌍", 10);
+        let _ = truncate_string("🚀", 5);
+        let _ = truncate_string("你好世界", 3);
+        let _ = truncate_string("👨‍👩‍👧‍👦", 2);
+
+        // Complex Unicode that could cause issues
+        let _ = truncate_string("é", 1); // combining character
+        let _ = truncate_string("🇺🇸", 1); // flag emoji (two code points)
+        let _ = truncate_string("👍🏽", 1); // emoji with skin tone modifier
     }
 }
