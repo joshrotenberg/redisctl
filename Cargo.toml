@@ -39,6 +39,8 @@ create-release = true
 install-path = "CARGO_HOME"
 # Whether to install an updater program
 install-updater = false
+# Allow custom modifications to generated CI files
+allow-dirty = ["ci"]
 
 [workspace.dependencies]
 # Core dependencies
