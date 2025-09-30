@@ -1,5 +1,28 @@
 # Installation
 
+## Homebrew (macOS/Linux)
+
+The easiest way to install on macOS or Linux:
+
+```bash
+# Install directly (automatically taps the repository)
+brew install joshrotenberg/brew/redisctl
+
+# Or tap first, then install
+brew tap joshrotenberg/brew
+brew install redisctl
+```
+
+This will:
+- Install the latest stable version
+- Set up the binary in your PATH
+- Enable automatic updates via `brew upgrade`
+
+To upgrade to the latest version:
+```bash
+brew upgrade redisctl
+```
+
 ## Binary Releases
 
 Download the latest release for your platform from the [GitHub releases page](https://github.com/joshrotenberg/redisctl/releases).

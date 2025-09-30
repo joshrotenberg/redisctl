@@ -42,7 +42,7 @@ on:
   pull_request:
   push:
     tags:
-      - '**[0-9]+.[0-9]+.[0-9]+*'
+      - "**[0-9]+.[0-9]+.[0-9]+*"
 
 jobs:
   # Run 'dist plan' (or host) to determine what tasks we need to do
@@ -277,6 +277,22 @@ jobs:
           echo "$ANNOUNCEMENT_BODY" > $RUNNER_TEMP/notes.txt
 
           gh release create "${{ needs.plan.outputs.tag }}" --target "$RELEASE_COMMIT" $PRERELEASE_FLAG --title "$ANNOUNCEMENT_TITLE" --notes-file "$RUNNER_TEMP/notes.txt" artifacts/*
+
+  update_brew_formula:
+    name: Update Brew Formula
+    runs-on: ubuntu-latest
+    needs: [plan, host]
+    if: ${{ needs.plan.outputs.publishing == 'true' }}
+    steps:
+      - uses: mislav/bump-homebrew-formula-action@v3.1
+        with:
+          formula-name: redisctl
+          formula-path: Formula/redisctl.rb
+          base-branch: main
+          tag-name: ${{ github.ref_name }}
+          homebrew-tap: joshrotenberg/homebrew-brew
+        env:
+          COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
 
   announce:
     needs:
