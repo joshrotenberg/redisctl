@@ -17,6 +17,11 @@ A unified command-line interface for managing Redis Cloud and Redis Enterprise d
 
 ## Installation
 
+### Homebrew (macOS/Linux)
+```bash
+brew install joshrotenberg/brew/redisctl
+```
+
 ### From Binary Releases
 Download the latest release for your platform from the [releases page](https://github.com/joshrotenberg/redisctl/releases).
 
