@@ -17,6 +17,16 @@ The CLI provides three layers of interaction:
 2. **Human-Friendly Commands** - Typed wrappers around common operations  
 3. **Workflows** - Multi-step orchestrated operations (coming soon)
 
+## Installation
+
+Get started quickly with Homebrew:
+
+```bash
+brew install joshrotenberg/brew/redisctl
+```
+
+Or see [Installation](./getting-started/installation.md) for other methods.
+
 ## Quick Example
 
 ```bash
