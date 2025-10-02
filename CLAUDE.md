@@ -465,6 +465,52 @@ let vpc = handler.create_active_active(subscription_id, region_id, &request).awa
 - **Testing**: Mock all HTTP calls with `wiremock`, never make real API calls in tests
 - **Active-Active**: Use `_active_active` suffixed functions for CRDB operations
 
+## OpenAPI Specification Validation
+
+### Automated Validation Tests
+The `redis-cloud` crate includes automated tests that validate our implementation against the official OpenAPI specification:
+
+**Test File**: `crates/redis-cloud/tests/openapi_validation.rs`
+
+**What is Validated**:
+1. **Spec Integrity** - OpenAPI spec loads and has required sections
+2. **Endpoint Count** - Verify we have the expected number of endpoints
+3. **Schema Definitions** - Key response types exist in spec
+4. **Endpoint Categories** - All expected API categories are present
+5. **Response Type Coverage** - Core fields match spec definitions
+
+**Running Validation**:
+```bash
+cargo test --package redis-cloud --test openapi_validation
+```
+
+### OpenAPI Spec Location
+- **Local Copy**: `crates/redis-cloud/tests/fixtures/cloud_openapi.json`
+- **Official Source**: https://redis.io/docs/latest/operate/rc/api/api-reference/openapi.json
+
+### API Documentation Pattern
+All handler functions include OpenAPI references in their documentation:
+
+```rust
+/// Get cloud accounts
+///
+/// Gets a list of all configured cloud accounts.
+///
+/// # API Endpoint
+///
+/// `GET /cloud-accounts`
+///
+/// See [OpenAPI Spec](https://redis.io/docs/latest/operate/rc/api/api-reference/openapi.json) - `getCloudAccounts`
+pub async fn get_cloud_accounts(&self) -> Result<CloudAccounts> {
+    // ...
+}
+```
+
+This pattern:
+- Links to the official OpenAPI specification
+- References the specific operationId from the spec
+- Makes it easy to cross-reference implementation with API docs
+
 ## Testing Approach
 
 ### MANDATORY Testing Requirements

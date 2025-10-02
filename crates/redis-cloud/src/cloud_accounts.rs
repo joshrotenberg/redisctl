@@ -24,6 +24,13 @@
 //! - **Provider Details**: Retrieve provider-specific account information
 //! - **Multi-cloud Support**: Manage accounts across different cloud providers
 //!
+//! # API Reference
+//!
+//! All operations in this module map to the Redis Cloud REST API's Cloud Accounts endpoints.
+//! For detailed API documentation, see the [Redis Cloud OpenAPI Specification].
+//!
+//! [Redis Cloud OpenAPI Specification]: https://redis.io/docs/latest/operate/rc/api/api-reference/openapi.json
+//!
 //! # Example Usage
 //!
 //! ```no_run
@@ -281,17 +288,27 @@ impl CloudAccountsHandler {
     }
 
     /// Get cloud accounts
+    ///
     /// Gets a list of all configured cloud accounts.
     ///
-    /// GET /cloud-accounts
+    /// # API Endpoint
+    ///
+    /// `GET /cloud-accounts`
+    ///
+    /// See [OpenAPI Spec](https://redis.io/docs/latest/operate/rc/api/api-reference/openapi.json) - `getCloudAccounts`
     pub async fn get_cloud_accounts(&self) -> Result<CloudAccounts> {
         self.client.get("/cloud-accounts").await
     }
 
     /// Create cloud account
+    ///
     /// Creates a cloud account.
     ///
-    /// POST /cloud-accounts
+    /// # API Endpoint
+    ///
+    /// `POST /cloud-accounts`
+    ///
+    /// See [OpenAPI Spec](https://redis.io/docs/latest/operate/rc/api/api-reference/openapi.json) - `createCloudAccount`
     pub async fn create_cloud_account(
         &self,
         request: &CloudAccountCreateRequest,
@@ -300,9 +317,14 @@ impl CloudAccountsHandler {
     }
 
     /// Delete cloud account
+    ///
     /// Deletes a cloud account.
     ///
-    /// DELETE /cloud-accounts/{cloudAccountId}
+    /// # API Endpoint
+    ///
+    /// `DELETE /cloud-accounts/{cloudAccountId}`
+    ///
+    /// See [OpenAPI Spec](https://redis.io/docs/latest/operate/rc/api/api-reference/openapi.json) - `deleteCloudAccount`
     pub async fn delete_cloud_account(&self, cloud_account_id: i32) -> Result<TaskStateUpdate> {
         let response = self
             .client
@@ -312,9 +334,14 @@ impl CloudAccountsHandler {
     }
 
     /// Get a single cloud account
+    ///
     /// Gets details on a single cloud account.
     ///
-    /// GET /cloud-accounts/{cloudAccountId}
+    /// # API Endpoint
+    ///
+    /// `GET /cloud-accounts/{cloudAccountId}`
+    ///
+    /// See [OpenAPI Spec](https://redis.io/docs/latest/operate/rc/api/api-reference/openapi.json) - `getCloudAccountById`
     pub async fn get_cloud_account_by_id(&self, cloud_account_id: i32) -> Result<CloudAccount> {
         self.client
             .get(&format!("/cloud-accounts/{}", cloud_account_id))
@@ -322,9 +349,14 @@ impl CloudAccountsHandler {
     }
 
     /// Update cloud account
+    ///
     /// Updates cloud account details.
     ///
-    /// PUT /cloud-accounts/{cloudAccountId}
+    /// # API Endpoint
+    ///
+    /// `PUT /cloud-accounts/{cloudAccountId}`
+    ///
+    /// See [OpenAPI Spec](https://redis.io/docs/latest/operate/rc/api/api-reference/openapi.json) - `updateCloudAccount`
     pub async fn update_cloud_account(
         &self,
         cloud_account_id: i32,
