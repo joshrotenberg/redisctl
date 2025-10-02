@@ -36,8 +36,13 @@ async fn test_get_all_subscriptions() {
     let result = handler.get_all_subscriptions().await.unwrap();
 
     assert_eq!(result.account_id, Some(456));
-    // The subscriptions are in the extra field
-    assert!(result.extra.get("subscriptions").is_some());
+    // The subscriptions are now first-class field
+    assert!(result.subscriptions.is_some());
+    let subs = result.subscriptions.unwrap();
+    assert_eq!(subs.len(), 1);
+    assert_eq!(subs[0].id, Some(123));
+    assert_eq!(subs[0].name, Some("Production".to_string()));
+    assert_eq!(subs[0].status, Some("active".to_string()));
 }
 
 #[tokio::test]

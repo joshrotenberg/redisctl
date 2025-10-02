@@ -93,30 +93,51 @@ pub struct CloudAccountUpdateRequest {
 /// RedisLabs Cloud Account information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+/// Cloud Account
+///
+/// Represents a cloud provider account integration with all known API fields
 pub struct CloudAccount {
+    /// Cloud account ID
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<i32>,
 
+    /// Cloud account display name
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 
+    /// Account status (e.g., "active", "error")
     #[serde(skip_serializing_if = "Option::is_none")]
     pub status: Option<String>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub access_key_id: Option<String>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub sign_in_login_url: Option<String>,
-
+    /// Cloud provider (e.g., "AWS", "GCP", "Azure")
     #[serde(skip_serializing_if = "Option::is_none")]
     pub provider: Option<String>,
 
-    /// HATEOAS links
+    /// Cloud provider access key ID
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub access_key_id: Option<String>,
+
+    /// Cloud provider secret key (typically masked in responses)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub access_secret_key: Option<String>,
+
+    /// Cloud provider management console username
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub console_username: Option<String>,
+
+    /// Cloud provider management console password (typically masked)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub console_password: Option<String>,
+
+    /// Cloud provider management console login URL
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sign_in_login_url: Option<String>,
+
+    /// HATEOAS links for API navigation
     #[serde(skip_serializing_if = "Option::is_none")]
     pub links: Option<Vec<HashMap<String, Value>>>,
 
-    /// Additional fields from the API
+    /// Only for truly unknown/future API fields
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -156,17 +177,24 @@ pub struct CloudAccountCreateRequest {
 }
 
 /// RedisLabs Cloud Accounts information
+///
+/// Response from GET /cloud-accounts containing list of cloud provider integrations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CloudAccounts {
+    /// Account ID
     #[serde(skip_serializing_if = "Option::is_none")]
     pub account_id: Option<i32>,
 
-    /// HATEOAS links
+    /// List of cloud provider accounts (typically in extra as 'cloudAccounts' array)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cloud_accounts: Option<Vec<CloudAccount>>,
+
+    /// HATEOAS links for API navigation
     #[serde(skip_serializing_if = "Option::is_none")]
     pub links: Option<Vec<HashMap<String, Value>>>,
 
-    /// Additional fields from the API
+    /// Only for truly unknown/future API fields
     #[serde(flatten)]
     pub extra: Value,
 }

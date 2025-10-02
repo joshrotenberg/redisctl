@@ -115,33 +115,47 @@ pub struct AclUserUpdateRequest {
 }
 
 /// Redis list of ACL users in current account
+///
+/// Response from GET /acl/users
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountACLUsers {
+    /// Account ID
     #[serde(skip_serializing_if = "Option::is_none")]
     pub account_id: Option<i32>,
 
-    /// HATEOAS links
+    /// List of ACL users (typically in extra as 'users' array)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub users: Option<Vec<ACLUser>>,
+
+    /// HATEOAS links for API navigation
     #[serde(skip_serializing_if = "Option::is_none")]
     pub links: Option<Vec<HashMap<String, Value>>>,
 
-    /// Additional fields from the API
+    /// Only for truly unknown/future API fields
     #[serde(flatten)]
     pub extra: Value,
 }
 
 /// Redis list of ACL redis rules in current account
+///
+/// Response from GET /acl/redisRules
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountACLRedisRules {
+    /// Account ID
     #[serde(skip_serializing_if = "Option::is_none")]
     pub account_id: Option<i32>,
 
-    /// HATEOAS links
+    /// List of Redis ACL rules (typically in extra as 'redisRules' array)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub redis_rules: Option<Vec<Value>>,
+
+    /// HATEOAS links for API navigation
     #[serde(skip_serializing_if = "Option::is_none")]
     pub links: Option<Vec<HashMap<String, Value>>>,
 
-    /// Additional fields from the API
+    /// Only for truly unknown/future API fields
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -165,17 +179,24 @@ pub struct AclRedisRuleCreateRequest {
 }
 
 /// Redis list of ACL roles in current account
+///
+/// Response from GET /acl/roles
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountACLRoles {
+    /// Account ID
     #[serde(skip_serializing_if = "Option::is_none")]
     pub account_id: Option<i32>,
 
-    /// HATEOAS links
+    /// List of ACL roles (typically in extra as 'roles' array)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub roles: Option<Vec<Value>>,
+
+    /// HATEOAS links for API navigation
     #[serde(skip_serializing_if = "Option::is_none")]
     pub links: Option<Vec<HashMap<String, Value>>>,
 
-    /// Additional fields from the API
+    /// Only for truly unknown/future API fields
     #[serde(flatten)]
     pub extra: Value,
 }

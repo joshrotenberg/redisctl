@@ -677,17 +677,24 @@ pub struct MaintenanceWindowSpec {
 }
 
 /// RedisLabs list of subscriptions in current account
+///
+/// Response from GET /subscriptions
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountSubscriptions {
+    /// Account ID
     #[serde(skip_serializing_if = "Option::is_none")]
     pub account_id: Option<i32>,
 
-    /// HATEOAS links
+    /// List of subscriptions (typically in extra as 'subscriptions' array)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub subscriptions: Option<Vec<Subscription>>,
+
+    /// HATEOAS links for API navigation
     #[serde(skip_serializing_if = "Option::is_none")]
     pub links: Option<Vec<HashMap<String, Value>>>,
 
-    /// Additional fields from the API
+    /// Only for truly unknown/future API fields
     #[serde(flatten)]
     pub extra: Value,
 }
