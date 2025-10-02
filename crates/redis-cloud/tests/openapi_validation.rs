@@ -6,7 +6,7 @@
 use serde_json::Value;
 use std::collections::HashSet;
 
-const OPENAPI_SPEC: &str = include_str!("../../../tmp/cloud_openapi.json");
+const OPENAPI_SPEC: &str = include_str!("fixtures/cloud_openapi.json");
 
 #[test]
 fn test_openapi_spec_loads() {

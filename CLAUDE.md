@@ -485,7 +485,7 @@ cargo test --package redis-cloud --test openapi_validation
 ```
 
 ### OpenAPI Spec Location
-- **Local Copy**: `tmp/cloud_openapi.json`
+- **Local Copy**: `crates/redis-cloud/tests/fixtures/cloud_openapi.json`
 - **Official Source**: https://redis.io/docs/latest/operate/rc/api/api-reference/openapi.json
 
 ### API Documentation Pattern
