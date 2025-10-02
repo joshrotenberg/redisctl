@@ -511,6 +511,67 @@ This pattern:
 - References the specific operationId from the spec
 - Makes it easy to cross-reference implementation with API docs
 
+## Code Quality and Organization Guidelines
+
+### Builder Patterns for Complex Request Types
+
+For complex request types with many optional fields, consider adding builder patterns:
+
+**When to Add Builders**:
+- Request types with 5+ optional fields
+- Types commonly constructed by end users
+- Types where field validation is important
+
+**Example Pattern**:
+```rust
+impl SubscriptionCreateRequest {
+    pub fn builder() -> SubscriptionCreateRequestBuilder {
+        SubscriptionCreateRequestBuilder::default()
+    }
+}
+
+#[derive(Default)]
+pub struct SubscriptionCreateRequestBuilder {
+    // fields...
+}
+
+impl SubscriptionCreateRequestBuilder {
+    pub fn name<S: Into<String>>(mut self, name: S) -> Self {
+        self.name = Some(name.into());
+        self
+    }
+    
+    pub fn build(self) -> SubscriptionCreateRequest {
+        // Validate required fields
+        SubscriptionCreateRequest { /* ... */ }
+    }
+}
+```
+
+### Naming Consistency
+
+**Current Standards**:
+- Handler functions: `get_`, `create_`, `update_`, `delete_`, `list_` prefixes
+- Deprecated aliases marked with `#[deprecated]` attribute
+- Active-Active functions: `_active_active` suffix
+
+**Future Considerations**:
+- Avoid creating new alias functions
+- Use consistent verb prefixes across all handlers
+- Document any exceptions in function comments
+
+### Code Organization
+
+**Current Structure**:
+- Handler functions grouped by resource type (databases, subscriptions, etc.)
+- Separate modules for fixed vs flexible plans
+- Connectivity operations in dedicated submodules
+
+**Best Practices**:
+- Keep related operations together in the same module
+- Use submodules when a feature has 5+ related functions
+- Maintain consistent ordering (CRUD: create, read, update, delete)
+
 ## Testing Approach
 
 ### MANDATORY Testing Requirements
