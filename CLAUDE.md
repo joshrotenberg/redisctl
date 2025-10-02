@@ -428,6 +428,34 @@ Examples:
 - BDB creation: Use `/v2/bdbs` for async operations
 - Actions: Use `/v2/actions` for listing and status
 
+### Active-Active (CRDB) Pattern
+
+Redis Cloud has separate functions for Active-Active (CRDB) operations to ensure type safety:
+
+#### When to Use Active-Active Functions
+Active-Active databases (Conflict-free Replicated Databases) require special handling for multi-region deployments. The `_active_active` suffix indicates functions designed specifically for these databases.
+
+**Key Active-Active Operations:**
+- VPC Peering: `create_active_active()`, `get_active_active()`, `update_active_active()`, `delete_active_active()`
+- PSC: `create_service_active_active()`, `create_endpoint_active_active()`, etc.
+- Transit Gateway: `create_attachment_active_active()`, `get_attachments_active_active()`, etc.
+
+**Why Separate Functions?**
+1. **Different request structures** - AA operations often require region-specific parameters
+2. **Type safety** - Prevents accidentally calling regular endpoints with AA-specific data
+3. **Clear API surface** - Explicit function names make intent clear
+
+**Example:**
+```rust
+// Regular database VPC peering
+let vpc = handler.create(subscription_id, &request).await?;
+
+// Active-Active database VPC peering (requires region specification)
+let vpc = handler.create_active_active(subscription_id, region_id, &request).await?;
+```
+
+**Note:** Despite having separate functions, these map to the same API endpoints. The separation is for developer ergonomics and type safety.
+
 ### Common Code Patterns
 - **Client creation**: Use `create_cloud_client()` or `create_enterprise_client()` helpers
 - **Error context**: Always add `.context()` to errors for debugging
@@ -435,6 +463,7 @@ Examples:
 - **Async operations**: Use `handle_async_response()` for task-based operations
 - **Parameter grouping**: Create params struct when >7 parameters needed
 - **Testing**: Mock all HTTP calls with `wiremock`, never make real API calls in tests
+- **Active-Active**: Use `_active_active` suffixed functions for CRDB operations
 
 ## Testing Approach
 

@@ -37,10 +37,7 @@ async fn test_get_fixed_subscription_databases() {
         .unwrap();
 
     let handler = FixedDatabaseHandler::new(client);
-    let result = handler
-        .get_fixed_subscription_databases(123, None, None)
-        .await
-        .unwrap();
+    let result = handler.list(123, None, None).await.unwrap();
 
     assert_eq!(result.account_id, Some(456));
     assert!(result.links.is_some());
@@ -105,7 +102,7 @@ async fn test_create_fixed_database() {
         extra: serde_json::Value::Null,
     };
 
-    let result = handler.create_fixed_database(123, &request).await.unwrap();
+    let result = handler.create(123, &request).await.unwrap();
     assert_eq!(result.task_id, Some("task-create-fixed-db".to_string()));
     assert_eq!(
         result.command_type,
@@ -196,7 +193,7 @@ async fn test_delete_fixed_database() {
         .unwrap();
 
     let handler = FixedDatabaseHandler::new(client);
-    let result = handler.delete_fixed_database_by_id(123, 456).await.unwrap();
+    let result = handler.delete_by_id(123, 456).await.unwrap();
 
     assert_eq!(result.task_id, Some("task-delete-fixed-db".to_string()));
     assert_eq!(
@@ -236,10 +233,7 @@ async fn test_backup_fixed_database() {
         command_type: None,
         extra: serde_json::Value::Null,
     };
-    let result = handler
-        .backup_fixed_database(123, 456, &request)
-        .await
-        .unwrap();
+    let result = handler.backup(123, 456, &request).await.unwrap();
 
     assert_eq!(result.task_id, Some("task-backup-fixed-db".to_string()));
 }
@@ -278,10 +272,7 @@ async fn test_import_fixed_database() {
         extra: serde_json::Value::Null,
     };
 
-    let result = handler
-        .import_fixed_database(123, 456, &request)
-        .await
-        .unwrap();
+    let result = handler.import(123, 456, &request).await.unwrap();
     assert_eq!(result.task_id, Some("task-import-fixed-db".to_string()));
 }
 
@@ -318,10 +309,7 @@ async fn test_tag_operations() {
         extra: serde_json::Value::Null,
     };
 
-    let result = handler
-        .create_fixed_database_tag(123, 456, &request)
-        .await
-        .unwrap();
+    let result = handler.create_tag(123, 456, &request).await.unwrap();
     assert!(result.key.is_some());
 }
 
@@ -345,9 +333,7 @@ async fn test_error_handling_401() {
         .unwrap();
 
     let handler = FixedDatabaseHandler::new(client);
-    let result = handler
-        .get_fixed_subscription_databases(123, None, None)
-        .await;
+    let result = handler.list(123, None, None).await;
 
     assert!(result.is_err());
     match result {
@@ -378,7 +364,7 @@ async fn test_error_handling_403() {
         .unwrap();
 
     let handler = FixedDatabaseHandler::new(client);
-    let result = handler.delete_fixed_database_by_id(123, 456).await;
+    let result = handler.delete_by_id(123, 456).await;
 
     assert!(result.is_err());
     match result {
@@ -409,9 +395,7 @@ async fn test_error_handling_404() {
         .unwrap();
 
     let handler = FixedDatabaseHandler::new(client);
-    let result = handler
-        .get_fixed_subscription_database_by_id(999, 999)
-        .await;
+    let result = handler.get_by_id(999, 999).await;
 
     assert!(result.is_err());
     if let Err(redis_cloud::CloudError::NotFound { message }) = result {
@@ -472,7 +456,7 @@ async fn test_error_handling_500() {
         command_type: None,
         extra: serde_json::Value::Null,
     };
-    let result = handler.create_fixed_database(123, &request).await;
+    let result = handler.create(123, &request).await;
 
     assert!(result.is_err());
     match result {

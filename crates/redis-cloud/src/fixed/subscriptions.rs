@@ -550,8 +550,13 @@ impl FixedSubscriptionHandler {
     // ========================================================================
     // Backward compatibility wrapper methods
     // ========================================================================
+    // NOTE: These methods are deprecated in favor of the shorter, more idiomatic names.
+    // They will be removed in a future version.
 
     /// Create fixed subscription (backward compatibility)
+    ///
+    /// **Deprecated**: Use [`create`](Self::create) instead
+    #[deprecated(since = "0.8.0", note = "Use `create` instead")]
     pub async fn create_fixed_subscription(
         &self,
         request: &FixedSubscriptionCreateRequest,
@@ -560,6 +565,9 @@ impl FixedSubscriptionHandler {
     }
 
     /// Get fixed subscription (backward compatibility)
+    ///
+    /// **Deprecated**: Use [`get_by_id`](Self::get_by_id) instead
+    #[deprecated(since = "0.8.0", note = "Use `get_by_id` instead")]
     pub async fn get_fixed_subscription(&self, subscription_id: i32) -> Result<TaskStateUpdate> {
         self.get_by_id(subscription_id)
             .await
@@ -567,6 +575,9 @@ impl FixedSubscriptionHandler {
     }
 
     /// Update fixed subscription (backward compatibility)
+    ///
+    /// **Deprecated**: Use [`update`](Self::update) instead
+    #[deprecated(since = "0.8.0", note = "Use `update` instead")]
     pub async fn update_fixed_subscription(
         &self,
         subscription_id: i32,
@@ -576,16 +587,25 @@ impl FixedSubscriptionHandler {
     }
 
     /// Delete fixed subscription (backward compatibility)
+    ///
+    /// **Deprecated**: Use [`delete_by_id`](Self::delete_by_id) instead
+    #[deprecated(since = "0.8.0", note = "Use `delete_by_id` instead")]
     pub async fn delete_fixed_subscription(&self, subscription_id: i32) -> Result<TaskStateUpdate> {
         self.delete_by_id(subscription_id).await
     }
 
     /// Get all fixed subscriptions plans (backward compatibility)
+    ///
+    /// **Deprecated**: Use [`list_plans`](Self::list_plans) instead
+    #[deprecated(since = "0.8.0", note = "Use `list_plans` instead")]
     pub async fn get_all_fixed_subscriptions_plans(&self) -> Result<FixedSubscriptionsPlans> {
         self.list_plans(None, None).await
     }
 
     /// Get fixed subscriptions plans by subscription id (backward compatibility)
+    ///
+    /// **Deprecated**: Use [`get_plans_by_subscription_id`](Self::get_plans_by_subscription_id) instead
+    #[deprecated(since = "0.8.0", note = "Use `get_plans_by_subscription_id` instead")]
     pub async fn get_fixed_subscriptions_plans_by_subscription_id(
         &self,
         subscription_id: i32,
@@ -594,6 +614,9 @@ impl FixedSubscriptionHandler {
     }
 
     /// Get fixed subscriptions plan by id (backward compatibility)
+    ///
+    /// **Deprecated**: Use [`get_plan_by_id`](Self::get_plan_by_id) instead
+    #[deprecated(since = "0.8.0", note = "Use `get_plan_by_id` instead")]
     pub async fn get_fixed_subscriptions_plan_by_id(
         &self,
         plan_id: i32,
@@ -602,16 +625,25 @@ impl FixedSubscriptionHandler {
     }
 
     /// Get fixed redis versions (backward compatibility)
+    ///
+    /// **Deprecated**: Use [`get_redis_versions`](Self::get_redis_versions) instead
+    #[deprecated(since = "0.8.0", note = "Use `get_redis_versions` instead")]
     pub async fn get_fixed_redis_versions(&self, subscription_id: i32) -> Result<RedisVersions> {
         self.get_redis_versions(subscription_id).await
     }
 
     /// Get all fixed subscriptions (backward compatibility)
+    ///
+    /// **Deprecated**: Use [`list`](Self::list) instead
+    #[deprecated(since = "0.8.0", note = "Use `list` instead")]
     pub async fn get_all_fixed_subscriptions(&self) -> Result<FixedSubscriptions> {
         self.list().await
     }
 
     /// Delete fixed subscription by id (backward compatibility)
+    ///
+    /// **Deprecated**: Use [`delete_by_id`](Self::delete_by_id) instead
+    #[deprecated(since = "0.8.0", note = "Use `delete_by_id` instead")]
     pub async fn delete_fixed_subscription_by_id(
         &self,
         subscription_id: i32,
@@ -620,6 +652,9 @@ impl FixedSubscriptionHandler {
     }
 
     /// Get fixed subscription by id (backward compatibility)
+    ///
+    /// **Deprecated**: Use [`get_by_id`](Self::get_by_id) instead
+    #[deprecated(since = "0.8.0", note = "Use `get_by_id` instead")]
     pub async fn get_fixed_subscription_by_id(
         &self,
         subscription_id: i32,

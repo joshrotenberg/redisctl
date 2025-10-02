@@ -121,6 +121,14 @@ pub struct CloudAccount {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub access_secret_key: Option<String>,
 
+    /// AWS Console Role ARN (AWS-specific)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub aws_console_role_arn: Option<String>,
+
+    /// AWS User ARN (AWS-specific)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub aws_user_arn: Option<String>,
+
     /// Cloud provider management console username
     #[serde(skip_serializing_if = "Option::is_none")]
     pub console_username: Option<String>,
