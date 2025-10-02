@@ -155,10 +155,23 @@ async fn test_get_database_by_id() {
         .await
         .unwrap();
 
-    assert_eq!(result.database_id, Some(456));
-    // Additional fields are in result.extra as the Database struct uses flattening
-    assert!(result.extra.get("name").is_some());
-    assert!(result.extra.get("status").is_some());
+    assert_eq!(result.database_id, 456);
+    // Fields are now first-class struct members
+    assert_eq!(result.name, Some("test-database".to_string()));
+    assert_eq!(result.status, Some("active".to_string()));
+    assert_eq!(
+        result.private_endpoint,
+        Some("redis-12345.c1.us-east-1.redislabs.com:16379".to_string())
+    );
+    assert_eq!(
+        result.public_endpoint,
+        Some("redis-12345-ext.c1.us-east-1.redislabs.com:16379".to_string())
+    );
+    assert_eq!(result.memory_limit_in_gb, Some(2.5));
+    assert_eq!(result.data_eviction_policy, Some("allkeys-lru".to_string()));
+    assert_eq!(result.replication, Some(true));
+    assert_eq!(result.data_persistence, Some("aof-every-1-sec".to_string()));
+    assert_eq!(result.protocol, Some("redis".to_string()));
 }
 
 #[tokio::test]

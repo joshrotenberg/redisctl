@@ -580,42 +580,80 @@ pub struct MaintenanceWindow {
 /// RedisLabs Subscription information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+/// Subscription
+///
+/// Represents a Redis Cloud subscription with all known API fields as first-class struct members.
+/// The `extra` field is reserved only for truly unknown/future fields that may be added to the API.
 pub struct Subscription {
+    /// Subscription ID
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<i32>,
 
+    /// Subscription name
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub payment_method_id: Option<i32>,
-
+    /// Subscription status (e.g., "active", "pending", "error")
     #[serde(skip_serializing_if = "Option::is_none")]
     pub status: Option<String>,
 
+    /// Payment method ID
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub memory_storage: Option<String>,
+    pub payment_method_id: Option<i32>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub number_of_databases: Option<i32>,
-
+    /// Payment method type (e.g., "credit-card", "marketplace")
     #[serde(skip_serializing_if = "Option::is_none")]
     pub payment_method_type: Option<String>,
 
+    /// Payment method (e.g., "credit-card", "marketplace")
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub payment_method: Option<String>,
+
+    /// Memory storage type: "ram" or "ram-and-flash" (Auto Tiering)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub memory_storage: Option<String>,
+
+    /// Persistent storage encryption type
     #[serde(skip_serializing_if = "Option::is_none")]
     pub persistent_storage_encryption_type: Option<String>,
 
+    /// Deployment type: "single-region" or "active-active"
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub deployment_type: Option<String>,
+
+    /// Number of databases in this subscription
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub number_of_databases: Option<i32>,
+
+    /// Cloud provider details (AWS, GCP, Azure configurations)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cloud_details: Option<Vec<Value>>,
+
+    /// Pricing details for the subscription
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pricing: Option<Vec<Value>>,
+
+    /// Redis version for databases created in this subscription (deprecated)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub redis_version: Option<String>,
+
+    /// Deletion grace period for customer-managed keys
     #[serde(skip_serializing_if = "Option::is_none")]
     pub deletion_grace_period: Option<String>,
 
+    /// Customer-managed key access details for encryption
     #[serde(skip_serializing_if = "Option::is_none")]
     pub customer_managed_key_access_details: Option<CustomerManagedKeyAccessDetails>,
 
-    /// HATEOAS links
+    /// Timestamp when subscription was created
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub created_timestamp: Option<String>,
+
+    /// HATEOAS links for API navigation
     #[serde(skip_serializing_if = "Option::is_none")]
     pub links: Option<Vec<HashMap<String, Value>>>,
 
-    /// Additional fields from the API
+    /// Only for truly unknown/future API fields. All documented fields should be first-class members above.
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -639,17 +677,24 @@ pub struct MaintenanceWindowSpec {
 }
 
 /// RedisLabs list of subscriptions in current account
+///
+/// Response from GET /subscriptions
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountSubscriptions {
+    /// Account ID
     #[serde(skip_serializing_if = "Option::is_none")]
     pub account_id: Option<i32>,
 
-    /// HATEOAS links
+    /// List of subscriptions (typically in extra as 'subscriptions' array)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub subscriptions: Option<Vec<Subscription>>,
+
+    /// HATEOAS links for API navigation
     #[serde(skip_serializing_if = "Option::is_none")]
     pub links: Option<Vec<HashMap<String, Value>>>,
 
-    /// Additional fields from the API
+    /// Only for truly unknown/future API fields
     #[serde(flatten)]
     pub extra: Value,
 }
