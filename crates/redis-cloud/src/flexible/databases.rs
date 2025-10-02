@@ -61,17 +61,25 @@ use std::collections::HashMap;
 // ============================================================================
 
 /// RedisLabs Account Subscription Databases information
+///
+/// Response from GET /subscriptions/{subscriptionId}/databases
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountSubscriptionDatabases {
+    /// Account ID
     #[serde(skip_serializing_if = "Option::is_none")]
     pub account_id: Option<i32>,
 
-    /// HATEOAS links
+    /// Subscription information with nested databases array
+    /// Contains subscriptionId, numberOfDatabases, and databases array
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub subscription: Option<Value>,
+
+    /// HATEOAS links for API navigation
     #[serde(skip_serializing_if = "Option::is_none")]
     pub links: Option<Vec<HashMap<String, Value>>>,
 
-    /// Additional fields from the API
+    /// Only for truly unknown/future API fields
     #[serde(flatten)]
     pub extra: Value,
 }
@@ -522,17 +530,176 @@ pub struct DatabaseBackupRequest {
 }
 
 /// Database
+///
+/// Represents a Redis Cloud database with all known API fields as first-class struct members.
+/// The `extra` field is reserved only for truly unknown/future fields that may be added to the API.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Database {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub database_id: Option<i32>,
+    /// Database ID - always present in API responses
+    pub database_id: i32,
 
-    /// HATEOAS links
+    /// Database name
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+
+    /// Database status (e.g., "active", "pending", "error", "draft")
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub status: Option<String>,
+
+    /// Cloud provider (e.g., "AWS", "GCP", "Azure")
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub provider: Option<String>,
+
+    /// Cloud region (e.g., "us-east-1", "europe-west1")
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub region: Option<String>,
+
+    /// Redis version (e.g., "7.2", "7.0")
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub redis_version: Option<String>,
+
+    /// Redis Serialization Protocol version
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub resp_version: Option<String>,
+
+    /// Total memory limit in GB (including replication and overhead)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub memory_limit_in_gb: Option<f64>,
+
+    /// Dataset size in GB (actual data size, excluding replication)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dataset_size_in_gb: Option<f64>,
+
+    /// Memory used in MB
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub memory_used_in_mb: Option<f64>,
+
+    /// Private endpoint for database connections
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub private_endpoint: Option<String>,
+
+    /// Public endpoint for database connections (if enabled)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub public_endpoint: Option<String>,
+
+    /// TCP port on which the database is available
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub port: Option<i32>,
+
+    /// Data eviction policy (e.g., "volatile-lru", "allkeys-lru", "noeviction")
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub data_eviction_policy: Option<String>,
+
+    /// Data persistence setting (e.g., "aof-every-1-sec", "snapshot-every-1-hour", "none")
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub data_persistence: Option<String>,
+
+    /// Whether replication is enabled
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub replication: Option<bool>,
+
+    /// Protocol used (e.g., "redis", "memcached")
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub protocol: Option<String>,
+
+    /// Support for OSS Cluster API
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub support_oss_cluster_api: Option<bool>,
+
+    /// Use external endpoint for OSS Cluster API
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub use_external_endpoint_for_oss_cluster_api: Option<bool>,
+
+    /// Whether TLS is enabled for connections
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enable_tls: Option<bool>,
+
+    /// Throughput measurement configuration
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub throughput_measurement: Option<DatabaseThroughputSpec>,
+
+    /// Local throughput measurement for Active-Active databases
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub local_throughput_measurement: Option<Vec<LocalThroughput>>,
+
+    /// Average item size in bytes (for Auto Tiering)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub average_item_size_in_bytes: Option<i64>,
+
+    /// Path to periodic backup storage location
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub periodic_backup_path: Option<String>,
+
+    /// Remote backup configuration
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub remote_backup: Option<Value>,
+
+    /// List of source IP addresses or subnet masks allowed to connect
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source_ip: Option<Vec<String>>,
+
+    /// Client TLS/SSL certificate (deprecated, use client_tls_certificates)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub client_ssl_certificate: Option<String>,
+
+    /// List of client TLS/SSL certificates for mTLS authentication
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub client_tls_certificates: Option<Vec<Value>>,
+
+    /// Database password (masked in responses for security)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub password: Option<String>,
+
+    /// Memcached SASL username
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sasl_username: Option<String>,
+
+    /// Memcached SASL password (masked in responses)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sasl_password: Option<String>,
+
+    /// Database alert configurations
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub alerts: Option<Vec<Value>>,
+
+    /// Redis modules/capabilities enabled on this database
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub modules: Option<Vec<Value>>,
+
+    /// Database hashing policy for clustering
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sharding_type: Option<String>,
+
+    /// Query performance factor (for search and query databases)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub query_performance_factor: Option<String>,
+
+    /// List of databases this database is a replica of
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub replica_of: Option<Vec<String>>,
+
+    /// Replica configuration
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub replica: Option<Value>,
+
+    /// Whether default Redis user is enabled
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enable_default_user: Option<bool>,
+
+    /// Timestamp when database was activated
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub activated: Option<String>,
+
+    /// Timestamp of last modification
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_modified: Option<String>,
+
+    /// HATEOAS links for API navigation
     #[serde(skip_serializing_if = "Option::is_none")]
     pub links: Option<Vec<HashMap<String, Value>>>,
 
-    /// Additional fields from the API
+    /// Only for truly unknown/future API fields. All documented fields should be first-class members above.
     #[serde(flatten)]
     pub extra: Value,
 }

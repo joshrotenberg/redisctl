@@ -65,56 +65,75 @@ use std::collections::HashMap;
 // ============================================================================
 
 /// ProcessorResponse
+///
+/// Contains the result of an asynchronous operation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProcessorResponse {
+    /// ID of the created/modified resource
     #[serde(skip_serializing_if = "Option::is_none")]
     pub resource_id: Option<i32>,
 
+    /// Additional resource ID (for operations creating multiple resources)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub additional_resource_id: Option<i32>,
 
+    /// Full resource object for the created/modified resource
     #[serde(skip_serializing_if = "Option::is_none")]
     pub resource: Option<HashMap<String, Value>>,
 
+    /// Error message if the operation failed
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<String>,
 
+    /// Additional information about the operation
     #[serde(skip_serializing_if = "Option::is_none")]
     pub additional_info: Option<String>,
 
-    /// Additional fields from the API
+    /// Only for truly unknown/future API fields
     #[serde(flatten)]
     pub extra: Value,
 }
 
 /// TaskStateUpdate
+///
+/// Represents the state and result of an asynchronous task
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TaskStateUpdate {
+    /// Unique task identifier
     #[serde(skip_serializing_if = "Option::is_none")]
     pub task_id: Option<String>,
 
+    /// Type of command being executed (e.g., "CREATE_DATABASE", "DELETE_SUBSCRIPTION")
     #[serde(skip_serializing_if = "Option::is_none")]
     pub command_type: Option<String>,
 
+    /// Current task status (e.g., "processing", "completed", "failed")
     #[serde(skip_serializing_if = "Option::is_none")]
     pub status: Option<String>,
 
+    /// Human-readable description of the task
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 
+    /// Timestamp of last task update
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timestamp: Option<String>,
 
+    /// Task completion percentage (0-100)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub progress: Option<f64>,
+
+    /// Result data once task is completed
     #[serde(skip_serializing_if = "Option::is_none")]
     pub response: Option<ProcessorResponse>,
 
-    /// HATEOAS links
+    /// HATEOAS links for API navigation
     #[serde(skip_serializing_if = "Option::is_none")]
     pub links: Option<Vec<HashMap<String, Value>>>,
 
-    /// Additional fields from the API
+    /// Only for truly unknown/future API fields
     #[serde(flatten)]
     pub extra: Value,
 }
