@@ -1044,8 +1044,13 @@ impl FixedDatabaseHandler {
     // ========================================================================
     // Backward compatibility wrapper methods
     // ========================================================================
+    // NOTE: These methods are deprecated in favor of the shorter, more idiomatic names.
+    // They will be removed in a future version.
 
     /// Create fixed database (backward compatibility)
+    ///
+    /// **Deprecated**: Use [`create`](Self::create) instead
+    #[deprecated(since = "0.8.0", note = "Use `create` instead")]
     pub async fn create_fixed_database(
         &self,
         subscription_id: i32,
@@ -1055,6 +1060,9 @@ impl FixedDatabaseHandler {
     }
 
     /// Get fixed database (backward compatibility)
+    ///
+    /// **Deprecated**: Use [`get_by_id`](Self::get_by_id) instead
+    #[deprecated(since = "0.8.0", note = "Use `get_by_id` instead")]
     pub async fn get_fixed_database(
         &self,
         subscription_id: i32,
@@ -1066,6 +1074,9 @@ impl FixedDatabaseHandler {
     }
 
     /// Update fixed database (backward compatibility)
+    ///
+    /// **Deprecated**: Use [`update`](Self::update) instead
+    #[deprecated(since = "0.8.0", note = "Use `update` instead")]
     pub async fn update_fixed_database(
         &self,
         subscription_id: i32,
@@ -1076,6 +1087,9 @@ impl FixedDatabaseHandler {
     }
 
     /// Delete fixed database (backward compatibility)
+    ///
+    /// **Deprecated**: Use [`delete_by_id`](Self::delete_by_id) instead
+    #[deprecated(since = "0.8.0", note = "Use `delete_by_id` instead")]
     pub async fn delete_fixed_database(
         &self,
         subscription_id: i32,
@@ -1085,6 +1099,9 @@ impl FixedDatabaseHandler {
     }
 
     /// Backup fixed database (backward compatibility)
+    ///
+    /// **Deprecated**: Use [`backup`](Self::backup) instead
+    #[deprecated(since = "0.8.0", note = "Use `backup` instead")]
     pub async fn backup_fixed_database(
         &self,
         subscription_id: i32,
@@ -1095,6 +1112,9 @@ impl FixedDatabaseHandler {
     }
 
     /// Get fixed subscription databases (backward compatibility)
+    ///
+    /// **Deprecated**: Use [`list`](Self::list) instead
+    #[deprecated(since = "0.8.0", note = "Use `list` instead")]
     pub async fn get_fixed_subscription_databases(
         &self,
         subscription_id: i32,
@@ -1105,6 +1125,9 @@ impl FixedDatabaseHandler {
     }
 
     /// Get fixed database by id (backward compatibility)
+    ///
+    /// **Deprecated**: Use [`get_by_id`](Self::get_by_id) instead
+    #[deprecated(since = "0.8.0", note = "Use `get_by_id` instead")]
     pub async fn fixed_database_by_id(
         &self,
         subscription_id: i32,
@@ -1114,6 +1137,9 @@ impl FixedDatabaseHandler {
     }
 
     /// Get fixed subscription database by id (backward compatibility)
+    ///
+    /// **Deprecated**: Use [`get_by_id`](Self::get_by_id) instead
+    #[deprecated(since = "0.8.0", note = "Use `get_by_id` instead")]
     pub async fn get_fixed_subscription_database_by_id(
         &self,
         subscription_id: i32,
@@ -1123,6 +1149,9 @@ impl FixedDatabaseHandler {
     }
 
     /// Delete fixed database by id (backward compatibility)
+    ///
+    /// **Deprecated**: Use [`delete_by_id`](Self::delete_by_id) instead
+    #[deprecated(since = "0.8.0", note = "Use `delete_by_id` instead")]
     pub async fn delete_fixed_database_by_id(
         &self,
         subscription_id: i32,
@@ -1132,6 +1161,9 @@ impl FixedDatabaseHandler {
     }
 
     /// Import fixed database (backward compatibility)
+    ///
+    /// **Deprecated**: Use [`import`](Self::import) instead
+    #[deprecated(since = "0.8.0", note = "Use `import` instead")]
     pub async fn import_fixed_database(
         &self,
         subscription_id: i32,
@@ -1142,6 +1174,9 @@ impl FixedDatabaseHandler {
     }
 
     /// Create fixed database tag (backward compatibility)
+    ///
+    /// **Deprecated**: Use [`create_tag`](Self::create_tag) instead
+    #[deprecated(since = "0.8.0", note = "Use `create_tag` instead")]
     pub async fn create_fixed_database_tag(
         &self,
         subscription_id: i32,
@@ -1152,6 +1187,9 @@ impl FixedDatabaseHandler {
     }
 
     /// Get fixed database tags (backward compatibility)
+    ///
+    /// **Deprecated**: Use [`get_tags`](Self::get_tags) instead
+    #[deprecated(since = "0.8.0", note = "Use `get_tags` instead")]
     pub async fn get_fixed_database_tags(
         &self,
         subscription_id: i32,
