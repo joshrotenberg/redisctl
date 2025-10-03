@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+mod optimizer;
+
 use crate::error::RedisCtlError;
 
 use anyhow::{Context, Result as AnyhowResult};
@@ -14,6 +16,7 @@ use crate::cli::OutputFormat;
 use crate::commands::cloud::async_utils::AsyncOperationArgs;
 use crate::connection::ConnectionManager;
 use crate::error::Result as CliResult;
+use optimizer::{OptimizationOptions, optimize_support_package};
 
 /// Support package generation commands for troubleshooting
 #[derive(Subcommand, Debug, Clone)]
@@ -31,6 +34,22 @@ pub enum SupportPackageCommands {
         /// Skip pre-flight checks
         #[arg(long)]
         skip_checks: bool,
+
+        /// Optimize package size by truncating logs and removing redundant data
+        #[arg(long)]
+        optimize: bool,
+
+        /// Disable optimization (generate full package)
+        #[arg(long, conflicts_with = "optimize")]
+        no_optimize: bool,
+
+        /// Maximum number of lines to keep in log files when optimizing (default: 1000)
+        #[arg(long, default_value = "1000", requires = "optimize")]
+        log_lines: usize,
+
+        /// Show optimization details
+        #[arg(long, short = 'v')]
+        verbose: bool,
 
         /// Async operation options
         #[command(flatten)]
@@ -54,6 +73,22 @@ pub enum SupportPackageCommands {
         #[arg(long)]
         skip_checks: bool,
 
+        /// Optimize package size by truncating logs and removing redundant data
+        #[arg(long)]
+        optimize: bool,
+
+        /// Disable optimization (generate full package)
+        #[arg(long, conflicts_with = "optimize")]
+        no_optimize: bool,
+
+        /// Maximum number of lines to keep in log files when optimizing (default: 1000)
+        #[arg(long, default_value = "1000", requires = "optimize")]
+        log_lines: usize,
+
+        /// Show optimization details
+        #[arg(long, short = 'v')]
+        verbose: bool,
+
         /// Async operation options
         #[command(flatten)]
         async_ops: AsyncOperationArgs,
@@ -75,6 +110,22 @@ pub enum SupportPackageCommands {
         /// Skip pre-flight checks
         #[arg(long)]
         skip_checks: bool,
+
+        /// Optimize package size by truncating logs and removing redundant data
+        #[arg(long)]
+        optimize: bool,
+
+        /// Disable optimization (generate full package)
+        #[arg(long, conflicts_with = "optimize")]
+        no_optimize: bool,
+
+        /// Maximum number of lines to keep in log files when optimizing (default: 1000)
+        #[arg(long, default_value = "1000", requires = "optimize")]
+        log_lines: usize,
+
+        /// Show optimization details
+        #[arg(long, short = 'v')]
+        verbose: bool,
 
         /// Async operation options
         #[command(flatten)]
@@ -119,6 +170,10 @@ pub async fn handle_support_package_command(
             file,
             use_new_api,
             skip_checks,
+            optimize,
+            no_optimize: _,
+            log_lines,
+            verbose,
             async_ops,
         } => {
             let output_path = file.unwrap_or_else(|| {
@@ -130,6 +185,19 @@ pub async fn handle_support_package_command(
                 perform_preflight_checks(&output_path)?;
             }
 
+            let optimization_opts = if optimize {
+                Some(OptimizationOptions {
+                    max_log_lines: log_lines,
+                    remove_nested_gz: true,
+                    exclude_patterns: vec![],
+                    verbose,
+                })
+            } else {
+                // Default behavior - no optimization for backwards compatibility
+                // (both no_optimize and no flag specified)
+                None
+            };
+
             generate_cluster_package(
                 conn_mgr,
                 profile_name,
@@ -137,6 +205,7 @@ pub async fn handle_support_package_command(
                 use_new_api,
                 &async_ops,
                 output_format,
+                optimization_opts,
             )
             .await
         }
@@ -146,6 +215,10 @@ pub async fn handle_support_package_command(
             file,
             use_new_api,
             skip_checks,
+            optimize,
+            no_optimize: _,
+            log_lines,
+            verbose,
             async_ops,
         } => {
             let output_path = file.unwrap_or_else(|| {
@@ -160,6 +233,17 @@ pub async fn handle_support_package_command(
                 perform_preflight_checks(&output_path)?;
             }
 
+            let optimization_opts = if optimize {
+                Some(OptimizationOptions {
+                    max_log_lines: log_lines,
+                    remove_nested_gz: true,
+                    exclude_patterns: vec![],
+                    verbose,
+                })
+            } else {
+                None
+            };
+
             generate_database_package(
                 conn_mgr,
                 profile_name,
@@ -168,6 +252,7 @@ pub async fn handle_support_package_command(
                 use_new_api,
                 &async_ops,
                 output_format,
+                optimization_opts,
             )
             .await
         }
@@ -177,6 +262,10 @@ pub async fn handle_support_package_command(
             file,
             use_new_api,
             skip_checks,
+            optimize,
+            no_optimize: _,
+            log_lines,
+            verbose,
             async_ops,
         } => {
             let output_path = file.unwrap_or_else(|| {
@@ -193,6 +282,17 @@ pub async fn handle_support_package_command(
                 perform_preflight_checks(&output_path)?;
             }
 
+            let optimization_opts = if optimize {
+                Some(OptimizationOptions {
+                    max_log_lines: log_lines,
+                    remove_nested_gz: true,
+                    exclude_patterns: vec![],
+                    verbose,
+                })
+            } else {
+                None
+            };
+
             generate_node_package(
                 conn_mgr,
                 profile_name,
@@ -201,6 +301,7 @@ pub async fn handle_support_package_command(
                 use_new_api,
                 &async_ops,
                 output_format,
+                optimization_opts,
             )
             .await
         }
@@ -265,6 +366,7 @@ async fn generate_cluster_package(
     use_new_api: bool,
     _async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
+    optimization_opts: Option<OptimizationOptions>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
@@ -316,7 +418,7 @@ async fn generate_cluster_package(
 
     // Use the appropriate endpoint based on flag
     let debuginfo_handler = redis_enterprise::debuginfo::DebugInfoHandler::new(client);
-    let data = if use_new_api {
+    let mut data = if use_new_api {
         debuginfo_handler
             .cluster_debuginfo_binary()
             .await
@@ -327,6 +429,28 @@ async fn generate_cluster_package(
             .await
             .map_err(RedisCtlError::from)?
     };
+
+    let original_size = data.len();
+
+    // Apply optimization if requested
+    if let Some(opts) = optimization_opts {
+        if let Some(ref spinner) = spinner {
+            spinner.set_message("Optimizing package...");
+        }
+
+        data =
+            optimize_support_package(&data, &opts).context("Failed to optimize support package")?;
+
+        if !matches!(output_format, OutputFormat::Json) && opts.verbose {
+            let reduction = ((original_size - data.len()) as f64 / original_size as f64) * 100.0;
+            eprintln!(
+                "Optimization: {} → {} ({:.1}% reduction)",
+                format_file_size(original_size),
+                format_file_size(data.len()),
+                reduction
+            );
+        }
+    }
 
     if let Some(spinner) = spinner {
         spinner.finish_and_clear();
@@ -377,6 +501,7 @@ async fn generate_cluster_package(
 }
 
 /// Generate database support package
+#[allow(clippy::too_many_arguments)]
 async fn generate_database_package(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
@@ -385,6 +510,7 @@ async fn generate_database_package(
     use_new_api: bool,
     _async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
+    optimization_opts: Option<OptimizationOptions>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
@@ -431,7 +557,7 @@ async fn generate_database_package(
 
     // Use the appropriate endpoint based on flag
     let debuginfo_handler = redis_enterprise::debuginfo::DebugInfoHandler::new(client);
-    let data = if use_new_api {
+    let mut data = if use_new_api {
         debuginfo_handler
             .database_debuginfo_binary(uid)
             .await
@@ -442,6 +568,28 @@ async fn generate_database_package(
             .await
             .context(format!("Failed to collect debug info for database {}", uid))?
     };
+
+    let original_size = data.len();
+
+    // Apply optimization if requested
+    if let Some(opts) = optimization_opts {
+        if let Some(ref spinner) = spinner {
+            spinner.set_message("Optimizing package...");
+        }
+
+        data =
+            optimize_support_package(&data, &opts).context("Failed to optimize support package")?;
+
+        if !matches!(output_format, OutputFormat::Json) && opts.verbose {
+            let reduction = ((original_size - data.len()) as f64 / original_size as f64) * 100.0;
+            eprintln!(
+                "Optimization: {} → {} ({:.1}% reduction)",
+                format_file_size(original_size),
+                format_file_size(data.len()),
+                reduction
+            );
+        }
+    }
 
     if let Some(spinner) = spinner {
         spinner.finish_and_clear();
@@ -491,6 +639,7 @@ async fn generate_database_package(
 }
 
 /// Generate node support package
+#[allow(clippy::too_many_arguments)]
 async fn generate_node_package(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
@@ -499,6 +648,7 @@ async fn generate_node_package(
     use_new_api: bool,
     _async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
+    optimization_opts: Option<OptimizationOptions>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
@@ -555,7 +705,7 @@ async fn generate_node_package(
 
     // Use the appropriate endpoint based on flag
     let debuginfo_handler = redis_enterprise::debuginfo::DebugInfoHandler::new(client);
-    let data = if let Some(node_uid) = uid {
+    let mut data = if let Some(node_uid) = uid {
         if use_new_api {
             debuginfo_handler
                 .node_debuginfo_binary(node_uid)
@@ -582,6 +732,28 @@ async fn generate_node_package(
             .await
             .map_err(RedisCtlError::from)?
     };
+
+    let original_size = data.len();
+
+    // Apply optimization if requested
+    if let Some(opts) = optimization_opts {
+        if let Some(ref spinner) = spinner {
+            spinner.set_message("Optimizing package...");
+        }
+
+        data =
+            optimize_support_package(&data, &opts).context("Failed to optimize support package")?;
+
+        if !matches!(output_format, OutputFormat::Json) && opts.verbose {
+            let reduction = ((original_size - data.len()) as f64 / original_size as f64) * 100.0;
+            eprintln!(
+                "Optimization: {} → {} ({:.1}% reduction)",
+                format_file_size(original_size),
+                format_file_size(data.len()),
+                reduction
+            );
+        }
+    }
 
     if let Some(spinner) = spinner {
         spinner.finish_and_clear();
