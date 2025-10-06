@@ -54,7 +54,7 @@ directories = { workspace = true }
 shellexpand = "3.1"
 
 # Secure storage
-keyring = { version = "3.6", optional = true }
+keyring = { version = "3.6", optional = true, features = ["apple-native", "windows-native", "linux-native"] }
 
 [target.'cfg(unix)'.dependencies]
 pager = "0.16"
