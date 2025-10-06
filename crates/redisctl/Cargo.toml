@@ -61,7 +61,7 @@ pager = "0.16"
 
 # Conditional dependencies for feature-gated binaries
 [features]
-default = ["full"]
+default = ["full", "secure-storage"]
 full = ["cloud", "enterprise", "upload"]
 cloud = []
 enterprise = []
