@@ -11,6 +11,10 @@ default-members = [
     "crates/redisctl",
 ]
 
+# External dependencies (not part of workspace)
+[workspace.dependencies.files-sdk]
+version = "0.3.1"
+
 [workspace.package]
 version = "0.6.2"
 edition = "2024"

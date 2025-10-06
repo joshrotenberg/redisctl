@@ -1,6 +1,8 @@
 #![allow(dead_code)]
 
 mod optimizer;
+#[cfg(feature = "upload")]
+mod upload;
 
 use crate::error::RedisCtlError;
 
@@ -48,8 +50,18 @@ pub enum SupportPackageCommands {
         log_lines: usize,
 
         /// Show optimization details
-        #[arg(long, short = 'v')]
-        verbose: bool,
+        #[arg(long = "optimize-verbose")]
+        optimize_verbose: bool,
+
+        /// Upload package to Files.com after generation
+        #[cfg(feature = "upload")]
+        #[arg(long)]
+        upload: bool,
+
+        /// Don't save package locally (only works with --upload)
+        #[cfg(feature = "upload")]
+        #[arg(long, requires = "upload")]
+        no_save: bool,
 
         /// Async operation options
         #[command(flatten)]
@@ -86,8 +98,18 @@ pub enum SupportPackageCommands {
         log_lines: usize,
 
         /// Show optimization details
-        #[arg(long, short = 'v')]
-        verbose: bool,
+        #[arg(long = "optimize-verbose")]
+        optimize_verbose: bool,
+
+        /// Upload package to Files.com after generation
+        #[cfg(feature = "upload")]
+        #[arg(long)]
+        upload: bool,
+
+        /// Don't save package locally (only works with --upload)
+        #[cfg(feature = "upload")]
+        #[arg(long, requires = "upload")]
+        no_save: bool,
 
         /// Async operation options
         #[command(flatten)]
@@ -124,8 +146,18 @@ pub enum SupportPackageCommands {
         log_lines: usize,
 
         /// Show optimization details
-        #[arg(long, short = 'v')]
-        verbose: bool,
+        #[arg(long = "optimize-verbose")]
+        optimize_verbose: bool,
+
+        /// Upload package to Files.com after generation
+        #[cfg(feature = "upload")]
+        #[arg(long)]
+        upload: bool,
+
+        /// Don't save package locally (only works with --upload)
+        #[cfg(feature = "upload")]
+        #[arg(long, requires = "upload")]
+        no_save: bool,
 
         /// Async operation options
         #[command(flatten)]
@@ -173,7 +205,11 @@ pub async fn handle_support_package_command(
             optimize,
             no_optimize: _,
             log_lines,
-            verbose,
+            optimize_verbose,
+            #[cfg(feature = "upload")]
+            upload,
+            #[cfg(feature = "upload")]
+            no_save,
             async_ops,
         } => {
             let output_path = file.unwrap_or_else(|| {
@@ -190,11 +226,9 @@ pub async fn handle_support_package_command(
                     max_log_lines: log_lines,
                     remove_nested_gz: true,
                     exclude_patterns: vec![],
-                    verbose,
+                    verbose: optimize_verbose,
                 })
             } else {
-                // Default behavior - no optimization for backwards compatibility
-                // (both no_optimize and no flag specified)
                 None
             };
 
@@ -206,6 +240,10 @@ pub async fn handle_support_package_command(
                 &async_ops,
                 output_format,
                 optimization_opts,
+                #[cfg(feature = "upload")]
+                upload,
+                #[cfg(feature = "upload")]
+                no_save,
             )
             .await
         }
@@ -218,7 +256,11 @@ pub async fn handle_support_package_command(
             optimize,
             no_optimize: _,
             log_lines,
-            verbose,
+            optimize_verbose,
+            #[cfg(feature = "upload")]
+            upload,
+            #[cfg(feature = "upload")]
+            no_save,
             async_ops,
         } => {
             let output_path = file.unwrap_or_else(|| {
@@ -238,7 +280,7 @@ pub async fn handle_support_package_command(
                     max_log_lines: log_lines,
                     remove_nested_gz: true,
                     exclude_patterns: vec![],
-                    verbose,
+                    verbose: optimize_verbose,
                 })
             } else {
                 None
@@ -253,6 +295,10 @@ pub async fn handle_support_package_command(
                 &async_ops,
                 output_format,
                 optimization_opts,
+                #[cfg(feature = "upload")]
+                upload,
+                #[cfg(feature = "upload")]
+                no_save,
             )
             .await
         }
@@ -265,7 +311,11 @@ pub async fn handle_support_package_command(
             optimize,
             no_optimize: _,
             log_lines,
-            verbose,
+            optimize_verbose,
+            #[cfg(feature = "upload")]
+            upload,
+            #[cfg(feature = "upload")]
+            no_save,
             async_ops,
         } => {
             let output_path = file.unwrap_or_else(|| {
@@ -287,7 +337,7 @@ pub async fn handle_support_package_command(
                     max_log_lines: log_lines,
                     remove_nested_gz: true,
                     exclude_patterns: vec![],
-                    verbose,
+                    verbose: optimize_verbose,
                 })
             } else {
                 None
@@ -302,6 +352,10 @@ pub async fn handle_support_package_command(
                 &async_ops,
                 output_format,
                 optimization_opts,
+                #[cfg(feature = "upload")]
+                upload,
+                #[cfg(feature = "upload")]
+                no_save,
             )
             .await
         }
@@ -359,6 +413,7 @@ fn perform_preflight_checks(output_path: &Path) -> AnyhowResult<()> {
 }
 
 /// Generate cluster support package
+#[allow(clippy::too_many_arguments)]
 async fn generate_cluster_package(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
@@ -367,6 +422,8 @@ async fn generate_cluster_package(
     _async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     optimization_opts: Option<OptimizationOptions>,
+    #[cfg(feature = "upload")] upload: bool,
+    #[cfg(feature = "upload")] no_save: bool,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
@@ -456,11 +513,38 @@ async fn generate_cluster_package(
         spinner.finish_and_clear();
     }
 
-    // Save to file
-    fs::write(&output_path, &data).context(format!(
-        "Failed to save support package to {:?}",
-        output_path
-    ))?;
+    // Handle upload if requested
+    #[cfg(feature = "upload")]
+    let uploaded_path = if upload {
+        let api_key =
+            upload::get_files_api_key(profile_name).context("Failed to get Files.com API key")?;
+
+        let filename = output_path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("support-package.tar.gz");
+
+        let upload_path = upload::upload_package(&api_key, &data, filename, None)
+            .await
+            .context("Failed to upload support package")?;
+
+        Some(upload_path)
+    } else {
+        None
+    };
+
+    // Save to file unless --no-save
+    #[cfg(feature = "upload")]
+    let should_save = !no_save;
+    #[cfg(not(feature = "upload"))]
+    let should_save = true;
+
+    if should_save {
+        fs::write(&output_path, &data).context(format!(
+            "Failed to save support package to {:?}",
+            output_path
+        ))?;
+    }
 
     let elapsed = start_time.elapsed();
     let file_size = data.len();
@@ -469,31 +553,62 @@ async fn generate_cluster_package(
     // Output based on format
     match output_format {
         OutputFormat::Json => {
-            let result = SupportPackageResult {
+            let mut result = SupportPackageResult {
                 success: true,
                 package_type: "cluster".to_string(),
                 file_path: output_path.display().to_string(),
                 file_size,
-                file_size_display: size_display,
+                file_size_display: size_display.clone(),
                 elapsed_seconds: elapsed.as_secs(),
                 cluster_name,
                 cluster_version,
                 message: "Support package created successfully".to_string(),
                 timestamp: chrono::Utc::now().to_rfc3339(),
             };
+
+            #[cfg(feature = "upload")]
+            if uploaded_path.is_some() {
+                result.message = format!(
+                    "Support package {} and uploaded to Files.com",
+                    if should_save { "created" } else { "uploaded" }
+                );
+            }
+
             println!("{}", serde_json::to_string_pretty(&result)?);
         }
         _ => {
             // Display success message with helpful information
             println!("\n✓ Support package created successfully");
-            println!("  File: {}", output_path.display());
+
+            #[cfg(feature = "upload")]
+            if let Some(ref upload_path) = uploaded_path {
+                println!("  Uploaded to: {}", upload_path);
+            }
+
+            if should_save {
+                println!("  File: {}", output_path.display());
+            }
             println!("  Size: {}", size_display);
             println!("  Time: {}s", elapsed.as_secs());
 
-            println!("\nNext steps:");
-            println!("1. Upload to Redis Support: https://support.redis.com/upload");
-            println!("2. Reference your case number when uploading");
-            println!("3. Delete local file after upload to free space");
+            #[cfg(feature = "upload")]
+            if uploaded_path.is_none() {
+                println!("\nNext steps:");
+                println!("1. Upload to Redis Support: https://support.redis.com/upload");
+                println!("2. Reference your case number when uploading");
+                println!("3. Delete local file after upload to free space");
+            } else if should_save {
+                println!("\nPackage uploaded to Files.com and saved locally.");
+                println!("You can delete the local file after confirming upload.");
+            }
+
+            #[cfg(not(feature = "upload"))]
+            {
+                println!("\nNext steps:");
+                println!("1. Upload to Redis Support: https://support.redis.com/upload");
+                println!("2. Reference your case number when uploading");
+                println!("3. Delete local file after upload to free space");
+            }
         }
     }
 
@@ -511,6 +626,8 @@ async fn generate_database_package(
     _async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     optimization_opts: Option<OptimizationOptions>,
+    #[cfg(feature = "upload")] upload: bool,
+    #[cfg(feature = "upload")] no_save: bool,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
@@ -595,11 +712,38 @@ async fn generate_database_package(
         spinner.finish_and_clear();
     }
 
-    // Save to file
-    fs::write(&output_path, &data).context(format!(
-        "Failed to save support package to {:?}",
-        output_path
-    ))?;
+    // Handle upload if requested
+    #[cfg(feature = "upload")]
+    let uploaded_path = if upload {
+        let api_key =
+            upload::get_files_api_key(profile_name).context("Failed to get Files.com API key")?;
+
+        let filename = output_path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("support-package.tar.gz");
+
+        let upload_path = upload::upload_package(&api_key, &data, filename, None)
+            .await
+            .context("Failed to upload support package")?;
+
+        Some(upload_path)
+    } else {
+        None
+    };
+
+    // Save to file unless --no-save
+    #[cfg(feature = "upload")]
+    let should_save = !no_save;
+    #[cfg(not(feature = "upload"))]
+    let should_save = true;
+
+    if should_save {
+        fs::write(&output_path, &data).context(format!(
+            "Failed to save support package to {:?}",
+            output_path
+        ))?;
+    }
 
     let elapsed = start_time.elapsed();
     let file_size = data.len();
@@ -608,30 +752,61 @@ async fn generate_database_package(
     // Output based on format
     match output_format {
         OutputFormat::Json => {
-            let result = SupportPackageResult {
+            let mut result = SupportPackageResult {
                 success: true,
                 package_type: format!("database-{}", uid),
                 file_path: output_path.display().to_string(),
                 file_size,
-                file_size_display: size_display,
+                file_size_display: size_display.clone(),
                 elapsed_seconds: elapsed.as_secs(),
-                cluster_name: Some(format!("Database {}", uid)), // Use DB info as context
-                cluster_version: database_name, // Store DB name in cluster_version field
+                cluster_name: Some(format!("Database {}", uid)),
+                cluster_version: database_name,
                 message: "Database support package created successfully".to_string(),
                 timestamp: chrono::Utc::now().to_rfc3339(),
             };
+
+            #[cfg(feature = "upload")]
+            if uploaded_path.is_some() {
+                result.message = format!(
+                    "Database support package {} and uploaded to Files.com",
+                    if should_save { "created" } else { "uploaded" }
+                );
+            }
+
             println!("{}", serde_json::to_string_pretty(&result)?);
         }
         _ => {
             println!("\n✓ Database support package created successfully");
-            println!("  File: {}", output_path.display());
+
+            #[cfg(feature = "upload")]
+            if let Some(ref upload_path) = uploaded_path {
+                println!("  Uploaded to: {}", upload_path);
+            }
+
+            if should_save {
+                println!("  File: {}", output_path.display());
+            }
             println!("  Size: {}", size_display);
             println!("  Time: {}s", elapsed.as_secs());
 
-            println!("\nNext steps:");
-            println!("1. Upload to Redis Support: https://support.redis.com/upload");
-            println!("2. Reference your case number when uploading");
-            println!("3. Delete local file after upload to free space");
+            #[cfg(feature = "upload")]
+            if uploaded_path.is_none() {
+                println!("\nNext steps:");
+                println!("1. Upload to Redis Support: https://support.redis.com/upload");
+                println!("2. Reference your case number when uploading");
+                println!("3. Delete local file after upload to free space");
+            } else if should_save {
+                println!("\nPackage uploaded to Files.com and saved locally.");
+                println!("You can delete the local file after confirming upload.");
+            }
+
+            #[cfg(not(feature = "upload"))]
+            {
+                println!("\nNext steps:");
+                println!("1. Upload to Redis Support: https://support.redis.com/upload");
+                println!("2. Reference your case number when uploading");
+                println!("3. Delete local file after upload to free space");
+            }
         }
     }
 
@@ -649,6 +824,8 @@ async fn generate_node_package(
     _async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     optimization_opts: Option<OptimizationOptions>,
+    #[cfg(feature = "upload")] upload: bool,
+    #[cfg(feature = "upload")] no_save: bool,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
@@ -715,7 +892,6 @@ async fn generate_node_package(
                     node_uid
                 ))?
         } else {
-            // Old API doesn't support specific node ID, use node endpoint instead
             debuginfo_handler
                 .node_binary()
                 .await
@@ -759,11 +935,38 @@ async fn generate_node_package(
         spinner.finish_and_clear();
     }
 
-    // Save to file
-    fs::write(&output_path, &data).context(format!(
-        "Failed to save support package to {:?}",
-        output_path
-    ))?;
+    // Handle upload if requested
+    #[cfg(feature = "upload")]
+    let uploaded_path = if upload {
+        let api_key =
+            upload::get_files_api_key(profile_name).context("Failed to get Files.com API key")?;
+
+        let filename = output_path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("support-package.tar.gz");
+
+        let upload_path = upload::upload_package(&api_key, &data, filename, None)
+            .await
+            .context("Failed to upload support package")?;
+
+        Some(upload_path)
+    } else {
+        None
+    };
+
+    // Save to file unless --no-save
+    #[cfg(feature = "upload")]
+    let should_save = !no_save;
+    #[cfg(not(feature = "upload"))]
+    let should_save = true;
+
+    if should_save {
+        fs::write(&output_path, &data).context(format!(
+            "Failed to save support package to {:?}",
+            output_path
+        ))?;
+    }
 
     let elapsed = start_time.elapsed();
     let file_size = data.len();
@@ -778,15 +981,15 @@ async fn generate_node_package(
                 "nodes".to_string()
             };
 
-            let result = SupportPackageResult {
+            let mut result = SupportPackageResult {
                 success: true,
                 package_type,
                 file_path: output_path.display().to_string(),
                 file_size,
-                file_size_display: size_display,
+                file_size_display: size_display.clone(),
                 elapsed_seconds: elapsed.as_secs(),
                 cluster_name: uid.map(|id| format!("Node {}", id)),
-                cluster_version: node_address, // Store node address in cluster_version field
+                cluster_version: node_address,
                 message: if uid.is_some() {
                     "Node support package created successfully".to_string()
                 } else {
@@ -794,19 +997,51 @@ async fn generate_node_package(
                 },
                 timestamp: chrono::Utc::now().to_rfc3339(),
             };
+
+            #[cfg(feature = "upload")]
+            if uploaded_path.is_some() {
+                result.message = format!(
+                    "{} support package {} and uploaded to Files.com",
+                    if uid.is_some() { "Node" } else { "Nodes" },
+                    if should_save { "created" } else { "uploaded" }
+                );
+            }
+
             println!("{}", serde_json::to_string_pretty(&result)?);
         }
         _ => {
             let package_type = if uid.is_some() { "Node" } else { "Nodes" };
             println!("\n✓ {} support package created successfully", package_type);
-            println!("  File: {}", output_path.display());
+
+            #[cfg(feature = "upload")]
+            if let Some(ref upload_path) = uploaded_path {
+                println!("  Uploaded to: {}", upload_path);
+            }
+
+            if should_save {
+                println!("  File: {}", output_path.display());
+            }
             println!("  Size: {}", size_display);
             println!("  Time: {}s", elapsed.as_secs());
 
-            println!("\nNext steps:");
-            println!("1. Upload to Redis Support: https://support.redis.com/upload");
-            println!("2. Reference your case number when uploading");
-            println!("3. Delete local file after upload to free space");
+            #[cfg(feature = "upload")]
+            if uploaded_path.is_none() {
+                println!("\nNext steps:");
+                println!("1. Upload to Redis Support: https://support.redis.com/upload");
+                println!("2. Reference your case number when uploading");
+                println!("3. Delete local file after upload to free space");
+            } else if should_save {
+                println!("\nPackage uploaded to Files.com and saved locally.");
+                println!("You can delete the local file after confirming upload.");
+            }
+
+            #[cfg(not(feature = "upload"))]
+            {
+                println!("\nNext steps:");
+                println!("1. Upload to Redis Support: https://support.redis.com/upload");
+                println!("2. Reference your case number when uploading");
+                println!("3. Delete local file after upload to free space");
+            }
         }
     }
 
@@ -818,8 +1053,6 @@ async fn list_support_packages(
     _conn_mgr: &ConnectionManager,
     _profile_name: Option<&str>,
 ) -> CliResult<()> {
-    // The current API doesn't support listing support packages
-    // This is a placeholder for future functionality
     eprintln!("Note: Listing support packages is not currently supported by the API");
     eprintln!("Support packages are generated on-demand and not stored on the server");
     Ok(())
@@ -833,7 +1066,6 @@ async fn check_support_package_status(
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
-    // Check if this is an async task status
     let debuginfo_handler = redis_enterprise::debuginfo::DebugInfoHandler::new(client);
 
     match debuginfo_handler.status(task_id).await {

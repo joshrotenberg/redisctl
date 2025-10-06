@@ -26,6 +26,10 @@ pub struct Config {
     /// Default profile for cloud commands
     #[serde(default, rename = "default_cloud")]
     pub default_cloud: Option<String>,
+    /// Global Files.com API key for support package uploads
+    /// Can be overridden per-profile. Supports keyring: prefix for secure storage.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub files_api_key: Option<String>,
     /// Map of profile name -> profile configuration
     #[serde(default)]
     pub profiles: HashMap<String, Profile>,
@@ -39,6 +43,10 @@ pub struct Profile {
     /// Connection credentials (flattened into the profile)
     #[serde(flatten)]
     pub credentials: ProfileCredentials,
+    /// Files.com API key for this profile (overrides global setting)
+    /// Supports keyring: prefix for secure storage.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub files_api_key: Option<String>,
 }
 
 /// Supported deployment types
@@ -456,6 +464,7 @@ mod tests {
                 api_secret: "test-secret".to_string(),
                 api_url: "https://api.redislabs.com/v1".to_string(),
             },
+            files_api_key: None,
         };
 
         config.set_profile("test".to_string(), cloud_profile);
@@ -477,6 +486,7 @@ mod tests {
                 api_secret: "secret".to_string(),
                 api_url: "url".to_string(),
             },
+            files_api_key: None,
         };
 
         let (key, secret, url) = cloud_profile.cloud_credentials().unwrap();
@@ -610,6 +620,7 @@ api_url = "${REDIS_TEST_URL:-https://api.redislabs.com/v1}"
                 password: Some("password".to_string()),
                 insecure: false,
             },
+            files_api_key: None,
         };
         config.set_profile("ent1".to_string(), enterprise_profile);
 
@@ -639,6 +650,7 @@ api_url = "${REDIS_TEST_URL:-https://api.redislabs.com/v1}"
                 api_secret: "secret".to_string(),
                 api_url: "https://api.redislabs.com/v1".to_string(),
             },
+            files_api_key: None,
         };
         config.set_profile("cloud1".to_string(), cloud_profile);
 
@@ -668,6 +680,7 @@ api_url = "${REDIS_TEST_URL:-https://api.redislabs.com/v1}"
                 api_secret: "secret".to_string(),
                 api_url: "https://api.redislabs.com/v1".to_string(),
             },
+            files_api_key: None,
         };
         config.set_profile("cloud1".to_string(), cloud_profile.clone());
         config.set_profile("cloud2".to_string(), cloud_profile);
@@ -681,6 +694,7 @@ api_url = "${REDIS_TEST_URL:-https://api.redislabs.com/v1}"
                 password: Some("password".to_string()),
                 insecure: false,
             },
+            files_api_key: None,
         };
         config.set_profile("ent1".to_string(), enterprise_profile.clone());
         config.set_profile("ent2".to_string(), enterprise_profile);
@@ -719,6 +733,7 @@ api_url = "${REDIS_TEST_URL:-https://api.redislabs.com/v1}"
                 api_secret: "secret".to_string(),
                 api_url: "https://api.redislabs.com/v1".to_string(),
             },
+            files_api_key: None,
         };
         config.set_profile("cloud1".to_string(), cloud_profile);
 

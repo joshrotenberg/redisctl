@@ -905,6 +905,7 @@ async fn execute_profile_command(
                             api_secret: stored_secret,
                             api_url: api_url.clone(),
                         },
+                        files_api_key: None,
                     }
                 }
                 config::DeploymentType::Enterprise => {
@@ -963,6 +964,7 @@ async fn execute_profile_command(
                             password: stored_password,
                             insecure: *insecure,
                         },
+                        files_api_key: None,
                     }
                 }
             };
