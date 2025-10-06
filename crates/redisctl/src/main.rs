@@ -89,6 +89,11 @@ async fn execute_command(cli: &Cli, conn_mgr: &ConnectionManager) -> Result<(), 
             execute_profile_command(profile_cmd, conn_mgr).await
         }
 
+        Commands::FilesKey(files_key_cmd) => {
+            debug!("Executing files-key command");
+            execute_files_key_command(files_key_cmd).await
+        }
+
         Commands::Api {
             deployment,
             method,
@@ -175,6 +180,14 @@ fn format_command(command: &Commands) -> String {
         }
         Commands::Cloud(cmd) => format!("cloud {:?}", cmd),
         Commands::Enterprise(cmd) => format!("enterprise {:?}", cmd),
+        Commands::FilesKey(cmd) => {
+            use cli::FilesKeyCommands::*;
+            match cmd {
+                Set { .. } => "files-key set [key redacted]".to_string(),
+                Get { profile } => format!("files-key get {:?}", profile),
+                Remove { .. } => "files-key remove".to_string(),
+            }
+        }
     }
 }
 
@@ -905,6 +918,7 @@ async fn execute_profile_command(
                             api_secret: stored_secret,
                             api_url: api_url.clone(),
                         },
+                        files_api_key: None,
                     }
                 }
                 config::DeploymentType::Enterprise => {
@@ -963,6 +977,7 @@ async fn execute_profile_command(
                             password: stored_password,
                             insecure: *insecure,
                         },
+                        files_api_key: None,
                     }
                 }
             };
@@ -1114,6 +1129,46 @@ async fn execute_profile_command(
             println!("Default cloud profile set to '{}'.", name);
             Ok(())
         }
+    }
+}
+
+async fn execute_files_key_command(
+    files_key_cmd: &cli::FilesKeyCommands,
+) -> Result<(), RedisCtlError> {
+    use cli::FilesKeyCommands::*;
+
+    match files_key_cmd {
+        Set {
+            api_key,
+            #[cfg(feature = "secure-storage")]
+            use_keyring,
+            global,
+            profile,
+        } => commands::files_key::handle_set(
+            api_key.clone(),
+            #[cfg(feature = "secure-storage")]
+            *use_keyring,
+            *global,
+            profile.clone(),
+        )
+        .await
+        .map_err(RedisCtlError::from),
+        Get { profile } => commands::files_key::handle_get(profile.clone())
+            .await
+            .map_err(RedisCtlError::from),
+        Remove {
+            #[cfg(feature = "secure-storage")]
+            keyring,
+            global,
+            profile,
+        } => commands::files_key::handle_remove(
+            #[cfg(feature = "secure-storage")]
+            *keyring,
+            *global,
+            profile.clone(),
+        )
+        .await
+        .map_err(RedisCtlError::from),
     }
 }
 

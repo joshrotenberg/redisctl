@@ -24,6 +24,45 @@ redisctl/
 └── docs/                   # mdBook documentation
 ```
 
+## Writing Style for Documentation and PRs
+
+**CRITICAL**: Follow these strict guidelines for all documentation, commit messages, and PR descriptions:
+
+### What to AVOID
+- ❌ **No emojis** - Never use emojis in commits, PRs, or code (✅ ❌ 🚀 etc.)
+- ❌ **No marketing language** - Avoid "exciting", "powerful", "seamless", "game-changing", etc.
+- ❌ **No superlatives** - Don't use "best", "perfect", "amazing", "incredible"
+- ❌ **No hype** - Write factual, technical descriptions only
+- ❌ **No exclamation points** - Use periods for professional tone
+
+### What to DO
+- ✓ Use **technical, factual language**
+- ✓ Focus on **what changed and why**
+- ✓ Be **specific and concrete**
+- ✓ Use **imperative mood for commits** (e.g., "Add feature" not "Added feature")
+- ✓ Reference **issue numbers** where applicable
+
+### Examples
+
+**Bad**:
+```
+🚀 feat: Add amazing support package upload feature!
+
+This exciting new feature seamlessly integrates with Files.com to provide
+a powerful solution for uploading support packages! ✨
+```
+
+**Good**:
+```
+feat: add support package upload with Files.com integration
+
+Implements support package upload to Files.com via files-sdk 0.3.1.
+Adds --upload and --no-save flags to support-package commands.
+Supports environment variable and secure keyring storage for API keys.
+
+Closes #123
+```
+
 ## Build and Development Commands
 
 ### Essential Commands

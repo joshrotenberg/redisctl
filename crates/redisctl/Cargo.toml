@@ -20,6 +20,7 @@ path = "src/main.rs"
 [dependencies]
 redis-cloud = { version = "0.6.2", path = "../redis-cloud" }
 redis-enterprise = { version = "0.6.2", path = "../redis-enterprise" }
+files-sdk = { workspace = true, optional = true }
 
 # CLI dependencies
 clap = { workspace = true }
@@ -53,17 +54,18 @@ directories = { workspace = true }
 shellexpand = "3.1"
 
 # Secure storage
-keyring = { version = "3.6", optional = true }
+keyring = { version = "3.6", optional = true, features = ["apple-native", "windows-native", "linux-native"] }
 
 [target.'cfg(unix)'.dependencies]
 pager = "0.16"
 
 # Conditional dependencies for feature-gated binaries
 [features]
-default = ["full"]
-full = ["cloud", "enterprise"]
+default = ["full", "secure-storage"]
+full = ["cloud", "enterprise", "upload"]
 cloud = []
 enterprise = []
+upload = ["dep:files-sdk"]
 secure-storage = ["dep:keyring"]
 
 [dev-dependencies]

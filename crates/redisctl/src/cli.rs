@@ -80,6 +80,10 @@ pub enum Commands {
     #[command(subcommand, visible_alias = "ent", visible_alias = "en")]
     Enterprise(EnterpriseCommands),
 
+    /// Files.com API key management (for support package uploads)
+    #[command(subcommand, visible_alias = "fk")]
+    FilesKey(FilesKeyCommands),
+
     /// Version information
     #[command(visible_alias = "ver", visible_alias = "v")]
     Version,
@@ -227,6 +231,55 @@ pub enum ProfileCommands {
     DefaultCloud {
         /// Profile name to set as default for cloud commands
         name: String,
+    },
+}
+
+/// Files.com API key management commands
+#[derive(Subcommand, Debug)]
+pub enum FilesKeyCommands {
+    /// Store Files.com API key (globally or in config)
+    #[command(visible_alias = "add")]
+    Set {
+        /// The Files.com API key provided by Redis Support
+        api_key: String,
+
+        /// Store in system keyring (most secure - recommended)
+        #[cfg(feature = "secure-storage")]
+        #[arg(long)]
+        use_keyring: bool,
+
+        /// Store globally in config file (plaintext - not recommended)
+        #[arg(long, conflicts_with = "use_keyring")]
+        global: bool,
+
+        /// Store in specific profile's config (plaintext - not recommended)
+        #[arg(long, conflicts_with_all = ["use_keyring", "global"])]
+        profile: Option<String>,
+    },
+
+    /// Get the currently configured Files.com API key
+    #[command(visible_alias = "show")]
+    Get {
+        /// Show for specific profile
+        #[arg(long)]
+        profile: Option<String>,
+    },
+
+    /// Remove Files.com API key
+    #[command(visible_alias = "rm", visible_alias = "delete")]
+    Remove {
+        /// Remove from keyring
+        #[cfg(feature = "secure-storage")]
+        #[arg(long)]
+        keyring: bool,
+
+        /// Remove from global config
+        #[arg(long, conflicts_with = "keyring")]
+        global: bool,
+
+        /// Remove from specific profile
+        #[arg(long, conflicts_with_all = ["keyring", "global"])]
+        profile: Option<String>,
     },
 }
 

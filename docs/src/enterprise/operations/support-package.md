@@ -31,6 +31,22 @@ redisctl enterprise support-package cluster --skip-checks
 
 # Use new API endpoints (Redis Enterprise 7.4+)
 redisctl enterprise support-package cluster --use-new-api
+
+# Optimize package size (reduces by ~20-30%)
+redisctl enterprise support-package cluster --optimize
+
+# Show optimization details
+redisctl enterprise support-package cluster --optimize --optimize-verbose
+
+# Upload directly to Redis Support (Files.com)
+export REDIS_ENTERPRISE_FILES_API_KEY="your-api-key"
+redisctl enterprise support-package cluster --upload
+
+# Upload without saving locally
+redisctl enterprise support-package cluster --upload --no-save
+
+# Optimize and upload in one command
+redisctl enterprise support-package cluster --optimize --upload --no-save
 ```
 
 **Example Output**:
@@ -130,6 +146,139 @@ Next steps:
 1. Upload to Redis Support: https://support.redis.com/upload
 2. Reference your case number when uploading
 3. Delete local file after upload to free space
+```
+
+## Package Optimization
+
+Support packages can be large (500MB-2GB+). The `--optimize` flag reduces package size by 20-30% through:
+
+- **Log truncation**: Keeps most recent 1000 lines per log file (configurable)
+- **Redundant data removal**: Removes duplicate or unnecessary files
+- **Nested archive cleanup**: Removes nested .gz files
+
+### Basic Optimization
+
+```bash
+# Optimize with defaults
+redisctl enterprise support-package cluster --optimize
+
+# Customize log retention
+redisctl enterprise support-package cluster --optimize --log-lines 5000
+
+# Show detailed optimization stats
+redisctl enterprise support-package cluster --optimize --optimize-verbose
+```
+
+### Optimization Output
+
+```
+Optimization: 487.3 MB → 358.2 MB (26.5% reduction)
+
+Files processed: 847
+Files truncated: 142
+Files removed: 23
+```
+
+### When to Use Optimization
+
+**Use optimization when:**
+- Package size exceeds upload limits
+- Network bandwidth is limited
+- Storage space is constrained
+- Only recent log data is needed
+
+**Skip optimization when:**
+- Full historical logs are needed for issue diagnosis
+- Investigating intermittent issues from the past
+- Redis Support specifically requests unoptimized packages
+
+## Direct Upload to Redis Support
+
+Upload support packages directly to Files.com for Redis Support tickets, eliminating manual upload steps.
+
+### Setup Files.com API Key
+
+Get your Files.com API key from Redis Support, then configure it:
+
+```bash
+# Option 1: Environment variable (recommended for CI/CD)
+export REDIS_ENTERPRISE_FILES_API_KEY="your-api-key"
+
+# Option 2: Secure keyring storage (requires secure-storage feature)
+redisctl files-key set "$REDIS_ENTERPRISE_FILES_API_KEY" --use-keyring
+
+# Option 3: Global config file (plaintext)
+redisctl files-key set "$REDIS_ENTERPRISE_FILES_API_KEY" --global
+
+# Option 4: Per-profile config
+redisctl files-key set "$REDIS_ENTERPRISE_FILES_API_KEY" --profile enterprise-prod
+```
+
+### Upload Commands
+
+```bash
+# Generate and upload
+redisctl enterprise support-package cluster --upload
+
+# Upload without local copy (saves disk space)
+redisctl enterprise support-package cluster --upload --no-save
+
+# Optimize before upload (recommended)
+redisctl enterprise support-package cluster --optimize --upload --no-save
+
+# Database-specific package
+redisctl enterprise support-package database 1 --optimize --upload
+```
+
+### Upload Output
+
+```
+Generating support package...
+Uploading to Files.com: /RLEC_Customers/Uploads/support-package-cluster-20240115T143000.tar.gz
+Size: 358234567 bytes
+
+✓ Support package created successfully
+  Uploaded to: RLEC_Customers/Uploads/support-package-cluster-20240115T143000.tar.gz
+  Size: 341.7 MB
+  Time: 124s
+```
+
+### API Key Priority
+
+The Files.com API key is resolved in this order:
+
+1. `REDIS_ENTERPRISE_FILES_API_KEY` environment variable
+2. Profile-specific `files_api_key` in config
+3. Global `files_api_key` in config  
+4. System keyring (if secure-storage feature enabled)
+5. `REDIS_FILES_API_KEY` environment variable (fallback)
+
+### Secure API Key Storage
+
+With the `secure-storage` feature, API keys are stored in your OS keyring:
+
+- **macOS**: Keychain
+- **Windows**: Credential Manager
+- **Linux**: Secret Service (GNOME Keyring, KWallet)
+
+```bash
+# Install with secure storage
+cargo install redisctl --features secure-storage
+
+# Store key securely
+redisctl files-key set "$REDIS_ENTERPRISE_FILES_API_KEY" --use-keyring
+
+# Verify storage
+redisctl files-key get
+# Output: Key found in keyring: your-ke...key4
+
+# Remove when no longer needed
+redisctl files-key remove --keyring
+```
+
+The config file only stores a reference:
+```toml
+files_api_key = "keyring:files-api-key"
 ```
 
 ## Pre-flight Checks

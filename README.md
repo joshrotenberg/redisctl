@@ -10,6 +10,7 @@ A unified command-line interface for managing Redis Cloud and Redis Enterprise d
 ## Features
 
 - **Unified Interface** - Single CLI for both Redis Cloud and Redis Enterprise
+- **Support Package Management** - Generate, optimize, and upload diagnostic packages to Redis Support
 - **Async Operations** - Full support for long-running operations with `--wait` flags  
 - **Explicit Commands** - Clear separation between Cloud and Enterprise operations
 - **Multiple Output Formats** - JSON, YAML, and Table output with JMESPath filtering
@@ -140,6 +141,34 @@ redisctl cloud database list -o json | jq         # JSON with jq
 
 # Create resources and wait for completion
 redisctl cloud database create --data @database.json --wait
+```
+
+### 3. Generate and Upload Support Packages
+
+Generate diagnostic support packages for Redis Enterprise clusters and optionally upload them directly to Redis Support:
+
+```bash
+# Generate cluster support package
+redisctl enterprise support-package cluster
+
+# Generate optimized package (reduces size by ~20-30%)
+redisctl enterprise support-package cluster --optimize
+
+# Generate and upload to Redis Support (Files.com)
+export REDIS_ENTERPRISE_FILES_API_KEY="your-files-api-key"
+redisctl enterprise support-package cluster --upload
+
+# Upload without saving locally
+redisctl enterprise support-package cluster --upload --no-save
+
+# Optimize and upload in one command
+redisctl enterprise support-package cluster --optimize --upload --no-save
+
+# Database-specific support package
+redisctl enterprise support-package database 1 --optimize --upload
+
+# Store Files.com API key securely (requires secure-storage feature)
+redisctl files-key set "$REDIS_ENTERPRISE_FILES_API_KEY" --use-keyring
 ```
 
 ## Using with Docker
