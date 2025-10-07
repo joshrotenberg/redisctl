@@ -11,43 +11,47 @@ New to redisctl? Start here:
 ## Redis Cloud Recipes
 
 ### Getting Started
-- [Create Your First Database](cloud/create-first-database.md) - ⏱️ 5 minutes
+- [Create Your First Database](cloud/create-first-database.md) - 5 minutes
 
 ### Networking
-- Setup VPC Peering (coming soon)
+- [Setup VPC Peering](cloud/setup-vpc-peering.md) - 15-20 minutes
 - Configure Private Service Connect (coming soon)
+- Configure Transit Gateway (coming soon)
 
 ### Security
-- Configure ACL Security (coming soon)
+- [Configure ACL Security](cloud/configure-acls.md) - 10-15 minutes
 - Manage SSL/TLS Certificates (coming soon)
 
 ### Operations
-- Backup and Restore Workflow (coming soon)
+- [Backup and Restore Workflow](cloud/backup-restore.md) - 10-15 minutes
 - Database Migration (coming soon)
+- Active-Active Setup (coming soon)
 
 ## Redis Enterprise Recipes
 
 ### Getting Started
-- [Create a Database](enterprise/create-database.md) - ⏱️ 5 minutes
+- [Create a Database](enterprise/create-database.md) - 5 minutes
 
 ### Operations
-- [Generate and Upload Support Package](enterprise/support-package.md) - ⏱️ 10 minutes
+- [Generate and Upload Support Package](enterprise/support-package.md) - 10 minutes
 - Configure Database Replication (coming soon)
+- Configure Redis ACLs (coming soon)
 
 ### Cluster Management
-- Cluster Health Check (coming soon)
-- Node Management (coming soon)
+- [Cluster Health Check](enterprise/cluster-health.md) - 5 minutes
+- [Node Management](enterprise/node-management.md) - 10-15 minutes
+- Database Failover (coming soon)
 
 ## How to Use These Recipes
 
 Each recipe includes:
-- ⏱️ **Time estimate** - How long it takes
-- 📋 **Prerequisites** - What you need before starting
-- ⚡ **Quick command** - One-liner when possible
-- 📝 **Step-by-step** - Detailed walkthrough
-- ✅ **Expected output** - What success looks like
-- 🔗 **Next steps** - Related recipes
-- ❌ **Troubleshooting** - Common errors and fixes
+- **Time estimate** - How long it takes
+- **Prerequisites** - What you need before starting
+- **Quick command** - One-liner when possible
+- **Step-by-step** - Detailed walkthrough
+- **Expected output** - What success looks like
+- **Next steps** - Related recipes
+- **Troubleshooting** - Common errors and fixes
 
 ## Contributing Recipes
 
