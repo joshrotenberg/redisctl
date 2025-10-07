@@ -66,6 +66,8 @@ full = ["cloud", "enterprise", "upload"]
 cloud = []
 enterprise = []
 upload = ["dep:files-sdk"]
+# Note: secure-storage may not work on musl targets due to keyring native dependencies
+# Build with --no-default-features --features full for musl
 secure-storage = ["dep:keyring"]
 
 [dev-dependencies]
