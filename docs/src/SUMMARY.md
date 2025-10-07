@@ -17,9 +17,18 @@
 - [Overview](./cookbook/README.md)
 - [Redis Cloud]()
   - [Create Your First Database](./cookbook/cloud/create-first-database.md)
+  - [Set Up VPC Peering](./cookbook/cloud/setup-vpc-peering.md)
+  - [Configure ACL Security](./cookbook/cloud/configure-acls.md)
+  - [Backup and Restore](./cookbook/cloud/backup-restore.md)
+  - [Database Migration](./cookbook/cloud/database-migration.md)
+  - [Active-Active Setup](./cookbook/cloud/active-active-setup.md)
 - [Redis Enterprise]()
   - [Create a Database](./cookbook/enterprise/create-database.md)
   - [Generate Support Package](./cookbook/enterprise/support-package.md)
+  - [Cluster Health Monitoring](./cookbook/enterprise/cluster-health.md)
+  - [Node Management](./cookbook/enterprise/node-management.md)
+  - [Configure Replication](./cookbook/enterprise/configure-replication.md)
+  - [Configure Redis ACLs](./cookbook/enterprise/configure-redis-acls.md)
 
 # Redis Cloud
 
