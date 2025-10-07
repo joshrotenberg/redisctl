@@ -24,8 +24,8 @@ New to redisctl? Start here:
 
 ### Operations
 - [Backup and Restore Workflow](cloud/backup-restore.md) - 10-15 minutes
-- Database Migration (coming soon)
-- Active-Active Setup (coming soon)
+- [Database Migration](cloud/database-migration.md) - 20-30 minutes
+- [Active-Active Setup](cloud/active-active-setup.md) - 30-45 minutes
 
 ## Redis Enterprise Recipes
 
@@ -34,13 +34,12 @@ New to redisctl? Start here:
 
 ### Operations
 - [Generate and Upload Support Package](enterprise/support-package.md) - 10 minutes
-- Configure Database Replication (coming soon)
-- Configure Redis ACLs (coming soon)
+- [Configure Database Replication](enterprise/configure-replication.md) - 10-15 minutes
+- [Configure Redis ACLs](enterprise/configure-redis-acls.md) - 10 minutes
 
 ### Cluster Management
 - [Cluster Health Check](enterprise/cluster-health.md) - 5 minutes
 - [Node Management](enterprise/node-management.md) - 10-15 minutes
-- Database Failover (coming soon)
 
 ## How to Use These Recipes
 
