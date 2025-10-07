@@ -12,6 +12,15 @@
 - [Shell Completions](./getting-started/shell-completions.md)
 - [Quick Start Guide](./getting-started/quickstart.md)
 
+# Cookbook
+
+- [Overview](./cookbook/README.md)
+- [Redis Cloud]()
+  - [Create Your First Database](./cookbook/cloud/create-first-database.md)
+- [Redis Enterprise]()
+  - [Create a Database](./cookbook/enterprise/create-database.md)
+  - [Generate Support Package](./cookbook/enterprise/support-package.md)
+
 # Redis Cloud
 
 - [Overview](./cloud/overview.md)
