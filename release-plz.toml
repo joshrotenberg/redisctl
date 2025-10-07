@@ -1,0 +1,34 @@
+[workspace]
+# Enable changelog updates
+changelog_update = true
+# Create git releases (disable - let cargo-dist handle this)
+git_release_enable = false
+# Create git tags for releases
+git_tag_enable = true
+# Use semantic versioning
+semver_check = true
+# Allow dirty working directory (cargo-dist modifies CI files)
+allow_dirty = true
+# Conventional commit parsing
+pr_labels = ["release"]
+
+# Publish to crates.io in dependency order
+[[package]]
+name = "redis-cloud"
+publish = true
+# Don't create tags for libraries
+git_tag_enable = false
+
+[[package]]
+name = "redis-enterprise"
+publish = true
+# Don't create tags for libraries
+git_tag_enable = false
+
+[[package]]
+name = "redisctl"
+publish = true
+# Tag with redisctl version for cargo-dist integration
+git_tag_name = "redisctl-v{{ version }}"
+# Let cargo-dist create the GitHub release
+git_release_enable = false
