@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.5](https://github.com/joshrotenberg/redisctl/compare/redisctl-v0.6.4...redisctl-v0.6.5) - 2025-10-07
+
+### Added
+
+- *(enterprise)* implement local node commands and expose shard commands
+
+### Fixed
+
+- add JSON output support to profile and version commands ([#394](https://github.com/joshrotenberg/redisctl/pull/394))
+
 ## [0.6.4](https://github.com/joshrotenberg/redisctl/compare/redisctl-v0.6.3...redisctl-v0.6.4) - 2025-10-07
 
 ### Fixed
