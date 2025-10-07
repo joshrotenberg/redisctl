@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0](https://github.com/joshrotenberg/redisctl/compare/redis-cloud-v0.6.2...redis-cloud-v0.7.0) - 2025-10-07
+
+### Added
+
+- *(redis-cloud)* medium priority API coverage improvements
+- *(redis-cloud)* high priority API coverage improvements
+- *(redis-cloud)* expand additional response types with list fields
+- *(redis-cloud)* expose all known API fields as first-class struct members
+
+### Fixed
+
+- add OpenAPI spec fixture for CI
+
+### Other
+
+- add support package optimization and upload documentation
+- add Homebrew installation instructions
+
 ## [0.6.1](https://github.com/joshrotenberg/redisctl/compare/redis-cloud-v0.6.0...redis-cloud-v0.6.1) - 2025-09-16
 
 ### Added
