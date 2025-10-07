@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.4](https://github.com/joshrotenberg/redisctl/compare/redisctl-v0.6.3...redisctl-v0.6.4) - 2025-10-07
+
+### Fixed
+
+- remove unused variable warning on Windows builds
+
 ## [0.6.3](https://github.com/joshrotenberg/redisctl/compare/redisctl-v0.6.2...redisctl-v0.6.3) - 2025-10-07
 
 ### Added
