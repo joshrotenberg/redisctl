@@ -75,7 +75,25 @@ async fn execute_command(cli: &Cli, conn_mgr: &ConnectionManager) -> Result<(), 
     let result = match &cli.command {
         Commands::Version => {
             debug!("Showing version information");
-            println!("redisctl {}", env!("CARGO_PKG_VERSION"));
+            match cli.output {
+                cli::OutputFormat::Json | cli::OutputFormat::Yaml => {
+                    let output_data = serde_json::json!({
+                        "version": env!("CARGO_PKG_VERSION"),
+                        "name": env!("CARGO_PKG_NAME"),
+                    });
+
+                    let fmt = match cli.output {
+                        cli::OutputFormat::Json => output::OutputFormat::Json,
+                        cli::OutputFormat::Yaml => output::OutputFormat::Yaml,
+                        _ => output::OutputFormat::Json,
+                    };
+
+                    crate::output::print_output(&output_data, fmt, None)?;
+                }
+                _ => {
+                    println!("redisctl {}", env!("CARGO_PKG_VERSION"));
+                }
+            }
             Ok(())
         }
         Commands::Completions { shell } => {
@@ -86,7 +104,7 @@ async fn execute_command(cli: &Cli, conn_mgr: &ConnectionManager) -> Result<(), 
 
         Commands::Profile(profile_cmd) => {
             debug!("Executing profile command");
-            execute_profile_command(profile_cmd, conn_mgr).await
+            execute_profile_command(profile_cmd, conn_mgr, cli.output).await
         }
 
         Commands::FilesKey(files_key_cmd) => {
@@ -736,6 +754,7 @@ async fn handle_enterprise_workflow_command(
 async fn execute_profile_command(
     profile_cmd: &cli::ProfileCommands,
     conn_mgr: &ConnectionManager,
+    output_format: cli::OutputFormat,
 ) -> Result<(), RedisCtlError> {
     use cli::ProfileCommands::*;
 
@@ -745,56 +764,117 @@ async fn execute_profile_command(
             let profiles = conn_mgr.config.list_profiles();
             trace!("Found {} profiles", profiles.len());
 
-            // Show config file path at the top
-            if let Ok(config_path) = config::Config::config_path() {
-                println!("Configuration file: {}", config_path.display());
-                println!();
-            }
+            match output_format {
+                cli::OutputFormat::Json | cli::OutputFormat::Yaml => {
+                    let config_path = config::Config::config_path()
+                        .ok()
+                        .and_then(|p| p.to_str().map(String::from));
 
-            if profiles.is_empty() {
-                info!("No profiles configured");
-                println!("No profiles configured.");
-                println!("Use 'redisctl profile set' to create a profile.");
-                return Ok(());
-            }
+                    let profile_list: Vec<serde_json::Value> = profiles
+                        .iter()
+                        .map(|(name, profile)| {
+                            let is_default_enterprise =
+                                conn_mgr.config.default_enterprise.as_deref() == Some(name);
+                            let is_default_cloud =
+                                conn_mgr.config.default_cloud.as_deref() == Some(name);
 
-            println!("{:<15} {:<12} DETAILS", "NAME", "TYPE");
-            println!("{:-<15} {:-<12} {:-<30}", "", "", "");
+                            let mut obj = serde_json::json!({
+                                "name": name,
+                                "deployment_type": profile.deployment_type.to_string(),
+                                "is_default_enterprise": is_default_enterprise,
+                                "is_default_cloud": is_default_cloud,
+                            });
 
-            for (name, profile) in profiles {
-                let mut details = String::new();
-                match profile.deployment_type {
-                    config::DeploymentType::Cloud => {
-                        if let Some((_, _, url)) = profile.cloud_credentials() {
-                            details = format!("URL: {}", url);
-                        }
+                            match profile.deployment_type {
+                                config::DeploymentType::Cloud => {
+                                    if let Some((_, _, url)) = profile.cloud_credentials() {
+                                        obj["api_url"] = serde_json::json!(url);
+                                    }
+                                }
+                                config::DeploymentType::Enterprise => {
+                                    if let Some((url, username, _, insecure)) =
+                                        profile.enterprise_credentials()
+                                    {
+                                        obj["url"] = serde_json::json!(url);
+                                        obj["username"] = serde_json::json!(username);
+                                        obj["insecure"] = serde_json::json!(insecure);
+                                    }
+                                }
+                            }
+
+                            obj
+                        })
+                        .collect();
+
+                    let output_data = serde_json::json!({
+                        "config_path": config_path,
+                        "profiles": profile_list,
+                        "count": profiles.len()
+                    });
+
+                    let fmt = match output_format {
+                        cli::OutputFormat::Json => output::OutputFormat::Json,
+                        cli::OutputFormat::Yaml => output::OutputFormat::Yaml,
+                        _ => output::OutputFormat::Json,
+                    };
+
+                    crate::output::print_output(&output_data, fmt, None)?;
+                }
+                _ => {
+                    // Show config file path at the top
+                    if let Ok(config_path) = config::Config::config_path() {
+                        println!("Configuration file: {}", config_path.display());
+                        println!();
                     }
-                    config::DeploymentType::Enterprise => {
-                        if let Some((url, username, _, insecure)) = profile.enterprise_credentials()
-                        {
-                            details = format!(
-                                "URL: {}, User: {}{}",
-                                url,
-                                username,
-                                if insecure { " (insecure)" } else { "" }
-                            );
+
+                    if profiles.is_empty() {
+                        info!("No profiles configured");
+                        println!("No profiles configured.");
+                        println!("Use 'redisctl profile set' to create a profile.");
+                        return Ok(());
+                    }
+
+                    println!("{:<15} {:<12} DETAILS", "NAME", "TYPE");
+                    println!("{:-<15} {:-<12} {:-<30}", "", "", "");
+
+                    for (name, profile) in profiles {
+                        let mut details = String::new();
+                        match profile.deployment_type {
+                            config::DeploymentType::Cloud => {
+                                if let Some((_, _, url)) = profile.cloud_credentials() {
+                                    details = format!("URL: {}", url);
+                                }
+                            }
+                            config::DeploymentType::Enterprise => {
+                                if let Some((url, username, _, insecure)) =
+                                    profile.enterprise_credentials()
+                                {
+                                    details = format!(
+                                        "URL: {}, User: {}{}",
+                                        url,
+                                        username,
+                                        if insecure { " (insecure)" } else { "" }
+                                    );
+                                }
+                            }
                         }
+
+                        let is_default_enterprise =
+                            conn_mgr.config.default_enterprise.as_deref() == Some(name);
+                        let is_default_cloud =
+                            conn_mgr.config.default_cloud.as_deref() == Some(name);
+                        let name_display = if is_default_enterprise || is_default_cloud {
+                            format!("{}*", name)
+                        } else {
+                            name.to_string()
+                        };
+
+                        println!(
+                            "{:<15} {:<12} {}",
+                            name_display, profile.deployment_type, details
+                        );
                     }
                 }
-
-                let is_default_enterprise =
-                    conn_mgr.config.default_enterprise.as_deref() == Some(name);
-                let is_default_cloud = conn_mgr.config.default_cloud.as_deref() == Some(name);
-                let name_display = if is_default_enterprise || is_default_cloud {
-                    format!("{}*", name)
-                } else {
-                    name.to_string()
-                };
-
-                println!(
-                    "{:<15} {:<12} {}",
-                    name_display, profile.deployment_type, details
-                );
             }
 
             Ok(())
@@ -802,52 +882,114 @@ async fn execute_profile_command(
 
         Path => {
             let config_path = config::Config::config_path()?;
-            println!("{}", config_path.display());
+
+            match output_format {
+                cli::OutputFormat::Json | cli::OutputFormat::Yaml => {
+                    let output_data = serde_json::json!({
+                        "config_path": config_path.to_str()
+                    });
+
+                    let fmt = match output_format {
+                        cli::OutputFormat::Json => output::OutputFormat::Json,
+                        cli::OutputFormat::Yaml => output::OutputFormat::Yaml,
+                        _ => output::OutputFormat::Json,
+                    };
+
+                    crate::output::print_output(&output_data, fmt, None)?;
+                }
+                _ => {
+                    println!("{}", config_path.display());
+                }
+            }
             Ok(())
         }
 
         Show { name } => match conn_mgr.config.profiles.get(name) {
             Some(profile) => {
-                println!("Profile: {}", name);
-                println!("Type: {}", profile.deployment_type);
-
-                match profile.deployment_type {
-                    config::DeploymentType::Cloud => {
-                        if let Some((api_key, _, api_url)) = profile.cloud_credentials() {
-                            println!(
-                                "API Key: {}...",
-                                &api_key[..std::cmp::min(8, api_key.len())]
-                            );
-                            println!("API URL: {}", api_url);
-                        }
-                    }
-                    config::DeploymentType::Enterprise => {
-                        if let Some((url, username, has_password, insecure)) =
-                            profile.enterprise_credentials()
-                        {
-                            println!("URL: {}", url);
-                            println!("Username: {}", username);
-                            println!(
-                                "Password: {}",
-                                if has_password.is_some() {
-                                    "configured"
-                                } else {
-                                    "not set"
-                                }
-                            );
-                            println!("Insecure: {}", insecure);
-                        }
-                    }
-                }
-
                 let is_default_enterprise =
                     conn_mgr.config.default_enterprise.as_deref() == Some(name);
                 let is_default_cloud = conn_mgr.config.default_cloud.as_deref() == Some(name);
-                if is_default_enterprise {
-                    println!("Default for enterprise: yes");
-                }
-                if is_default_cloud {
-                    println!("Default for cloud: yes");
+
+                match output_format {
+                    cli::OutputFormat::Json | cli::OutputFormat::Yaml => {
+                        let mut output_data = serde_json::json!({
+                            "name": name,
+                            "deployment_type": profile.deployment_type.to_string(),
+                            "is_default_enterprise": is_default_enterprise,
+                            "is_default_cloud": is_default_cloud,
+                        });
+
+                        match profile.deployment_type {
+                            config::DeploymentType::Cloud => {
+                                if let Some((api_key, _, api_url)) = profile.cloud_credentials() {
+                                    output_data["api_key_preview"] = serde_json::json!(format!(
+                                        "{}...",
+                                        &api_key[..std::cmp::min(8, api_key.len())]
+                                    ));
+                                    output_data["api_url"] = serde_json::json!(api_url);
+                                }
+                            }
+                            config::DeploymentType::Enterprise => {
+                                if let Some((url, username, has_password, insecure)) =
+                                    profile.enterprise_credentials()
+                                {
+                                    output_data["url"] = serde_json::json!(url);
+                                    output_data["username"] = serde_json::json!(username);
+                                    output_data["password_configured"] =
+                                        serde_json::json!(has_password.is_some());
+                                    output_data["insecure"] = serde_json::json!(insecure);
+                                }
+                            }
+                        }
+
+                        let fmt = match output_format {
+                            cli::OutputFormat::Json => output::OutputFormat::Json,
+                            cli::OutputFormat::Yaml => output::OutputFormat::Yaml,
+                            _ => output::OutputFormat::Json,
+                        };
+
+                        crate::output::print_output(&output_data, fmt, None)?;
+                    }
+                    _ => {
+                        println!("Profile: {}", name);
+                        println!("Type: {}", profile.deployment_type);
+
+                        match profile.deployment_type {
+                            config::DeploymentType::Cloud => {
+                                if let Some((api_key, _, api_url)) = profile.cloud_credentials() {
+                                    println!(
+                                        "API Key: {}...",
+                                        &api_key[..std::cmp::min(8, api_key.len())]
+                                    );
+                                    println!("API URL: {}", api_url);
+                                }
+                            }
+                            config::DeploymentType::Enterprise => {
+                                if let Some((url, username, has_password, insecure)) =
+                                    profile.enterprise_credentials()
+                                {
+                                    println!("URL: {}", url);
+                                    println!("Username: {}", username);
+                                    println!(
+                                        "Password: {}",
+                                        if has_password.is_some() {
+                                            "configured"
+                                        } else {
+                                            "not set"
+                                        }
+                                    );
+                                    println!("Insecure: {}", insecure);
+                                }
+                            }
+                        }
+
+                        if is_default_enterprise {
+                            println!("Default for enterprise: yes");
+                        }
+                        if is_default_cloud {
+                            println!("Default for cloud: yes");
+                        }
+                    }
                 }
 
                 Ok(())
