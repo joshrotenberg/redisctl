@@ -436,6 +436,16 @@ async fn execute_enterprise_command(
         Workflow(workflow_cmd) => {
             handle_enterprise_workflow_command(conn_mgr, profile, workflow_cmd, output).await
         }
+        Local(local_cmd) => {
+            commands::enterprise::local::handle_local_command(
+                conn_mgr,
+                profile,
+                local_cmd.clone(),
+                output,
+                query,
+            )
+            .await
+        }
         Shard(shard_cmd) => {
             commands::enterprise::shard::handle_shard_command(
                 conn_mgr,

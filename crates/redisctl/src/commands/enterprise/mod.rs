@@ -20,6 +20,7 @@ pub mod jsonschema;
 pub mod ldap;
 pub mod license;
 pub mod license_workflow;
+pub mod local;
 pub mod logs;
 pub mod logs_impl;
 pub mod migration;
