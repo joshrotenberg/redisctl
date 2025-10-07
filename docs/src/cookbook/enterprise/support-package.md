@@ -11,9 +11,8 @@
 Generate support package for entire cluster:
 
 ```bash
-redisctl enterprise support-package create \
-  --output /tmp/support-package.tar.gz \
-  --wait
+redisctl enterprise support-package cluster \
+  --file /tmp/support-package.tar.gz
 ```
 
 ## What is a Support Package?
@@ -34,9 +33,8 @@ Used for troubleshooting with Redis support or internal diagnostics.
 Create a support package for the entire cluster:
 
 ```bash
-redisctl enterprise support-package create \
-  --output /tmp/cluster-support-$(date +%Y%m%d).tar.gz \
-  --wait
+redisctl enterprise support-package cluster \
+  --file /tmp/cluster-support-$(date +%Y%m%d).tar.gz
 ```
 
 **What you should see:**
@@ -51,10 +49,9 @@ Size: 45.2 MB
 Create a package for just one database (smaller, faster):
 
 ```bash
-redisctl enterprise support-package create \
+redisctl enterprise support-package database \
   --database-id 1 \
-  --output /tmp/db1-support.tar.gz \
-  --wait
+  --file /tmp/db1-support.tar.gz
 ```
 
 ### 3. Optimize Before Upload
@@ -62,11 +59,10 @@ redisctl enterprise support-package create \
 Reduce package size for faster upload:
 
 ```bash
-redisctl enterprise support-package create \
+redisctl enterprise support-package database \
   --database-id 1 \
   --optimize \
-  --output /tmp/db1-optimized.tar.gz \
-  --wait
+  --file /tmp/db1-optimized.tar.gz
 ```
 
 **What `--optimize` does:**
@@ -94,12 +90,11 @@ export FILES_API_KEY="your-api-key"
 Create package and upload in one command:
 
 ```bash
-redisctl enterprise support-package create \
+redisctl enterprise support-package database \
   --database-id 1 \
   --optimize \
   --upload \
-  --no-save \
-  --wait
+  --no-save
 ```
 
 **Flags explained:**
@@ -123,14 +118,9 @@ URL: https://yourcompany.files.com/file/support-packages/db1-20251007-abc123.tar
 Exclude certain log types:
 
 ```bash
-redisctl enterprise support-package create \
-  --data '{
-    "database_id": 1,
-    "log_types": ["redis", "cluster"],
-    "time_range": "last_24_hours"
-  }' \
-  --output /tmp/filtered-support.tar.gz \
-  --wait
+redisctl enterprise support-package database \
+  --database-id 1 \
+  --file /tmp/filtered-support.tar.gz
 ```
 
 ### Automated Uploads
@@ -144,12 +134,11 @@ Schedule regular support package uploads:
 DATE=$(date +%Y%m%d-%H%M%S)
 DB_ID=$1
 
-redisctl enterprise support-package create \
+redisctl enterprise support-package database \
   --database-id "$DB_ID" \
   --optimize \
   --upload \
   --no-save \
-  --wait \
   -o json | tee /var/log/support-upload-$DATE.log
 ```
 
@@ -164,11 +153,10 @@ Run via cron:
 Generate and get sharable link:
 
 ```bash
-RESULT=$(redisctl enterprise support-package create \
+RESULT=$(redisctl enterprise support-package cluster \
   --optimize \
   --upload \
   --no-save \
-  --wait \
   -o json)
 
 URL=$(echo "$RESULT" | jq -r '.upload_url')
@@ -184,12 +172,11 @@ echo "$URL"
 Error: Support package generation timed out
 ```
 
-**Solution:** Increase timeout for large clusters:
+**Solution:** Use optimize flag to reduce generation time:
 ```bash
-redisctl enterprise support-package create \
-  --wait \
-  --wait-timeout 600 \
-  --output /tmp/support.tar.gz
+redisctl enterprise support-package cluster \
+  --optimize \
+  --file /tmp/support.tar.gz
 ```
 
 ### Upload Fails
@@ -219,9 +206,9 @@ Error: Not enough disk space
 find /tmp -name "*support*.tar.gz" -mtime +7
 
 # Use optimization
-redisctl enterprise support-package create \
+redisctl enterprise support-package cluster \
   --optimize \
-  --output /tmp/support.tar.gz
+  --file /tmp/support.tar.gz
 ```
 
 ### Database Not Found
