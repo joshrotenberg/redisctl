@@ -396,16 +396,13 @@ fn perform_preflight_checks(output_path: &Path) -> AnyhowResult<()> {
     }
 
     // Check available disk space (warn if less than 1GB)
+    // Only perform check on Unix systems where we can read block count
+    #[cfg(unix)]
     if let Ok(metadata) = fs::metadata(parent_dir) {
-        // This is platform-specific and would need proper implementation
-        // For now, just a placeholder check
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::MetadataExt;
-            // Basic check - would need proper disk space checking
-            if metadata.blocks() < 1000000 {
-                eprintln!("Warning: Low disk space detected");
-            }
+        use std::os::unix::fs::MetadataExt;
+        // Basic check - would need proper disk space checking
+        if metadata.blocks() < 1000000 {
+            eprintln!("Warning: Low disk space detected");
         }
     }
 
