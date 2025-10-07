@@ -1133,6 +1133,10 @@ pub enum EnterpriseCommands {
     #[command(subcommand)]
     Workflow(EnterpriseWorkflowCommands),
 
+    /// Local node operations
+    #[command(subcommand)]
+    Local(crate::commands::enterprise::local::LocalCommands),
+
     /// Shard management operations
     #[command(subcommand)]
     Shard(crate::commands::enterprise::shard::ShardCommands),
