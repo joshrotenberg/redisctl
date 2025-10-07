@@ -1,7 +1,7 @@
 # Create Your First Redis Enterprise Database
 
-⏱️ **Time:** 5 minutes  
-📋 **Prerequisites:**
+Time: 5 minutes  
+Prerequisites:
 - Redis Enterprise cluster running ([see cluster setup](../../enterprise/cluster-management.md))
 - redisctl installed ([installation guide](../../getting-started/installation.md))
 - Profile configured with Enterprise credentials ([authentication guide](../../getting-started/authentication.md))
@@ -32,9 +32,9 @@ redisctl enterprise cluster get -o json -q 'name'
 ```
 
 **Troubleshooting:**
-- ❌ "Connection refused" → Check `REDIS_ENTERPRISE_URL` or profile settings
-- ❌ "401 Unauthorized" → Verify credentials with `redisctl profile get`
-- ❌ "SSL error" → Add `--insecure` flag or set `REDIS_ENTERPRISE_INSECURE=true`
+- "Connection refused" - Check `REDIS_ENTERPRISE_URL` or profile settings
+- "401 Unauthorized" - Verify credentials with `redisctl profile get`
+- "SSL error" - Add `--insecure` flag or set `REDIS_ENTERPRISE_INSECURE=true`
 
 ### 2. Check Available Resources
 
@@ -249,10 +249,10 @@ Or use: `echo "$((1 * 1024 * 1024 * 1024))"` for 1GB
 
 Now that you have a database:
 
-- 🔒 [Configure Redis ACLs](configure-acls.md) - Secure your database with access controls
-- 💾 [Generate Support Package](support-package.md) - Troubleshooting and diagnostics
-- 🔄 [Configure Replication](configure-replication.md) - Set up replica databases
-- 📊 [Monitor Database Health](../../guides/monitoring.md) - Track performance metrics
+- [Configure Redis ACLs](configure-acls.md) - Secure your database with access controls
+- [Generate Support Package](support-package.md) - Troubleshooting and diagnostics
+- [Configure Replication](configure-replication.md) - Set up replica databases
+- [Monitor Database Health](../../guides/monitoring.md) - Track performance metrics
 
 ## See Also
 

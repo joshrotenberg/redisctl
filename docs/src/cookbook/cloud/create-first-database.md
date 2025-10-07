@@ -1,7 +1,7 @@
 # Create Your First Redis Cloud Database
 
-⏱️ **Time:** 5-10 minutes  
-📋 **Prerequisites:**
+Time: 5-10 minutes  
+Prerequisites:
 - Redis Cloud account ([sign up](https://redis.io/try-free/))
 - redisctl installed ([installation guide](../../getting-started/installation.md))
 - Profile configured with Cloud credentials ([authentication guide](../../getting-started/authentication.md))
@@ -37,8 +37,8 @@ redisctl cloud subscription list -o table
 ```
 
 **Troubleshooting:**
-- ❌ "401 Unauthorized" → Check your API credentials with `redisctl profile get`
-- ❌ Empty table → Create a subscription first (see [subscription guide](../cloud/subscriptions.md))
+- "401 Unauthorized" - Check your API credentials with `redisctl profile get`
+- Empty table - Create a subscription first (see [subscription guide](../cloud/subscriptions.md))
 
 ### 2. Choose Your Database Configuration
 
@@ -217,10 +217,10 @@ redisctl cloud subscription get --subscription-id 42 -q 'pricing'
 
 Now that you have a database:
 
-- 🔒 [Configure ACL Security](configure-acls.md) - Secure your database with access controls
-- 🌐 [Set Up VPC Peering](setup-vpc-peering.md) - Connect to your private network
-- 💾 [Configure Backups](backup-restore.md) - Protect your data
-- 📊 [Monitor Performance](../../guides/monitoring.md) - Track your database metrics
+- [Configure ACL Security](configure-acls.md) - Secure your database with access controls
+- [Set Up VPC Peering](setup-vpc-peering.md) - Connect to your private network
+- [Configure Backups](backup-restore.md) - Protect your data
+- [Monitor Performance](../../guides/monitoring.md) - Track your database metrics
 
 ## See Also
 

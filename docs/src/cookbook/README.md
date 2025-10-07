@@ -11,7 +11,7 @@ New to redisctl? Start here:
 ## Redis Cloud Recipes
 
 ### Getting Started
-- [Create Your First Database](cloud/create-first-database.md) - ⏱️ 5 minutes
+- [Create Your First Database](cloud/create-first-database.md) - 5 minutes
 
 ### Networking
 - Setup VPC Peering (coming soon)
@@ -28,10 +28,10 @@ New to redisctl? Start here:
 ## Redis Enterprise Recipes
 
 ### Getting Started
-- [Create a Database](enterprise/create-database.md) - ⏱️ 5 minutes
+- [Create a Database](enterprise/create-database.md) - 5 minutes
 
 ### Operations
-- [Generate and Upload Support Package](enterprise/support-package.md) - ⏱️ 10 minutes
+- [Generate and Upload Support Package](enterprise/support-package.md) - 10 minutes
 - Configure Database Replication (coming soon)
 
 ### Cluster Management
@@ -41,13 +41,13 @@ New to redisctl? Start here:
 ## How to Use These Recipes
 
 Each recipe includes:
-- ⏱️ **Time estimate** - How long it takes
-- 📋 **Prerequisites** - What you need before starting
-- ⚡ **Quick command** - One-liner when possible
-- 📝 **Step-by-step** - Detailed walkthrough
-- ✅ **Expected output** - What success looks like
-- 🔗 **Next steps** - Related recipes
-- ❌ **Troubleshooting** - Common errors and fixes
+- **Time estimate** - How long it takes
+- **Prerequisites** - What you need before starting
+- Quick Command - One-liner when possible
+- Step-by-Step - Detailed walkthrough
+- Expected Output - What success looks like
+- Next Steps - Related recipes
+- Troubleshooting - Common errors and fixes
 
 ## Contributing Recipes
 

@@ -1,7 +1,7 @@
 # Generate and Upload a Support Package
 
-⏱️ **Time:** 10-15 minutes  
-📋 **Prerequisites:**
+Time: 10-15 minutes  
+Prerequisites:
 - Redis Enterprise cluster running
 - redisctl installed and configured
 - (Optional) Files.com account for upload ([sign up](https://www.files.com/))
@@ -272,9 +272,9 @@ support-package/
 
 ## Next Steps
 
-- 📊 [Monitor Cluster Health](../../enterprise/monitoring/cluster-health.md) - Proactive monitoring
-- 🔍 [Troubleshooting Guide](../../guides/troubleshooting.md) - Common issues and solutions
-- 🛠️ [Node Management](../../enterprise/operations/node-management.md) - Manage cluster nodes
+- [Monitor Cluster Health](../../enterprise/monitoring/cluster-health.md) - Proactive monitoring
+- [Troubleshooting Guide](../../guides/troubleshooting.md) - Common issues and solutions
+- [Node Management](../../enterprise/operations/node-management.md) - Manage cluster nodes
 
 ## See Also
 
