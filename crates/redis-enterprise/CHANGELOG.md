@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.3](https://github.com/joshrotenberg/redisctl/compare/redis-enterprise-v0.6.2...redis-enterprise-v0.6.3) - 2025-10-07
+
+### Other
+
+- add support package optimization and upload documentation
+- add Homebrew installation instructions
+
 ## [0.6.1](https://github.com/joshrotenberg/redisctl/compare/redis-enterprise-v0.6.0...redis-enterprise-v0.6.1) - 2025-09-16
 
 ### Added

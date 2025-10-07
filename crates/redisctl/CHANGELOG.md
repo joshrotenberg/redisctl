@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.3](https://github.com/joshrotenberg/redisctl/compare/redisctl-v0.6.2...redisctl-v0.6.3) - 2025-10-07
+
+### Added
+
+- add comprehensive Files.com API key management with secure storage
+- add support package upload feature with files-sdk 0.3.1
+- add support package optimization
+
+### Fixed
+
+- *(secure-storage)* enable platform-native keyring backends
+
+### Other
+
+- add support package optimization and upload documentation
+- Merge pull request #371 from joshrotenberg/feat/homebrew-auto-update
+- add Homebrew installation instructions
+
 ## [0.6.1](https://github.com/joshrotenberg/redisctl/compare/redisctl-v0.6.0...redisctl-v0.6.1) - 2025-09-16
 
 ### Fixed
