@@ -31,7 +31,7 @@ async fn main() -> Result<()> {
 
     // Execute command
     if let Err(e) = execute_command(&cli, &conn_mgr).await {
-        eprintln!("Error: {}", e);
+        eprintln!("{}", e.display_with_suggestions());
         std::process::exit(1);
     }
 
@@ -186,6 +186,7 @@ fn format_command(command: &Commands) -> String {
                 Remove { name } => format!("profile remove {}", name),
                 DefaultEnterprise { name } => format!("profile default-enterprise {}", name),
                 DefaultCloud { name } => format!("profile default-cloud {}", name),
+                Validate => "profile validate".to_string(),
             }
         }
         Commands::Api {
@@ -1279,6 +1280,133 @@ async fn execute_profile_command(
             config.save().context("Failed to save configuration")?;
 
             println!("Default cloud profile set to '{}'.", name);
+            Ok(())
+        }
+
+        Validate => {
+            debug!("Validating configuration");
+
+            // Configuration file validation
+            let config_path = config::Config::config_path()?;
+            println!("Configuration file: {}", config_path.display());
+
+            if !config_path.exists() {
+                println!("✗ Configuration file does not exist");
+                println!("\nTry:");
+                println!("  • Create a profile: redisctl profile set <name> <type>");
+                return Ok(());
+            }
+
+            println!("✓ Configuration file exists and is readable");
+
+            // Profile validation
+            let profiles = conn_mgr.config.list_profiles();
+            println!("✓ Found {} profile(s)", profiles.len());
+
+            if profiles.is_empty() {
+                println!("\n⚠ No profiles configured");
+                println!("\nTry:");
+                println!(
+                    "  • Create a Cloud profile: redisctl profile set mycloud cloud --api-key <key> --api-secret <secret>"
+                );
+                println!(
+                    "  • Create an Enterprise profile: redisctl profile set myenterprise enterprise --url <url> --username <user>"
+                );
+                return Ok(());
+            }
+
+            println!();
+
+            let mut has_warnings = false;
+            let mut has_errors = false;
+
+            for (name, profile) in profiles {
+                print!("Profile '{}' ({}): ", name, profile.deployment_type);
+
+                match profile.deployment_type {
+                    config::DeploymentType::Cloud => {
+                        match profile.cloud_credentials() {
+                            Some((api_key, api_secret, api_url)) => {
+                                if api_key.is_empty() || api_secret.is_empty() {
+                                    println!("✗ Missing credentials");
+                                    has_errors = true;
+                                } else {
+                                    println!("✓ Valid");
+                                }
+
+                                // Check for valid URL
+                                if !api_url.starts_with("http://")
+                                    && !api_url.starts_with("https://")
+                                {
+                                    println!("  ⚠ API URL should start with http:// or https://");
+                                    has_warnings = true;
+                                }
+                            }
+                            None => {
+                                println!("✗ Missing Cloud credentials");
+                                has_errors = true;
+                            }
+                        }
+                    }
+                    config::DeploymentType::Enterprise => {
+                        match profile.enterprise_credentials() {
+                            Some((url, username, password, _insecure)) => {
+                                if username.is_empty() {
+                                    println!("✗ Missing username");
+                                    has_errors = true;
+                                } else if password.is_none()
+                                    || password.as_ref().is_none_or(|p| p.is_empty())
+                                {
+                                    println!("⚠ Missing password (will be prompted)");
+                                    has_warnings = true;
+                                } else {
+                                    println!("✓ Valid");
+                                }
+
+                                // Check for valid URL
+                                if !url.starts_with("http://") && !url.starts_with("https://") {
+                                    println!("  ⚠ URL should start with http:// or https://");
+                                    has_warnings = true;
+                                }
+                            }
+                            None => {
+                                println!("✗ Missing Enterprise credentials");
+                                has_errors = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Check default profiles
+            println!();
+            if let Some(default_ent) = &conn_mgr.config.default_enterprise {
+                if conn_mgr.config.profiles.contains_key(default_ent) {
+                    println!("✓ Default enterprise profile: {}", default_ent);
+                } else {
+                    println!("✗ Default enterprise profile '{}' not found", default_ent);
+                    has_errors = true;
+                }
+            }
+
+            if let Some(default_cloud) = &conn_mgr.config.default_cloud {
+                if conn_mgr.config.profiles.contains_key(default_cloud) {
+                    println!("✓ Default cloud profile: {}", default_cloud);
+                } else {
+                    println!("✗ Default cloud profile '{}' not found", default_cloud);
+                    has_errors = true;
+                }
+            }
+
+            println!();
+            if has_errors {
+                println!("⚠ Configuration has errors. Fix them before using affected profiles.");
+            } else if has_warnings {
+                println!("⚠ Configuration has warnings but should work.");
+            } else {
+                println!("✓ Configuration is valid");
+            }
+
             Ok(())
         }
     }

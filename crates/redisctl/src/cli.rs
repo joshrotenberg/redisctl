@@ -11,7 +11,37 @@ use clap::{Parser, Subcommand};
 /// Redis management CLI with unified access to Cloud and Enterprise
 #[derive(Parser, Debug)]
 #[command(name = "redisctl")]
-#[command(version, about = "Redis management CLI for Cloud and Enterprise deployments", long_about = None)]
+#[command(
+    version,
+    about = "Redis management CLI for Cloud and Enterprise deployments"
+)]
+#[command(long_about = "
+Redis management CLI for Cloud and Enterprise deployments
+
+EXAMPLES:
+    # Set up a Cloud profile
+    redisctl profile set mycloud cloud --api-key KEY --api-secret SECRET
+
+    # Set up an Enterprise profile
+    redisctl profile set myenterprise enterprise --url https://cluster:9443 --username admin
+
+    # List databases
+    redisctl cloud database list
+    redisctl enterprise database list
+
+    # Get JSON output for scripting
+    redisctl cloud subscription list -o json
+
+    # Filter output with JMESPath
+    redisctl cloud database list -q 'databases[?status==`active`]'
+
+    # Direct API access
+    redisctl api cloud get /subscriptions
+    redisctl api enterprise get /v1/cluster
+
+For more help on a specific command, run:
+    redisctl <command> --help
+")]
 pub struct Cli {
     /// Profile to use for this command
     #[arg(long, short, global = true, env = "REDISCTL_PROFILE")]
@@ -51,6 +81,22 @@ pub enum OutputFormat {
 pub enum Commands {
     /// Raw API access - direct REST endpoint calls
     #[command(name = "api")]
+    #[command(after_help = "EXAMPLES:
+    # GET request to Cloud API
+    redisctl api cloud get /subscriptions
+
+    # GET request to Enterprise API
+    redisctl api enterprise get /v1/cluster
+
+    # POST request with JSON data
+    redisctl api cloud post /subscriptions --data '{\"name\":\"my-sub\"}'
+
+    # POST request from file
+    redisctl api cloud post /subscriptions --data @subscription.json
+
+    # Output as JSON for scripting
+    redisctl api enterprise get /v1/bdbs -o json
+")]
     Api {
         /// Deployment type to target
         #[arg(value_enum)]
@@ -70,6 +116,26 @@ pub enum Commands {
 
     /// Profile management
     #[command(subcommand, visible_alias = "prof", visible_alias = "pr")]
+    #[command(after_help = "EXAMPLES:
+    # Create a Cloud profile
+    redisctl profile set mycloud cloud --api-key KEY --api-secret SECRET
+
+    # Create an Enterprise profile
+    redisctl profile set myenterprise enterprise --url https://cluster:9443 --username admin
+
+    # List all profiles
+    redisctl profile list
+
+    # Show profile details
+    redisctl profile show mycloud
+
+    # Validate configuration
+    redisctl profile validate
+
+    # Set default profiles
+    redisctl profile default-cloud mycloud
+    redisctl profile default-enterprise myenterprise
+")]
     Profile(ProfileCommands),
 
     /// Cloud-specific operations
@@ -170,6 +236,29 @@ pub enum ProfileCommands {
 
     /// Set or create a profile
     #[command(visible_alias = "add", visible_alias = "create")]
+    #[command(after_help = "EXAMPLES:
+    # Create a Cloud profile
+    redisctl profile set mycloud cloud \\
+        --api-key A3qcymrvqpn9rrgdt40sv5f9yfxob26vx64hwddh8vminqnkgfq \\
+        --api-secret S3s8ecrrnaguqkvwfvealoe3sn25zqs4wc4lwgo4rb0ud3qm77c
+
+    # Create an Enterprise profile (password will be prompted)
+    redisctl profile set prod enterprise \\
+        --url https://cluster.example.com:9443 \\
+        --username admin@example.com
+
+    # Create Enterprise profile with password
+    redisctl profile set staging enterprise \\
+        --url https://staging:9443 \\
+        --username admin \\
+        --password mypassword
+
+    # Create Enterprise profile allowing insecure connections
+    redisctl profile set local enterprise \\
+        --url https://localhost:9443 \\
+        --username admin@redis.local \\
+        --insecure
+")]
     Set {
         /// Profile name
         name: String,
@@ -232,6 +321,27 @@ pub enum ProfileCommands {
         /// Profile name to set as default for cloud commands
         name: String,
     },
+
+    /// Validate configuration file and profiles
+    #[command(visible_alias = "check")]
+    #[command(after_help = "EXAMPLES:
+    # Validate all profiles and configuration
+    redisctl profile validate
+
+    # Example output:
+    # Configuration file: /Users/user/.config/redisctl/config.toml
+    # ✓ Configuration file exists and is readable
+    # ✓ Found 2 profile(s)
+    #
+    # Profile 'mycloud' (cloud): ✓ Valid
+    # Profile 'myenterprise' (enterprise): ✓ Valid
+    #
+    # ✓ Default enterprise profile: myenterprise
+    # ✓ Default cloud profile: mycloud
+    #
+    # ✓ Configuration is valid
+")]
+    Validate,
 }
 
 /// Files.com API key management commands
