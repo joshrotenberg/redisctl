@@ -4,3 +4,4 @@ pub mod api;
 pub mod cloud;
 pub mod enterprise;
 pub mod files_key;
+pub mod profile;
