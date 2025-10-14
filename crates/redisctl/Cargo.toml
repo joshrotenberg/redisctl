@@ -27,6 +27,8 @@ clap = { workspace = true }
 clap_complete = "4.5"
 anyhow = { workspace = true }
 tokio = { workspace = true }
+tokio-stream = { workspace = true }
+futures = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 serde = { workspace = true }
