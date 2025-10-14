@@ -38,11 +38,13 @@ pub struct Module {
     /// Redis command used to configure this module
     pub config_command: Option<String>,
 
-    /// Whether the module supports CRDB (Conflict-free Replicated Database)
-    pub crdb: Option<bool>,
+    /// CRDB (Conflict-free Replicated Database) configuration
+    /// The API returns an empty object {} for modules without CRDB support
+    pub crdb: Option<Value>,
 
-    /// List of other modules this module depends on
-    pub dependencies: Option<Vec<Value>>,
+    /// Module dependencies
+    /// The API returns an empty object {} for modules without dependencies
+    pub dependencies: Option<Value>,
 
     /// Contact email address of the module author
     pub email: Option<String>,
