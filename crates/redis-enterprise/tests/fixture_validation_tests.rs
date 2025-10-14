@@ -3,11 +3,12 @@
 //! These tests use real API responses captured from a Redis Enterprise cluster
 //! to validate that our Rust type definitions accurately match the actual API.
 //!
-//! ## Known Issues Found
+//! ## Fixed Issues
 //!
-//! - Module struct has type mismatch: bigstore_version_2_support should be bool, not map
+//! - Module struct had type mismatches: crdb and dependencies were incorrectly typed
+//!   They should be Option<Value> to handle empty objects {} from API
 
-use redis_enterprise::{ClusterInfo, Database, License, Node, User};
+use redis_enterprise::{ClusterInfo, Database, License, Module, Node, User};
 use serde_json::Value;
 
 #[test]
@@ -48,12 +49,16 @@ fn test_users_list_from_fixture() {
 }
 
 #[test]
-#[ignore = "Known type mismatch - bigstore_version_2_support should be bool not map"]
 fn test_modules_list_from_fixture() {
     let fixture = include_str!("fixtures/modules_list.json");
-    // This will fail until Module struct is fixed
-    let _modules: Vec<serde_json::Value> =
+    let modules: Vec<Module> =
         serde_json::from_str(fixture).expect("Failed to deserialize modules list");
+
+    assert!(!modules.is_empty(), "Should have modules");
+
+    let module = &modules[0];
+    assert!(!module.uid.is_empty(), "Module should have UID");
+    assert!(module.module_name.is_some(), "Module should have name");
 }
 
 #[test]
