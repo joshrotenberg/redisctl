@@ -232,6 +232,10 @@ pub enum ProfileCommands {
         /// Profile name to set as default for cloud commands
         name: String,
     },
+
+    /// Validate configuration file and profiles
+    #[command(visible_alias = "check")]
+    Validate,
 }
 
 /// Files.com API key management commands

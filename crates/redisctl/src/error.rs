@@ -57,6 +57,84 @@ pub enum RedisCtlError {
 /// Result type for redisctl operations
 pub type Result<T> = std::result::Result<T, RedisCtlError>;
 
+impl RedisCtlError {
+    /// Get helpful suggestions for resolving this error
+    pub fn suggestions(&self) -> Vec<String> {
+        match self {
+            RedisCtlError::ProfileNotFound { name } => vec![
+                format!("List available profiles: redisctl profile list"),
+                format!("Create profile '{}': redisctl profile set {}", name, name),
+                format!("Check profile name spelling"),
+            ],
+            RedisCtlError::NoProfileConfigured => vec![
+                "Create a Cloud profile: redisctl profile set mycloud cloud --api-key <key> --api-secret <secret>".to_string(),
+                "Create an Enterprise profile: redisctl profile set myenterprise enterprise --url <url> --username <user>".to_string(),
+                "View profile documentation: redisctl profile --help".to_string(),
+            ],
+            RedisCtlError::MissingCredentials { name } => vec![
+                format!("Update profile credentials: redisctl profile set {}", name),
+                format!("Check profile details: redisctl profile show {}", name),
+                "Verify environment variables are set correctly".to_string(),
+            ],
+            RedisCtlError::AuthenticationFailed { .. } => vec![
+                "Check your credentials: redisctl profile show <profile>".to_string(),
+                "For Cloud: Verify API key and secret are correct".to_string(),
+                "For Enterprise: Verify username and password are correct".to_string(),
+                "Ensure the API endpoint URL is correct".to_string(),
+            ],
+            RedisCtlError::ConnectionError { message } if message.contains("certificate") || message.contains("SSL") => vec![
+                "For Enterprise: Try with --insecure flag for self-signed certificates".to_string(),
+                "Update profile with insecure option: redisctl profile set <name> enterprise --insecure".to_string(),
+                "Check that the server URL is correct and reachable".to_string(),
+            ],
+            RedisCtlError::ConnectionError { .. } => vec![
+                "Check network connectivity".to_string(),
+                "Verify the server URL is correct: redisctl profile show <profile>".to_string(),
+                "Ensure firewall allows connections to the API endpoint".to_string(),
+            ],
+            RedisCtlError::ApiError { message } if message.contains("404") => vec![
+                "Verify the resource ID is correct".to_string(),
+                "List available resources to find the correct ID".to_string(),
+                "Check that you're using the correct profile".to_string(),
+            ],
+            RedisCtlError::ProfileTypeMismatch { expected_type, .. } => vec![
+                format!("Use a {} profile for this command", expected_type),
+                format!("List profiles: redisctl profile list"),
+                format!("Create a {} profile: redisctl profile set <name> {}", expected_type, expected_type.to_lowercase()),
+            ],
+            RedisCtlError::UnsupportedDeploymentType { .. } => vec![
+                "Check the command documentation: redisctl <command> --help".to_string(),
+                "Use the appropriate command for your deployment type".to_string(),
+            ],
+            RedisCtlError::InvalidInput { .. } => vec![
+                "Check the command syntax: redisctl <command> --help".to_string(),
+                "Verify input file format is correct (JSON/YAML)".to_string(),
+            ],
+            RedisCtlError::FileError { path, .. } => vec![
+                format!("Check that file exists: {}", path),
+                "Verify file permissions are correct".to_string(),
+                "Ensure file path is correct (use absolute path if needed)".to_string(),
+            ],
+            _ => vec![],
+        }
+    }
+
+    /// Format error with suggestions for display
+    pub fn display_with_suggestions(&self) -> String {
+        let mut output = format!("Error: {}", self);
+
+        let suggestions = self.suggestions();
+        if !suggestions.is_empty() {
+            output.push_str("\n\nTry:\n");
+            for suggestion in suggestions {
+                output.push_str(&format!("  • {}\n", suggestion));
+            }
+        }
+
+        output
+    }
+}
+
 impl From<redis_cloud::CloudError> for RedisCtlError {
     fn from(err: redis_cloud::CloudError) -> Self {
         match err {
