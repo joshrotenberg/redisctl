@@ -26,12 +26,12 @@ Managing Redis Cloud and Redis Enterprise through REST APIs means juggling curl 
 
 ### What You Get
 
-✅ **One CLI for Everything** — Manage both Redis Cloud and Enterprise from a single tool  
-✅ **Intelligent Async Handling** — `--wait` flags automatically poll long-running operations  
-✅ **Real-Time Streaming** — Tail logs and metrics with `--follow`  
-✅ **Automated Workflows** — High-level commands like `subscription-setup` handle complex tasks  
-✅ **Smart Output** — Tables for humans, JSON for scripts, with JMESPath filtering built-in  
-✅ **Production Ready** — Secure credential storage, profile management, and comprehensive error handling
+- **One CLI for Everything** — Manage both Redis Cloud and Enterprise from a single tool  
+- **Intelligent Async Handling** — `--wait` flags automatically poll long-running operations  
+- **Real-Time Streaming** — Tail logs and metrics with `--follow`  
+- **Automated Workflows** — High-level commands like `subscription-setup` handle complex tasks  
+- **Smart Output** — Tables for humans, JSON for scripts, with JMESPath filtering built-in  
+- **Production Ready** — Secure credential storage, profile management, and comprehensive error handling
 
 ---
 
@@ -85,13 +85,13 @@ redisctl enterprise logs list --follow
 
 **That's it!** You're ready to manage your Redis deployments.
 
-📚 [**Full Documentation →**](https://joshrotenberg.github.io/redisctl/)
+[**Full Documentation →**](https://joshrotenberg.github.io/redisctl/)
 
 ---
 
 ## Feature Showcase
 
-### 🔄 Async Operations Made Easy
+### Async Operations Made Easy
 
 No more manual polling. The `--wait` flag handles it automatically:
 
@@ -105,7 +105,7 @@ redisctl cloud database create @config.json --wait
 # ✓ Database created and ready in 45s
 ```
 
-### 📊 Flexible Output Formats
+### Flexible Output Formats
 
 ```bash
 # Human-friendly tables
@@ -118,7 +118,7 @@ redisctl cloud database list -o json
 redisctl cloud database list -q 'databases[?status==`active`].name'
 ```
 
-### 🎯 High-Level Workflows
+### High-Level Workflows
 
 Complex multi-step operations in one command:
 
@@ -134,7 +134,7 @@ redisctl cloud workflow subscription-setup @workflow.yaml
 # ✓ Ready for production
 ```
 
-### 📡 Real-Time Streaming
+### Real-Time Streaming
 
 Monitor your infrastructure live:
 
@@ -146,7 +146,7 @@ redisctl enterprise logs list --follow
 redisctl enterprise logs list --follow --poll-interval 1
 ```
 
-### 🔧 Support Package Automation
+### Support Package Automation
 
 Generate diagnostic packages and upload to Redis Support in one step:
 
@@ -411,7 +411,7 @@ redisctl enterprise cluster get -o yaml
 
 ## Documentation
 
-📚 **[Complete Documentation](https://joshrotenberg.github.io/redisctl/)**
+**[Complete Documentation](https://joshrotenberg.github.io/redisctl/)**
 
 - [Getting Started Guide](https://joshrotenberg.github.io/redisctl/getting-started/)
 - [Command Reference](https://joshrotenberg.github.io/redisctl/reference/)
@@ -453,6 +453,6 @@ at your option.
 
 ## Support
 
-- 📖 [Documentation](https://joshrotenberg.github.io/redisctl/)
-- 🐛 [Issue Tracker](https://github.com/joshrotenberg/redisctl/issues)
-- 💬 [Discussions](https://github.com/joshrotenberg/redisctl/discussions)
+- [Documentation](https://joshrotenberg.github.io/redisctl/)
+- [Issue Tracker](https://github.com/joshrotenberg/redisctl/issues)
+- [Discussions](https://github.com/joshrotenberg/redisctl/discussions)
