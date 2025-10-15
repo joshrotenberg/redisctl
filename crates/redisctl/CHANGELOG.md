@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.6](https://github.com/joshrotenberg/redisctl/compare/redisctl-v0.6.5...redisctl-v0.6.6) - 2025-10-15
+
+### Added
+
+- *(cli)* add AWS PrivateLink human-friendly commands ([#407](https://github.com/joshrotenberg/redisctl/pull/407))
+- Add streaming logs support with --follow flag (Issue #70) ([#404](https://github.com/joshrotenberg/redisctl/pull/404))
+- Add improved error messages with actionable suggestions (Issue #259) ([#401](https://github.com/joshrotenberg/redisctl/pull/401))
+
+### Other
+
+- rewrite README for presentation readiness ([#408](https://github.com/joshrotenberg/redisctl/pull/408))
+- extract profile commands from main.rs to dedicated module ([#403](https://github.com/joshrotenberg/redisctl/pull/403))
+
 ## [0.6.5](https://github.com/joshrotenberg/redisctl/compare/redisctl-v0.6.4...redisctl-v0.6.5) - 2025-10-07
 
 ### Added
