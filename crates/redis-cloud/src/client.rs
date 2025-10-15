@@ -301,6 +301,26 @@ impl CloudClient {
         }
     }
 
+    /// Execute DELETE request with JSON body (used by some endpoints like PrivateLink principals)
+    pub async fn delete_with_body<T: serde::de::DeserializeOwned>(
+        &self,
+        path: &str,
+        body: serde_json::Value,
+    ) -> Result<T> {
+        let url = self.normalize_url(path);
+
+        let response = self
+            .client
+            .delete(&url)
+            .header("x-api-key", &self.api_key)
+            .header("x-api-secret-key", &self.api_secret)
+            .json(&body)
+            .send()
+            .await?;
+
+        self.handle_response(response).await
+    }
+
     /// Handle HTTP response
     async fn handle_response<T: serde::de::DeserializeOwned>(
         &self,
