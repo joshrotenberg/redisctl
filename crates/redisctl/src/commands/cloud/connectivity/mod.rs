@@ -2,6 +2,7 @@
 
 #![allow(dead_code)]
 
+pub mod private_link;
 pub mod psc;
 pub mod tgw;
 pub mod vpc_peering;
@@ -47,6 +48,16 @@ pub async fn handle_connectivity_command(
         }
         CloudConnectivityCommands::Tgw(tgw_cmd) => {
             tgw::handle_tgw_command(conn_mgr, profile_name, tgw_cmd, output_format, query).await
+        }
+        CloudConnectivityCommands::PrivateLink(pl_cmd) => {
+            private_link::handle_private_link_command(
+                conn_mgr,
+                profile_name,
+                pl_cmd,
+                output_format,
+                query,
+            )
+            .await
         }
     }
 }
