@@ -405,6 +405,9 @@ pub enum CloudConnectivityCommands {
     /// Transit Gateway operations
     #[command(subcommand, name = "tgw")]
     Tgw(TgwCommands),
+    /// AWS PrivateLink operations
+    #[command(subcommand, name = "privatelink")]
+    PrivateLink(PrivateLinkCommands),
 }
 
 /// VPC Peering Commands
@@ -807,6 +810,67 @@ pub enum TgwCommands {
         region_id: i32,
         /// Invitation ID
         invitation_id: String,
+    },
+}
+
+/// AWS PrivateLink Commands
+#[derive(Subcommand, Debug)]
+pub enum PrivateLinkCommands {
+    /// Get PrivateLink configuration
+    Get {
+        /// Subscription ID
+        #[arg(long)]
+        subscription: i32,
+        /// Region ID (for Active-Active databases)
+        #[arg(long)]
+        region: Option<i32>,
+    },
+    /// Create PrivateLink
+    Create {
+        /// Subscription ID
+        #[arg(long)]
+        subscription: i32,
+        /// Region ID (for Active-Active databases)
+        #[arg(long)]
+        region: Option<i32>,
+        /// Configuration JSON file or string (use @filename for file)
+        data: String,
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
+    },
+    /// Add principals to PrivateLink
+    #[command(name = "add-principal")]
+    AddPrincipal {
+        /// Subscription ID
+        #[arg(long)]
+        subscription: i32,
+        /// Region ID (for Active-Active databases)
+        #[arg(long)]
+        region: Option<i32>,
+        /// Configuration JSON file or string (use @filename for file)
+        data: String,
+    },
+    /// Remove principals from PrivateLink
+    #[command(name = "remove-principal")]
+    RemovePrincipal {
+        /// Subscription ID
+        #[arg(long)]
+        subscription: i32,
+        /// Region ID (for Active-Active databases)
+        #[arg(long)]
+        region: Option<i32>,
+        /// Configuration JSON file or string (use @filename for file)
+        data: String,
+    },
+    /// Get VPC endpoint creation script
+    #[command(name = "get-script")]
+    GetScript {
+        /// Subscription ID
+        #[arg(long)]
+        subscription: i32,
+        /// Region ID (for Active-Active databases)
+        #[arg(long)]
+        region: Option<i32>,
     },
 }
 
