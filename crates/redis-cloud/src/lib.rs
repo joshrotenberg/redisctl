@@ -309,6 +309,7 @@ pub use acl::AclHandler;
 pub use cloud_accounts::CloudAccountsHandler as CloudAccountHandler;
 
 // Connectivity handlers
+pub use connectivity::private_link::PrivateLinkHandler;
 pub use connectivity::psc::PscHandler;
 pub use connectivity::transit_gateway::TransitGatewayHandler;
 pub use connectivity::vpc_peering::VpcPeeringHandler;

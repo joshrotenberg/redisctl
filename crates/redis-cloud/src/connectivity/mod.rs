@@ -2,26 +2,30 @@
 //!
 //! This module manages advanced networking features for Redis Cloud Pro subscriptions,
 //! including VPC peering, AWS Transit Gateway attachments, GCP Private Service Connect,
-//! and other cloud-native networking integrations.
+//! AWS PrivateLink, and other cloud-native networking integrations.
 //!
 //! # Supported Connectivity Types
 //!
 //! - **VPC Peering**: Direct peering between Redis Cloud VPC and your VPC
 //! - **Transit Gateway**: AWS Transit Gateway attachments for hub-and-spoke topologies
 //! - **Private Service Connect**: GCP Private Service Connect for private endpoints
+//! - **PrivateLink**: AWS PrivateLink for secure private connectivity
 //!
 //! # Module Organization
 //!
-//! The connectivity features are split into three specialized modules:
+//! The connectivity features are split into four specialized modules:
 //! - `vpc_peering` - VPC peering operations for AWS, GCP, and Azure
 //! - `psc` - Google Cloud Private Service Connect endpoints
 //! - `transit_gateway` - AWS Transit Gateway attachments
+//! - `private_link` - AWS PrivateLink connectivity
 
+pub mod private_link;
 pub mod psc;
 pub mod transit_gateway;
 pub mod vpc_peering;
 
 // Re-export handlers for convenience
+pub use private_link::PrivateLinkHandler;
 pub use psc::PscHandler;
 pub use transit_gateway::TransitGatewayHandler;
 pub use vpc_peering::VpcPeeringHandler;
