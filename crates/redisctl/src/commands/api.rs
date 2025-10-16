@@ -1,11 +1,11 @@
 //! Raw API access commands for direct REST endpoint calls
 
 use crate::cli::{HttpMethod, OutputFormat};
-use crate::config::{Config, DeploymentType};
 use crate::connection::ConnectionManager;
 use crate::error::Result as CliResult;
 use crate::output::print_output;
 use anyhow::Context;
+use redisctl_config::{Config, DeploymentType};
 use serde_json::Value;
 
 /// Parameters for API command execution

@@ -1,11 +1,13 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/redisctl-config",
     "crates/redis-cloud",
     "crates/redis-enterprise",
     "crates/redisctl",
 ]
 default-members = [
+    "crates/redisctl-config",
     "crates/redis-cloud",
     "crates/redis-enterprise",
     "crates/redisctl",
@@ -91,6 +93,7 @@ serial_test = "3.1"
 pretty_assertions = "1.4"
 
 # Internal crates
+redisctl-config = { path = "crates/redisctl-config" }
 redis-cloud = { path = "crates/redis-cloud" }
 redis-enterprise = { path = "crates/redis-enterprise" }
 

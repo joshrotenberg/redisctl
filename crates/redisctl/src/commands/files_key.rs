@@ -6,8 +6,8 @@
 
 #![allow(dead_code)] // Functions are called from main.rs router
 
-use crate::config::Config;
 use anyhow::{Context, Result};
+use redisctl_config::Config;
 
 /// Handle the files-key set command
 pub async fn handle_set(

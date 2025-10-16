@@ -3,11 +3,11 @@
 //! This module handles uploading support packages to Files.com for Redis Support.
 
 #[cfg(feature = "upload")]
-use crate::config::Config;
-#[cfg(feature = "upload")]
 use anyhow::{Context, Result};
 #[cfg(feature = "upload")]
 use files_sdk::{FileHandler, FilesClient};
+#[cfg(feature = "upload")]
+use redisctl_config::Config;
 
 /// Upload a support package to Files.com
 ///

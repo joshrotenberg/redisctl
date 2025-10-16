@@ -18,6 +18,7 @@ path = "src/main.rs"
 
 
 [dependencies]
+redisctl-config = { version = "0.1.0", path = "../redisctl-config" }
 redis-cloud = { version = "0.7.0", path = "../redis-cloud" }
 redis-enterprise = { version = "0.6.3", path = "../redis-enterprise" }
 files-sdk = { workspace = true, optional = true }
@@ -51,11 +52,8 @@ serde_yaml = { workspace = true }
 comfy-table = { workspace = true }
 jmespath = { workspace = true }
 config = { workspace = true }
-toml = { workspace = true }
-directories = { workspace = true }
-shellexpand = "3.1"
 
-# Secure storage
+# Keyring for Files.com API key storage (separate from profile credentials)
 keyring = { version = "3.6", optional = true, features = ["apple-native", "windows-native", "linux-native"] }
 
 [target.'cfg(unix)'.dependencies]
@@ -70,7 +68,7 @@ enterprise = []
 upload = ["dep:files-sdk"]
 # Note: secure-storage may not work on musl targets due to keyring native dependencies
 # Build with --no-default-features --features full for musl
-secure-storage = ["dep:keyring"]
+secure-storage = ["redisctl-config/secure-storage", "dep:keyring"]
 
 [dev-dependencies]
 assert_cmd = "2.0"

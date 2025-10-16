@@ -1,11 +1,8 @@
-//! Configuration management for redisctl
+//! Configuration management for Redis CLI tools
 //!
 //! Handles configuration loading from files, environment variables, and command-line arguments.
 //! Configuration is stored in TOML format with support for multiple named profiles.
 
-#![allow(dead_code)] // Foundation code - will be used in future PRs
-
-use anyhow::{Context, Result};
 #[cfg(target_os = "macos")]
 use directories::BaseDirs;
 use directories::ProjectDirs;
@@ -13,9 +10,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
-use tracing::{debug, info, trace};
 
-use crate::credential_store::CredentialStore;
+use crate::credential::CredentialStore;
+use crate::error::{ConfigError, Result};
 
 /// Main configuration structure
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
@@ -140,13 +137,19 @@ impl Profile {
                 // Resolve each credential with environment variable fallback
                 let resolved_key = store
                     .get_credential(api_key, Some("REDIS_CLOUD_API_KEY"))
-                    .context("Failed to resolve API key")?;
+                    .map_err(|e| {
+                        ConfigError::CredentialError(format!("Failed to resolve API key: {}", e))
+                    })?;
                 let resolved_secret = store
                     .get_credential(api_secret, Some("REDIS_CLOUD_API_SECRET"))
-                    .context("Failed to resolve API secret")?;
+                    .map_err(|e| {
+                        ConfigError::CredentialError(format!("Failed to resolve API secret: {}", e))
+                    })?;
                 let resolved_url = store
                     .get_credential(api_url, Some("REDIS_CLOUD_API_URL"))
-                    .context("Failed to resolve API URL")?;
+                    .map_err(|e| {
+                        ConfigError::CredentialError(format!("Failed to resolve API URL: {}", e))
+                    })?;
 
                 Ok(Some((resolved_key, resolved_secret, resolved_url)))
             }
@@ -171,16 +174,25 @@ impl Profile {
                 // Resolve each credential with environment variable fallback
                 let resolved_url = store
                     .get_credential(url, Some("REDIS_ENTERPRISE_URL"))
-                    .context("Failed to resolve URL")?;
+                    .map_err(|e| {
+                        ConfigError::CredentialError(format!("Failed to resolve URL: {}", e))
+                    })?;
                 let resolved_username = store
                     .get_credential(username, Some("REDIS_ENTERPRISE_USER"))
-                    .context("Failed to resolve username")?;
+                    .map_err(|e| {
+                        ConfigError::CredentialError(format!("Failed to resolve username: {}", e))
+                    })?;
                 let resolved_password = password
                     .as_ref()
                     .map(|p| {
                         store
                             .get_credential(p, Some("REDIS_ENTERPRISE_PASSWORD"))
-                            .context("Failed to resolve password")
+                            .map_err(|e| {
+                                ConfigError::CredentialError(format!(
+                                    "Failed to resolve password: {}",
+                                    e
+                                ))
+                            })
                     })
                     .transpose()?;
 
@@ -241,13 +253,18 @@ impl Config {
         // No enterprise profiles available
         let cloud_profiles = self.get_profiles_of_type(DeploymentType::Cloud);
         if !cloud_profiles.is_empty() {
-            anyhow::bail!(
-                "No enterprise profiles found. Available cloud profiles: {}. \
-                Use 'redisctl profile set' to create an enterprise profile.",
-                cloud_profiles.join(", ")
-            )
+            Err(ConfigError::NoProfilesOfType {
+                deployment_type: "enterprise".to_string(),
+                suggestion: format!(
+                    "Available cloud profiles: {}. Use 'redisctl profile set' to create an enterprise profile.",
+                    cloud_profiles.join(", ")
+                ),
+            })
         } else {
-            anyhow::bail!("No profiles configured. Use 'redisctl profile set' to create a profile.")
+            Err(ConfigError::NoProfilesOfType {
+                deployment_type: "enterprise".to_string(),
+                suggestion: "Use 'redisctl profile set' to create a profile.".to_string(),
+            })
         }
     }
 
@@ -271,59 +288,38 @@ impl Config {
         // No cloud profiles available
         let enterprise_profiles = self.get_profiles_of_type(DeploymentType::Enterprise);
         if !enterprise_profiles.is_empty() {
-            anyhow::bail!(
-                "No cloud profiles found. Available enterprise profiles: {}. \
-                Use 'redisctl profile set' to create a cloud profile.",
-                enterprise_profiles.join(", ")
-            )
+            Err(ConfigError::NoProfilesOfType {
+                deployment_type: "cloud".to_string(),
+                suggestion: format!(
+                    "Available enterprise profiles: {}. Use 'redisctl profile set' to create a cloud profile.",
+                    enterprise_profiles.join(", ")
+                ),
+            })
         } else {
-            anyhow::bail!("No profiles configured. Use 'redisctl profile set' to create a profile.")
+            Err(ConfigError::NoProfilesOfType {
+                deployment_type: "cloud".to_string(),
+                suggestion: "Use 'redisctl profile set' to create a profile.".to_string(),
+            })
         }
     }
+
     /// Load configuration from the standard location
     pub fn load() -> Result<Self> {
-        debug!("Loading configuration");
         let config_path = Self::config_path()?;
-        info!("Configuration path: {:?}", config_path);
 
         if !config_path.exists() {
-            info!("No configuration file found, using defaults");
             return Ok(Config::default());
         }
 
-        debug!("Reading configuration from {:?}", config_path);
-        let content = fs::read_to_string(&config_path)
-            .with_context(|| format!("Failed to read config from {:?}", config_path))?;
-
-        trace!("Raw config content: {} bytes", content.len());
-
-        // Expand environment variables in the config content
-        debug!("Expanding environment variables in configuration");
-        let expanded_content = Self::expand_env_vars(&content).with_context(|| {
-            format!(
-                "Failed to expand environment variables in config from {:?}",
-                config_path
-            )
+        let content = fs::read_to_string(&config_path).map_err(|e| ConfigError::LoadError {
+            path: config_path.display().to_string(),
+            source: e,
         })?;
 
-        if expanded_content != content {
-            debug!("Environment variables were expanded in configuration");
-        }
+        // Expand environment variables in the config content
+        let expanded_content = Self::expand_env_vars(&content);
 
-        debug!("Parsing TOML configuration");
-        let config: Config = toml::from_str(&expanded_content)
-            .with_context(|| format!("Failed to parse config from {:?}", config_path))?;
-
-        info!(
-            "Configuration loaded: {} profiles, enterprise default: {:?}, cloud default: {:?}",
-            config.profiles.len(),
-            config.default_enterprise,
-            config.default_cloud
-        );
-
-        for (name, profile) in &config.profiles {
-            debug!("Profile '{}': type={:?}", name, profile.deployment_type);
-        }
+        let config: Config = toml::from_str(&expanded_content)?;
 
         Ok(config)
     }
@@ -334,14 +330,18 @@ impl Config {
 
         // Create parent directories if they don't exist
         if let Some(parent) = config_path.parent() {
-            fs::create_dir_all(parent)
-                .with_context(|| format!("Failed to create config directory {:?}", parent))?;
+            fs::create_dir_all(parent).map_err(|e| ConfigError::SaveError {
+                path: parent.display().to_string(),
+                source: e,
+            })?;
         }
 
-        let content = toml::to_string_pretty(self).context("Failed to serialize config")?;
+        let content = toml::to_string_pretty(self)?;
 
-        fs::write(&config_path, content)
-            .with_context(|| format!("Failed to write config to {:?}", config_path))?;
+        fs::write(&config_path, content).map_err(|e| ConfigError::SaveError {
+            path: config_path.display().to_string(),
+            source: e,
+        })?;
 
         Ok(())
     }
@@ -379,8 +379,6 @@ impl Config {
     /// On Linux: ~/.config/redisctl/config.toml
     /// On Windows: %APPDATA%\redis\redisctl\config.toml
     pub fn config_path() -> Result<PathBuf> {
-        trace!("Determining configuration file path");
-
         // On macOS, check for Linux-style path first for cross-platform consistency
         #[cfg(target_os = "macos")]
         {
@@ -391,14 +389,8 @@ impl Config {
                     .join("redisctl")
                     .join("config.toml");
 
-                trace!("Checking Linux-style path on macOS: {:?}", linux_style_path);
-
                 // If Linux-style config exists, use it
                 if linux_style_path.exists() {
-                    debug!(
-                        "Using existing Linux-style config path on macOS: {:?}",
-                        linux_style_path
-                    );
                     return Ok(linux_style_path);
                 }
 
@@ -408,19 +400,14 @@ impl Config {
                     .map(|p| p.exists())
                     .unwrap_or(false)
                 {
-                    debug!(
-                        "Using Linux-style config directory on macOS: {:?}",
-                        linux_style_path
-                    );
                     return Ok(linux_style_path);
                 }
             }
         }
 
         // Use platform-specific standard path
-        trace!("Using platform-specific configuration path");
-        let proj_dirs = ProjectDirs::from("com", "redis", "redisctl")
-            .context("Failed to determine config directory")?;
+        let proj_dirs =
+            ProjectDirs::from("com", "redis", "redisctl").ok_or(ConfigError::ConfigDirError)?;
 
         Ok(proj_dirs.config_dir().join("config.toml"))
     }
@@ -436,12 +423,12 @@ impl Config {
     /// api_key = "${REDIS_CLOUD_API_KEY}"
     /// api_url = "${REDIS_CLOUD_API_URL:-https://api.redislabs.com/v1}"
     /// ```
-    fn expand_env_vars(content: &str) -> Result<String> {
+    fn expand_env_vars(content: &str) -> String {
         // Use shellexpand::env_with_context_no_errors which returns unexpanded vars as-is
         // This prevents errors when env vars for unused profiles aren't set
         let expanded =
             shellexpand::env_with_context_no_errors(content, |var| std::env::var(var).ok());
-        Ok(expanded.to_string())
+        expanded.to_string()
     }
 }
 
@@ -512,7 +499,7 @@ api_key = "${TEST_API_KEY}"
 api_secret = "${TEST_API_SECRET}"
 "#;
 
-        let expanded = Config::expand_env_vars(content).unwrap();
+        let expanded = Config::expand_env_vars(content);
         assert!(expanded.contains("test-key-value"));
         assert!(expanded.contains("test-secret-value"));
 
@@ -538,7 +525,7 @@ api_key = "${NONEXISTENT_VAR:-default-key}"
 api_url = "${NONEXISTENT_URL:-https://api.redislabs.com/v1}"
 "#;
 
-        let expanded = Config::expand_env_vars(content).unwrap();
+        let expanded = Config::expand_env_vars(content);
         assert!(expanded.contains("default-key"));
         assert!(expanded.contains("https://api.redislabs.com/v1"));
     }
@@ -559,7 +546,7 @@ api_secret = "static-secret"
 api_url = "${MISSING_VAR:-https://api.redislabs.com/v1}"
 "#;
 
-        let expanded = Config::expand_env_vars(content).unwrap();
+        let expanded = Config::expand_env_vars(content);
         assert!(expanded.contains("dynamic-value"));
         assert!(expanded.contains("static-secret"));
         assert!(expanded.contains("https://api.redislabs.com/v1"));
@@ -589,7 +576,7 @@ api_secret = "${REDIS_TEST_SECRET}"
 api_url = "${REDIS_TEST_URL:-https://api.redislabs.com/v1}"
 "#;
 
-        let expanded = Config::expand_env_vars(config_content).unwrap();
+        let expanded = Config::expand_env_vars(config_content);
         let config: Config = toml::from_str(&expanded).unwrap();
 
         assert_eq!(config.default_cloud, Some("test".to_string()));
@@ -739,7 +726,7 @@ api_url = "${REDIS_TEST_URL:-https://api.redislabs.com/v1}"
 
         // Try to resolve enterprise profile - should get helpful error
         let err = config.resolve_enterprise_profile(None).unwrap_err();
-        assert!(err.to_string().contains("No enterprise profiles found"));
+        assert!(err.to_string().contains("No enterprise profiles"));
         assert!(err.to_string().contains("Available cloud profiles: cloud1"));
     }
 }
