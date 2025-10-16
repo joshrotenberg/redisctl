@@ -6,9 +6,7 @@
 //! - Plaintext storage (fallback)
 //! - Environment variable override
 
-use anyhow::Result;
-#[cfg(feature = "secure-storage")]
-use anyhow::{Context, anyhow};
+use crate::error::{ConfigError, Result};
 use std::env;
 
 /// Prefix that indicates a value should be retrieved from the keyring
@@ -87,10 +85,13 @@ impl CredentialStore {
             match self.storage {
                 CredentialStorage::Keyring => {
                     let entry = keyring::Entry::new(SERVICE_NAME, key)
-                        .context("Failed to create keyring entry")?;
-                    entry
-                        .set_password(value)
-                        .context("Failed to store credential in keyring")?;
+                        .map_err(|e| ConfigError::KeyringError(e.to_string()))?;
+                    entry.set_password(value).map_err(|e| {
+                        ConfigError::KeyringError(format!(
+                            "Failed to store credential in keyring: {}",
+                            e
+                        ))
+                    })?;
                     // Return the reference string that will be stored in config
                     Ok(format!("{}{}", KEYRING_PREFIX, key))
                 }
@@ -125,16 +126,20 @@ impl CredentialStore {
             {
                 let key = value.trim_start_matches(KEYRING_PREFIX);
                 let entry = keyring::Entry::new(SERVICE_NAME, key)
-                    .context("Failed to create keyring entry")?;
-                entry.get_password().with_context(|| {
-                    format!("Failed to retrieve credential '{}' from keyring", key)
+                    .map_err(|e| ConfigError::KeyringError(e.to_string()))?;
+                entry.get_password().map_err(|e| {
+                    ConfigError::KeyringError(format!(
+                        "Failed to retrieve credential '{}' from keyring: {}",
+                        key, e
+                    ))
                 })
             }
             #[cfg(not(feature = "secure-storage"))]
             {
-                anyhow::bail!(
+                Err(ConfigError::CredentialError(
                     "Credential references keyring but secure-storage feature is not enabled"
-                )
+                        .to_string(),
+                ))
             }
         } else {
             // Plain text value
@@ -150,13 +155,14 @@ impl CredentialStore {
             match self.storage {
                 CredentialStorage::Keyring => {
                     let entry = keyring::Entry::new(SERVICE_NAME, key)
-                        .context("Failed to create keyring entry")?;
+                        .map_err(|e| ConfigError::KeyringError(e.to_string()))?;
                     match entry.delete_credential() {
                         Ok(()) => Ok(()),
                         Err(keyring::Error::NoEntry) => Ok(()), // Already deleted
-                        Err(e) => {
-                            Err(anyhow!(e)).context("Failed to delete credential from keyring")
-                        }
+                        Err(e) => Err(ConfigError::KeyringError(format!(
+                            "Failed to delete credential from keyring: {}",
+                            e
+                        ))),
                     }
                 }
                 CredentialStorage::Plaintext => Ok(()), // Nothing to delete for plaintext

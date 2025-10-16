@@ -1,10 +1,11 @@
 use crate::error::RedisCtlError;
 use anyhow::{Context, Result as AnyhowResult};
 use clap::Subcommand;
+use redisctl_config::Config;
 use serde_json::Value;
 use std::path::Path;
 
-use crate::{cli::OutputFormat, config::Config};
+use crate::cli::OutputFormat;
 
 #[derive(Debug, Subcommand)]
 pub enum LicenseCommands {

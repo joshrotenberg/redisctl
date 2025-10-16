@@ -1,8 +1,8 @@
 //! Connection management for Redis Cloud and Enterprise clients
 
-use crate::config::Config;
 use crate::error::Result as CliResult;
 use anyhow::Context;
+use redisctl_config::{Config, DeploymentType};
 use tracing::{debug, info, trace};
 
 /// Connection manager for creating authenticated clients
@@ -61,12 +61,12 @@ impl ConnectionManager {
                     .with_context(|| format!("Profile '{}' not found", resolved_profile_name))?;
 
                 // Verify it's a cloud profile
-                if profile.deployment_type != crate::config::DeploymentType::Cloud {
+                if profile.deployment_type != DeploymentType::Cloud {
                     return Err(crate::error::RedisCtlError::ProfileTypeMismatch {
                         name: resolved_profile_name.to_string(),
                         actual_type: match profile.deployment_type {
-                            crate::config::DeploymentType::Cloud => "cloud",
-                            crate::config::DeploymentType::Enterprise => "enterprise",
+                            DeploymentType::Cloud => "cloud",
+                            DeploymentType::Enterprise => "enterprise",
                         }
                         .to_string(),
                         expected_type: "cloud".to_string(),
@@ -163,12 +163,12 @@ impl ConnectionManager {
                     .with_context(|| format!("Profile '{}' not found", resolved_profile_name))?;
 
                 // Verify it's an enterprise profile
-                if profile.deployment_type != crate::config::DeploymentType::Enterprise {
+                if profile.deployment_type != DeploymentType::Enterprise {
                     return Err(crate::error::RedisCtlError::ProfileTypeMismatch {
                         name: resolved_profile_name.to_string(),
                         actual_type: match profile.deployment_type {
-                            crate::config::DeploymentType::Cloud => "cloud",
-                            crate::config::DeploymentType::Enterprise => "enterprise",
+                            DeploymentType::Cloud => "cloud",
+                            DeploymentType::Enterprise => "enterprise",
                         }
                         .to_string(),
                         expected_type: "enterprise".to_string(),

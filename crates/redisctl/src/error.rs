@@ -211,3 +211,9 @@ impl From<anyhow::Error> for RedisCtlError {
         RedisCtlError::Config(err.to_string())
     }
 }
+
+impl From<redisctl_config::ConfigError> for RedisCtlError {
+    fn from(err: redisctl_config::ConfigError) -> Self {
+        RedisCtlError::Configuration(err.to_string())
+    }
+}
