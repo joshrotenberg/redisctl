@@ -114,6 +114,10 @@
 - [Raw API Access](./common-features/raw-api.md)
 - [Secure Storage](./common-features/secure-storage.md)
 
+# Comparison
+
+- [rladmin vs redisctl](./comparison/rladmin.md)
+
 # Tutorials
 
 - [CI/CD Integration](./tutorials/cicd.md)
