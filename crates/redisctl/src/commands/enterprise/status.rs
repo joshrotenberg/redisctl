@@ -18,6 +18,7 @@ use super::utils::*;
 
 /// Comprehensive cluster status information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct ClusterStatus {
     /// Cluster information
     pub cluster: Value,
@@ -33,6 +34,7 @@ pub struct ClusterStatus {
 
 /// Summary statistics for cluster health
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct StatusSummary {
     /// Total number of nodes
     pub total_nodes: usize,
@@ -50,6 +52,7 @@ pub struct StatusSummary {
 
 /// Sections to display in status output
 #[derive(Debug, Clone, Default)]
+#[allow(dead_code)]
 pub struct StatusSections {
     /// Show cluster information
     pub cluster: bool,
@@ -63,6 +66,7 @@ pub struct StatusSections {
 
 impl StatusSections {
     /// Create sections showing all information
+    #[allow(dead_code)]
     pub fn all() -> Self {
         Self {
             cluster: true,
@@ -73,12 +77,14 @@ impl StatusSections {
     }
 
     /// Check if any section is enabled
+    #[allow(dead_code)]
     pub fn any_enabled(&self) -> bool {
         self.cluster || self.nodes || self.databases || self.shards
     }
 }
 
 /// Get comprehensive cluster status
+#[allow(dead_code)]
 pub async fn get_status(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
@@ -163,6 +169,7 @@ pub async fn get_status(
 }
 
 /// Calculate summary statistics from collected data
+#[allow(dead_code)]
 fn calculate_summary(nodes: &Value, databases: &Value, shards: &Value) -> StatusSummary {
     let empty_vec = vec![];
     let nodes_array = nodes.as_array().unwrap_or(&empty_vec);
