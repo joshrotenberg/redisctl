@@ -12,6 +12,10 @@
 - [Shell Completions](./getting-started/shell-completions.md)
 - [Quick Start Guide](./getting-started/quickstart.md)
 
+# Complete Walkthrough
+
+- [Overview & Presentation](./walkthrough.md)
+
 # Cookbook
 
 - [Overview](./cookbook/README.md)
