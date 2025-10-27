@@ -10,15 +10,10 @@ preferred-dark-theme = "ayu"
 git-repository-url = "https://github.com/joshrotenberg/redisctl"
 git-repository-icon = "fa-github"
 edit-url-template = "https://github.com/joshrotenberg/redisctl/edit/main/docs/{path}"
-additional-css = ["theme/custom.css", "./mdbook-admonish.css"]
 
 [output.html.fold]
 enable = true
 level = 1
-
-[preprocessor.admonish]
-command = "mdbook-admonish"
-assets_version = "3.0.2" # do not edit: managed by `mdbook-admonish install`
 
 # Temporarily disabled for reorganization
 # [preprocessor.lint]
