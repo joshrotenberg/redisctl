@@ -5,8 +5,8 @@
 //! 2. Human-friendly interface (`cloud`/`enterprise` commands)
 //! 3. Workflow orchestration (`workflow` commands - future)
 
-use crate::config::DeploymentType;
 use clap::{Parser, Subcommand};
+use redisctl_config::DeploymentType;
 
 /// Redis management CLI with unified access to Cloud and Enterprise
 #[derive(Parser, Debug)]
