@@ -14,7 +14,17 @@
 
 # Complete Walkthrough
 
-- [Overview & Presentation](./walkthrough.md)
+- [Introduction](./walkthrough/README.md)
+- [1. The Problem](./walkthrough/01-problem.md)
+- [2. Enter redisctl](./walkthrough/02-solution.md)
+- [3. Installation & Setup](./walkthrough/03-setup.md)
+- [4. Raw API Layer](./walkthrough/04-raw-api.md)
+- [5. Human-Friendly Layer](./walkthrough/05-human-friendly.md)
+- [6. Workflows Layer](./walkthrough/06-workflows.md)
+- [7. Advanced Features](./walkthrough/07-advanced.md)
+- [8. Library Architecture](./walkthrough/08-libraries.md)
+- [9. Next Steps](./walkthrough/09-next-steps.md)
+- [Appendix: rladmin vs redisctl](./walkthrough/rladmin-comparison.md)
 
 # Cookbook
 
