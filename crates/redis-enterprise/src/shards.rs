@@ -25,7 +25,7 @@ pub struct MetricResponse {
 pub struct Shard {
     pub uid: String,
     pub bdb_uid: u32,
-    pub node_uid: u32,
+    pub node_uid: String,
     pub role: String,
     pub status: String,
     #[serde(skip_serializing_if = "Option::is_none")]
