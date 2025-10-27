@@ -35,6 +35,7 @@ pub mod rbac_impl;
 pub mod services;
 pub mod shard;
 pub mod stats;
+pub mod status;
 pub mod suffix;
 pub mod support_package;
 pub mod usage_report;

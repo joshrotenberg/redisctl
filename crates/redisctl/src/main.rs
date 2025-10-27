@@ -479,6 +479,21 @@ async fn execute_enterprise_command(
             )
             .await
         }
+        Status {
+            cluster,
+            nodes,
+            databases,
+            shards,
+        } => {
+            let sections = commands::enterprise::status::StatusSections {
+                cluster: *cluster,
+                nodes: *nodes,
+                databases: *databases,
+                shards: *shards,
+            };
+            commands::enterprise::status::get_status(conn_mgr, profile, sections, output, query)
+                .await
+        }
         SupportPackage(support_cmd) => {
             commands::enterprise::support_package::handle_support_package_command(
                 conn_mgr,
