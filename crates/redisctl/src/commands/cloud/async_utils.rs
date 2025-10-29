@@ -134,6 +134,38 @@ pub async fn wait_for_task(
         if is_terminal_state(&state) {
             pb.finish_with_message(format!("Task {}: {}", task_id, format_task_state(&state)));
 
+            // Check if task failed first (before moving task)
+            if state == "failed" || state == "error" || state == "processing-error" {
+                // Extract error details from response
+                let error_msg = if let Some(response) = task.get("response") {
+                    if let Some(error) = response.get("error") {
+                        let description = error
+                            .get("description")
+                            .and_then(|d| d.as_str())
+                            .unwrap_or("Unknown error");
+                        let error_type = error.get("type").and_then(|t| t.as_str()).unwrap_or("");
+                        let status = error.get("status").and_then(|s| s.as_str()).unwrap_or("");
+
+                        if !error_type.is_empty() && !status.is_empty() {
+                            format!("{} ({}): {}", error_type, status, description)
+                        } else if !error_type.is_empty() {
+                            format!("{}: {}", error_type, description)
+                        } else {
+                            description.to_string()
+                        }
+                    } else {
+                        format!("Task {} failed", task_id)
+                    }
+                } else if let Some(error) = task.get("error") {
+                    error.as_str().unwrap_or("Task failed").to_string()
+                } else {
+                    format!("Task {} failed", task_id)
+                };
+
+                return Err(RedisCtlError::InvalidInput { message: error_msg });
+            }
+
+            // Print output for successful completion
             match output_format {
                 OutputFormat::Auto | OutputFormat::Table => {
                     print_task_details(&task)?;
@@ -144,13 +176,6 @@ pub async fn wait_for_task(
                 OutputFormat::Yaml => {
                     print_output(task, crate::output::OutputFormat::Yaml, None)?;
                 }
-            }
-
-            // Check if task failed
-            if state == "failed" || state == "error" {
-                return Err(RedisCtlError::InvalidInput {
-                    message: format!("Task {} failed", task_id),
-                });
             }
 
             return Ok(());
@@ -195,7 +220,14 @@ fn get_task_state(task: &Value) -> String {
 fn is_terminal_state(state: &str) -> bool {
     matches!(
         state.to_lowercase().as_str(),
-        "completed" | "complete" | "succeeded" | "success" | "failed" | "error" | "cancelled"
+        "completed"
+            | "complete"
+            | "succeeded"
+            | "success"
+            | "failed"
+            | "error"
+            | "cancelled"
+            | "processing-error"
     )
 }
 
@@ -203,7 +235,7 @@ fn is_terminal_state(state: &str) -> bool {
 fn format_task_state(state: &str) -> String {
     match state.to_lowercase().as_str() {
         "completed" | "complete" | "succeeded" | "success" => format!("✓ {}", state),
-        "failed" | "error" => format!("✗ {}", state),
+        "failed" | "error" | "processing-error" => format!("✗ {}", state),
         "cancelled" => format!("⊘ {}", state),
         "processing" | "running" | "in_progress" => format!("⟳ {}", state),
         _ => state.to_string(),
