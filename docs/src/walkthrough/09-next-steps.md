@@ -54,7 +54,7 @@ cd examples/presentation
 
 ### Report Issues
 Found a bug? Have a feature request?  
-→ [Open an issue](https://github.com/joshrotenberg/redisctl/issues/new)
+[Open an issue](https://github.com/joshrotenberg/redisctl/issues/new)
 
 ### Contribute
 - Check out [good first issues](https://github.com/joshrotenberg/redisctl/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
@@ -86,24 +86,24 @@ See [open issues](https://github.com/joshrotenberg/redisctl/issues) for details.
 
 ## Key Takeaways
 
-1. ✅ **FIRST CLI tool** for Redis Cloud and Enterprise
-2. ✅ **Eliminates fragile scripts** - One command vs 50 lines of bash
-3. ✅ **Four-layer architecture** - Raw API → Human → Workflows → Tools
-4. ✅ **Production ready** - 85%+ coverage, v0.6.5, cross-platform
-5. ✅ **Library-first** - Foundation for Redis Rust ecosystem
-6. ✅ **Automation-friendly** - JSON output, JMESPath, profiles
-7. ✅ **Support tools** - 30-second support packages vs 10+ minutes
+1. **FIRST CLI tool** for Redis Cloud and Enterprise
+2. **Eliminates fragile scripts** - One command vs 50 lines of bash
+3. **Four-layer architecture** - Raw API Human Workflows Tools
+4. **Production ready** - 85%+ coverage, v0.6.5, cross-platform
+5. **Library-first** - Foundation for Redis Rust ecosystem
+6. **Automation-friendly** - JSON output, JMESPath, profiles
+7. **Support tools** - 30-second support packages vs 10+ minutes
 
 ## Thank You!
 
 Questions? Comments? Feedback?
 
-→ [Open an issue](https://github.com/joshrotenberg/redisctl/issues)  
-→ [Start a discussion](https://github.com/joshrotenberg/redisctl/discussions)
+[Open an issue](https://github.com/joshrotenberg/redisctl/issues)  
+[Start a discussion](https://github.com/joshrotenberg/redisctl/discussions)
 
 ---
 
-**← Previous:** [8. Library Architecture](./08-libraries.md)  
+**Previous:** [8. Library Architecture](./08-libraries.md)  
 **Appendix →** [rladmin Comparison](./rladmin-comparison.md)
 
 **[Back to Start](./README.md)**

@@ -4,71 +4,63 @@
 
 ## Why Human-Friendly Layer?
 
-Better experience for day-to-day operations:
-- ✅ Type-safe parameters
-- ✅ Automatic error handling
-- ✅ Progress indicators
-- ✅ Better output formatting
-- ✅ Command completion
+Better experience for day-to-day operations with type-safe parameters, automatic error handling, and progress indicators.
 
 ## Cloud Operations
 
 ```bash
 # List subscriptions
-redisctl cloud subscription list -o table
+redisctl cloud subscription list
 
-# Get subscription details
-redisctl cloud subscription get 12345
-
-# Create database (with automatic polling)
-redisctl cloud database create \
-  --subscription-id 12345 \
-  --data '{"name": "mydb", "memoryLimitInGb": 1}' \
-  --wait
+# Get account info
+redisctl cloud account get
 
 # List databases
-redisctl cloud database list --subscription-id 12345
+redisctl cloud database list
+
+# Get database with filtering (as shown in demo)
+redisctl cloud database get 2969240:13684622 \
+  -o json -q '{endpoint: publicEndpoint, password: security.password}'
 ```
 
 ## Enterprise Operations
 
 ```bash
-# Cluster information
-redisctl enterprise cluster get
+# Cluster information (as shown in docker-compose)
+redisctl enterprise cluster get \
+  -o json -q '{name: name, nodes: nodes_count, version: software_version}'
 
-# List databases
-redisctl enterprise database list -o table
+# List databases with filtering
+redisctl enterprise database list \
+  -o json -q '[].{uid: uid, name: name, port: port, status: status}'
 
-# Get database details
-redisctl enterprise database get 1
-
-# Create database
+# Create database (as shown in docker-compose)
 redisctl enterprise database create \
-  --name "mydb" \
-  --memory-size "1GB" \
-  --port 12000
+  --data '{"name": "cache-db", "memory_size": 104857600, "port": 12001}' \
+  -o json -q '{uid: uid, name: name, port: port, status: status}'
 
 # List nodes
-redisctl enterprise node list
+redisctl enterprise node list \
+  -o json -q '[].{id: uid, address: addr, status: status}'
+
+# List users
+redisctl enterprise user list \
+  -o json -q '[].{uid: uid, name: name, email: email, role: role}'
 ```
 
 ## Output Formats
 
-### JSON (default)
+**JSON** (default, scriptable)
 ```bash
 redisctl enterprise database list
-# Parseable for scripts
 ```
 
-### Table (human-readable)
+**Table** (human-readable)
 ```bash
 redisctl enterprise database list -o table
-# ┌────┬──────────┬────────┬──────┐
-# │ ID │ Name     │ Status │ Port │
-# └────┴──────────┴────────┴──────┘
 ```
 
-### YAML (config files)
+**YAML** (config files)
 ```bash
 redisctl enterprise database get 1 -o yaml
 ```
@@ -80,44 +72,27 @@ The `--wait` flag automatically polls until operations complete:
 ```bash
 # Create and wait for completion
 redisctl cloud database create \
-  --subscription-id 12345 \
-  --data '{...}' \
-  --wait \
-  --wait-timeout 300
+  --subscription 12345 \
+  --data '{"name": "mydb", "memoryLimitInGb": 1}' \
+  --wait
 
-# Shows progress, exits when done
+# Shows progress spinner and completes when done
 ```
-
-No more manual polling loops!
 
 ## JMESPath Filtering
 
-```bash
-# Get only database names
-redisctl enterprise database list -q "[].name"
-
-# Active databases with specific fields
-redisctl enterprise database list \
-  -q "[?status=='active'].{name:name,mem:memory_size}"
-
-# Count databases
-redisctl enterprise database list -q "length(@)"
-```
-
-## Live Demo
+Extract exactly what you need:
 
 ```bash
-# Try these commands (if you have Docker running)
-redisctl enterprise cluster get
-redisctl enterprise database list -o table
-redisctl enterprise node list
+# Get just the cluster name
+redisctl enterprise cluster get -q 'name'
+
+# Reshape output
+redisctl enterprise node get 1 \
+  -q '{address: addr, cores: cores, memory: total_memory}'
 ```
 
 ---
 
-**← Previous:** [4. Raw API Layer](./04-raw-api.md)  
-**Next →** [6. Workflows Layer](./06-workflows.md)
-
-**Layer Stack:** Raw API → **Human-Friendly** → Workflows
-
-See [Cloud Commands](../cloud/commands.md) | [Enterprise Commands](../enterprise/README.md)
+**Previous:** [4. Raw API Access](./04-raw-api.md)  
+**Next:** [6. Workflows](./06-workflows.md)
