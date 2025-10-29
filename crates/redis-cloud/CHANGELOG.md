@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1](https://github.com/joshrotenberg/redisctl/compare/redis-cloud-v0.7.0...redis-cloud-v0.7.1) - 2025-10-29
+
+### Added
+
+- *(redis-cloud)* add AWS PrivateLink connectivity support ([#406](https://github.com/joshrotenberg/redisctl/pull/406))
+
+### Other
+
+- rewrite README for presentation readiness ([#408](https://github.com/joshrotenberg/redisctl/pull/408))
+- implement fixture-based validation for Enterprise API ([#352](https://github.com/joshrotenberg/redisctl/pull/352)) ([#398](https://github.com/joshrotenberg/redisctl/pull/398))
+
 ## [0.7.0](https://github.com/joshrotenberg/redisctl/compare/redis-cloud-v0.6.2...redis-cloud-v0.7.0) - 2025-10-07
 
 ### Added
