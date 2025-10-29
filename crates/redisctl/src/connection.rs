@@ -10,13 +10,39 @@ use tracing::{debug, info, trace};
 #[derive(Clone)]
 pub struct ConnectionManager {
     pub config: Config,
+    pub config_path: Option<std::path::PathBuf>,
 }
 
 impl ConnectionManager {
     /// Create a new connection manager with the given configuration
     #[allow(dead_code)] // Used by binary target
     pub fn new(config: Config) -> Self {
-        Self { config }
+        Self {
+            config,
+            config_path: None,
+        }
+    }
+
+    /// Create a new connection manager with a custom config path
+    #[allow(dead_code)] // Used by binary target
+    pub fn with_config_path(config: Config, config_path: Option<std::path::PathBuf>) -> Self {
+        Self {
+            config,
+            config_path,
+        }
+    }
+
+    /// Save the configuration to the appropriate location
+    #[allow(dead_code)] // Used by binary target
+    pub fn save_config(&self) -> CliResult<()> {
+        if let Some(ref path) = self.config_path {
+            self.config
+                .save_to_path(path)
+                .context("Failed to save configuration")?;
+        } else {
+            self.config.save().context("Failed to save configuration")?;
+        }
+        Ok(())
     }
 
     /// Create a Cloud client from profile credentials with environment variable override support
