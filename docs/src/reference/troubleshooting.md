@@ -58,20 +58,57 @@ brew install ca-certificates
 
 ## Authentication Issues
 
+### Credential Priority Hierarchy
+
+**IMPORTANT:** redisctl uses credentials in this priority order (highest to lowest):
+
+1. **Environment Variables** (highest priority)
+2. **Profile Configuration**
+3. **CLI Flags** (lowest priority)
+
+This means environment variables will **override** your profile settings!
+
+**Common Issue:** Profile credentials not being used
+
+**Diagnosis:**
+```bash
+# Check for environment variables
+env | grep REDIS
+
+# Run with verbose logging to see which credentials are used
+redisctl -vv cloud subscription list 2>&1 | grep -i "using.*credentials"
+```
+
+**Solution:**
+```bash
+# Unset environment variables to use profile
+unset REDIS_CLOUD_API_KEY
+unset REDIS_CLOUD_SECRET_KEY
+unset REDIS_CLOUD_API_URL
+
+# For Enterprise
+unset REDIS_ENTERPRISE_URL
+unset REDIS_ENTERPRISE_USER
+unset REDIS_ENTERPRISE_PASSWORD
+
+# Verify profile is now used
+redisctl -vv cloud subscription list
+```
+
 ### Invalid Credentials
 
 **Problem:** `401 Unauthorized` or `Authentication failed`
 
 **Diagnosis:**
 ```bash
-# Test credentials directly
-redisctl auth test --profile prod
-
-# Check environment variables
+# Check environment variables first
 env | grep REDIS
 
 # Verify profile configuration
 redisctl profile show prod
+
+# Use verbose logging to see which credentials are being used
+redisctl -vv cloud account get 2>&1 | head -20
 ```
 
 **Solutions:**

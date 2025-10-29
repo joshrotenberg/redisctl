@@ -74,6 +74,16 @@ redisctl profile set prod --deployment cloud \
   --use-keyring
 ```
 
+## Credential Priority
+
+**IMPORTANT:** Credentials are used in this order (highest to lowest):
+
+1. **Environment Variables** ← Will override profiles!
+2. **Profile Configuration**
+3. **CLI Flags**
+
+If you have `REDIS_CLOUD_API_KEY` set in your environment, it will be used instead of your profile credentials. Use `unset REDIS_CLOUD_API_KEY` to use profile credentials.
+
 ## Docker Compose Demo
 
 Try the complete Enterprise demo:
