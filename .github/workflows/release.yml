@@ -284,12 +284,22 @@ jobs:
     needs: [plan, host]
     if: ${{ needs.plan.outputs.publishing == 'true' }}
     steps:
+      - name: Extract version from tag
+        id: extract_version
+        run: |
+          TAG="${{ github.ref_name }}"
+          # Strip 'redisctl-v' prefix to get version number (e.g., redisctl-v0.6.6 -> 0.6.6)
+          VERSION="${TAG#redisctl-v}"
+          # Add 'v' prefix for Homebrew (e.g., 0.6.6 -> v0.6.6)
+          echo "version=v${VERSION}" >> $GITHUB_OUTPUT
+          echo "Extracted version: v${VERSION}"
+
       - uses: mislav/bump-homebrew-formula-action@v3.1
         with:
           formula-name: redisctl
           formula-path: Formula/redisctl.rb
           base-branch: main
-          tag-name: ${{ github.ref_name }}
+          tag-name: ${{ steps.extract_version.outputs.version }}
           homebrew-tap: joshrotenberg/homebrew-brew
         env:
           COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
