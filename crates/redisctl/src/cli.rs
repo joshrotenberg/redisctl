@@ -47,6 +47,10 @@ pub struct Cli {
     #[arg(long, short, global = true, env = "REDISCTL_PROFILE")]
     pub profile: Option<String>,
 
+    /// Path to alternate configuration file
+    #[arg(long, global = true, env = "REDISCTL_CONFIG_FILE")]
+    pub config_file: Option<String>,
+
     /// Output format
     #[arg(long, short = 'o', global = true, value_enum, default_value = "auto")]
     pub output: OutputFormat,
