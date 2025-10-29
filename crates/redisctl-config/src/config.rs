@@ -9,7 +9,7 @@ use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::credential::CredentialStore;
 use crate::error::{ConfigError, Result};
@@ -306,12 +306,16 @@ impl Config {
     /// Load configuration from the standard location
     pub fn load() -> Result<Self> {
         let config_path = Self::config_path()?;
+        Self::load_from_path(&config_path)
+    }
 
+    /// Load configuration from a specific path
+    pub fn load_from_path(config_path: &Path) -> Result<Self> {
         if !config_path.exists() {
             return Ok(Config::default());
         }
 
-        let content = fs::read_to_string(&config_path).map_err(|e| ConfigError::LoadError {
+        let content = fs::read_to_string(config_path).map_err(|e| ConfigError::LoadError {
             path: config_path.display().to_string(),
             source: e,
         })?;
@@ -327,7 +331,11 @@ impl Config {
     /// Save configuration to the standard location
     pub fn save(&self) -> Result<()> {
         let config_path = Self::config_path()?;
+        self.save_to_path(&config_path)
+    }
 
+    /// Save configuration to a specific path
+    pub fn save_to_path(&self, config_path: &Path) -> Result<()> {
         // Create parent directories if they don't exist
         if let Some(parent) = config_path.parent() {
             fs::create_dir_all(parent).map_err(|e| ConfigError::SaveError {
@@ -338,7 +346,7 @@ impl Config {
 
         let content = toml::to_string_pretty(self)?;
 
-        fs::write(&config_path, content).map_err(|e| ConfigError::SaveError {
+        fs::write(config_path, content).map_err(|e| ConfigError::SaveError {
             path: config_path.display().to_string(),
             source: e,
         })?;

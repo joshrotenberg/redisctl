@@ -68,9 +68,15 @@ async fn handle_list(
 
     match output_format {
         OutputFormat::Json | OutputFormat::Yaml => {
-            let config_path = Config::config_path()
-                .ok()
-                .and_then(|p| p.to_str().map(String::from));
+            let config_path = conn_mgr
+                .config_path
+                .as_ref()
+                .map(|p| p.to_string_lossy().to_string())
+                .or_else(|| {
+                    Config::config_path()
+                        .ok()
+                        .and_then(|p| p.to_str().map(String::from))
+                });
 
             let profile_list: Vec<serde_json::Value> = profiles
                 .iter()
@@ -123,7 +129,10 @@ async fn handle_list(
         }
         _ => {
             // Show config file path at the top
-            if let Ok(config_path) = Config::config_path() {
+            if let Some(ref path) = conn_mgr.config_path {
+                println!("Configuration file: {}", path.display());
+                println!();
+            } else if let Ok(config_path) = Config::config_path() {
                 println!("Configuration file: {}", config_path.display());
                 println!();
             }
@@ -443,14 +452,21 @@ async fn handle_set(
     let mut config = conn_mgr.config.clone();
     config.profiles.insert(name.to_string(), profile);
 
-    // Save the configuration
-    config.save().context("Failed to save configuration")?;
-
-    if let Ok(config_path) = Config::config_path() {
+    // Save the configuration to the appropriate location
+    if let Some(ref path) = conn_mgr.config_path {
+        config
+            .save_to_path(path)
+            .context("Failed to save configuration")?;
         println!("Profile '{}' saved successfully to:", name);
-        println!("  {}", config_path.display());
+        println!("  {}", path.display());
     } else {
-        println!("Profile '{}' saved successfully.", name);
+        config.save().context("Failed to save configuration")?;
+        if let Ok(config_path) = Config::config_path() {
+            println!("Profile '{}' saved successfully to:", name);
+            println!("  {}", config_path.display());
+        } else {
+            println!("Profile '{}' saved successfully.", name);
+        }
     }
 
     // Suggest setting as default if it's the only profile of its type
@@ -527,8 +543,14 @@ async fn handle_remove(conn_mgr: &ConnectionManager, name: &str) -> Result<(), R
         println!("Default cloud profile cleared.");
     }
 
-    // Save the configuration
-    config.save().context("Failed to save configuration")?;
+    // Save the configuration to the appropriate location
+    if let Some(ref path) = conn_mgr.config_path {
+        config
+            .save_to_path(path)
+            .context("Failed to save configuration")?;
+    } else {
+        config.save().context("Failed to save configuration")?;
+    }
 
     println!("Profile '{}' removed successfully.", name);
     Ok(())
@@ -558,8 +580,14 @@ async fn handle_default_enterprise(
     let mut config = conn_mgr.config.clone();
     config.default_enterprise = Some(name.to_string());
 
-    // Save the configuration
-    config.save().context("Failed to save configuration")?;
+    // Save the configuration to the appropriate location
+    if let Some(ref path) = conn_mgr.config_path {
+        config
+            .save_to_path(path)
+            .context("Failed to save configuration")?;
+    } else {
+        config.save().context("Failed to save configuration")?;
+    }
 
     println!("Default enterprise profile set to '{}'.", name);
     Ok(())
@@ -589,8 +617,14 @@ async fn handle_default_cloud(
     let mut config = conn_mgr.config.clone();
     config.default_cloud = Some(name.to_string());
 
-    // Save the configuration
-    config.save().context("Failed to save configuration")?;
+    // Save the configuration to the appropriate location
+    if let Some(ref path) = conn_mgr.config_path {
+        config
+            .save_to_path(path)
+            .context("Failed to save configuration")?;
+    } else {
+        config.save().context("Failed to save configuration")?;
+    }
 
     println!("Default cloud profile set to '{}'.", name);
     Ok(())
