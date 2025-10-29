@@ -147,7 +147,7 @@ pub async fn wait_for_task(
             }
 
             // Check if task failed
-            if state == "failed" || state == "error" {
+            if state == "failed" || state == "error" || state == "processing-error" {
                 return Err(RedisCtlError::InvalidInput {
                     message: format!("Task {} failed", task_id),
                 });
@@ -195,7 +195,14 @@ fn get_task_state(task: &Value) -> String {
 fn is_terminal_state(state: &str) -> bool {
     matches!(
         state.to_lowercase().as_str(),
-        "completed" | "complete" | "succeeded" | "success" | "failed" | "error" | "cancelled"
+        "completed"
+            | "complete"
+            | "succeeded"
+            | "success"
+            | "failed"
+            | "error"
+            | "cancelled"
+            | "processing-error"
     )
 }
 
@@ -203,7 +210,7 @@ fn is_terminal_state(state: &str) -> bool {
 fn format_task_state(state: &str) -> String {
     match state.to_lowercase().as_str() {
         "completed" | "complete" | "succeeded" | "success" => format!("✓ {}", state),
-        "failed" | "error" => format!("✗ {}", state),
+        "failed" | "error" | "processing-error" => format!("✗ {}", state),
         "cancelled" => format!("⊘ {}", state),
         "processing" | "running" | "in_progress" => format!("⟳ {}", state),
         _ => state.to_string(),
@@ -239,8 +246,26 @@ fn print_task_details(task: &Value) -> CliResult<()> {
         println!("Updated: {}", updated);
     }
 
+    // Handle error details - check both top-level and nested in response
     if let Some(error) = task.get("error").or_else(|| task.get("errorMessage")) {
         println!("Error: {}", error);
+    } else if let Some(response) = task.get("response")
+        && let Some(error) = response.get("error")
+    {
+        // Handle nested error object
+        if let Some(error_type) = error.get("type") {
+            println!("Error Type: {}", error_type);
+        }
+        if let Some(error_status) = error.get("status") {
+            println!("Error Status: {}", error_status);
+        }
+        if let Some(error_description) = error.get("description") {
+            println!("Error Description: {}", error_description);
+        }
+        // If error is a simple string
+        if error.is_string() {
+            println!("Error: {}", error);
+        }
     }
 
     Ok(())
