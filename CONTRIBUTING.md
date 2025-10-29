@@ -8,6 +8,22 @@ Please be respectful and constructive in all interactions.
 
 ## How to Contribute
 
+### Finding Good First Issues
+
+New to the project? Look for issues labeled [`good first issue`](https://github.com/joshrotenberg/redisctl/labels/good%20first%20issue).
+
+These issues are:
+- Well-defined with clear acceptance criteria
+- Include implementation hints and code pointers
+- Have existing patterns you can follow
+- Are great for learning the codebase
+
+**Current good first issues:**
+- **#138** - Add pager support for Windows (cross-platform development)
+- **#426** - Add payment-method commands (CLI wrapper for existing API)
+
+Each issue has detailed guidance in the comments. Don't hesitate to ask questions!
+
 ### Reporting Issues
 
 - Check existing issues first to avoid duplicates
