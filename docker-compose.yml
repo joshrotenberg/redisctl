@@ -1,4 +1,47 @@
+# ==============================================================================
+# Redis Enterprise Docker Compose Demo
+# ==============================================================================
+# This docker-compose.yml demonstrates redisctl's Enterprise capabilities by:
+# 1. Spinning up a Redis Enterprise cluster
+# 2. Initializing it with redisctl's workflow command
+# 3. Creating test databases (cache and persistent)
+# 4. Running various redisctl commands to inspect the cluster
+#
+# Usage:
+#   docker compose up -d          # Start everything
+#   docker compose logs -f        # Watch the initialization
+#   docker compose down -v        # Clean up completely
+#
+# The services run sequentially, each demonstrating different redisctl features.
+# Check logs of individual services to see command outputs:
+#   docker compose logs redis-enterprise-list-dbs
+#   docker compose logs redis-enterprise-cluster-info
+# ==============================================================================
+
+# Extension fields for shared configuration
+# This anchor (&redis-enterprise-env) defines common environment variables
+# that are reused across all services using YAML merge (<<: *redis-enterprise-env)
+x-redis-enterprise-env: &redis-enterprise-env
+  REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
+  REDIS_ENTERPRISE_USER: "admin@redis.local"
+  REDIS_ENTERPRISE_PASSWORD: "Redis123!"
+  REDIS_ENTERPRISE_INSECURE: "true" # Skip TLS verification for local testing
+
 services:
+  # ==============================================================================
+  # SECTION 1: Redis Enterprise Cluster
+  # ==============================================================================
+  # The base Redis Enterprise container. This provides the Redis Enterprise
+  # platform but does NOT initialize it - that's done by redis-enterprise-init.
+  #
+  # Ports exposed:
+  #   9443 - REST API (HTTPS)
+  #   8443 - Admin UI (HTTPS)
+  #   12000-12002 - Database ports
+  #
+  # Healthcheck: Waits for the bootstrap endpoint to be available before
+  # allowing dependent services to start.
+  # ==============================================================================
   redis-enterprise:
     image: ${REDIS_ENTERPRISE_IMAGE:-redislabs/redis:latest}
     platform: ${REDIS_ENTERPRISE_PLATFORM:-linux/amd64}
@@ -7,11 +50,11 @@ services:
     cap_add:
       - ALL
     ports:
-      - "12000:12000"
-      - "12001:12001"
-      - "12002:12002"
-      - "9443:9443"
-      - "8443:8443"
+      - "12000:12000" # Default database port
+      - "12001:12001" # Cache database port
+      - "12002:12002" # Persistent database port
+      - "9443:9443" # REST API
+      - "8443:8443" # Admin UI
     networks:
       - redisctl-network
     healthcheck:
@@ -21,7 +64,19 @@ services:
       retries: 5
       start_period: 10s
 
-  # Auto-initialize Redis Enterprise cluster using our workflow
+  # ==============================================================================
+  # SECTION 2: Cluster Initialization
+  # ==============================================================================
+  # 🔄 WORKFLOW COMMAND
+  # Demonstrates: redisctl enterprise workflow init-cluster
+  #
+  # This workflow command handles the multi-step cluster initialization:
+  # - Creates the cluster with the specified name
+  # - Sets up the admin user with credentials
+  # - Creates a default database
+  #
+  # This is a high-level workflow that replaces multiple manual API calls.
+  # ==============================================================================
   redis-enterprise-init:
     image: joshrotenberg/redisctl:latest
     container_name: redis-enterprise-init
@@ -46,7 +101,20 @@ services:
         "Redis123!",
       ]
 
+  # ==============================================================================
+  # SECTION 3: Database Creation
+  # ==============================================================================
+  # Demonstrates: redisctl enterprise database create
+  #
+  # Creates two databases with different configurations:
+  # 1. cache-db: Ephemeral cache with allkeys-lru eviction
+  # 2. persistent-db: AOF persistence with appendfsync-every-sec
+  #
+  # Note: Uses JSON for complex configuration. See issue #425 for CLI params.
+  # ==============================================================================
+
   # Create first test database - basic ephemeral cache
+  # Configuration: 100MB, no persistence, LRU eviction policy
   redis-enterprise-create-db1:
     image: joshrotenberg/redisctl:latest
     container_name: redis-enterprise-create-db1
@@ -56,20 +124,18 @@ services:
     networks:
       - redisctl-network
     environment:
-      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
-      REDIS_ENTERPRISE_USER: "admin@redis.local"
-      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
-      REDIS_ENTERPRISE_INSECURE: "true"
+      <<: *redis-enterprise-env
+    entrypoint: ["/bin/sh", "-c"]
     command:
-      [
-        "enterprise",
-        "database",
-        "create",
-        "--data",
-        '{"name": "cache-db", "memory_size": 104857600, "port": 12001, "replication": false, "data_persistence": "disabled", "eviction_policy": "allkeys-lru"}',
-      ]
+      - |
+        echo "=== Creating cache database (ephemeral, LRU eviction) ==="
+        sleep 3
+        redisctl enterprise database create \
+          --data '{"name": "cache-db", "memory_size": 104857600, "port": 12001, "replication": false, "data_persistence": "disabled", "eviction_policy": "allkeys-lru"}' \
+          -o json -q '{uid: uid, name: name, port: port, status: status, memory: memory_size, eviction: eviction_policy}'
 
   # Create second test database - persistent with AOF
+  # Configuration: 200MB, AOF persistence, appendfsync-every-sec
   redis-enterprise-create-db2:
     image: joshrotenberg/redisctl:latest
     container_name: redis-enterprise-create-db2
@@ -79,20 +145,27 @@ services:
     networks:
       - redisctl-network
     environment:
-      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
-      REDIS_ENTERPRISE_USER: "admin@redis.local"
-      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
-      REDIS_ENTERPRISE_INSECURE: "true"
+      <<: *redis-enterprise-env
+    entrypoint: ["/bin/sh", "-c"]
     command:
-      [
-        "enterprise",
-        "database",
-        "create",
-        "--data",
-        '{"name": "persistent-db", "memory_size": 209715200, "port": 12002, "replication": false, "data_persistence": "aof", "aof_policy": "appendfsync-every-sec"}',
-      ]
+      - |
+        echo "=== Creating persistent database (AOF, appendfsync-every-sec) ==="
+        sleep 3
+        redisctl enterprise database create \
+          --data '{"name": "persistent-db", "memory_size": 209715200, "port": 12002, "replication": false, "data_persistence": "aof", "aof_policy": "appendfsync-every-sec"}' \
+          -o json -q '{uid: uid, name: name, port: port, status: status, memory: memory_size, persistence: data_persistence}'
+
+  # ==============================================================================
+  # SECTION 4: Database Inspection
+  # ==============================================================================
+  # Demonstrates: redisctl enterprise database list/get
+  #
+  # Shows how to list databases and retrieve detailed information with
+  # JMESPath queries for filtering output.
+  # ==============================================================================
 
   # List all databases to verify creation
+  # 👤 HUMAN-FRIENDLY COMMAND
   redis-enterprise-list-dbs:
     image: joshrotenberg/redisctl:latest
     container_name: redis-enterprise-list-dbs
@@ -104,13 +177,16 @@ services:
     networks:
       - redisctl-network
     environment:
-      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
-      REDIS_ENTERPRISE_USER: "admin@redis.local"
-      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
-      REDIS_ENTERPRISE_INSECURE: "true"
-    command: ["enterprise", "database", "list", "-o", "table"]
+      <<: *redis-enterprise-env
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "=== Listing all databases ==="
+        sleep 3
+        redisctl enterprise database list -o json -q '[].{uid: uid, name: name, port: port, memory_mb: memory_size, status: status}'
 
-  # Get cache database details
+  # Get cache database details with JMESPath filtering
+  # 👤 HUMAN-FRIENDLY COMMAND (with filtering)
   redis-enterprise-get-cache-db:
     image: joshrotenberg/redisctl:latest
     container_name: redis-enterprise-get-cache-db
@@ -120,10 +196,7 @@ services:
     networks:
       - redisctl-network
     environment:
-      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
-      REDIS_ENTERPRISE_USER: "admin@redis.local"
-      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
-      REDIS_ENTERPRISE_INSECURE: "true"
+      <<: *redis-enterprise-env
     command: [
         "enterprise",
         "database",
@@ -136,6 +209,7 @@ services:
       ]
 
   # Get persistent database details
+  # 👤 HUMAN-FRIENDLY COMMAND (with filtering)
   redis-enterprise-get-persistent-db:
     image: joshrotenberg/redisctl:latest
     container_name: redis-enterprise-get-persistent-db
@@ -145,10 +219,7 @@ services:
     networks:
       - redisctl-network
     environment:
-      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
-      REDIS_ENTERPRISE_USER: "admin@redis.local"
-      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
-      REDIS_ENTERPRISE_INSECURE: "true"
+      <<: *redis-enterprise-env
     command: [
         "enterprise",
         "database",
@@ -160,207 +231,205 @@ services:
         "{name: name, status: status, port: port, memory: memory_size, persistence: data_persistence, replication: replication}",
       ]
 
+  # ==============================================================================
+  # SECTION 5: Cluster Management
+  # ==============================================================================
+  # Demonstrates: redisctl enterprise cluster/node commands
+  #
+  # Shows how to inspect cluster state, nodes, stats, and configuration.
+  # ==============================================================================
+
   # Check cluster information
+  # Output: Basic cluster details (filtered for key fields)
+  # 👤 HUMAN-FRIENDLY COMMAND
   redis-enterprise-cluster-info:
     image: joshrotenberg/redisctl:latest
     container_name: redis-enterprise-cluster-info
     depends_on:
-      redis-enterprise-init:
+      redis-enterprise-list-dbs:
         condition: service_completed_successfully
     networks:
       - redisctl-network
     environment:
-      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
-      REDIS_ENTERPRISE_USER: "admin@redis.local"
-      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
-      REDIS_ENTERPRISE_INSECURE: "true"
-    command: ["enterprise", "cluster", "get", "-o", "table"]
+      <<: *redis-enterprise-env
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "=== Cluster Information ==="
+        sleep 3
+        redisctl enterprise cluster get -o json -q '{name: name, nodes: nodes_count, version: software_version}'
 
   # List nodes in the cluster
+  # 👤 HUMAN-FRIENDLY COMMAND
   redis-enterprise-list-nodes:
     image: joshrotenberg/redisctl:latest
     container_name: redis-enterprise-list-nodes
     depends_on:
-      redis-enterprise-init:
+      redis-enterprise-cluster-info:
         condition: service_completed_successfully
     networks:
       - redisctl-network
     environment:
-      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
-      REDIS_ENTERPRISE_USER: "admin@redis.local"
-      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
-      REDIS_ENTERPRISE_INSECURE: "true"
-    command: ["enterprise", "node", "list", "-o", "table"]
+      <<: *redis-enterprise-env
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "=== Cluster Nodes ==="
+        sleep 3
+        redisctl enterprise node list -o json -q '[].{id: uid, address: addr, status: status, shards: shard_count}'
 
   # Check cluster stats
+  # 👤 HUMAN-FRIENDLY COMMAND
   redis-enterprise-stats:
     image: joshrotenberg/redisctl:latest
     container_name: redis-enterprise-stats
     depends_on:
-      redis-enterprise-create-db1:
-        condition: service_completed_successfully
-      redis-enterprise-create-db2:
+      redis-enterprise-list-nodes:
         condition: service_completed_successfully
     networks:
       - redisctl-network
     environment:
-      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
-      REDIS_ENTERPRISE_USER: "admin@redis.local"
-      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
-      REDIS_ENTERPRISE_INSECURE: "true"
+      <<: *redis-enterprise-env
+    entrypoint: ["/bin/sh", "-c"]
     command:
-      [
-        "enterprise",
-        "cluster",
-        "stats",
-        "-o",
-        "json",
-        "-q",
-        "{cpu: cpu_usage, memory: memory_usage, databases: total_databases, nodes: total_nodes}",
-      ]
+      - |
+        echo "=== Cluster Statistics ==="
+        sleep 3
+        redisctl enterprise cluster stats -o json -q '{cpu: cpu_usage, memory: memory_usage, databases: total_databases, nodes: total_nodes}'
+
+  # ==============================================================================
+  # SECTION 6: Advanced Features
+  # ==============================================================================
+  # Demonstrates: License, modules, users, policies, and alerts
+  #
+  # Shows various administrative and operational commands.
+  # ==============================================================================
 
   # Get license information
+  # 👤 HUMAN-FRIENDLY COMMAND
   redis-enterprise-license:
     image: joshrotenberg/redisctl:latest
     container_name: redis-enterprise-license
     depends_on:
-      redis-enterprise-init:
+      redis-enterprise-stats:
         condition: service_completed_successfully
     networks:
       - redisctl-network
     environment:
-      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
-      REDIS_ENTERPRISE_USER: "admin@redis.local"
-      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
-      REDIS_ENTERPRISE_INSECURE: "true"
-    command: ["enterprise", "license", "get", "-o", "json"]
+      <<: *redis-enterprise-env
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "=== License Information ==="
+        sleep 3
+        redisctl enterprise license get -o json -q '{expired: expired, shards_limit: shards_limit}'
 
-  # List available modules
-  redis-enterprise-modules:
-    image: joshrotenberg/redisctl:latest
-    container_name: redis-enterprise-modules
-    depends_on:
-      redis-enterprise-init:
-        condition: service_completed_successfully
-    networks:
-      - redisctl-network
-    environment:
-      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
-      REDIS_ENTERPRISE_USER: "admin@redis.local"
-      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
-      REDIS_ENTERPRISE_INSECURE: "true"
-    command: ["enterprise", "module", "list", "-o", "table"]
+  # Note: Module list command disabled - API endpoint not available in test environment
+  # Would show: redisctl enterprise module list
 
   # Get detailed node information
+  # 👤 HUMAN-FRIENDLY COMMAND
   redis-enterprise-node-details:
     image: joshrotenberg/redisctl:latest
     container_name: redis-enterprise-node-details
     depends_on:
-      redis-enterprise-init:
+      redis-enterprise-license:
         condition: service_completed_successfully
     networks:
       - redisctl-network
     environment:
-      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
-      REDIS_ENTERPRISE_USER: "admin@redis.local"
-      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
-      REDIS_ENTERPRISE_INSECURE: "true"
+      <<: *redis-enterprise-env
+    entrypoint: ["/bin/sh", "-c"]
     command:
-      [
-        "enterprise",
-        "node",
-        "get",
-        "1",
-        "-o",
-        "json",
-        "-q",
-        "{address: addr, status: status, cores: cores, memory: total_memory, version: software_version, shards: shard_count}",
-      ]
+      - |
+        echo "=== Node 1 Details ==="
+        sleep 3
+        redisctl enterprise node get 1 -o json -q '{address: addr, status: status, cores: cores, memory: total_memory, version: software_version, shards: shard_count}'
 
   # List all users
+  # 👤 HUMAN-FRIENDLY COMMAND
   redis-enterprise-users:
     image: joshrotenberg/redisctl:latest
     container_name: redis-enterprise-users
     depends_on:
-      redis-enterprise-init:
+      redis-enterprise-node-details:
         condition: service_completed_successfully
     networks:
       - redisctl-network
     environment:
-      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
-      REDIS_ENTERPRISE_USER: "admin@redis.local"
-      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
-      REDIS_ENTERPRISE_INSECURE: "true"
-    command: ["enterprise", "user", "list", "-o", "table"]
+      <<: *redis-enterprise-env
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "=== Cluster Users ==="
+        sleep 3
+        redisctl enterprise user list -o json -q '[].{uid: uid, name: name, email: email, role: role}'
 
   # Get cluster policy
+  # 🔧 RAW API COMMAND
   redis-enterprise-policy:
     image: joshrotenberg/redisctl:latest
     container_name: redis-enterprise-policy
     depends_on:
-      redis-enterprise-init:
+      redis-enterprise-users:
         condition: service_completed_successfully
     networks:
       - redisctl-network
     environment:
-      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
-      REDIS_ENTERPRISE_USER: "admin@redis.local"
-      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
-      REDIS_ENTERPRISE_INSECURE: "true"
+      <<: *redis-enterprise-env
+    entrypoint: ["/bin/sh", "-c"]
     command:
-      [
-        "api",
-        "enterprise",
-        "get",
-        "/v1/cluster/policy",
-        "-o",
-        "json",
-        "-q",
-        "{default_db_config: default_non_sharded_proxy_policy, rack_aware: rack_aware, redis_upgrade: redis_upgrade_policy}",
-      ]
+      - |
+        echo "=== Cluster Policy (via raw API) ==="
+        sleep 3
+        redisctl api enterprise get /v1/cluster/policy -o json -q '{default_db: default_non_sharded_proxy_policy, rack_aware: rack_aware}'
 
   # Check for any cluster alerts
+  # 🔧 RAW API COMMAND
   redis-enterprise-alerts:
     image: joshrotenberg/redisctl:latest
     container_name: redis-enterprise-alerts
     depends_on:
-      redis-enterprise-init:
+      redis-enterprise-policy:
         condition: service_completed_successfully
     networks:
       - redisctl-network
     environment:
-      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
-      REDIS_ENTERPRISE_USER: "admin@redis.local"
-      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
-      REDIS_ENTERPRISE_INSECURE: "true"
-    command: ["api", "enterprise", "get", "/v1/cluster/alerts", "-o", "json"]
+      <<: *redis-enterprise-env
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "=== Cluster Alerts ==="
+        sleep 3
+        redisctl api enterprise get /v1/cluster/alerts -o json -q 'length(@)'
 
   # Get comprehensive cluster information
+  # 👤 HUMAN-FRIENDLY COMMAND
   redis-enterprise-cluster-full:
     image: joshrotenberg/redisctl:latest
     container_name: redis-enterprise-cluster-full
     depends_on:
-      redis-enterprise-init:
+      redis-enterprise-alerts:
         condition: service_completed_successfully
     networks:
       - redisctl-network
     environment:
-      REDIS_ENTERPRISE_URL: "https://redis-enterprise:9443"
-      REDIS_ENTERPRISE_USER: "admin@redis.local"
-      REDIS_ENTERPRISE_PASSWORD: "Redis123!"
-      REDIS_ENTERPRISE_INSECURE: "true"
+      <<: *redis-enterprise-env
+    entrypoint: ["/bin/sh", "-c"]
     command:
-      [
-        "enterprise",
-        "cluster",
-        "get",
-        "-o",
-        "json",
-        "-q",
-        "{name: name, license: license_expired, nodes: nodes, databases: databases, version: software_version, created: created_time}",
-      ]
+      - |
+        echo "=== Comprehensive Cluster Info ==="
+        sleep 3
+        redisctl enterprise cluster get -o json -q '{name: name, nodes: nodes_count, version: software_version, created: created_time}'
+
+  # ==============================================================================
+  # SECTION 7: Connectivity Testing
+  # ==============================================================================
+  # Verifies that created databases are accessible via redis-cli
+  # ==============================================================================
 
   # Test database connectivity
+  # Uses standard redis-cli to ping both databases
   redis-enterprise-test-connectivity:
     image: redis:7-alpine
     container_name: redis-enterprise-test-connectivity
@@ -371,12 +440,16 @@ services:
         condition: service_completed_successfully
     networks:
       - redisctl-network
+    entrypoint: ["/bin/sh", "-c"]
     command:
-      [
-        "sh",
-        "-c",
-        "echo 'Testing cache-db on port 12001...' && redis-cli -h redis-enterprise -p 12001 ping && echo 'Testing persistent-db on port 12002...' && redis-cli -h redis-enterprise -p 12002 ping && echo 'All databases responding!'",
-      ]
+      - |
+        echo "=== Testing Database Connectivity ==="
+        sleep 3
+        echo "Testing cache-db on port 12001..."
+        redis-cli -h redis-enterprise -p 12001 ping
+        echo "Testing persistent-db on port 12002..."
+        redis-cli -h redis-enterprise -p 12002 ping
+        echo "All databases responding!"
 
 networks:
   redisctl-network:

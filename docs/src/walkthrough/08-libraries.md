@@ -51,7 +51,7 @@ redisctl (monolithic binary)
 
 After:
 ```
-redisctl-config (library) ← reusable!
+redisctl-config (library) reusable!
 └── redisctl (uses library)
 ```
 
@@ -125,10 +125,10 @@ use redisctl_workflows::SubscriptionSetup;
 
 **Not just a CLI** - Foundation for entire Redis Rust ecosystem
 
-✅ Terraform providers can use our API clients  
-✅ Monitoring tools can use our libraries  
-✅ Backup tools can use our workflows  
-✅ Custom tools can use proven components  
+Terraform providers can use our API clients  
+Monitoring tools can use our libraries  
+Backup tools can use our workflows  
+Custom tools can use proven components  
 
 ## Platform Vision
 
@@ -144,7 +144,7 @@ Better tools for everyone
 
 ---
 
-**← Previous:** [7. Advanced Features](./07-advanced.md)  
+**Previous:** [7. Advanced Features](./07-advanced.md)  
 **Next →** [9. Next Steps](./09-next-steps.md)
 
 See [Developer Guide](../developer/library-usage.md) for details

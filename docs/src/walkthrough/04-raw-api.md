@@ -4,10 +4,7 @@
 
 ## Why Raw API Layer?
 
-When you need:
-- Access to endpoints not yet wrapped
-- Exact API behavior for testing
-- Maximum flexibility
+Access endpoints not yet wrapped, test exact API behavior, or get maximum flexibility.
 
 ## Cloud Examples
 
@@ -21,9 +18,6 @@ redisctl api cloud get /subscriptions/12345/databases
 # POST request with data
 redisctl api cloud post /subscriptions \
   --data '{"name": "new-sub", "cloudProviders": [...]}'
-
-# DELETE request
-redisctl api cloud delete /subscriptions/12345
 ```
 
 ## Enterprise Examples
@@ -35,56 +29,46 @@ redisctl api enterprise get /v1/cluster
 # List databases
 redisctl api enterprise get /v1/bdbs
 
-# Get specific database
-redisctl api enterprise get /v1/bdbs/1
+# Get cluster policy (as shown in docker-compose)
+redisctl api enterprise get /v1/cluster/policy \
+  -o json -q '{default_db: default_non_sharded_proxy_policy, rack_aware: rack_aware}'
 
-# Create database
-redisctl api enterprise post /v1/bdbs \
-  --data '{"name": "mydb", "memory_size": 1073741824}'
+# Get alerts count
+redisctl api enterprise get /v1/cluster/alerts -o json -q 'length(@)'
 ```
 
 ## With JMESPath Queries
 
 ```bash
-# Extract just the name field
+# Extract cluster name
 redisctl api enterprise get /v1/cluster -q 'name'
 
-# Filter and reshape
+# Filter active databases
 redisctl api enterprise get /v1/bdbs \
-  -q '[?status==`active`].{name:name,memory:memory_size}'
+  -q "[?status=='active'].{name:name,memory:memory_size}"
 ```
 
 ## With Different Output Formats
 
 ```bash
 # JSON (default)
-redisctl api enterprise get /v1/bdbs
+redisctl api cloud get /subscriptions -o json
 
 # YAML
-redisctl api enterprise get /v1/bdbs -o yaml
+redisctl api cloud get /subscriptions -o yaml
 
-# Table (limited for raw API)
-redisctl api enterprise get /v1/cluster -o table
+# Table (auto-formatted)
+redisctl api cloud get /subscriptions -o table
 ```
 
-## HTTP Methods Supported
+## Key Features
 
-- `GET` - Retrieve resources
-- `POST` - Create resources
-- `PUT` - Update resources (full replacement)
-- `PATCH` - Update resources (partial)
-- `DELETE` - Remove resources
-
-## When to Use
-
-✅ Testing new API endpoints  
-✅ Debugging API behavior  
-✅ Endpoints not in human-friendly layer yet  
-✅ Need exact API response
+- **Any HTTP method**: GET, POST, PUT, PATCH, DELETE
+- **Request body**: `--data` flag for JSON payloads
+- **Output filtering**: JMESPath queries via `-q`
+- **Format control**: JSON, YAML, or table output
 
 ---
 
-**← Previous:** [3. Installation & Setup](./03-setup.md)  
-**Next →** [5. Human-Friendly Layer](./05-human-friendly.md)
-
-**Layer Stack:** **Raw API** → Human-Friendly → Workflows
+**Previous:** [3. Installation & Setup](./03-setup.md)  
+**Next:** [5. Human-Friendly Commands](./05-human-friendly.md)

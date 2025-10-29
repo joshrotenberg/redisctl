@@ -2,98 +2,94 @@
 
 ## Installation
 
-### Homebrew (macOS/Linux)
-
+**Homebrew (macOS/Linux):**
 ```bash
-brew install joshrotenberg/brew/redisctl
+brew tap joshrotenberg/brew
+brew install redisctl
 ```
 
-### GitHub Releases
+**GitHub Releases:**  
+Download pre-built binaries: [Latest Release](https://github.com/joshrotenberg/redisctl/releases)
 
-Download pre-built binaries for your platform:
-- macOS (Intel & Apple Silicon)
-- Linux (x86_64)
-- Windows (x86_64)
-
-[→ Latest Release](https://github.com/joshrotenberg/redisctl/releases)
-
-### Docker
-
+**Docker:**
 ```bash
 docker run ghcr.io/joshrotenberg/redisctl:latest --help
 ```
 
-### Cargo (from source)
-
+**Cargo (from source):**
 ```bash
 cargo install redisctl
 ```
 
 ## Profile Setup
 
-### Why Profiles?
+Profiles let you manage multiple clusters (dev, staging, prod) and store credentials securely.
 
-Profiles let you:
-- Manage multiple clusters (dev, staging, prod)
-- Store credentials securely (OS keyring)
-- Override with env vars or CLI flags
-
-### Cloud Profile
-
+**Cloud Profile:**
 ```bash
-redisctl profile set prod-cloud \
-  --deployment-type cloud \
+redisctl profile set prod --deployment cloud \
   --api-key "your-api-key" \
-  --api-secret "your-secret-key" \
-  --use-keyring
+  --api-secret "your-secret-key"
 ```
 
-### Enterprise Profile
-
+**Enterprise Profile:**
 ```bash
-redisctl profile set prod-cluster \
-  --deployment-type enterprise \
-  --url "https://cluster.example.com:9443" \
-  --username "admin@cluster.local" \
-  --use-keyring
-# Password will be prompted and stored securely
+redisctl profile set local --deployment enterprise \
+  --url https://localhost:9443 \
+  --username admin@redis.local \
+  --password Redis123! \
+  --insecure
 ```
 
-### Verify Setup
-
+**List Profiles:**
 ```bash
-# List profiles
 redisctl profile list
-
-# Test connection
-redisctl api cloud get /           # Cloud
-redisctl api enterprise get /v1/cluster  # Enterprise
 ```
 
-## Secure Credential Storage
-
-With `--use-keyring`:
-- **macOS**: Keychain
-- **Windows**: Credential Manager
-- **Linux**: Secret Service
-
-No credentials in config files or shell history!
-
-## Override Hierarchy
-
-```
-CLI flags > Environment variables > Profile settings
-```
-
-Example:
+**Use a Profile:**
 ```bash
-# Override profile URL for one command
-redisctl --url https://other-cluster:9443 enterprise cluster get
+# With flag
+redisctl -p prod cloud subscription list
+
+# With environment variable
+export REDISCTL_PROFILE=prod
+redisctl cloud subscription list
 ```
+
+## Credential Storage
+
+**Plaintext** (default) - Stored in config.toml
+
+**Environment Variables:**
+```bash
+export REDIS_CLOUD_API_KEY="your-key"
+export REDIS_CLOUD_SECRET_KEY="your-secret"
+```
+
+**OS Keyring** (requires `secure-storage` feature):
+```bash
+redisctl profile set prod --deployment cloud \
+  --api-key "$KEY" \
+  --api-secret "$SECRET" \
+  --use-keyring
+```
+
+## Docker Compose Demo
+
+Try the complete Enterprise demo:
+
+```bash
+git clone https://github.com/joshrotenberg/redisctl
+cd redisctl
+docker compose up -d
+
+# Watch initialization
+docker compose logs -f redis-enterprise-init
+```
+
+See `docker-compose.yml` for annotated examples of every command type.
 
 ---
 
-**← Previous:** [2. Enter redisctl](./02-solution.md)  
-**Next →** [4. Raw API Layer](./04-raw-api.md)
-
-See [Configuration Guide](../getting-started/configuration.md) for details
+**Previous:** [2. Enter redisctl](./02-solution.md)  
+**Next:** [4. Raw API Access](./04-raw-api.md)

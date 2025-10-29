@@ -23,10 +23,10 @@ redisctl enterprise support-package cluster \
 ```
 
 **Features:**
-- ✅ Automatic generation
-- ✅ 20-30% compression with `--optimize`
-- ✅ Direct upload to Redis Support (Files.com)
-- ✅ Works from anywhere (no SSH)
+- Automatic generation
+- 20-30% compression with `--optimize`
+- Direct upload to Redis Support (Files.com)
+- Works from anywhere (no SSH)
 
 ## Log Streaming
 
@@ -133,5 +133,5 @@ redisctl cloud database create ... --wait
 
 ---
 
-**← Previous:** [6. Workflows Layer](./06-workflows.md)  
+**Previous:** [6. Workflows Layer](./06-workflows.md)  
 **Next →** [8. Library Architecture](./08-libraries.md)

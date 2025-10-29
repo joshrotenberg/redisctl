@@ -20,19 +20,19 @@ They're **complementary tools** - use both!
 
 ## Where rladmin Excels
 
-✅ **Local node operations** - Direct node access  
-✅ **No network dependency** - Works when API is down  
-✅ **Low-level operations** - Node-specific commands  
-✅ **Already installed** - No extra setup  
+**Local node operations** - Direct node access  
+**No network dependency** - Works when API is down  
+**Low-level operations** - Node-specific commands  
+**Already installed** - No extra setup  
 
 ## Where redisctl Excels
 
-✅ **Remote management** - No SSH required  
-✅ **Structured output** - JSON/YAML for automation  
-✅ **Cross-platform** - Works on developer laptops  
-✅ **Multi-cluster** - Profile system  
-✅ **Rich features** - JMESPath, workflows, support packages  
-✅ **Better UX** - Progress indicators, `--wait` for async ops  
+**Remote management** - No SSH required  
+**Structured output** - JSON/YAML for automation  
+**Cross-platform** - Works on developer laptops  
+**Multi-cluster** - Profile system  
+**Rich features** - JMESPath, workflows, support packages  
+**Better UX** - Progress indicators, `--wait` for async ops  
 
 ## Example Comparison
 
@@ -104,5 +104,5 @@ See [RLADMIN_COMPARISON.md](https://github.com/joshrotenberg/redisctl/blob/main/
 
 ---
 
-**← Back:** [9. Next Steps](./09-next-steps.md)  
+**Back:** [9. Next Steps](./09-next-steps.md)  
 **[Return to Start](./README.md)**
