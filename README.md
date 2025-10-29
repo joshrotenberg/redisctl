@@ -421,6 +421,16 @@ redisctl enterprise cluster get -o yaml
 
 ---
 
+## Changelogs
+
+Individual crate changelogs:
+- [redisctl CLI](crates/redisctl/CHANGELOG.md) - Command-line interface
+- [redis-cloud](crates/redis-cloud/CHANGELOG.md) - Cloud API client library
+- [redis-enterprise](crates/redis-enterprise/CHANGELOG.md) - Enterprise API client library
+- [redisctl-config](crates/redisctl-config/CHANGELOG.md) - Configuration management library
+
+---
+
 ## Contributing
 
 Contributions welcome! See our [Contributing Guide](https://joshrotenberg.github.io/redisctl/developer/contributing.html).
