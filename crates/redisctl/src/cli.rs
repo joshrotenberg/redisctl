@@ -1323,6 +1323,25 @@ pub enum EnterpriseCommands {
     #[command(subcommand)]
     Stats(EnterpriseStatsCommands),
 
+    /// Comprehensive cluster status (cluster, nodes, databases, shards)
+    Status {
+        /// Show only cluster information
+        #[arg(long)]
+        cluster: bool,
+
+        /// Show only nodes information
+        #[arg(long)]
+        nodes: bool,
+
+        /// Show only databases information
+        #[arg(long)]
+        databases: bool,
+
+        /// Show only shards information
+        #[arg(long)]
+        shards: bool,
+    },
+
     /// Support package generation for troubleshooting
     #[command(subcommand, name = "support-package")]
     SupportPackage(crate::commands::enterprise::support_package::SupportPackageCommands),

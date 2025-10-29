@@ -12,6 +12,20 @@
 - [Shell Completions](./getting-started/shell-completions.md)
 - [Quick Start Guide](./getting-started/quickstart.md)
 
+# Complete Walkthrough
+
+- [8. Introduction](./walkthrough/README.md)
+  - [8.1 The Problem](./walkthrough/01-problem.md)
+  - [8.2 Enter redisctl](./walkthrough/02-solution.md)
+  - [8.3 Installation & Setup](./walkthrough/03-setup.md)
+  - [8.4 Raw API Layer](./walkthrough/04-raw-api.md)
+  - [8.5 Human-Friendly Layer](./walkthrough/05-human-friendly.md)
+  - [8.6 Workflows Layer](./walkthrough/06-workflows.md)
+  - [8.7 Advanced Features](./walkthrough/07-advanced.md)
+  - [8.8 Library Architecture](./walkthrough/08-libraries.md)
+  - [8.9 Next Steps](./walkthrough/09-next-steps.md)
+  - [8.10 Appendix: rladmin vs redisctl](./walkthrough/rladmin-comparison.md)
+
 # Cookbook
 
 - [Overview](./cookbook/README.md)
@@ -99,6 +113,10 @@
 - [Async Operations](./common-features/async-operations.md)
 - [Raw API Access](./common-features/raw-api.md)
 - [Secure Storage](./common-features/secure-storage.md)
+
+# Comparison
+
+- [rladmin vs redisctl](./comparison/rladmin.md)
 
 # Tutorials
 

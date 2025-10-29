@@ -14,7 +14,7 @@ fn master_shard() -> serde_json::Value {
     json!({
         "uid": "shard:1:1",
         "bdb_uid": 1,
-        "node_uid": 1,
+        "node_uid": "1",
         "role": "master",
         "status": "active",
         "slots": "0-8191",
@@ -28,7 +28,7 @@ fn replica_shard() -> serde_json::Value {
     json!({
         "uid": "shard:1:2",
         "bdb_uid": 1,
-        "node_uid": 2,
+        "node_uid": "2",
         "role": "slave",
         "status": "active",
         "slots": "0-8191",
@@ -40,7 +40,7 @@ fn backup_shard() -> serde_json::Value {
     json!({
         "uid": "shard:2:1",
         "bdb_uid": 2,
-        "node_uid": 1,
+        "node_uid": "1",
         "role": "master",
         "status": "backing-up",
         "slots": "8192-16383",
@@ -53,7 +53,7 @@ fn importing_shard() -> serde_json::Value {
     json!({
         "uid": "shard:3:1",
         "bdb_uid": 3,
-        "node_uid": 3,
+        "node_uid": "3",
         "role": "master",
         "status": "importing",
         "slots": "0-16383",
@@ -66,7 +66,7 @@ fn minimal_shard() -> serde_json::Value {
     json!({
         "uid": "shard:4:1",
         "bdb_uid": 4,
-        "node_uid": 1,
+        "node_uid": "1",
         "role": "master",
         "status": "active"
     })
@@ -132,7 +132,7 @@ async fn test_shard_list() {
     let master = &shards[0];
     assert_eq!(master.uid, "shard:1:1");
     assert_eq!(master.bdb_uid, 1);
-    assert_eq!(master.node_uid, 1);
+    assert_eq!(master.node_uid, "1");
     assert_eq!(master.role, "master");
     assert_eq!(master.status, "active");
     assert_eq!(master.slots, Some("0-8191".to_string()));
@@ -219,7 +219,7 @@ async fn test_shard_get() {
     let shard = result.unwrap();
     assert_eq!(shard.uid, "shard:1:1");
     assert_eq!(shard.bdb_uid, 1);
-    assert_eq!(shard.node_uid, 1);
+    assert_eq!(shard.node_uid, "1");
     assert_eq!(shard.role, "master");
     assert_eq!(shard.status, "active");
     assert_eq!(shard.slots, Some("0-8191".to_string()));
@@ -252,7 +252,7 @@ async fn test_shard_get_minimal() {
     let shard = result.unwrap();
     assert_eq!(shard.uid, "shard:4:1");
     assert_eq!(shard.bdb_uid, 4);
-    assert_eq!(shard.node_uid, 1);
+    assert_eq!(shard.node_uid, "1");
     assert_eq!(shard.role, "master");
     assert_eq!(shard.status, "active");
     assert!(shard.slots.is_none());
@@ -453,9 +453,9 @@ async fn test_shard_list_by_node() {
     assert_eq!(shards.len(), 3);
 
     // All shards should be on node 1
-    assert_eq!(shards[0].node_uid, 1);
-    assert_eq!(shards[1].node_uid, 1);
-    assert_eq!(shards[2].node_uid, 1);
+    assert_eq!(shards[0].node_uid, "1");
+    assert_eq!(shards[1].node_uid, "1");
+    assert_eq!(shards[2].node_uid, "1");
 
     // Verify different databases
     assert_eq!(shards[0].bdb_uid, 1);
