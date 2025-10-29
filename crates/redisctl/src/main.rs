@@ -23,9 +23,15 @@ async fn main() -> Result<()> {
     // Initialize tracing based on verbosity level
     init_tracing(cli.verbose);
 
-    // Load configuration
-    let config = Config::load()?;
-    let conn_mgr = ConnectionManager::new(config);
+    // Load configuration from specified path or default location
+    let (config, config_path) = if let Some(config_file) = &cli.config_file {
+        let path = std::path::PathBuf::from(config_file);
+        let config = Config::load_from_path(&path)?;
+        (config, Some(path))
+    } else {
+        (Config::load()?, None)
+    };
+    let conn_mgr = ConnectionManager::with_config_path(config, config_path);
 
     // Execute command
     if let Err(e) = execute_command(&cli, &conn_mgr).await {
