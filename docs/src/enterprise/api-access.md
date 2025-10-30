@@ -98,7 +98,7 @@ redisctl api enterprise delete /v1/nodes/3
 ### Database Operations (BDB)
 - `/v1/bdbs` - Database list and creation
 - `/v1/bdbs/{id}` - Database details and management
-- `/v1/bdbs/{id}/actions` - Database actions (flush, restart)
+- `/v1/bdbs/{id}/actions` - Database actions (stop_traffic, resume_traffic, export, import, etc.)
 - `/v1/bdbs/{id}/stats` - Database statistics
 
 ### Node Management
