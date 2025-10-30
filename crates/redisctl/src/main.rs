@@ -26,11 +26,17 @@ async fn main() -> Result<()> {
     // Load configuration from specified path or default location
     let (config, config_path) = if let Some(config_file) = &cli.config_file {
         let path = std::path::PathBuf::from(config_file);
+        debug!("Loading config from explicit path: {:?}", path);
         let config = Config::load_from_path(&path)?;
         (config, Some(path))
     } else {
+        debug!("Loading config from default location");
         (Config::load()?, None)
     };
+    debug!(
+        "Creating ConnectionManager with config_path: {:?}",
+        config_path
+    );
     let conn_mgr = ConnectionManager::with_config_path(config, config_path);
 
     // Execute command
@@ -821,6 +827,7 @@ async fn execute_api_command(
 ) -> Result<(), RedisCtlError> {
     commands::api::handle_api_command(commands::api::ApiCommandParams {
         config: conn_mgr.config.clone(),
+        config_path: conn_mgr.config_path.clone(),
         profile_name: cli.profile.clone(),
         deployment: *deployment,
         method: method.clone(),
