@@ -858,6 +858,17 @@ async fn execute_cloud_command(
             .await
         }
 
+        PaymentMethod(payment_method_cmd) => {
+            commands::cloud::handle_payment_method_command(
+                conn_mgr,
+                cli.profile.as_deref(),
+                payment_method_cmd,
+                cli.output,
+                cli.query.as_deref(),
+            )
+            .await
+        }
+
         Subscription(sub_cmd) => {
             commands::cloud::handle_subscription_command(
                 conn_mgr,
