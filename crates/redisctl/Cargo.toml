@@ -76,6 +76,9 @@ predicates = "3.0"
 tempfile = "3.8"
 criterion = "0.5"
 serial_test = "3.1"
+wiremock = { workspace = true }
+tokio = { workspace = true }
+serde_json = { workspace = true }
 
 [[bench]]
 name = "api_performance"

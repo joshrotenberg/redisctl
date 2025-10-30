@@ -12,9 +12,7 @@ fn test_help_flag() {
         .arg("--help")
         .assert()
         .success()
-        .stdout(predicate::str::contains(
-            "Redis management CLI",
-        ))
+        .stdout(predicate::str::contains("Redis management CLI"))
         .stdout(predicate::str::contains("EXAMPLES:"));
 }
 
