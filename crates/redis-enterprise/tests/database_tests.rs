@@ -503,3 +503,43 @@ async fn test_passwords_delete_and_reset_status() {
     let reset = handler.backup_reset_status(1).await.unwrap();
     assert_eq!(reset["status"], "reset");
 }
+
+#[tokio::test]
+async fn test_database_upgrade_redis_version() {
+    let mock_server = MockServer::start().await;
+
+    Mock::given(method("POST"))
+        .and(path("/v1/bdbs/1/upgrade"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(success_response(json!({
+            "action_uid": "act-upgrade-123",
+            "description": "Upgrading database to Redis 7.4.2"
+        })))
+        .mount(&mock_server)
+        .await;
+
+    let client = EnterpriseClient::builder()
+        .base_url(mock_server.uri())
+        .username("admin")
+        .password("password")
+        .build()
+        .unwrap();
+
+    let handler = BdbHandler::new(client);
+
+    let request = redis_enterprise::bdb::DatabaseUpgradeRequest {
+        redis_version: Some("7.4.2".to_string()),
+        preserve_roles: Some(true),
+        force_restart: Some(false),
+        may_discard_data: Some(false),
+        force_discard: Some(false),
+        keep_crdt_protocol_version: Some(false),
+        parallel_shards_upgrade: None,
+        modules: None,
+    };
+
+    let result = handler.upgrade_redis_version(1, request).await;
+    assert!(result.is_ok());
+    let response = result.unwrap();
+    assert_eq!(response.action_uid, "act-upgrade-123");
+}
