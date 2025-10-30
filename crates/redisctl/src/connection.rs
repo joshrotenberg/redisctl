@@ -46,6 +46,10 @@ impl ConnectionManager {
     }
 
     /// Create a Cloud client from profile credentials with environment variable override support
+    ///
+    /// When --config-file is explicitly specified, environment variables are ignored to provide
+    /// true configuration isolation. This allows testing with isolated configs and follows the
+    /// principle of "explicit wins" (CLI args > env vars > defaults).
     #[allow(dead_code)] // Used by binary target
     pub async fn create_cloud_client(
         &self,
@@ -54,10 +58,35 @@ impl ConnectionManager {
         debug!("Creating Redis Cloud client");
         trace!("Profile name: {:?}", profile_name);
 
-        // Check if all required environment variables are present
-        let env_api_key = std::env::var("REDIS_CLOUD_API_KEY").ok();
-        let env_api_secret = std::env::var("REDIS_CLOUD_SECRET_KEY").ok();
-        let env_api_url = std::env::var("REDIS_CLOUD_API_URL").ok();
+        // When --config-file is explicitly specified, ignore environment variables
+        // This provides true configuration isolation for testing and follows CLI best practices
+        let use_env_vars = self.config_path.is_none();
+
+        debug!(
+            "Config path: {:?}, use_env_vars: {}",
+            self.config_path, use_env_vars
+        );
+
+        if !use_env_vars {
+            info!("--config-file specified explicitly, ignoring environment variables");
+        }
+
+        // Check if all required environment variables are present (only if we're using them)
+        let env_api_key = if use_env_vars {
+            std::env::var("REDIS_CLOUD_API_KEY").ok()
+        } else {
+            None
+        };
+        let env_api_secret = if use_env_vars {
+            std::env::var("REDIS_CLOUD_SECRET_KEY").ok()
+        } else {
+            None
+        };
+        let env_api_url = if use_env_vars {
+            std::env::var("REDIS_CLOUD_API_URL").ok()
+        } else {
+            None
+        };
 
         if env_api_key.is_some() {
             debug!("Found REDIS_CLOUD_API_KEY environment variable");
@@ -140,6 +169,10 @@ impl ConnectionManager {
     }
 
     /// Create an Enterprise client from profile credentials with environment variable override support
+    ///
+    /// When --config-file is explicitly specified, environment variables are ignored to provide
+    /// true configuration isolation. This allows testing with isolated configs and follows the
+    /// principle of "explicit wins" (CLI args > env vars > defaults).
     #[allow(dead_code)] // Used by binary target
     pub async fn create_enterprise_client(
         &self,
@@ -148,11 +181,40 @@ impl ConnectionManager {
         debug!("Creating Redis Enterprise client");
         trace!("Profile name: {:?}", profile_name);
 
-        // Check if all required environment variables are present
-        let env_url = std::env::var("REDIS_ENTERPRISE_URL").ok();
-        let env_user = std::env::var("REDIS_ENTERPRISE_USER").ok();
-        let env_password = std::env::var("REDIS_ENTERPRISE_PASSWORD").ok();
-        let env_insecure = std::env::var("REDIS_ENTERPRISE_INSECURE").ok();
+        // When --config-file is explicitly specified, ignore environment variables
+        // This provides true configuration isolation for testing and follows CLI best practices
+        let use_env_vars = self.config_path.is_none();
+
+        debug!(
+            "Config path: {:?}, use_env_vars: {}",
+            self.config_path, use_env_vars
+        );
+
+        if !use_env_vars {
+            info!("--config-file specified explicitly, ignoring environment variables");
+        }
+
+        // Check if all required environment variables are present (only if we're using them)
+        let env_url = if use_env_vars {
+            std::env::var("REDIS_ENTERPRISE_URL").ok()
+        } else {
+            None
+        };
+        let env_user = if use_env_vars {
+            std::env::var("REDIS_ENTERPRISE_USER").ok()
+        } else {
+            None
+        };
+        let env_password = if use_env_vars {
+            std::env::var("REDIS_ENTERPRISE_PASSWORD").ok()
+        } else {
+            None
+        };
+        let env_insecure = if use_env_vars {
+            std::env::var("REDIS_ENTERPRISE_INSECURE").ok()
+        } else {
+            None
+        };
 
         if env_url.is_some() {
             debug!("Found REDIS_ENTERPRISE_URL environment variable");

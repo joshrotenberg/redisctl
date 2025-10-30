@@ -997,3 +997,70 @@ async fn test_cloud_maintenance_windows() {
         .stdout(predicate::str::contains("maintenanceWindows"))
         .stdout(predicate::str::contains("weekly"));
 }
+
+#[tokio::test]
+async fn test_config_file_overrides_env_vars() {
+    let temp_dir = TempDir::new().unwrap();
+    let mock_server = MockServer::start().await;
+
+    create_cloud_profile(&temp_dir, &mock_server.uri()).unwrap();
+
+    // Mock endpoint expecting credentials from config file
+    // Note: Matches any path to debug what request is being made
+    Mock::given(method("GET"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "message": "config file credentials used"
+        })))
+        .mount(&mock_server)
+        .await;
+
+    let mut cmd = Command::cargo_bin("redisctl").unwrap();
+    let config_file = temp_dir.path().join("config.toml");
+
+    // Set environment variables that should be IGNORED when --config-file is specified
+    cmd.env("REDIS_CLOUD_API_KEY", "wrong-env-key");
+    cmd.env("REDIS_CLOUD_SECRET_KEY", "wrong-env-secret");
+
+    // The --config-file flag should take precedence over env vars
+    cmd.arg("--config-file")
+        .arg(config_file)
+        .arg("api")
+        .arg("cloud")
+        .arg("get")
+        .arg("/test")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("config file credentials used"));
+}
+
+#[tokio::test]
+async fn test_env_vars_work_without_config_file() {
+    let mock_server = MockServer::start().await;
+
+    // Mock endpoint expecting credentials from environment variables
+    Mock::given(method("GET"))
+        .and(path("/test"))
+        .and(header("x-api-key", "env-api-key"))
+        .and(header("x-api-secret-key", "env-api-secret"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "message": "env credentials used"
+        })))
+        .expect(1)
+        .mount(&mock_server)
+        .await;
+
+    let mut cmd = Command::cargo_bin("redisctl").unwrap();
+
+    // Without --config-file, env vars should work
+    cmd.env("REDIS_CLOUD_API_KEY", "env-api-key");
+    cmd.env("REDIS_CLOUD_SECRET_KEY", "env-api-secret");
+    cmd.env("REDIS_CLOUD_API_URL", mock_server.uri());
+
+    cmd.arg("api")
+        .arg("cloud")
+        .arg("get")
+        .arg("/test")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("env credentials used"));
+}
