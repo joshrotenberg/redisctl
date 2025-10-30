@@ -653,3 +653,347 @@ async fn test_cloud_list_all_subscriptions() {
         .stdout(predicate::str::contains("production"))
         .stdout(predicate::str::contains("staging"));
 }
+
+#[tokio::test]
+async fn test_enterprise_node_operations() {
+    let temp_dir = TempDir::new().unwrap();
+    let mock_server = MockServer::start().await;
+
+    create_enterprise_profile(&temp_dir, &mock_server.uri()).unwrap();
+
+    // Mock nodes endpoint
+    Mock::given(method("GET"))
+        .and(path("/v1/nodes/1"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "uid": 1,
+            "addr": "10.0.0.1",
+            "status": "active",
+            "total_memory": 16000000000_u64
+        })))
+        .expect(1)
+        .mount(&mock_server)
+        .await;
+
+    test_cmd(&temp_dir)
+        .arg("api")
+        .arg("enterprise")
+        .arg("get")
+        .arg("/v1/nodes/1")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("10.0.0.1"))
+        .stdout(predicate::str::contains("active"));
+}
+
+#[tokio::test]
+async fn test_cloud_vpc_peering_endpoints() {
+    let temp_dir = TempDir::new().unwrap();
+    let mock_server = MockServer::start().await;
+
+    create_cloud_profile(&temp_dir, &mock_server.uri()).unwrap();
+
+    // Mock VPC peering list endpoint
+    Mock::given(method("GET"))
+        .and(path("/subscriptions/100/peerings"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "peerings": [
+                {
+                    "id": 1,
+                    "provider": "AWS",
+                    "region": "us-east-1",
+                    "status": "active"
+                }
+            ]
+        })))
+        .expect(1)
+        .mount(&mock_server)
+        .await;
+
+    test_cmd(&temp_dir)
+        .arg("api")
+        .arg("cloud")
+        .arg("get")
+        .arg("/subscriptions/100/peerings")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("AWS"))
+        .stdout(predicate::str::contains("us-east-1"));
+}
+
+#[tokio::test]
+async fn test_enterprise_backup_operations() {
+    let temp_dir = TempDir::new().unwrap();
+    let mock_server = MockServer::start().await;
+
+    create_enterprise_profile(&temp_dir, &mock_server.uri()).unwrap();
+
+    // Mock backup export endpoint
+    Mock::given(method("POST"))
+        .and(path("/v1/bdbs/1/backup"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "uid": "backup-123",
+            "status": "started",
+            "bdb_uid": 1
+        })))
+        .expect(1)
+        .mount(&mock_server)
+        .await;
+
+    test_cmd(&temp_dir)
+        .arg("api")
+        .arg("enterprise")
+        .arg("post")
+        .arg("/v1/bdbs/1/backup")
+        .arg("--data")
+        .arg(r#"{"location":"/tmp/backup"}"#)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("backup-123"));
+}
+
+#[tokio::test]
+async fn test_cloud_account_information() {
+    let temp_dir = TempDir::new().unwrap();
+    let mock_server = MockServer::start().await;
+
+    create_cloud_profile(&temp_dir, &mock_server.uri()).unwrap();
+
+    // Mock account endpoint
+    Mock::given(method("GET"))
+        .and(path("/account"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "id": 2034806,
+            "name": "Test Account",
+            "key": {
+                "name": "test-key",
+                "accountId": 2034806
+            }
+        })))
+        .expect(1)
+        .mount(&mock_server)
+        .await;
+
+    test_cmd(&temp_dir)
+        .arg("api")
+        .arg("cloud")
+        .arg("get")
+        .arg("/account")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Test Account"))
+        .stdout(predicate::str::contains("2034806"));
+}
+
+#[tokio::test]
+async fn test_enterprise_redis_acl_operations() {
+    let temp_dir = TempDir::new().unwrap();
+    let mock_server = MockServer::start().await;
+
+    create_enterprise_profile(&temp_dir, &mock_server.uri()).unwrap();
+
+    // Mock Redis ACL list
+    Mock::given(method("GET"))
+        .and(path("/v1/redis_acls"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!([
+            {
+                "uid": 1,
+                "name": "default-acl",
+                "acl": "+@all"
+            },
+            {
+                "uid": 2,
+                "name": "readonly-acl",
+                "acl": "+@read"
+            }
+        ])))
+        .expect(1)
+        .mount(&mock_server)
+        .await;
+
+    test_cmd(&temp_dir)
+        .arg("api")
+        .arg("enterprise")
+        .arg("get")
+        .arg("/v1/redis_acls")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("default-acl"))
+        .stdout(predicate::str::contains("readonly-acl"));
+}
+
+#[tokio::test]
+async fn test_cloud_database_modules() {
+    let temp_dir = TempDir::new().unwrap();
+    let mock_server = MockServer::start().await;
+
+    create_cloud_profile(&temp_dir, &mock_server.uri()).unwrap();
+
+    // Mock database with modules
+    Mock::given(method("GET"))
+        .and(path("/subscriptions/123/databases/456"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "databaseId": 456,
+            "name": "redis-with-modules",
+            "modules": [
+                {
+                    "name": "RedisJSON",
+                    "version": "2.6"
+                },
+                {
+                    "name": "RediSearch",
+                    "version": "2.8"
+                }
+            ]
+        })))
+        .expect(1)
+        .mount(&mock_server)
+        .await;
+
+    test_cmd(&temp_dir)
+        .arg("api")
+        .arg("cloud")
+        .arg("get")
+        .arg("/subscriptions/123/databases/456")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("RedisJSON"))
+        .stdout(predicate::str::contains("RediSearch"));
+}
+
+#[tokio::test]
+async fn test_enterprise_crdb_operations() {
+    let temp_dir = TempDir::new().unwrap();
+    let mock_server = MockServer::start().await;
+
+    create_enterprise_profile(&temp_dir, &mock_server.uri()).unwrap();
+
+    // Mock CRDB (Active-Active) list
+    Mock::given(method("GET"))
+        .and(path("/v1/crdbs"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!([
+            {
+                "guid": "crdb-guid-1",
+                "name": "geo-distributed-db",
+                "replication": true,
+                "instances": [
+                    {"cluster": {"url": "cluster1.example.com"}},
+                    {"cluster": {"url": "cluster2.example.com"}}
+                ]
+            }
+        ])))
+        .expect(1)
+        .mount(&mock_server)
+        .await;
+
+    test_cmd(&temp_dir)
+        .arg("api")
+        .arg("enterprise")
+        .arg("get")
+        .arg("/v1/crdbs")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("geo-distributed-db"))
+        .stdout(predicate::str::contains("cluster1.example.com"));
+}
+
+#[tokio::test]
+async fn test_cloud_payment_methods() {
+    let temp_dir = TempDir::new().unwrap();
+    let mock_server = MockServer::start().await;
+
+    create_cloud_profile(&temp_dir, &mock_server.uri()).unwrap();
+
+    // Mock payment methods endpoint
+    Mock::given(method("GET"))
+        .and(path("/payment-methods"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "paymentMethods": [
+                {
+                    "id": 1,
+                    "type": "credit-card",
+                    "last4": "4242"
+                }
+            ]
+        })))
+        .expect(1)
+        .mount(&mock_server)
+        .await;
+
+    test_cmd(&temp_dir)
+        .arg("api")
+        .arg("cloud")
+        .arg("get")
+        .arg("/payment-methods")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("credit-card"))
+        .stdout(predicate::str::contains("4242"));
+}
+
+#[tokio::test]
+async fn test_enterprise_license_info() {
+    let temp_dir = TempDir::new().unwrap();
+    let mock_server = MockServer::start().await;
+
+    create_enterprise_profile(&temp_dir, &mock_server.uri()).unwrap();
+
+    // Mock license endpoint
+    Mock::given(method("GET"))
+        .and(path("/v1/license"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "license": "valid",
+            "activation_date": "2024-01-01",
+            "expiration_date": "2025-12-31",
+            "shards_limit": 100
+        })))
+        .expect(1)
+        .mount(&mock_server)
+        .await;
+
+    test_cmd(&temp_dir)
+        .arg("api")
+        .arg("enterprise")
+        .arg("get")
+        .arg("/v1/license")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("valid"))
+        .stdout(predicate::str::contains("shards_limit"));
+}
+
+#[tokio::test]
+async fn test_cloud_maintenance_windows() {
+    let temp_dir = TempDir::new().unwrap();
+    let mock_server = MockServer::start().await;
+
+    create_cloud_profile(&temp_dir, &mock_server.uri()).unwrap();
+
+    // Mock maintenance window update
+    Mock::given(method("PUT"))
+        .and(path("/subscriptions/123/maintenance"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "subscriptionId": 123,
+            "maintenanceWindows": [
+                {
+                    "mode": "weekly",
+                    "startHour": 2,
+                    "durationInHours": 4
+                }
+            ]
+        })))
+        .expect(1)
+        .mount(&mock_server)
+        .await;
+
+    test_cmd(&temp_dir)
+        .arg("api")
+        .arg("cloud")
+        .arg("put")
+        .arg("/subscriptions/123/maintenance")
+        .arg("--data")
+        .arg(r#"{"mode":"weekly","startHour":2}"#)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("maintenanceWindows"))
+        .stdout(predicate::str::contains("weekly"));
+}
