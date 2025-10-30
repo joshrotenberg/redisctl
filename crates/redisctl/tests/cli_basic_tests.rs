@@ -257,3 +257,17 @@ fn test_profile_remove_missing_name() {
         .failure()
         .stderr(predicate::str::contains("required"));
 }
+
+#[test]
+fn test_enterprise_database_upgrade_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("upgrade")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Upgrade database Redis version"))
+        .stdout(predicate::str::contains("--version"))
+        .stdout(predicate::str::contains("--preserve-roles"));
+}
