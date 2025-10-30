@@ -508,12 +508,27 @@ async fn test_passwords_delete_and_reset_status() {
 async fn test_database_upgrade_redis_version() {
     let mock_server = MockServer::start().await;
 
+    // Mock data captured from: curl -k -u "admin@redis.local:Redis123!" -X POST \
+    //   -H "Content-Type: application/json" -d '{"force_restart": true}' \
+    //   https://localhost:9443/v1/bdbs/1/upgrade
+    // Real API returns full BDB object with action_uid embedded
     Mock::given(method("POST"))
         .and(path("/v1/bdbs/1/upgrade"))
         .and(basic_auth("admin", "password"))
         .respond_with(success_response(json!({
-            "action_uid": "act-upgrade-123",
-            "description": "Upgrading database to Redis 7.4.2"
+            "action_uid": "591d9dcb-ddd7-48a9-a04d-bd5d4d6834d0",
+            "uid": 1,
+            "name": "test-db",
+            "status": "active",
+            "redis_version": "7.4",
+            "version": "7.4.2",
+            "memory_size": 1073741824,
+            "type": "redis",
+            "replication": false,
+            "persistence": "disabled",
+            "port": 18367,
+            "shards_count": 1,
+            "oss_cluster": false
         })))
         .mount(&mock_server)
         .await;
@@ -541,5 +556,9 @@ async fn test_database_upgrade_redis_version() {
     let result = handler.upgrade_redis_version(1, request).await;
     assert!(result.is_ok());
     let response = result.unwrap();
-    assert_eq!(response.action_uid, "act-upgrade-123");
+    assert_eq!(response.action_uid, "591d9dcb-ddd7-48a9-a04d-bd5d4d6834d0");
+    // Verify the flattened extra fields are captured
+    assert_eq!(response.extra["uid"], 1);
+    assert_eq!(response.extra["name"], "test-db");
+    assert_eq!(response.extra["redis_version"], "7.4");
 }
