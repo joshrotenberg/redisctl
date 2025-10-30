@@ -65,7 +65,9 @@ redisctl cloud database get 2969240:13684622 \
 
 ```bash
 # Connect using the endpoint and password from above
-redis-cli -u redis://default:cozsNl5jC2PsUZq7TWcPmoDSu0QDM41Y@redis-19206.c89.us-east-1-3.ec2.redns.redis-cloud.com:19206
+redis-cli -u redis://default:<YOUR_PASSWORD>@<YOUR_ENDPOINT>:<PORT>
+
+# Example: redis-cli -u redis://default:password123@redis-12345.c1.us-east-1-3.ec2.redns.redis-cloud.com:12345
 
 # Test some commands
 SET demo:key "Hello from redisctl demo"
