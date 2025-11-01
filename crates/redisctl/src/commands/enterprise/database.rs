@@ -98,6 +98,34 @@ pub async fn handle_database_command(
             )
             .await
         }
+        EnterpriseDatabaseCommands::Upgrade {
+            id,
+            version,
+            preserve_roles,
+            force_restart,
+            may_discard_data,
+            force_discard,
+            keep_crdt_protocol_version,
+            parallel_shards_upgrade,
+            force,
+        } => {
+            database_impl::upgrade_database(
+                conn_mgr,
+                profile_name,
+                *id,
+                version.as_deref(),
+                *preserve_roles,
+                *force_restart,
+                *may_discard_data,
+                *force_discard,
+                *keep_crdt_protocol_version,
+                *parallel_shards_upgrade,
+                *force,
+                output_format,
+                query,
+            )
+            .await
+        }
         EnterpriseDatabaseCommands::GetAcl { id } => {
             database_impl::get_database_acl(conn_mgr, profile_name, *id, output_format, query).await
         }

@@ -2196,6 +2196,36 @@ pub enum EnterpriseDatabaseCommands {
         data: String,
     },
 
+    /// Upgrade database Redis version
+    Upgrade {
+        /// Database ID
+        id: u32,
+        /// Target Redis version (defaults to latest)
+        #[arg(long)]
+        version: Option<String>,
+        /// Preserve master/replica roles (requires extra failover)
+        #[arg(long)]
+        preserve_roles: bool,
+        /// Restart shards even if no version change
+        #[arg(long)]
+        force_restart: bool,
+        /// Allow data loss in non-replicated, non-persistent databases
+        #[arg(long)]
+        may_discard_data: bool,
+        /// Force data discard even if replicated/persistent
+        #[arg(long)]
+        force_discard: bool,
+        /// Keep current CRDT protocol version
+        #[arg(long)]
+        keep_crdt_protocol_version: bool,
+        /// Maximum parallel shard upgrades
+        #[arg(long)]
+        parallel_shards_upgrade: Option<u32>,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+    },
+
     /// Get ACL configuration
     GetAcl {
         /// Database ID

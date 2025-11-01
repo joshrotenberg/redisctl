@@ -453,3 +453,62 @@ async fn test_passwords_delete_and_reset_status() {
     let reset = handler.backup_reset_status(1).await.unwrap();
     assert_eq!(reset["status"], "reset");
 }
+
+#[tokio::test]
+async fn test_database_upgrade_redis_version() {
+    let mock_server = MockServer::start().await;
+
+    // Mock data captured from: curl -k -u "admin@redis.local:Redis123!" -X POST \
+    //   -H "Content-Type: application/json" -d '{"force_restart": true}' \
+    //   https://localhost:9443/v1/bdbs/1/upgrade
+    // Real API returns full BDB object with action_uid embedded
+    Mock::given(method("POST"))
+        .and(path("/v1/bdbs/1/upgrade"))
+        .and(basic_auth("admin", "password"))
+        .respond_with(success_response(json!({
+            "action_uid": "591d9dcb-ddd7-48a9-a04d-bd5d4d6834d0",
+            "uid": 1,
+            "name": "test-db",
+            "status": "active",
+            "redis_version": "7.4",
+            "version": "7.4.2",
+            "memory_size": 1073741824,
+            "type": "redis",
+            "replication": false,
+            "persistence": "disabled",
+            "port": 18367,
+            "shards_count": 1,
+            "oss_cluster": false
+        })))
+        .mount(&mock_server)
+        .await;
+
+    let client = EnterpriseClient::builder()
+        .base_url(mock_server.uri())
+        .username("admin")
+        .password("password")
+        .build()
+        .unwrap();
+
+    let handler = BdbHandler::new(client);
+
+    let request = redis_enterprise::bdb::DatabaseUpgradeRequest {
+        redis_version: Some("7.4.2".to_string()),
+        preserve_roles: Some(true),
+        force_restart: Some(false),
+        may_discard_data: Some(false),
+        force_discard: Some(false),
+        keep_crdt_protocol_version: Some(false),
+        parallel_shards_upgrade: None,
+        modules: None,
+    };
+
+    let result = handler.upgrade_redis_version(1, request).await;
+    assert!(result.is_ok());
+    let response = result.unwrap();
+    assert_eq!(response.action_uid, "591d9dcb-ddd7-48a9-a04d-bd5d4d6834d0");
+    // Verify the flattened extra fields are captured
+    assert_eq!(response.extra["uid"], 1);
+    assert_eq!(response.extra["name"], "test-db");
+    assert_eq!(response.extra["redis_version"], "7.4");
+}
