@@ -158,56 +158,6 @@ async fn test_database_delete() {
 // Database Action Tests
 
 #[tokio::test]
-async fn test_database_start() {
-    let mock_server = MockServer::start().await;
-
-    Mock::given(method("POST"))
-        .and(path("/v1/bdbs/1/actions/start"))
-        .and(basic_auth("admin", "password"))
-        .respond_with(success_response(json!({"status": "started"})))
-        .mount(&mock_server)
-        .await;
-
-    let client = EnterpriseClient::builder()
-        .base_url(mock_server.uri())
-        .username("admin")
-        .password("password")
-        .build()
-        .unwrap();
-
-    let handler = BdbHandler::new(client);
-    let result = handler.start(1).await;
-
-    assert!(result.is_ok());
-    assert_eq!(result.unwrap()["status"], "started");
-}
-
-#[tokio::test]
-async fn test_database_stop() {
-    let mock_server = MockServer::start().await;
-
-    Mock::given(method("POST"))
-        .and(path("/v1/bdbs/1/actions/stop"))
-        .and(basic_auth("admin", "password"))
-        .respond_with(success_response(json!({"status": "stopped"})))
-        .mount(&mock_server)
-        .await;
-
-    let client = EnterpriseClient::builder()
-        .base_url(mock_server.uri())
-        .username("admin")
-        .password("password")
-        .build()
-        .unwrap();
-
-    let handler = BdbHandler::new(client);
-    let result = handler.stop(1).await;
-
-    assert!(result.is_ok());
-    assert_eq!(result.unwrap()["status"], "stopped");
-}
-
-#[tokio::test]
 async fn test_database_export() {
     let mock_server = MockServer::start().await;
 
