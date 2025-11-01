@@ -984,17 +984,17 @@ pub enum CloudFixedDatabaseCommands {
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
-    /// View slow query log
+    /// Get slow query log
     #[command(name = "slow-log")]
     SlowLog {
         /// Database ID (format: subscription_id:database_id)
         id: String,
         /// Maximum number of entries to return
-        #[arg(long)]
-        limit: Option<i32>,
-        /// Number of entries to skip
-        #[arg(long)]
-        offset: Option<i32>,
+        #[arg(long, default_value = "100")]
+        limit: i32,
+        /// Offset for pagination
+        #[arg(long, default_value = "0")]
+        offset: i32,
     },
     /// List tags for fixed database
     #[command(name = "list-tags")]

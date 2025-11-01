@@ -235,7 +235,7 @@ fn test_profile_set_missing_deployment_type() {
         .arg("key")
         .assert()
         .failure()
-        .stderr(predicate::str::contains("--deployment"));
+        .stderr(predicate::str::contains("--type"));
 }
 
 #[test]
@@ -280,4 +280,130 @@ fn test_payment_method_list_help() {
         .assert()
         .success()
         .stdout(predicate::str::contains("List payment methods"));
+}
+
+// === SLOW-LOG COMMAND TESTS ===
+
+#[test]
+fn test_cloud_database_slow_log_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("slow-log")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Get slow query log"))
+        .stdout(predicate::str::contains("--limit"))
+        .stdout(predicate::str::contains("--offset"));
+}
+
+#[test]
+fn test_cloud_database_slow_log_has_default_limit() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("slow-log")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("default: 100"));
+}
+
+#[test]
+fn test_cloud_database_slow_log_has_default_offset() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("slow-log")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("default: 0"));
+}
+
+#[test]
+fn test_cloud_fixed_database_slow_log_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("fixed-database")
+        .arg("slow-log")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Get slow query log"))
+        .stdout(predicate::str::contains("--limit"))
+        .stdout(predicate::str::contains("--offset"));
+}
+
+#[test]
+fn test_cloud_fixed_database_slow_log_has_defaults() {
+    redisctl()
+        .arg("cloud")
+        .arg("fixed-database")
+        .arg("slow-log")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("default: 100"))
+        .stdout(predicate::str::contains("default: 0"));
+}
+
+#[test]
+fn test_cloud_database_slow_log_offset_description() {
+    // Both should use "Offset for pagination" consistently
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("slow-log")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Offset for pagination"));
+}
+
+#[test]
+fn test_cloud_fixed_database_slow_log_offset_description() {
+    // Both should use "Offset for pagination" consistently
+    redisctl()
+        .arg("cloud")
+        .arg("fixed-database")
+        .arg("slow-log")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Offset for pagination"));
+}
+
+#[test]
+fn test_slow_log_descriptions_match() {
+    // Ensure both commands have the same description
+    let database_output = redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("slow-log")
+        .arg("--help")
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let fixed_database_output = redisctl()
+        .arg("cloud")
+        .arg("fixed-database")
+        .arg("slow-log")
+        .arg("--help")
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let database_desc = String::from_utf8_lossy(&database_output);
+    let fixed_database_desc = String::from_utf8_lossy(&fixed_database_output);
+
+    // Both should say "Get slow query log"
+    assert!(database_desc.contains("Get slow query log"));
+    assert!(fixed_database_desc.contains("Get slow query log"));
 }

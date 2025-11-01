@@ -10,6 +10,11 @@ fn test_cmd(temp_dir: &TempDir) -> Command {
     cmd
 }
 
+/// Helper to get redisctl command without temp dir
+fn redisctl() -> Command {
+    Command::cargo_bin("redisctl").unwrap()
+}
+
 #[test]
 fn test_profile_list() {
     let temp_dir = TempDir::new().unwrap();
@@ -412,4 +417,225 @@ fn test_profile_set_cloud_with_custom_url() {
         .arg("https://custom-api.example.com/v1")
         .assert()
         .success();
+}
+
+// === NEW TESTS FOR --type FLAG AND HELP TEXT ACCURACY ===
+
+#[test]
+fn test_profile_set_with_type_flag_cloud() {
+    let temp_dir = TempDir::new().unwrap();
+
+    // Test new --type flag
+    test_cmd(&temp_dir)
+        .arg("profile")
+        .arg("set")
+        .arg("type-test-cloud")
+        .arg("--type")
+        .arg("cloud")
+        .arg("--api-key")
+        .arg("test-key")
+        .arg("--api-secret")
+        .arg("test-secret")
+        .assert()
+        .success();
+
+    // Verify profile was created
+    test_cmd(&temp_dir)
+        .arg("profile")
+        .arg("list")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("type-test-cloud"));
+}
+
+#[test]
+fn test_profile_set_with_type_flag_enterprise() {
+    let temp_dir = TempDir::new().unwrap();
+
+    // Test new --type flag
+    test_cmd(&temp_dir)
+        .arg("profile")
+        .arg("set")
+        .arg("type-test-enterprise")
+        .arg("--type")
+        .arg("enterprise")
+        .arg("--url")
+        .arg("https://localhost:9443")
+        .arg("--username")
+        .arg("admin@redis.local")
+        .arg("--password")
+        .arg("password123")
+        .assert()
+        .success();
+
+    // Verify profile was created
+    test_cmd(&temp_dir)
+        .arg("profile")
+        .arg("list")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("type-test-enterprise"));
+}
+
+#[test]
+fn test_profile_set_deployment_alias_still_works() {
+    let temp_dir = TempDir::new().unwrap();
+
+    // Verify --deployment alias still works for backward compatibility
+    test_cmd(&temp_dir)
+        .arg("profile")
+        .arg("set")
+        .arg("alias-test")
+        .arg("--deployment")
+        .arg("cloud")
+        .arg("--api-key")
+        .arg("key")
+        .arg("--api-secret")
+        .arg("secret")
+        .assert()
+        .success();
+}
+
+#[test]
+fn test_profile_set_help_shows_type_flag() {
+    // Verify help shows --type as the primary flag
+    redisctl()
+        .arg("profile")
+        .arg("set")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--type <TYPE>"))
+        .stdout(predicate::str::contains("Platform type"));
+}
+
+#[test]
+fn test_profile_set_help_shows_deployment_alias() {
+    // Verify help shows --deployment as an alias
+    redisctl()
+        .arg("profile")
+        .arg("set")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--deployment"));
+}
+
+#[test]
+fn test_profile_set_help_examples_use_type_flag() {
+    // Verify examples use --type, not bare positional argument
+    redisctl()
+        .arg("profile")
+        .arg("set")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--type cloud"))
+        .stdout(predicate::str::contains("--type enterprise"));
+}
+
+#[test]
+fn test_profile_help_examples_accurate() {
+    // Verify main profile help has accurate examples
+    redisctl()
+        .arg("profile")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("profile set mycloud --type cloud"))
+        .stdout(predicate::str::contains(
+            "profile set myenterprise --type enterprise",
+        ));
+}
+
+#[test]
+fn test_main_help_profile_examples_accurate() {
+    // Verify main redisctl help has accurate profile examples
+    redisctl()
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("profile set mycloud --type cloud"))
+        .stdout(predicate::str::contains(
+            "profile set myenterprise --type enterprise",
+        ));
+}
+
+#[test]
+fn test_profile_set_requires_type_flag() {
+    let temp_dir = TempDir::new().unwrap();
+
+    // Should fail without --type flag
+    test_cmd(&temp_dir)
+        .arg("profile")
+        .arg("set")
+        .arg("test-profile")
+        .arg("--api-key")
+        .arg("key")
+        .arg("--api-secret")
+        .arg("secret")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("--type"));
+}
+
+#[test]
+fn test_profile_list_help() {
+    redisctl()
+        .arg("profile")
+        .arg("list")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("List all configured profiles"));
+}
+
+#[test]
+fn test_profile_show_help() {
+    redisctl()
+        .arg("profile")
+        .arg("show")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "Show details of a specific profile",
+        ));
+}
+
+#[test]
+fn test_profile_validate_help() {
+    redisctl()
+        .arg("profile")
+        .arg("validate")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "Validate configuration file and profiles",
+        ));
+}
+
+#[test]
+fn test_profile_remove_help() {
+    redisctl()
+        .arg("profile")
+        .arg("remove")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Remove a profile"));
+}
+
+#[test]
+fn test_profile_path_help() {
+    redisctl()
+        .arg("profile")
+        .arg("path")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "Show the path to the configuration file",
+        ));
 }
