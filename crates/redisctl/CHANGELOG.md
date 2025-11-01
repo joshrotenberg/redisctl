@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0](https://github.com/joshrotenberg/redisctl/compare/redisctl-v0.6.6...redisctl-v0.7.0) - 2025-11-01
+
+### Added
+
+- [**breaking**] improve CLI help text accuracy and add comprehensive test coverage ([#444](https://github.com/joshrotenberg/redisctl/pull/444))
+- add payment-method commands to CLI ([#439](https://github.com/joshrotenberg/redisctl/pull/439))
+- make --config-file take precedence over environment variables ([#438](https://github.com/joshrotenberg/redisctl/pull/438))
+
+### Fixed
+
+- *(release)* improve Homebrew formula auto-update ([#433](https://github.com/joshrotenberg/redisctl/pull/433))
+
+### Other
+
+- add comprehensive CLI tests with assert_cmd ([#435](https://github.com/joshrotenberg/redisctl/pull/435))
+
 ## [0.6.6](https://github.com/joshrotenberg/redisctl/compare/redisctl-v0.6.5...redisctl-v0.6.6) - 2025-10-29
 
 ### Added
