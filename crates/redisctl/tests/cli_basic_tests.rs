@@ -407,3 +407,439 @@ fn test_slow_log_descriptions_match() {
     assert!(database_desc.contains("Get slow query log"));
     assert!(fixed_database_desc.contains("Get slow query log"));
 }
+
+// === FILES-KEY COMMAND TESTS ===
+
+#[test]
+fn test_files_key_help() {
+    redisctl()
+        .arg("files-key")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Files.com API key management"))
+        .stdout(predicate::str::contains("set"))
+        .stdout(predicate::str::contains("get"))
+        .stdout(predicate::str::contains("remove"));
+}
+
+#[test]
+fn test_files_key_set_help() {
+    redisctl()
+        .arg("files-key")
+        .arg("set")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Store Files.com API key"));
+}
+
+#[test]
+fn test_files_key_get_help() {
+    redisctl()
+        .arg("files-key")
+        .arg("get")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "Get the currently configured Files.com API key",
+        ));
+}
+
+#[test]
+fn test_files_key_remove_help() {
+    redisctl()
+        .arg("files-key")
+        .arg("remove")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Remove Files.com API key"));
+}
+
+// === API COMMAND ADDITIONAL TESTS ===
+
+#[test]
+fn test_api_help_shows_examples() {
+    redisctl()
+        .arg("api")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EXAMPLES:"))
+        .stdout(predicate::str::contains("api cloud get /subscriptions"))
+        .stdout(predicate::str::contains("api enterprise get /v1/cluster"));
+}
+
+#[test]
+fn test_completions_help() {
+    redisctl()
+        .arg("completions")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Generate shell completions"))
+        .stdout(predicate::str::contains("bash"))
+        .stdout(predicate::str::contains("zsh"));
+}
+
+// === CLOUD SUBCOMMAND HELP TESTS ===
+
+#[test]
+fn test_cloud_account_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("account")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Account operations"));
+}
+
+#[test]
+fn test_cloud_account_get_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("account")
+        .arg("get")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Get account information"));
+}
+
+#[test]
+fn test_cloud_subscription_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Subscription operations"))
+        .stdout(predicate::str::contains("list"))
+        .stdout(predicate::str::contains("get"))
+        .stdout(predicate::str::contains("create"))
+        .stdout(predicate::str::contains("update"))
+        .stdout(predicate::str::contains("delete"));
+}
+
+#[test]
+fn test_cloud_subscription_list_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("list")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("List all subscriptions"));
+}
+
+#[test]
+fn test_cloud_database_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Database operations"))
+        .stdout(predicate::str::contains("list"))
+        .stdout(predicate::str::contains("get"))
+        .stdout(predicate::str::contains("create"));
+}
+
+#[test]
+fn test_cloud_database_list_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("list")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("List all databases"));
+}
+
+#[test]
+fn test_cloud_user_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("user")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("User operations"));
+}
+
+#[test]
+fn test_cloud_acl_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("acl")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("ACL"));
+}
+
+#[test]
+fn test_cloud_task_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("task")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Task operations"));
+}
+
+#[test]
+fn test_cloud_task_get_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("task")
+        .arg("get")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Get task status"));
+}
+
+#[test]
+fn test_cloud_connectivity_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("connectivity")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Network connectivity"))
+        .stdout(predicate::str::contains("vpc-peering"))
+        .stdout(predicate::str::contains("psc"))
+        .stdout(predicate::str::contains("tgw"));
+}
+
+#[test]
+fn test_cloud_fixed_database_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("fixed-database")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Fixed database operations"));
+}
+
+#[test]
+fn test_cloud_fixed_subscription_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("fixed-subscription")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Fixed subscription operations"));
+}
+
+#[test]
+fn test_cloud_workflow_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("workflow")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Workflow operations"));
+}
+
+// === ENTERPRISE SUBCOMMAND HELP TESTS ===
+
+#[test]
+fn test_enterprise_cluster_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Cluster operations"));
+}
+
+#[test]
+fn test_enterprise_cluster_get_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("get")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Get cluster configuration"));
+}
+
+#[test]
+fn test_enterprise_database_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Database operations"))
+        .stdout(predicate::str::contains("list"))
+        .stdout(predicate::str::contains("get"))
+        .stdout(predicate::str::contains("create"));
+}
+
+#[test]
+fn test_enterprise_database_list_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("list")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("List all databases"));
+}
+
+#[test]
+fn test_enterprise_node_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Node operations"));
+}
+
+#[test]
+fn test_enterprise_user_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("user")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("User operations"));
+}
+
+#[test]
+fn test_enterprise_role_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("role")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Role operations"));
+}
+
+#[test]
+fn test_enterprise_acl_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("acl")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("ACL operations"));
+}
+
+#[test]
+fn test_enterprise_license_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("license")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("License management"));
+}
+
+#[test]
+fn test_enterprise_support_package_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("support-package")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Support package"));
+}
+
+#[test]
+fn test_enterprise_support_package_cluster_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("support-package")
+        .arg("cluster")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "Generate full cluster support package",
+        ));
+}
+
+#[test]
+fn test_enterprise_workflow_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("workflow")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Workflow operations"));
+}
+
+#[test]
+fn test_enterprise_workflow_init_cluster_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("workflow")
+        .arg("init-cluster")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "Initialize a Redis Enterprise cluster",
+        ));
+}
+
+#[test]
+fn test_enterprise_crdb_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("crdb")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Active-Active database"));
+}
+
+#[test]
+fn test_enterprise_proxy_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("proxy")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Proxy management"));
+}
+
+#[test]
+fn test_enterprise_module_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("module")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Module management"));
+}
