@@ -20,10 +20,10 @@ Redis management CLI for Cloud and Enterprise deployments
 
 EXAMPLES:
     # Set up a Cloud profile
-    redisctl profile set mycloud cloud --api-key KEY --api-secret SECRET
+    redisctl profile set mycloud --type cloud --api-key KEY --api-secret SECRET
 
     # Set up an Enterprise profile
-    redisctl profile set myenterprise enterprise --url https://cluster:9443 --username admin
+    redisctl profile set myenterprise --type enterprise --url https://cluster:9443 --username admin
 
     # List databases
     redisctl cloud database list
@@ -102,7 +102,7 @@ pub enum Commands {
     redisctl api enterprise get /v1/bdbs -o json
 ")]
     Api {
-        /// Deployment type to target
+        /// Platform type (cloud or enterprise)
         #[arg(value_enum)]
         deployment: DeploymentType,
 
@@ -122,10 +122,10 @@ pub enum Commands {
     #[command(subcommand, visible_alias = "prof", visible_alias = "pr")]
     #[command(after_help = "EXAMPLES:
     # Create a Cloud profile
-    redisctl profile set mycloud cloud --api-key KEY --api-secret SECRET
+    redisctl profile set mycloud --type cloud --api-key KEY --api-secret SECRET
 
     # Create an Enterprise profile
-    redisctl profile set myenterprise enterprise --url https://cluster:9443 --username admin
+    redisctl profile set myenterprise --type enterprise --url https://cluster:9443 --username admin
 
     # List all profiles
     redisctl profile list
@@ -242,23 +242,23 @@ pub enum ProfileCommands {
     #[command(visible_alias = "add", visible_alias = "create")]
     #[command(after_help = "EXAMPLES:
     # Create a Cloud profile
-    redisctl profile set mycloud cloud \\
+    redisctl profile set mycloud --type cloud \\
         --api-key A3qcymrvqpn9rrgdt40sv5f9yfxob26vx64hwddh8vminqnkgfq \\
         --api-secret S3s8ecrrnaguqkvwfvealoe3sn25zqs4wc4lwgo4rb0ud3qm77c
 
     # Create an Enterprise profile (password will be prompted)
-    redisctl profile set prod enterprise \\
+    redisctl profile set prod --type enterprise \\
         --url https://cluster.example.com:9443 \\
         --username admin@example.com
 
     # Create Enterprise profile with password
-    redisctl profile set staging enterprise \\
+    redisctl profile set staging --type enterprise \\
         --url https://staging:9443 \\
         --username admin \\
         --password mypassword
 
     # Create Enterprise profile allowing insecure connections
-    redisctl profile set local enterprise \\
+    redisctl profile set local --type enterprise \\
         --url https://localhost:9443 \\
         --username admin@redis.local \\
         --insecure
@@ -267,16 +267,16 @@ pub enum ProfileCommands {
         /// Profile name
         name: String,
 
-        /// Deployment type
-        #[arg(long, value_enum)]
-        deployment: DeploymentType,
+        /// Platform type: 'cloud' for Redis Cloud or 'enterprise' for Redis Enterprise
+        #[arg(long, value_enum, visible_alias = "deployment")]
+        r#type: DeploymentType,
 
         /// API key (for Cloud profiles)
-        #[arg(long, required_if_eq("deployment", "cloud"))]
+        #[arg(long, required_if_eq("type", "cloud"))]
         api_key: Option<String>,
 
         /// API secret (for Cloud profiles)
-        #[arg(long, required_if_eq("deployment", "cloud"))]
+        #[arg(long, required_if_eq("type", "cloud"))]
         api_secret: Option<String>,
 
         /// API URL (for Cloud profiles)
@@ -284,11 +284,11 @@ pub enum ProfileCommands {
         api_url: String,
 
         /// Enterprise URL (for Enterprise profiles)
-        #[arg(long, required_if_eq("deployment", "enterprise"))]
+        #[arg(long, required_if_eq("type", "enterprise"))]
         url: Option<String>,
 
         /// Username (for Enterprise profiles)
-        #[arg(long, required_if_eq("deployment", "enterprise"))]
+        #[arg(long, required_if_eq("type", "enterprise"))]
         username: Option<String>,
 
         /// Password (for Enterprise profiles)
