@@ -6,17 +6,12 @@ use jmespath::compile;
 use serde::Serialize;
 use serde_json::Value;
 
-#[derive(Debug, Clone, Copy, clap::ValueEnum)]
+#[derive(Debug, Clone, Copy, clap::ValueEnum, Default)]
 pub enum OutputFormat {
+    #[default]
     Json,
     Yaml,
     Table,
-}
-
-impl Default for OutputFormat {
-    fn default() -> Self {
-        Self::Json
-    }
 }
 
 impl OutputFormat {
