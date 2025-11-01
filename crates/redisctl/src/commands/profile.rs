@@ -24,7 +24,7 @@ pub async fn handle_profile_command(
         Show { name } => handle_show(conn_mgr, name, output_format).await,
         Set {
             name,
-            deployment,
+            r#type,
             api_key,
             api_secret,
             api_url,
@@ -38,7 +38,7 @@ pub async fn handle_profile_command(
             handle_set(
                 conn_mgr,
                 name,
-                deployment,
+                r#type,
                 api_key,
                 api_secret,
                 api_url,
