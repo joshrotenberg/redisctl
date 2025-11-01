@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.5](https://github.com/joshrotenberg/redisctl/compare/redis-enterprise-v0.6.4...redis-enterprise-v0.6.5) - 2025-11-01
+
+### Fixed
+
+- *(redis-enterprise)* remove non-existent database action methods ([#443](https://github.com/joshrotenberg/redisctl/pull/443))
+- *(release)* improve Homebrew formula auto-update ([#433](https://github.com/joshrotenberg/redisctl/pull/433))
+
 ## [0.6.4](https://github.com/joshrotenberg/redisctl/compare/redis-enterprise-v0.6.3...redis-enterprise-v0.6.4) - 2025-10-29
 
 ### Added
