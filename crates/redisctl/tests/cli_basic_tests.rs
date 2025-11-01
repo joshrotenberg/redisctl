@@ -271,3 +271,27 @@ fn test_enterprise_database_upgrade_help() {
         .stdout(predicate::str::contains("--version"))
         .stdout(predicate::str::contains("--preserve-roles"));
 }
+
+#[test]
+fn test_payment_method_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("payment-method")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Payment method operations"))
+        .stdout(predicate::str::contains("list"));
+}
+
+#[test]
+fn test_payment_method_list_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("payment-method")
+        .arg("list")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("List payment methods"));
+}

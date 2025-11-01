@@ -1164,6 +1164,10 @@ pub enum CloudCommands {
     #[command(subcommand)]
     Account(CloudAccountCommands),
 
+    /// Payment method operations
+    #[command(subcommand, name = "payment-method")]
+    PaymentMethod(CloudPaymentMethodCommands),
+
     /// Subscription operations
     #[command(subcommand)]
     Subscription(CloudSubscriptionCommands),
@@ -1454,6 +1458,12 @@ pub enum CloudAccountCommands {
 
     /// Get search module scaling factors
     GetSearchScaling,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum CloudPaymentMethodCommands {
+    /// List payment methods configured for the account
+    List,
 }
 
 #[derive(Subcommand, Debug)]

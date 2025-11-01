@@ -571,36 +571,6 @@ impl DatabaseHandler {
         self.client.get(&format!("/v1/bdbs/{}/metrics", uid)).await
     }
 
-    /// Start database (BDB.START)
-    pub async fn start(&self, uid: u32) -> Result<Value> {
-        self.client
-            .post(
-                &format!("/v1/bdbs/{}/actions/start", uid),
-                &serde_json::json!({}),
-            )
-            .await
-    }
-
-    /// Stop database (BDB.STOP)
-    pub async fn stop(&self, uid: u32) -> Result<Value> {
-        self.client
-            .post(
-                &format!("/v1/bdbs/{}/actions/stop", uid),
-                &serde_json::json!({}),
-            )
-            .await
-    }
-
-    /// Restart database (BDB.RESTART)
-    pub async fn restart(&self, uid: u32) -> Result<DatabaseActionResponse> {
-        self.client
-            .post(
-                &format!("/v1/bdbs/{}/actions/restart", uid),
-                &serde_json::json!({}),
-            )
-            .await
-    }
-
     /// Export database (BDB.EXPORT)
     pub async fn export(&self, uid: u32, export_location: &str) -> Result<ExportResponse> {
         let body = serde_json::json!({

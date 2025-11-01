@@ -305,24 +305,30 @@ redisctl api enterprise post /v1/crdbs \
 
 ## Maintenance Operations
 
-### Rolling Restart
+### Rolling Traffic Management
 
 ```bash
 #!/bin/bash
-# Perform rolling restart of all databases
+# Stop and resume traffic for all databases (for maintenance)
 
 redisctl enterprise database list -q "[].uid" | while read db_id; do
-  echo "Restarting database $db_id..."
+  echo "Stopping traffic for database $db_id..."
   
-  # Restart database
-  redisctl api enterprise post /v1/bdbs/$db_id/actions/restart
+  # Stop database traffic
+  redisctl api enterprise post /v1/bdbs/$db_id/actions/stop_traffic
+  
+  # Perform maintenance operations here
+  sleep 5
+  
+  # Resume database traffic
+  redisctl api enterprise post /v1/bdbs/$db_id/actions/resume_traffic
   
   # Wait for database to be active
   while [ "$(redisctl enterprise database get $db_id -q status)" != "active" ]; do
     sleep 5
   done
   
-  echo "Database $db_id restarted successfully"
+  echo "Database $db_id traffic resumed successfully"
 done
 ```
 
