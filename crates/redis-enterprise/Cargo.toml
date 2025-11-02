@@ -32,6 +32,10 @@ base64 = { workspace = true }
 chrono = { workspace = true }
 url = { workspace = true }
 typed-builder = "0.20"
+tower = { version = "0.5", optional = true }
+
+[features]
+tower-integration = ["tower"]
 
 [dev-dependencies]
 wiremock = { workspace = true }
