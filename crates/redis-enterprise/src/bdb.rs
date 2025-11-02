@@ -133,6 +133,55 @@ pub struct ExportResponse {
     pub extra: Value,
 }
 
+/// Module information for database upgrade
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ModuleUpgrade {
+    /// Module name
+    pub module_name: String,
+    /// Module version
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub new_version: Option<String>,
+    /// Module arguments
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub module_args: Option<String>,
+}
+
+/// Request for database upgrade operation
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct DatabaseUpgradeRequest {
+    /// Target Redis version (optional, defaults to latest)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub redis_version: Option<String>,
+
+    /// Preserve master/replica roles (requires extra failover)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub preserve_roles: Option<bool>,
+
+    /// Restart shards even if no version change
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub force_restart: Option<bool>,
+
+    /// Allow data loss in non-replicated, non-persistent databases
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub may_discard_data: Option<bool>,
+
+    /// Force data discard even if replicated/persistent
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub force_discard: Option<bool>,
+
+    /// Keep current CRDT protocol version
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub keep_crdt_protocol_version: Option<bool>,
+
+    /// Maximum parallel shard upgrades (default: all shards)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parallel_shards_upgrade: Option<u32>,
+
+    /// Modules to upgrade alongside Redis
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub modules: Option<Vec<ModuleUpgrade>>,
+}
+
 /// Database information from the REST API - 100% field coverage (152/152 fields)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatabaseInfo {
@@ -853,6 +902,50 @@ impl DatabaseHandler {
         });
         self.client
             .post(&format!("/v1/bdbs/{}/actions/upgrade", uid), &body)
+            .await
+    }
+
+    /// Upgrade database Redis version and/or modules (BDB.UPGRADE)
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use redis_enterprise::EnterpriseClient;
+    /// # use redis_enterprise::bdb::{BdbHandler, DatabaseUpgradeRequest};
+    /// # async fn example() -> redis_enterprise::Result<()> {
+    /// let client = EnterpriseClient::builder()
+    ///     .base_url("https://localhost:9443")
+    ///     .username("admin")
+    ///     .password("password")
+    ///     .insecure(true)
+    ///     .build()?;
+    /// let db_handler = BdbHandler::new(client);
+    ///
+    /// // Upgrade to latest Redis version
+    /// let request = DatabaseUpgradeRequest {
+    ///     redis_version: None,  // defaults to latest
+    ///     preserve_roles: Some(true),
+    ///     ..Default::default()
+    /// };
+    /// db_handler.upgrade_redis_version(1, request).await?;
+    ///
+    /// // Upgrade to specific Redis version
+    /// let request = DatabaseUpgradeRequest {
+    ///     redis_version: Some("7.4.2".to_string()),
+    ///     preserve_roles: Some(true),
+    ///     ..Default::default()
+    /// };
+    /// db_handler.upgrade_redis_version(1, request).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn upgrade_redis_version(
+        &self,
+        uid: u32,
+        request: DatabaseUpgradeRequest,
+    ) -> Result<DatabaseActionResponse> {
+        self.client
+            .post(&format!("/v1/bdbs/{}/upgrade", uid), &request)
             .await
     }
 

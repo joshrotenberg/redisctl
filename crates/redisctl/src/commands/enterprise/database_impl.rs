@@ -440,3 +440,129 @@ pub async fn get_database_clients(
     print_formatted_output(data, output_format)?;
     Ok(())
 }
+
+/// Upgrade database Redis version
+#[allow(clippy::too_many_arguments)]
+pub async fn upgrade_database(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
+    id: u32,
+    version: Option<&str>,
+    preserve_roles: bool,
+    force_restart: bool,
+    may_discard_data: bool,
+    force_discard: bool,
+    keep_crdt_protocol_version: bool,
+    parallel_shards_upgrade: Option<u32>,
+    force: bool,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> CliResult<()> {
+    use redis_enterprise::bdb::{DatabaseHandler, DatabaseInfo, DatabaseUpgradeRequest};
+
+    let client = conn_mgr.create_enterprise_client(profile_name).await?;
+
+    // Get current database info
+    let db_handler = DatabaseHandler::new(client);
+    let db: DatabaseInfo = db_handler.get(id).await?;
+    let current_version = db.redis_version.as_deref().unwrap_or("unknown");
+
+    // Determine target version
+    let target_version = if let Some(v) = version {
+        v.to_string()
+    } else {
+        // Get latest version from cluster - for now just use current
+        // TODO: Get from cluster info when we add that endpoint
+        current_version.to_string()
+    };
+
+    // Safety checks unless --force
+    if !force {
+        // Check if database is active
+        if db.status.as_deref() != Some("active") {
+            return Err(RedisCtlError::InvalidInput {
+                message: format!(
+                    "Database is not active (status: {}). Use --force to upgrade anyway.",
+                    db.status.as_deref().unwrap_or("unknown")
+                ),
+            });
+        }
+
+        // Warn about persistence (check if persistence is disabled/none)
+        let has_persistence = db
+            .persistence
+            .as_deref()
+            .map(|p| p != "disabled")
+            .unwrap_or(false);
+        if !has_persistence && !may_discard_data {
+            eprintln!("Warning: Database has no persistence enabled.");
+            eprintln!("If upgrade fails, data may be lost.");
+            eprintln!("Use --may-discard-data to proceed.");
+            return Err(RedisCtlError::InvalidInput {
+                message: "Upgrade cancelled for safety".to_string(),
+            });
+        }
+
+        // Warn about replication (check if replication is enabled)
+        let has_replication = db.replication.unwrap_or(false);
+        if !has_replication {
+            eprintln!("Warning: Database has no replication enabled.");
+            eprintln!("Upgrade will cause downtime.");
+            eprintln!("Use --force to proceed.");
+            return Err(RedisCtlError::InvalidInput {
+                message: "Upgrade cancelled for safety".to_string(),
+            });
+        }
+    }
+
+    // Display upgrade info
+    if matches!(output_format, OutputFormat::Table | OutputFormat::Auto) {
+        println!("Upgrading database '{}' (db:{})...", db.name, id);
+        println!("  Current version: {}", current_version);
+        println!("  Target version: {}", target_version);
+    }
+
+    // Build upgrade request
+    let request = DatabaseUpgradeRequest {
+        redis_version: Some(target_version.clone()),
+        preserve_roles: Some(preserve_roles),
+        force_restart: Some(force_restart),
+        may_discard_data: Some(may_discard_data),
+        force_discard: Some(force_discard),
+        keep_crdt_protocol_version: Some(keep_crdt_protocol_version),
+        parallel_shards_upgrade,
+        modules: None,
+    };
+
+    // Call upgrade API
+    let response = db_handler.upgrade_redis_version(id, request).await?;
+
+    // Handle output
+    match output_format {
+        OutputFormat::Json => {
+            let output = serde_json::json!({
+                "database_id": id,
+                "database_name": db.name,
+                "old_version": current_version,
+                "new_version": target_version,
+                "action_uid": response.action_uid,
+                "status": "upgrade_initiated"
+            });
+            println!("{}", serde_json::to_string_pretty(&output)?);
+        }
+        OutputFormat::Table | OutputFormat::Auto => {
+            println!("Upgrade initiated (action_uid: {})", response.action_uid);
+            println!(
+                "Use 'redisctl enterprise database get {}' to check status",
+                id
+            );
+        }
+        _ => {
+            let data = serde_json::to_value(&response)?;
+            let filtered = handle_output(data, output_format, query)?;
+            print_formatted_output(filtered, output_format)?;
+        }
+    }
+
+    Ok(())
+}

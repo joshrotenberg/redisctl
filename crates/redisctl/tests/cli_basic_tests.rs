@@ -259,6 +259,20 @@ fn test_profile_remove_missing_name() {
 }
 
 #[test]
+fn test_enterprise_database_upgrade_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("upgrade")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Upgrade database Redis version"))
+        .stdout(predicate::str::contains("--version"))
+        .stdout(predicate::str::contains("--preserve-roles"));
+}
+
+#[test]
 fn test_payment_method_help() {
     redisctl()
         .arg("cloud")
