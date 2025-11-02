@@ -910,10 +910,16 @@ impl DatabaseHandler {
     /// # Examples
     ///
     /// ```no_run
-    /// # use redis_enterprise::{Client, bdb::DatabaseUpgradeRequest};
+    /// # use redis_enterprise::EnterpriseClient;
+    /// # use redis_enterprise::bdb::{BdbHandler, DatabaseUpgradeRequest};
     /// # async fn example() -> redis_enterprise::Result<()> {
-    /// let client = Client::new("https://localhost:9443", "admin", "password", true);
-    /// let db_handler = client.databases();
+    /// let client = EnterpriseClient::builder()
+    ///     .base_url("https://localhost:9443")
+    ///     .username("admin")
+    ///     .password("password")
+    ///     .insecure(true)
+    ///     .build()?;
+    /// let db_handler = BdbHandler::new(client);
     ///
     /// // Upgrade to latest Redis version
     /// let request = DatabaseUpgradeRequest {
