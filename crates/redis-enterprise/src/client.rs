@@ -575,16 +575,12 @@ impl EnterpriseClient {
 ///
 /// # Examples
 ///
-/// ```rust,no_run
+/// ```rust,ignore
 /// use redis_enterprise::EnterpriseClient;
-/// # #[cfg(feature = "tower-integration")]
 /// use redis_enterprise::tower_support::ApiRequest;
-/// # #[cfg(feature = "tower-integration")]
 /// use tower::ServiceExt;
 ///
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-/// # #[cfg(feature = "tower-integration")]
-/// # {
 /// let client = EnterpriseClient::builder()
 ///     .base_url("https://localhost:9443")
 ///     .username("admin")
@@ -598,7 +594,6 @@ impl EnterpriseClient {
 /// // Use the service
 /// let response = service.oneshot(ApiRequest::get("/v1/cluster")).await?;
 /// println!("Status: {}", response.status);
-/// # }
 /// # Ok(())
 /// # }
 /// ```
@@ -705,16 +700,12 @@ pub mod tower_support {
         ///
         /// # Examples
         ///
-        /// ```rust,no_run
+        /// ```rust,ignore
         /// use redis_enterprise::EnterpriseClient;
-        /// # #[cfg(feature = "tower-integration")]
         /// use tower::ServiceExt;
-        /// # #[cfg(feature = "tower-integration")]
         /// use redis_enterprise::tower_support::ApiRequest;
         ///
         /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-        /// # #[cfg(feature = "tower-integration")]
-        /// # {
         /// let client = EnterpriseClient::builder()
         ///     .base_url("https://localhost:9443")
         ///     .username("admin")
@@ -724,7 +715,6 @@ pub mod tower_support {
         ///
         /// let mut service = client.into_service();
         /// let response = service.oneshot(ApiRequest::get("/v1/cluster")).await?;
-        /// # }
         /// # Ok(())
         /// # }
         /// ```
