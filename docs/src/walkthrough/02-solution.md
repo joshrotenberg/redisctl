@@ -20,8 +20,16 @@ A unified CLI that eliminates fragile bash scripts with:
 curl + jq + while loops + manual polling + text parsing
 ```
 
-**After: One Command**
+**After: One Simple Command**
 ```bash
+# Clean CLI with first-class parameters (v0.6.6+)
+redisctl cloud database create \
+  --subscription 12345 \
+  --name mydb \
+  --memory 1 \
+  --wait
+
+# Or use JSON for complex configs
 redisctl cloud database create \
   --subscription 12345 \
   --data '{"name": "mydb", "memoryLimitInGb": 1}' \
@@ -48,9 +56,11 @@ redisctl cloud database create \
 ## Metrics
 
 - 50+ API handlers (21 Cloud + 29 Enterprise)
+- 225 comprehensive CLI tests (+217% coverage increase)
 - 85%+ test coverage
+- First-class parameters for common operations
 - Cross-platform (macOS, Linux, Windows)
-- v0.6.5 released and actively maintained
+- v0.6.6 released and actively maintained
 
 ## The Impact
 

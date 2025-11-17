@@ -6,6 +6,31 @@
 
 Better experience for day-to-day operations with type-safe parameters, automatic error handling, and progress indicators.
 
+## First-Class Parameters (v0.6.6+)
+
+**Before: JSON strings required**
+```bash
+# Old way - easy to mess up!
+redisctl enterprise database create \
+  --data '{"name":"mydb","memory_size":1073741824,"replication":true}'
+```
+
+**After: Clean CLI parameters**
+```bash
+# New way - simple and validated
+redisctl enterprise database create \
+  --name mydb \
+  --memory 1073741824 \
+  --replication
+```
+
+**Key improvements:**
+- 70% less typing for common operations
+- No JSON syntax errors
+- Tab completion works
+- Better error messages
+- Still supports `--data` for complex configs
+
 ## Cloud Operations
 
 ```bash
@@ -34,7 +59,14 @@ redisctl enterprise cluster get \
 redisctl enterprise database list \
   -o json -q '[].{uid: uid, name: name, port: port, status: status}'
 
-# Create database (as shown in docker-compose)
+# Create database - clean CLI parameters
+redisctl enterprise database create \
+  --name cache-db \
+  --memory 104857600 \
+  --port 12001 \
+  -o json -q '{uid: uid, name: name, port: port, status: status}'
+
+# Or with JSON for complex configs
 redisctl enterprise database create \
   --data '{"name": "cache-db", "memory_size": 104857600, "port": 12001}' \
   -o json -q '{uid: uid, name: name, port: port, status: status}'
@@ -70,7 +102,14 @@ redisctl enterprise database get 1 -o yaml
 The `--wait` flag automatically polls until operations complete:
 
 ```bash
-# Create and wait for completion
+# Create and wait for completion - new clean syntax
+redisctl cloud database create \
+  --subscription 12345 \
+  --name mydb \
+  --memory 1 \
+  --wait
+
+# Or with JSON for complex configs
 redisctl cloud database create \
   --subscription 12345 \
   --data '{"name": "mydb", "memoryLimitInGb": 1}' \

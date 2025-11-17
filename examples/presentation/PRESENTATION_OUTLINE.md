@@ -4,9 +4,15 @@
 **Audience:** Technical team (engineers, architects)
 **Goal:** Introduce redisctl as the first CLI tool for Redis management
 
+> **📖 Primary Presentation Source:** Use `docs/src/walkthrough/` (mdBook) for the actual presentation.  
+> This outline provides speaker notes, timing, and Q&A preparation.  
+> The walkthrough is navigable, polished, and keeps content synced in one place.
+
 ---
 
 ## 1. Current State of Redis Management (3 min)
+
+> **📖 Walkthrough:** [1. The Problem](../../docs/src/walkthrough/01-problem.md)
 
 ### Redis Cloud
 - REST API exists but not widely used directly
@@ -43,6 +49,8 @@
 
 ## 2. Enter redisctl (2 min)
 
+> **📖 Walkthrough:** [2. Enter redisctl](../../docs/src/walkthrough/02-solution.md)
+
 **The FIRST command-line tool for both Redis Cloud and Redis Enterprise**
 
 ### Key Value Propositions
@@ -60,6 +68,8 @@
 ---
 
 ## 3. Installation & Setup (2 min)
+
+> **📖 Walkthrough:** [3. Installation & Setup](../../docs/src/walkthrough/03-setup.md)
 
 ### Installation
 
@@ -102,6 +112,8 @@ redisctl profile list
 ---
 
 ## 4. Four-Layer Architecture (5 min)
+
+> **📖 Walkthrough:** [4. Raw API](../../docs/src/walkthrough/04-raw-api.md) → [5. Human-Friendly](../../docs/src/walkthrough/05-human-friendly.md) → [6. Workflows](../../docs/src/walkthrough/06-workflows.md) → [7. Advanced](../../docs/src/walkthrough/07-advanced.md)
 
 ### Layer 1: Raw API Access
 
@@ -233,6 +245,8 @@ ls -lh demo-package*.tar.gz
 
 ## 5. Recent UX Improvements (3 min)
 
+> **📖 Walkthrough:** [5. Human-Friendly Commands](../../docs/src/walkthrough/05-human-friendly.md) (First-Class Parameters section)
+
 ### First-Class Parameters (NEW in v0.6.6)
 
 **The Problem with JSON strings:**
@@ -361,6 +375,8 @@ redisctl enterprise license set --key "license-string"
 
 ## 7. rladmin Comparison (2 min)
 
+> **📖 Walkthrough:** [Appendix: rladmin Comparison](../../docs/src/walkthrough/rladmin-comparison.md)
+
 **Quick comparison:** (Show `RLADMIN_COMPARISON.md`)
 
 ### Where redisctl Excels Over rladmin
@@ -381,6 +397,8 @@ redisctl enterprise license set --key "license-string"
 ---
 
 ## 8. Library Architecture (2 min)
+
+> **📖 Walkthrough:** [8. Library Architecture](../../docs/src/walkthrough/08-libraries.md)
 
 **redisctl isn't just a CLI - it's a platform**
 
@@ -463,6 +481,8 @@ Showcases:
 ---
 
 ## 11. Roadmap & Future (2 min)
+
+> **📖 Walkthrough:** [9. Next Steps](../../docs/src/walkthrough/09-next-steps.md)
 
 ### Near Term
 - Additional workflows (see issues #263-#268)
