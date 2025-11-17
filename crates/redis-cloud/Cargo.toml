@@ -39,3 +39,4 @@ tokio = { workspace = true, features = ["rt", "macros", "test-util"] }
 pretty_assertions = { workspace = true }
 serial_test = { workspace = true }
 tower = { version = "0.5", features = ["timeout", "limit", "retry", "buffer"] }
+tower-resilience = { version = "0.3.8", features = ["retry"] }

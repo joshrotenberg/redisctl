@@ -184,10 +184,7 @@ impl EnterpriseClient {
         trace!("Response status: {}", response.status());
 
         if response.status().is_success() {
-            let text = response
-                .text()
-                .await
-                .map_err(crate::error::RestError::RequestFailed)?;
+            let text = response.text().await?;
             Ok(text)
         } else {
             let status = response.status();
@@ -222,10 +219,7 @@ impl EnterpriseClient {
         );
 
         if response.status().is_success() {
-            let bytes = response
-                .bytes()
-                .await
-                .map_err(crate::error::RestError::RequestFailed)?;
+            let bytes = response.bytes().await?;
             Ok(bytes.to_vec())
         } else {
             let status = response.status();
@@ -505,7 +499,7 @@ impl EnterpriseClient {
                 url, error
             ))
         } else {
-            RestError::RequestFailed(error)
+            RestError::RequestFailed(error.to_string())
         }
     }
 

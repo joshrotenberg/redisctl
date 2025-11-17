@@ -2,13 +2,13 @@
 
 use thiserror::Error;
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, Clone)]
 pub enum RestError {
     #[error("Invalid URL: {0}")]
     InvalidUrl(String),
 
     #[error("HTTP request failed: {0}")]
-    RequestFailed(#[from] reqwest::Error),
+    RequestFailed(String),
 
     #[error("Authentication failed")]
     AuthenticationFailed,
@@ -17,7 +17,7 @@ pub enum RestError {
     ApiError { code: u16, message: String },
 
     #[error("Serialization error: {0}")]
-    SerializationError(#[from] serde_json::Error),
+    SerializationError(String),
 
     #[error("Parse error: {0}")]
     ParseError(String),
@@ -39,6 +39,18 @@ pub enum RestError {
 
     #[error("Server error: {0}")]
     ServerError(String),
+}
+
+impl From<reqwest::Error> for RestError {
+    fn from(err: reqwest::Error) -> Self {
+        RestError::RequestFailed(err.to_string())
+    }
+}
+
+impl From<serde_json::Error> for RestError {
+    fn from(err: serde_json::Error) -> Self {
+        RestError::SerializationError(err.to_string())
+    }
 }
 
 impl RestError {
