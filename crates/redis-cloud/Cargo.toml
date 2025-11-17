@@ -38,3 +38,4 @@ wiremock = { workspace = true }
 tokio = { workspace = true, features = ["rt", "macros", "test-util"] }
 pretty_assertions = { workspace = true }
 serial_test = { workspace = true }
+tower = { version = "0.5", features = ["timeout", "limit", "retry", "buffer"] }

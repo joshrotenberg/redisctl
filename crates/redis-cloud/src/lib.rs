@@ -284,6 +284,10 @@ mod lib_tests;
 // Re-export client types
 pub use client::{CloudClient, CloudClientBuilder};
 
+// Re-export Tower integration when feature is enabled
+#[cfg(feature = "tower-integration")]
+pub use client::tower_support;
+
 // Types module for shared models
 pub mod types;
 
