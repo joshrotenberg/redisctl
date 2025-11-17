@@ -64,18 +64,98 @@ fn read_json_data(data: &str) -> CliResult<Value> {
     })
 }
 
-/// Create a new database
+/// Create a new database with first-class parameters
+#[allow(clippy::too_many_arguments)]
 pub async fn create_database(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     subscription_id: u32,
-    data: &str,
+    name: Option<&str>,
+    memory: Option<f64>,
+    dataset_size: Option<f64>,
+    protocol: &str,
+    replication: bool,
+    data_persistence: Option<&str>,
+    eviction_policy: &str,
+    redis_version: Option<&str>,
+    oss_cluster: bool,
+    port: Option<i32>,
+    data: Option<&str>,
     async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_cloud_client(profile_name).await?;
-    let request = read_json_data(data)?;
+
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut request = if let Some(data_str) = data {
+        read_json_data(data_str)?
+    } else {
+        json!({})
+    };
+
+    // Ensure request is an object
+    if !request.is_object() {
+        return Err(RedisCtlError::InvalidInput {
+            message: "Database configuration must be a JSON object".to_string(),
+        });
+    }
+
+    let request_obj = request.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    // Required parameters (when not using pure --data mode)
+    if let Some(name_val) = name {
+        request_obj.insert("name".to_string(), json!(name_val));
+    } else if data.is_none() {
+        return Err(RedisCtlError::InvalidInput {
+            message: "--name is required (unless using --data with complete configuration)"
+                .to_string(),
+        });
+    }
+
+    // Memory configuration (must have either --memory, --dataset-size, or in --data)
+    if let Some(mem) = memory {
+        request_obj.insert("memoryLimitInGb".to_string(), json!(mem));
+    } else if let Some(dataset) = dataset_size {
+        request_obj.insert("datasetSizeInGb".to_string(), json!(dataset));
+    } else if data.is_none() {
+        return Err(RedisCtlError::InvalidInput {
+            message: "Either --memory or --dataset-size is required (unless using --data with complete configuration)".to_string(),
+        });
+    }
+
+    // Protocol (only set if non-default or not already in data)
+    if protocol != "redis" || !request_obj.contains_key("protocol") {
+        request_obj.insert("protocol".to_string(), json!(protocol));
+    }
+
+    // Replication (only set if true or not already in data)
+    if replication || !request_obj.contains_key("replication") {
+        request_obj.insert("replication".to_string(), json!(replication));
+    }
+
+    // Optional parameters - only set if provided
+    if let Some(persistence) = data_persistence {
+        request_obj.insert("dataPersistence".to_string(), json!(persistence));
+    }
+
+    // Eviction policy (only set if non-default or not already in data)
+    if eviction_policy != "volatile-lru" || !request_obj.contains_key("dataEvictionPolicy") {
+        request_obj.insert("dataEvictionPolicy".to_string(), json!(eviction_policy));
+    }
+
+    if let Some(version) = redis_version {
+        request_obj.insert("redisVersion".to_string(), json!(version));
+    }
+
+    if oss_cluster {
+        request_obj.insert("supportOSSClusterAPI".to_string(), json!(true));
+    }
+
+    if let Some(port_val) = port {
+        request_obj.insert("port".to_string(), json!(port_val));
+    }
 
     let response = client
         .post_raw(

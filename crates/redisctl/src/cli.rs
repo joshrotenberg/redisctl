@@ -1478,10 +1478,65 @@ pub enum CloudSubscriptionCommands {
     },
 
     /// Create a new subscription
+    #[command(after_help = "EXAMPLES:
+    # Simple subscription - just name, provider, and region via --data
+    redisctl cloud subscription create --name prod-subscription \\
+      --data '{\"cloudProviders\":[{\"regions\":[{\"region\":\"us-east-1\"}]}],\"databases\":[{\"name\":\"db1\",\"memoryLimitInGb\":1}]}'
+
+    # With payment method
+    redisctl cloud subscription create --name dev-subscription \\
+      --payment-method marketplace \\
+      --data '{\"cloudProviders\":[{\"regions\":[{\"region\":\"us-west-2\"}]}],\"databases\":[{\"name\":\"db1\",\"memoryLimitInGb\":1}]}'
+
+    # With auto-tiering (RAM+Flash)
+    redisctl cloud subscription create --name large-subscription \\
+      --memory-storage ram-and-flash \\
+      --data '{\"cloudProviders\":[{\"provider\":\"AWS\",\"regions\":[{\"region\":\"eu-west-1\"}]}],\"databases\":[{\"name\":\"db1\",\"memoryLimitInGb\":10}]}'
+
+    # Complete configuration from file
+    redisctl cloud subscription create --data @subscription.json
+
+    # Dry run to preview deployment
+    redisctl cloud subscription create --dry-run --data @subscription.json
+
+NOTE: Subscription creation requires complex nested structures for cloud providers,
+      regions, and databases. Use --data for the required cloudProviders and databases
+      arrays. First-class parameters (--name, --payment-method, etc.) override values
+      in --data when both are provided.")]
     Create {
-        /// Subscription configuration as JSON string or @file.json
+        /// Subscription name
         #[arg(long)]
-        data: String,
+        name: Option<String>,
+
+        /// Dry run - create deployment plan without provisioning resources
+        #[arg(long)]
+        dry_run: bool,
+
+        /// Deployment type: single-region or active-active
+        #[arg(long, value_parser = ["single-region", "active-active"])]
+        deployment_type: Option<String>,
+
+        /// Payment method: credit-card or marketplace
+        #[arg(long, value_parser = ["credit-card", "marketplace"], default_value = "credit-card")]
+        payment_method: String,
+
+        /// Payment method ID (required if payment-method is credit-card)
+        #[arg(long)]
+        payment_method_id: Option<i32>,
+
+        /// Memory storage: ram or ram-and-flash (Auto Tiering)
+        #[arg(long, value_parser = ["ram", "ram-and-flash"], default_value = "ram")]
+        memory_storage: String,
+
+        /// Persistent storage encryption: cloud-provider-managed-key or customer-managed-key
+        #[arg(long, value_parser = ["cloud-provider-managed-key", "customer-managed-key"], default_value = "cloud-provider-managed-key")]
+        persistent_storage_encryption: String,
+
+        /// Advanced: Full subscription configuration as JSON string or @file.json
+        /// REQUIRED: Must include cloudProviders array with regions and databases array
+        #[arg(long)]
+        data: Option<String>,
+
         /// Async operation options
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
@@ -1598,13 +1653,83 @@ pub enum CloudDatabaseCommands {
     },
 
     /// Create a new database
+    #[command(after_help = "EXAMPLES:
+    # Simple database - just name and size
+    redisctl cloud database create --subscription 123 --name mydb --memory 1
+
+    # Production database with high availability
+    redisctl cloud database create \\
+      --subscription 123 \\
+      --name prod-cache \\
+      --memory 10 \\
+      --replication \\
+      --data-persistence aof-every-1-second
+
+    # Advanced: Mix flags with JSON for rare options
+    redisctl cloud database create \\
+      --subscription 123 \\
+      --name mydb \\
+      --memory 5 \\
+      --data '{\"modules\": [{\"name\": \"RedisJSON\"}]}'
+")]
     Create {
         /// Subscription ID
         #[arg(long)]
         subscription: u32,
-        /// Database configuration as JSON string or @file.json
+
+        /// Database name (required unless using --data)
+        /// Limited to 40 characters: letters, digits, hyphens
+        /// Must start with letter, end with letter or digit
         #[arg(long)]
-        data: String,
+        name: Option<String>,
+
+        /// Memory limit in GB (e.g., 1, 5, 10, 50)
+        /// Alternative to --dataset-size
+        #[arg(long, conflicts_with = "dataset_size")]
+        memory: Option<f64>,
+
+        /// Dataset size in GB (alternative to --memory)
+        /// If replication enabled, total memory will be 2x this value
+        #[arg(long, conflicts_with = "memory")]
+        dataset_size: Option<f64>,
+
+        /// Database protocol
+        #[arg(long, value_parser = ["redis", "memcached"], default_value = "redis")]
+        protocol: String,
+
+        /// Enable replication for high availability
+        #[arg(long)]
+        replication: bool,
+
+        /// Data persistence policy
+        /// Options: none, aof-every-1-second, aof-every-write, snapshot-every-1-hour,
+        ///          snapshot-every-6-hours, snapshot-every-12-hours
+        #[arg(long)]
+        data_persistence: Option<String>,
+
+        /// Data eviction policy when memory limit reached
+        /// Options: volatile-lru, volatile-ttl, volatile-random, allkeys-lru,
+        ///          allkeys-lfu, allkeys-random, noeviction, volatile-lfu
+        #[arg(long, default_value = "volatile-lru")]
+        eviction_policy: String,
+
+        /// Redis version (e.g., "7.2", "7.0", "6.2")
+        #[arg(long)]
+        redis_version: Option<String>,
+
+        /// Enable OSS Cluster API support
+        #[arg(long)]
+        oss_cluster: bool,
+
+        /// TCP port (10000-19999, auto-assigned if not specified)
+        #[arg(long)]
+        port: Option<i32>,
+
+        /// Advanced: Full database configuration as JSON string or @file.json
+        /// CLI flags take precedence over values in JSON
+        #[arg(long)]
+        data: Option<String>,
+
         /// Async operation options
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
@@ -2097,10 +2222,84 @@ pub enum EnterpriseDatabaseCommands {
     },
 
     /// Create a new database
+    #[command(after_help = "EXAMPLES:
+    # Simple database - just name and size
+    redisctl enterprise database create --name mydb --memory 1073741824
+
+    # With replication for high availability
+    redisctl enterprise database create --name prod-db --memory 2147483648 --replication
+
+    # With persistence and eviction policy
+    redisctl enterprise database create --name cache-db --memory 536870912 \\
+      --persistence aof --eviction-policy volatile-lru
+
+    # With sharding for horizontal scaling
+    redisctl enterprise database create --name large-db --memory 10737418240 \\
+      --sharding --shards-count 4
+
+    # With specific port
+    redisctl enterprise database create --name service-db --memory 1073741824 --port 12000
+
+    # Complete configuration from file
+    redisctl enterprise database create --data @database.json
+
+    # Dry run to preview without creating
+    redisctl enterprise database create --name test-db --memory 1073741824 --dry-run
+
+NOTE: Memory size is in bytes. Common values:
+      - 1 GB = 1073741824 bytes
+      - 2 GB = 2147483648 bytes
+      - 5 GB = 5368709120 bytes
+      First-class parameters override values in --data when both are provided.")]
     Create {
-        /// Database configuration as JSON string or @file.json
+        /// Database name (required unless using --data)
         #[arg(long)]
-        data: String,
+        name: Option<String>,
+
+        /// Memory size in bytes (e.g., 1073741824 for 1GB)
+        #[arg(long)]
+        memory: Option<u64>,
+
+        /// TCP port (10000-19999, auto-assigned if not specified)
+        #[arg(long)]
+        port: Option<u16>,
+
+        /// Enable replication for high availability
+        #[arg(long)]
+        replication: bool,
+
+        /// Data persistence: aof, snapshot, or aof-and-snapshot
+        #[arg(long)]
+        persistence: Option<String>,
+
+        /// Data eviction policy when memory limit reached
+        #[arg(long)]
+        eviction_policy: Option<String>,
+
+        /// Enable sharding for horizontal scaling
+        #[arg(long)]
+        sharding: bool,
+
+        /// Number of shards (requires --sharding)
+        #[arg(long)]
+        shards_count: Option<u32>,
+
+        /// Proxy policy: single, all-master-shards, or all-nodes
+        #[arg(long)]
+        proxy_policy: Option<String>,
+
+        /// Enable CRDB (Active-Active)
+        #[arg(long)]
+        crdb: bool,
+
+        /// Redis password for authentication
+        #[arg(long)]
+        redis_password: Option<String>,
+
+        /// Advanced: Full database configuration as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
+
         /// Perform a dry run without creating the database
         #[arg(long)]
         dry_run: bool,

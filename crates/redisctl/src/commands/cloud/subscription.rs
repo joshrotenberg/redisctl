@@ -49,11 +49,28 @@ pub async fn handle_subscription_command(
         CloudSubscriptionCommands::Get { id } => {
             get_subscription(conn_mgr, profile_name, *id, output_format, query).await
         }
-        CloudSubscriptionCommands::Create { data, async_ops } => {
+        CloudSubscriptionCommands::Create {
+            name,
+            dry_run,
+            deployment_type,
+            payment_method,
+            payment_method_id,
+            memory_storage,
+            persistent_storage_encryption,
+            data,
+            async_ops,
+        } => {
             subscription_impl::create_subscription(
                 conn_mgr,
                 profile_name,
-                data,
+                name.as_deref(),
+                *dry_run,
+                deployment_type.as_deref(),
+                payment_method,
+                *payment_method_id,
+                memory_storage,
+                persistent_storage_encryption,
+                data.as_deref(),
                 async_ops,
                 output_format,
                 query,
