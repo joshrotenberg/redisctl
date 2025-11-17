@@ -154,8 +154,42 @@ redisctl enterprise cluster stats -o json
 
 ---
 
+## 11. First-Class Parameters (NEW Feature)
+
+```bash
+# OLD WAY - JSON required (easy to mess up!)
+redisctl enterprise database create \
+  --data '{"name":"demo","memory_size":1073741824,"replication":true}'
+
+# NEW WAY - clean CLI flags
+redisctl enterprise database create \
+  --name demo --memory 1073741824 --replication --dry-run
+
+# Works for Cloud too
+redisctl cloud database create --subscription 123 \
+  --name mydb --memory 5 --replication \
+  --data-persistence aof --eviction-policy allkeys-lru
+
+# Cloud subscription creation
+redisctl cloud subscription create \
+  --name prod-subscription \
+  --payment-method marketplace \
+  --memory-storage ram-and-flash \
+  --data @subscription.json  # For complex nested config
+```
+
+**Benefits:**
+- No JSON syntax errors
+- Clear parameter names
+- Built-in validation
+- Tab completion works!
+- Still supports `--data` for advanced configs
+
+---
+
 ## Notes
 - Commands ready to copy/paste
 - Fill in real IDs during demo
 - Keep it moving - don't wait for long operations
 - Docker Compose shows complete working examples with all commands
+- Highlight the new first-class parameters - it's a major UX win!
