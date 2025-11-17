@@ -23,11 +23,36 @@ pub async fn handle_database_command(
         EnterpriseDatabaseCommands::Get { id } => {
             database_impl::get_database(conn_mgr, profile_name, *id, output_format, query).await
         }
-        EnterpriseDatabaseCommands::Create { data, dry_run } => {
+        EnterpriseDatabaseCommands::Create {
+            name,
+            memory,
+            port,
+            replication,
+            persistence,
+            eviction_policy,
+            sharding,
+            shards_count,
+            proxy_policy,
+            crdb,
+            redis_password,
+            data,
+            dry_run,
+        } => {
             database_impl::create_database(
                 conn_mgr,
                 profile_name,
-                data,
+                name.as_deref(),
+                *memory,
+                *port,
+                *replication,
+                persistence.as_deref(),
+                eviction_policy.as_deref(),
+                *sharding,
+                *shards_count,
+                proxy_policy.as_deref(),
+                *crdb,
+                redis_password.as_deref(),
+                data.as_deref(),
                 *dry_run,
                 output_format,
                 query,

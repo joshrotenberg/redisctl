@@ -47,16 +47,103 @@ pub async fn get_database(
 }
 
 /// Create a new database
+#[allow(clippy::too_many_arguments)]
 pub async fn create_database(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
-    data: &str,
+    name: Option<&str>,
+    memory: Option<u64>,
+    port: Option<u16>,
+    replication: bool,
+    persistence: Option<&str>,
+    eviction_policy: Option<&str>,
+    sharding: bool,
+    shards_count: Option<u32>,
+    proxy_policy: Option<&str>,
+    crdb: bool,
+    redis_password: Option<&str>,
+    data: Option<&str>,
     dry_run: bool,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
-    let json_data = read_json_data(data)?;
+
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut request = if let Some(data_str) = data {
+        read_json_data(data_str)?
+    } else {
+        serde_json::json!({})
+    };
+
+    let request_obj = request.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(name_val) = name {
+        request_obj.insert("name".to_string(), serde_json::json!(name_val));
+    } else if data.is_none() {
+        return Err(RedisCtlError::InvalidInput {
+            message: "--name is required (unless using --data with complete configuration)"
+                .to_string(),
+        });
+    }
+
+    // Memory is highly recommended but not strictly required
+    if let Some(mem) = memory {
+        request_obj.insert("memory_size".to_string(), serde_json::json!(mem));
+    }
+
+    if let Some(p) = port {
+        request_obj.insert("port".to_string(), serde_json::json!(p));
+    }
+
+    // Only set replication if true (false is default)
+    if replication {
+        request_obj.insert("replication".to_string(), serde_json::json!(true));
+    }
+
+    if let Some(persist) = persistence {
+        request_obj.insert("persistence".to_string(), serde_json::json!(persist));
+    }
+
+    if let Some(evict) = eviction_policy {
+        request_obj.insert("eviction_policy".to_string(), serde_json::json!(evict));
+    }
+
+    // Only set sharding if true (false is default)
+    if sharding {
+        request_obj.insert("sharding".to_string(), serde_json::json!(true));
+    }
+
+    if let Some(count) = shards_count {
+        if !sharding
+            && !request_obj
+                .get("sharding")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false)
+        {
+            return Err(RedisCtlError::InvalidInput {
+                message: "--shards-count requires --sharding to be enabled".to_string(),
+            });
+        }
+        request_obj.insert("shards_count".to_string(), serde_json::json!(count));
+    }
+
+    if let Some(policy) = proxy_policy {
+        request_obj.insert("proxy_policy".to_string(), serde_json::json!(policy));
+    }
+
+    // Only set crdb if true (false is default)
+    if crdb {
+        request_obj.insert("crdt".to_string(), serde_json::json!(true));
+    }
+
+    if let Some(password) = redis_password {
+        request_obj.insert(
+            "authentication_redis_pass".to_string(),
+            serde_json::json!(password),
+        );
+    }
 
     let path = if dry_run {
         "/v1/bdbs/dry-run"
@@ -65,7 +152,7 @@ pub async fn create_database(
     };
 
     let response = client
-        .post_raw(path, json_data)
+        .post_raw(path, request)
         .await
         .map_err(RedisCtlError::from)?;
 

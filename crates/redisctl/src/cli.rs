@@ -2222,10 +2222,84 @@ pub enum EnterpriseDatabaseCommands {
     },
 
     /// Create a new database
+    #[command(after_help = "EXAMPLES:
+    # Simple database - just name and size
+    redisctl enterprise database create --name mydb --memory 1073741824
+
+    # With replication for high availability
+    redisctl enterprise database create --name prod-db --memory 2147483648 --replication
+
+    # With persistence and eviction policy
+    redisctl enterprise database create --name cache-db --memory 536870912 \\
+      --persistence aof --eviction-policy volatile-lru
+
+    # With sharding for horizontal scaling
+    redisctl enterprise database create --name large-db --memory 10737418240 \\
+      --sharding --shards-count 4
+
+    # With specific port
+    redisctl enterprise database create --name service-db --memory 1073741824 --port 12000
+
+    # Complete configuration from file
+    redisctl enterprise database create --data @database.json
+
+    # Dry run to preview without creating
+    redisctl enterprise database create --name test-db --memory 1073741824 --dry-run
+
+NOTE: Memory size is in bytes. Common values:
+      - 1 GB = 1073741824 bytes
+      - 2 GB = 2147483648 bytes
+      - 5 GB = 5368709120 bytes
+      First-class parameters override values in --data when both are provided.")]
     Create {
-        /// Database configuration as JSON string or @file.json
+        /// Database name (required unless using --data)
         #[arg(long)]
-        data: String,
+        name: Option<String>,
+
+        /// Memory size in bytes (e.g., 1073741824 for 1GB)
+        #[arg(long)]
+        memory: Option<u64>,
+
+        /// TCP port (10000-19999, auto-assigned if not specified)
+        #[arg(long)]
+        port: Option<u16>,
+
+        /// Enable replication for high availability
+        #[arg(long)]
+        replication: bool,
+
+        /// Data persistence: aof, snapshot, or aof-and-snapshot
+        #[arg(long)]
+        persistence: Option<String>,
+
+        /// Data eviction policy when memory limit reached
+        #[arg(long)]
+        eviction_policy: Option<String>,
+
+        /// Enable sharding for horizontal scaling
+        #[arg(long)]
+        sharding: bool,
+
+        /// Number of shards (requires --sharding)
+        #[arg(long)]
+        shards_count: Option<u32>,
+
+        /// Proxy policy: single, all-master-shards, or all-nodes
+        #[arg(long)]
+        proxy_policy: Option<String>,
+
+        /// Enable CRDB (Active-Active)
+        #[arg(long)]
+        crdb: bool,
+
+        /// Redis password for authentication
+        #[arg(long)]
+        redis_password: Option<String>,
+
+        /// Advanced: Full database configuration as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
+
         /// Perform a dry run without creating the database
         #[arg(long)]
         dry_run: bool,
