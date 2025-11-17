@@ -857,3 +857,516 @@ fn test_enterprise_module_help() {
         .success()
         .stdout(predicate::str::contains("Module management"));
 }
+
+// Additional Enterprise command help tests
+
+#[test]
+fn test_enterprise_action_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("action")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Action"));
+}
+
+#[test]
+fn test_enterprise_alerts_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("alerts")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Alert"));
+}
+
+#[test]
+fn test_enterprise_auth_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("auth")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Authentication"));
+}
+
+#[test]
+fn test_enterprise_bdb_group_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("bdb-group")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Database group"));
+}
+
+#[test]
+fn test_enterprise_bootstrap_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("bootstrap")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Bootstrap"));
+}
+
+#[test]
+fn test_enterprise_cm_settings_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cm-settings")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Cluster manager settings"));
+}
+
+#[test]
+fn test_enterprise_crdb_task_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("crdb-task")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("CRDB task"));
+}
+
+#[test]
+fn test_enterprise_debug_info_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("debug-info")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Debug info"));
+}
+
+#[test]
+fn test_enterprise_diagnostics_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("diagnostics")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Diagnostics"));
+}
+
+#[test]
+fn test_enterprise_endpoint_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("endpoint")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Endpoint"));
+}
+
+#[test]
+fn test_enterprise_job_scheduler_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("job-scheduler")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Job scheduler"));
+}
+
+#[test]
+fn test_enterprise_jsonschema_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("jsonschema")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("JSON schema"));
+}
+
+#[test]
+fn test_enterprise_ldap_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("ldap")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("LDAP"));
+}
+
+#[test]
+fn test_enterprise_ldap_mappings_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("ldap-mappings")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("LDAP mappings"));
+}
+
+#[test]
+fn test_enterprise_local_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("local")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Local"));
+}
+
+#[test]
+fn test_enterprise_logs_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("logs")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Log"));
+}
+
+#[test]
+fn test_enterprise_migration_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("migration")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Migration"));
+}
+
+#[test]
+fn test_enterprise_ocsp_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("ocsp")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("OCSP"));
+}
+
+#[test]
+fn test_enterprise_services_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("services")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Service"));
+}
+
+#[test]
+fn test_enterprise_shard_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("shard")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Shard"));
+}
+
+#[test]
+fn test_enterprise_stats_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("stats")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Statistics"));
+}
+
+#[test]
+fn test_enterprise_status_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("status")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("status"));
+}
+
+#[test]
+fn test_enterprise_suffix_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("suffix")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("DNS suffix"));
+}
+
+#[test]
+fn test_enterprise_usage_report_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("usage-report")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Usage report"));
+}
+
+// Cloud command help tests
+
+#[test]
+fn test_cloud_provider_account_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("provider-account")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Cloud provider account"));
+}
+
+// Error case tests - Cloud database commands
+
+#[test]
+fn test_cloud_database_create_missing_subscription() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("create")
+        .arg("--data")
+        .arg("{}")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+#[test]
+fn test_cloud_database_create_missing_data() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("create")
+        .arg("--subscription")
+        .arg("123")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+#[test]
+fn test_cloud_database_get_missing_id() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("get")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+#[test]
+fn test_cloud_database_delete_missing_args() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("delete")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+// Error case tests - Cloud subscription commands
+
+#[test]
+fn test_cloud_subscription_create_missing_data() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("create")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+#[test]
+fn test_cloud_subscription_get_missing_id() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("get")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+#[test]
+fn test_cloud_subscription_delete_missing_id() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("delete")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+// Error case tests - Enterprise database commands
+
+#[test]
+fn test_enterprise_database_create_missing_data() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("create")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+#[test]
+fn test_enterprise_database_get_missing_id() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("get")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+#[test]
+fn test_enterprise_database_delete_missing_id() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("delete")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+#[test]
+fn test_enterprise_database_update_missing_id() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("update")
+        .arg("--data")
+        .arg("{}")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+#[test]
+fn test_enterprise_database_update_missing_data() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("update")
+        .arg("1")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+// Error case tests - API commands
+
+#[test]
+fn test_api_cloud_missing_method() {
+    redisctl()
+        .arg("api")
+        .arg("cloud")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+#[test]
+fn test_api_cloud_invalid_method() {
+    redisctl()
+        .arg("api")
+        .arg("cloud")
+        .arg("invalid")
+        .arg("/subscriptions")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("invalid HTTP method"));
+}
+
+#[test]
+fn test_api_enterprise_missing_path() {
+    redisctl()
+        .arg("api")
+        .arg("enterprise")
+        .arg("get")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+// Argument validation tests
+
+#[test]
+fn test_cloud_database_list_accepts_subscription() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("list")
+        .arg("--subscription")
+        .arg("123")
+        .arg("--help")
+        .assert()
+        .success();
+}
+
+#[test]
+fn test_enterprise_node_list_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("list")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("List all nodes"));
+}
+
+#[test]
+fn test_enterprise_cluster_get_accepts_query() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("get")
+        .arg("-q")
+        .arg("name")
+        .arg("--help")
+        .assert()
+        .success();
+}
+
+#[test]
+fn test_wait_flags_accepted() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--wait"))
+        .stdout(predicate::str::contains("--wait-timeout"))
+        .stdout(predicate::str::contains("--wait-interval"));
+}
