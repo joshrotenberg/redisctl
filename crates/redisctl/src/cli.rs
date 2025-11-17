@@ -1598,13 +1598,83 @@ pub enum CloudDatabaseCommands {
     },
 
     /// Create a new database
+    #[command(after_help = "EXAMPLES:
+    # Simple database - just name and size
+    redisctl cloud database create --subscription 123 --name mydb --memory 1
+
+    # Production database with high availability
+    redisctl cloud database create \\
+      --subscription 123 \\
+      --name prod-cache \\
+      --memory 10 \\
+      --replication \\
+      --data-persistence aof-every-1-second
+
+    # Advanced: Mix flags with JSON for rare options
+    redisctl cloud database create \\
+      --subscription 123 \\
+      --name mydb \\
+      --memory 5 \\
+      --data '{\"modules\": [{\"name\": \"RedisJSON\"}]}'
+")]
     Create {
         /// Subscription ID
         #[arg(long)]
         subscription: u32,
-        /// Database configuration as JSON string or @file.json
+
+        /// Database name (required unless using --data)
+        /// Limited to 40 characters: letters, digits, hyphens
+        /// Must start with letter, end with letter or digit
         #[arg(long)]
-        data: String,
+        name: Option<String>,
+
+        /// Memory limit in GB (e.g., 1, 5, 10, 50)
+        /// Alternative to --dataset-size
+        #[arg(long, conflicts_with = "dataset_size")]
+        memory: Option<f64>,
+
+        /// Dataset size in GB (alternative to --memory)
+        /// If replication enabled, total memory will be 2x this value
+        #[arg(long, conflicts_with = "memory")]
+        dataset_size: Option<f64>,
+
+        /// Database protocol
+        #[arg(long, value_parser = ["redis", "memcached"], default_value = "redis")]
+        protocol: String,
+
+        /// Enable replication for high availability
+        #[arg(long)]
+        replication: bool,
+
+        /// Data persistence policy
+        /// Options: none, aof-every-1-second, aof-every-write, snapshot-every-1-hour,
+        ///          snapshot-every-6-hours, snapshot-every-12-hours
+        #[arg(long)]
+        data_persistence: Option<String>,
+
+        /// Data eviction policy when memory limit reached
+        /// Options: volatile-lru, volatile-ttl, volatile-random, allkeys-lru,
+        ///          allkeys-lfu, allkeys-random, noeviction, volatile-lfu
+        #[arg(long, default_value = "volatile-lru")]
+        eviction_policy: String,
+
+        /// Redis version (e.g., "7.2", "7.0", "6.2")
+        #[arg(long)]
+        redis_version: Option<String>,
+
+        /// Enable OSS Cluster API support
+        #[arg(long)]
+        oss_cluster: bool,
+
+        /// TCP port (10000-19999, auto-assigned if not specified)
+        #[arg(long)]
+        port: Option<i32>,
+
+        /// Advanced: Full database configuration as JSON string or @file.json
+        /// CLI flags take precedence over values in JSON
+        #[arg(long)]
+        data: Option<String>,
+
         /// Async operation options
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
