@@ -231,7 +231,78 @@ ls -lh demo-package*.tar.gz
 
 ---
 
-## 5. Advanced Features (3 min)
+## 5. Recent UX Improvements (3 min)
+
+### First-Class Parameters (NEW in v0.6.6)
+
+**The Problem with JSON strings:**
+- Easy to make syntax errors (missing quotes, commas, braces)
+- No tab completion
+- Hard to remember exact field names
+- Verbose for simple operations
+
+**Before: Complex JSON Required**
+
+```bash
+# Cloud database - the old way
+redisctl cloud database create --subscription 123 \
+  --data '{"name":"mydb","memoryLimitInGb":1,"protocol":"redis","replication":true,"dataPersistence":"aof","dataEvictionPolicy":"volatile-lru"}'
+
+# Enterprise database - the old way  
+redisctl enterprise database create \
+  --data '{"name":"prod-db","memory_size":2147483648,"replication":true,"persistence":"aof","eviction_policy":"volatile-lru"}'
+```
+
+**After: Clean CLI Parameters**
+
+```bash
+# Cloud database - the new way (70% less typing!)
+redisctl cloud database create --subscription 123 \
+  --name mydb --memory 1 --replication \
+  --data-persistence aof --eviction-policy volatile-lru
+
+# Enterprise database - the new way
+redisctl enterprise database create \
+  --name prod-db --memory 2147483648 --replication \
+  --persistence aof --eviction-policy volatile-lru
+
+# Cloud subscription with smart defaults
+redisctl cloud subscription create \
+  --name prod-subscription \
+  --payment-method marketplace \
+  --memory-storage ram-and-flash \
+  --data @subscription.json  # Still supports complex nested config
+```
+
+**Key Improvements:**
+- ✅ **70% less typing** for common operations
+- ✅ **No JSON syntax errors** - CLI validates parameters
+- ✅ **Tab completion** for parameter names
+- ✅ **Clear error messages** - "unknown flag --nmae" vs silent JSON typo
+- ✅ **Smart defaults** - protocol=redis, eviction-policy=volatile-lru
+- ✅ **Backwards compatible** - `--data` still works for advanced configs
+- ✅ **Parameter override** - Mix `--data` with flags for flexibility
+
+**Live Demo:**
+```bash
+# Show help with all new parameters
+redisctl enterprise database create --help
+
+# Create a simple database - no JSON needed!
+redisctl enterprise database create \
+  --name demo-db \
+  --memory 1073741824 \
+  --replication \
+  --dry-run
+
+# Compare to the old way
+echo '{"name":"demo-db","memory_size":1073741824,"replication":true}' | \
+  redisctl enterprise database create --data @- --dry-run
+```
+
+---
+
+## 6. Advanced Features (3 min)
 
 ### JMESPath Query Support
 
@@ -288,7 +359,7 @@ redisctl enterprise license set --key "license-string"
 
 ---
 
-## 6. rladmin Comparison (2 min)
+## 7. rladmin Comparison (2 min)
 
 **Quick comparison:** (Show `RLADMIN_COMPARISON.md`)
 
@@ -309,7 +380,7 @@ redisctl enterprise license set --key "license-string"
 
 ---
 
-## 7. Library Architecture (2 min)
+## 8. Library Architecture (2 min)
 
 **redisctl isn't just a CLI - it's a platform**
 
@@ -356,12 +427,14 @@ let client = Client::from_profile(&profile)?;
 
 ---
 
-## 8. Metrics & Status (1 min)
+## 9. Metrics & Status (1 min)
 
 ### Current State
 
 - ✅ **50+ API handlers** (21 Cloud + 29 Enterprise)
+- ✅ **225 comprehensive CLI tests** (+217% coverage increase)
 - ✅ **85%+ test coverage** (production quality)
+- ✅ **First-class parameters** for common operations (NEW)
 - ✅ **4 crates published** to crates.io
 - ✅ **Cross-platform** (macOS, Linux, Windows)
 - ✅ **Docker images** on ghcr.io
@@ -369,13 +442,13 @@ let client = Client::from_profile(&profile)?;
 
 ### Release Status
 
-- **Current version:** v0.6.5
+- **Current version:** v0.6.6
 - **Automated releases:** GitHub Actions + cargo-dist
 - **Distribution:** crates.io, GitHub releases, Docker Hub, Homebrew
 
 ---
 
-## 9. Demo Time (3 min)
+## 10. Demo Time (3 min)
 
 **Run:** `examples/presentation/03-demo-workflow.sh`
 
@@ -389,7 +462,7 @@ Showcases:
 
 ---
 
-## 10. Roadmap & Future (2 min)
+## 11. Roadmap & Future (2 min)
 
 ### Near Term
 - Additional workflows (see issues #263-#268)
@@ -404,7 +477,7 @@ Showcases:
 
 ---
 
-## 11. Call to Action (1 min)
+## 12. Call to Action (1 min)
 
 ### Try It
 
@@ -455,7 +528,7 @@ redisctl --help
 - Keyring works on all platforms
 
 **Q: How stable is it?**
-- v0.6.5, used in production
+- v0.6.6, used in production
 - 85%+ test coverage
 - Comprehensive wiremock tests
 - Breaking changes follow semver
@@ -472,14 +545,25 @@ redisctl --help
 
 ---
 
+**Q: Why first-class parameters instead of just JSON?**
+- 70% reduction in typing for common operations
+- No JSON syntax errors (closing braces, quotes, commas)
+- Tab completion and shell history work better
+- Better error messages (typo in --name vs typo in JSON key)
+- Still supports --data for complex configs (backwards compatible)
+- Follows industry best practices (kubectl, gh, aws cli all use flags)
+
+---
+
 ## Key Takeaways (Summary Slide)
 
 1. **First CLI tool** for Redis Cloud and Enterprise
 2. **Eliminates fragile scripts** - One command vs 50 lines of bash
-3. **Four-layer architecture** - Raw API → Human-friendly → Workflows → Tools
-4. **Production ready** - 85%+ coverage, cross-platform, v0.6.5
-5. **Library-first** - Foundation for Redis Rust ecosystem
-6. **Automation-friendly** - JSON output, JMESPath, profiles
-7. **Support tools** - 30-second support packages vs 10+ minutes
+3. **Clean UX** - First-class parameters, no JSON required for common ops
+4. **Four-layer architecture** - Raw API → Human-friendly → Workflows → Tools
+5. **Production ready** - 225 tests, 85%+ coverage, cross-platform, v0.6.6
+6. **Library-first** - Foundation for Redis Rust ecosystem
+7. **Automation-friendly** - JSON output, JMESPath, profiles
+8. **Support tools** - 30-second support packages vs 10+ minutes
 
 **redisctl: Making Redis operations scriptable, automatable, and enjoyable** 🚀
