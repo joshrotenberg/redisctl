@@ -38,16 +38,95 @@ fn read_json_data(data: &str) -> CliResult<Value> {
 }
 
 /// Create a new subscription
+#[allow(clippy::too_many_arguments)]
 pub async fn create_subscription(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
-    data: &str,
+    name: Option<&str>,
+    dry_run: bool,
+    deployment_type: Option<&str>,
+    payment_method: &str,
+    payment_method_id: Option<i32>,
+    memory_storage: &str,
+    persistent_storage_encryption: &str,
+    data: Option<&str>,
     async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_cloud_client(profile_name).await?;
-    let request = read_json_data(data)?;
+
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut request = if let Some(data_str) = data {
+        read_json_data(data_str)?
+    } else {
+        serde_json::json!({})
+    };
+
+    let request_obj = request.as_object_mut().unwrap();
+
+    // Validate: cloudProviders and databases are required
+    if data.is_none() {
+        return Err(RedisCtlError::InvalidInput {
+            message: "--data is required for subscription creation (must include cloudProviders and databases arrays). Use first-class parameters (--name, --payment-method, etc.) to override specific values.".to_string(),
+        });
+    }
+
+    // CLI parameters override JSON values
+    if let Some(name_val) = name {
+        request_obj.insert("name".to_string(), serde_json::json!(name_val));
+    }
+
+    // Always set dry_run if specified (even if false, to be explicit)
+    if dry_run {
+        request_obj.insert("dryRun".to_string(), serde_json::json!(true));
+    }
+
+    if let Some(deployment) = deployment_type {
+        request_obj.insert("deploymentType".to_string(), serde_json::json!(deployment));
+    }
+
+    // Always set payment method (has default)
+    request_obj.insert(
+        "paymentMethod".to_string(),
+        serde_json::json!(payment_method),
+    );
+
+    if let Some(pm_id) = payment_method_id {
+        request_obj.insert("paymentMethodId".to_string(), serde_json::json!(pm_id));
+    } else if payment_method == "credit-card" && !request_obj.contains_key("paymentMethodId") {
+        return Err(RedisCtlError::InvalidInput {
+            message: "--payment-method-id is required when using credit-card payment method"
+                .to_string(),
+        });
+    }
+
+    // Always set memory storage (has default)
+    request_obj.insert(
+        "memoryStorage".to_string(),
+        serde_json::json!(memory_storage),
+    );
+
+    // Always set persistent storage encryption (has default)
+    request_obj.insert(
+        "persistentStorageEncryption".to_string(),
+        serde_json::json!(persistent_storage_encryption),
+    );
+
+    // Validate required nested structures
+    if !request_obj.contains_key("cloudProviders") {
+        return Err(RedisCtlError::InvalidInput {
+            message: "cloudProviders array is required in --data (defines provider, regions, and networking)".to_string(),
+        });
+    }
+
+    if !request_obj.contains_key("databases") {
+        return Err(RedisCtlError::InvalidInput {
+            message:
+                "databases array is required in --data (at least one database specification needed)"
+                    .to_string(),
+        });
+    }
 
     let response = client
         .post_raw("/subscriptions", request)

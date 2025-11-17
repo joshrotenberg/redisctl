@@ -1478,10 +1478,65 @@ pub enum CloudSubscriptionCommands {
     },
 
     /// Create a new subscription
+    #[command(after_help = "EXAMPLES:
+    # Simple subscription - just name, provider, and region via --data
+    redisctl cloud subscription create --name prod-subscription \\
+      --data '{\"cloudProviders\":[{\"regions\":[{\"region\":\"us-east-1\"}]}],\"databases\":[{\"name\":\"db1\",\"memoryLimitInGb\":1}]}'
+
+    # With payment method
+    redisctl cloud subscription create --name dev-subscription \\
+      --payment-method marketplace \\
+      --data '{\"cloudProviders\":[{\"regions\":[{\"region\":\"us-west-2\"}]}],\"databases\":[{\"name\":\"db1\",\"memoryLimitInGb\":1}]}'
+
+    # With auto-tiering (RAM+Flash)
+    redisctl cloud subscription create --name large-subscription \\
+      --memory-storage ram-and-flash \\
+      --data '{\"cloudProviders\":[{\"provider\":\"AWS\",\"regions\":[{\"region\":\"eu-west-1\"}]}],\"databases\":[{\"name\":\"db1\",\"memoryLimitInGb\":10}]}'
+
+    # Complete configuration from file
+    redisctl cloud subscription create --data @subscription.json
+
+    # Dry run to preview deployment
+    redisctl cloud subscription create --dry-run --data @subscription.json
+
+NOTE: Subscription creation requires complex nested structures for cloud providers,
+      regions, and databases. Use --data for the required cloudProviders and databases
+      arrays. First-class parameters (--name, --payment-method, etc.) override values
+      in --data when both are provided.")]
     Create {
-        /// Subscription configuration as JSON string or @file.json
+        /// Subscription name
         #[arg(long)]
-        data: String,
+        name: Option<String>,
+
+        /// Dry run - create deployment plan without provisioning resources
+        #[arg(long)]
+        dry_run: bool,
+
+        /// Deployment type: single-region or active-active
+        #[arg(long, value_parser = ["single-region", "active-active"])]
+        deployment_type: Option<String>,
+
+        /// Payment method: credit-card or marketplace
+        #[arg(long, value_parser = ["credit-card", "marketplace"], default_value = "credit-card")]
+        payment_method: String,
+
+        /// Payment method ID (required if payment-method is credit-card)
+        #[arg(long)]
+        payment_method_id: Option<i32>,
+
+        /// Memory storage: ram or ram-and-flash (Auto Tiering)
+        #[arg(long, value_parser = ["ram", "ram-and-flash"], default_value = "ram")]
+        memory_storage: String,
+
+        /// Persistent storage encryption: cloud-provider-managed-key or customer-managed-key
+        #[arg(long, value_parser = ["cloud-provider-managed-key", "customer-managed-key"], default_value = "cloud-provider-managed-key")]
+        persistent_storage_encryption: String,
+
+        /// Advanced: Full subscription configuration as JSON string or @file.json
+        /// REQUIRED: Must include cloudProviders array with regions and databases array
+        #[arg(long)]
+        data: Option<String>,
+
         /// Async operation options
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
