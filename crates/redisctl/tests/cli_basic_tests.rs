@@ -1370,3 +1370,1337 @@ fn test_wait_flags_accepted() {
         .stdout(predicate::str::contains("--wait-timeout"))
         .stdout(predicate::str::contains("--wait-interval"));
 }
+
+// Comprehensive Cloud Database subcommand tests
+
+#[test]
+fn test_cloud_database_backup_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("backup")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("backup"));
+}
+
+#[test]
+fn test_cloud_database_backup_status_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("backup-status")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("backup"));
+}
+
+#[test]
+fn test_cloud_database_import_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("import")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("import"));
+}
+
+#[test]
+fn test_cloud_database_import_status_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("import-status")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("import"));
+}
+
+#[test]
+fn test_cloud_database_update_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Update"));
+}
+
+#[test]
+fn test_cloud_database_delete_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("delete")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Delete"));
+}
+
+#[test]
+fn test_cloud_database_get_certificate_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("get-certificate")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("certificate"));
+}
+
+#[test]
+fn test_cloud_database_add_tag_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("add-tag")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("tag"));
+}
+
+#[test]
+fn test_cloud_database_delete_tag_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("delete-tag")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("tag"));
+}
+
+#[test]
+fn test_cloud_database_list_tags_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("list-tags")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("tag"));
+}
+
+#[test]
+fn test_cloud_database_update_tags_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("update-tags")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("tag"));
+}
+
+#[test]
+fn test_cloud_database_flush_crdb_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("flush-crdb")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("flush"));
+}
+
+#[test]
+fn test_cloud_database_upgrade_redis_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("upgrade-redis")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("upgrade"));
+}
+
+#[test]
+fn test_cloud_database_upgrade_status_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("upgrade-status")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("upgrade"));
+}
+
+// Comprehensive Cloud Subscription subcommand tests
+
+#[test]
+fn test_cloud_subscription_create_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Create"));
+}
+
+#[test]
+fn test_cloud_subscription_get_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("get")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("subscription"));
+}
+
+#[test]
+fn test_cloud_subscription_update_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Update"));
+}
+
+#[test]
+fn test_cloud_subscription_delete_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("delete")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Delete"));
+}
+
+#[test]
+fn test_cloud_subscription_get_cidr_allowlist_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("get-cidr-allowlist")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("CIDR"));
+}
+
+#[test]
+fn test_cloud_subscription_update_cidr_allowlist_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("update-cidr-allowlist")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("CIDR"));
+}
+
+#[test]
+fn test_cloud_subscription_get_maintenance_windows_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("get-maintenance-windows")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("maintenance"));
+}
+
+#[test]
+fn test_cloud_subscription_update_maintenance_windows_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("update-maintenance-windows")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("maintenance"));
+}
+
+#[test]
+fn test_cloud_subscription_get_pricing_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("get-pricing")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("pricing"));
+}
+
+#[test]
+fn test_cloud_subscription_redis_versions_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("redis-versions")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Redis"));
+}
+
+#[test]
+fn test_cloud_subscription_add_aa_region_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("add-aa-region")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Active-Active"));
+}
+
+#[test]
+fn test_cloud_subscription_list_aa_regions_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("list-aa-regions")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Active-Active"));
+}
+
+#[test]
+fn test_cloud_subscription_delete_aa_regions_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("delete-aa-regions")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Active-Active"));
+}
+
+// Comprehensive Enterprise Database subcommand tests
+
+#[test]
+fn test_enterprise_database_create_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Create"));
+}
+
+#[test]
+fn test_enterprise_database_get_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("get")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("database"));
+}
+
+#[test]
+fn test_enterprise_database_update_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Update"));
+}
+
+#[test]
+fn test_enterprise_database_delete_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("delete")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Delete"));
+}
+
+#[test]
+fn test_enterprise_database_backup_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("backup")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("backup"));
+}
+
+#[test]
+fn test_enterprise_database_import_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("import")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("import"));
+}
+
+#[test]
+fn test_enterprise_database_export_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("export")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("export"));
+}
+
+#[test]
+fn test_enterprise_database_restore_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("restore")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("restore"));
+}
+
+#[test]
+fn test_enterprise_database_flush_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("flush")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("flush"));
+}
+
+#[test]
+fn test_enterprise_database_get_shards_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("get-shards")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("shard"));
+}
+
+#[test]
+fn test_enterprise_database_update_shards_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("update-shards")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("shard"));
+}
+
+#[test]
+fn test_enterprise_database_get_modules_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("get-modules")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("module"));
+}
+
+#[test]
+fn test_enterprise_database_update_modules_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("update-modules")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("module"));
+}
+
+#[test]
+fn test_enterprise_database_get_acl_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("get-acl")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("ACL"));
+}
+
+#[test]
+fn test_enterprise_database_update_acl_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("update-acl")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("ACL"));
+}
+
+#[test]
+fn test_enterprise_database_client_list_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("client-list")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("client"));
+}
+
+#[test]
+fn test_enterprise_database_slowlog_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("slowlog")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("slow"));
+}
+
+#[test]
+fn test_enterprise_database_stats_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("stats")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("stat"));
+}
+
+#[test]
+fn test_enterprise_database_metrics_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("metrics")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("metric"));
+}
+
+// Comprehensive Cloud ACL subcommand tests
+
+#[test]
+fn test_cloud_acl_create_acl_user_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("acl")
+        .arg("create-acl-user")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("user"));
+}
+
+#[test]
+fn test_cloud_acl_list_acl_users_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("acl")
+        .arg("list-acl-users")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("user"));
+}
+
+#[test]
+fn test_cloud_acl_get_acl_user_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("acl")
+        .arg("get-acl-user")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("user"));
+}
+
+#[test]
+fn test_cloud_acl_update_acl_user_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("acl")
+        .arg("update-acl-user")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("user"));
+}
+
+#[test]
+fn test_cloud_acl_delete_acl_user_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("acl")
+        .arg("delete-acl-user")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("user"));
+}
+
+#[test]
+fn test_cloud_acl_create_role_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("acl")
+        .arg("create-role")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("role"));
+}
+
+#[test]
+fn test_cloud_acl_list_roles_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("acl")
+        .arg("list-roles")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("role"));
+}
+
+#[test]
+fn test_cloud_acl_update_role_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("acl")
+        .arg("update-role")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("role"));
+}
+
+#[test]
+fn test_cloud_acl_delete_role_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("acl")
+        .arg("delete-role")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("role"));
+}
+
+#[test]
+fn test_cloud_acl_create_redis_rule_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("acl")
+        .arg("create-redis-rule")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("rule"));
+}
+
+#[test]
+fn test_cloud_acl_list_redis_rules_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("acl")
+        .arg("list-redis-rules")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("rule"));
+}
+
+#[test]
+fn test_cloud_acl_update_redis_rule_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("acl")
+        .arg("update-redis-rule")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("rule"));
+}
+
+#[test]
+fn test_cloud_acl_delete_redis_rule_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("acl")
+        .arg("delete-redis-rule")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("rule"));
+}
+
+// Comprehensive Cloud User subcommand tests
+
+#[test]
+fn test_cloud_user_list_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("user")
+        .arg("list")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("user"));
+}
+
+#[test]
+fn test_cloud_user_get_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("user")
+        .arg("get")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("user"));
+}
+
+#[test]
+fn test_cloud_user_update_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("user")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("user"));
+}
+
+#[test]
+fn test_cloud_user_delete_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("user")
+        .arg("delete")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("user"));
+}
+
+// Comprehensive Enterprise Node subcommand tests
+
+#[test]
+fn test_enterprise_node_get_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("get")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("node"));
+}
+
+#[test]
+fn test_enterprise_node_add_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("add")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("node"));
+}
+
+#[test]
+fn test_enterprise_node_remove_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("remove")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("node"));
+}
+
+#[test]
+fn test_enterprise_node_update_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("node"));
+}
+
+#[test]
+fn test_enterprise_node_stats_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("stats")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("stat"));
+}
+
+#[test]
+fn test_enterprise_node_metrics_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("metrics")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("metric"));
+}
+
+#[test]
+fn test_enterprise_node_maintenance_enable_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("maintenance-enable")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("maintenance"));
+}
+
+#[test]
+fn test_enterprise_node_maintenance_disable_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("maintenance-disable")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("maintenance"));
+}
+
+#[test]
+fn test_enterprise_node_alerts_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("alerts")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("alert"));
+}
+
+#[test]
+fn test_enterprise_node_get_config_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("get-config")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("config"));
+}
+
+#[test]
+fn test_enterprise_node_update_config_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("update-config")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("config"));
+}
+
+#[test]
+fn test_enterprise_node_drain_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("drain")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("drain"));
+}
+
+#[test]
+fn test_enterprise_node_rebalance_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("rebalance")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("rebalance"));
+}
+
+#[test]
+fn test_enterprise_node_status_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("status")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("status"));
+}
+
+#[test]
+fn test_enterprise_node_cpu_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("cpu")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("CPU"));
+}
+
+#[test]
+fn test_enterprise_node_memory_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("memory")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("memory"));
+}
+
+#[test]
+fn test_enterprise_node_storage_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("storage")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("storage"));
+}
+
+#[test]
+fn test_enterprise_node_network_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("network")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("network"));
+}
+
+#[test]
+fn test_enterprise_node_resources_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("resources")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("resource"));
+}
+
+#[test]
+fn test_enterprise_node_check_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("check")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("check"));
+}
+
+#[test]
+fn test_enterprise_node_restart_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("restart")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("restart"));
+}
+
+#[test]
+fn test_enterprise_node_get_rack_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("get-rack")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("rack"));
+}
+
+#[test]
+fn test_enterprise_node_set_rack_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("set-rack")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("rack"));
+}
+
+#[test]
+fn test_enterprise_node_get_role_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("node")
+        .arg("get-role")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("role"));
+}
+
+// Comprehensive Enterprise Cluster subcommand tests
+
+#[test]
+fn test_enterprise_cluster_update_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Update"));
+}
+
+#[test]
+fn test_enterprise_cluster_join_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("join")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("join"));
+}
+
+#[test]
+fn test_enterprise_cluster_reset_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("reset")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("reset"));
+}
+
+#[test]
+fn test_enterprise_cluster_recover_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("recover")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("recover"));
+}
+
+#[test]
+fn test_enterprise_cluster_bootstrap_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("bootstrap")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("bootstrap"));
+}
+
+#[test]
+fn test_enterprise_cluster_check_status_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("check-status")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("status"));
+}
+
+#[test]
+fn test_enterprise_cluster_stats_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("stats")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("stat"));
+}
+
+#[test]
+fn test_enterprise_cluster_metrics_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("metrics")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("metric"));
+}
+
+#[test]
+fn test_enterprise_cluster_alerts_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("alerts")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("alert"));
+}
+
+#[test]
+fn test_enterprise_cluster_events_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("events")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("event"));
+}
+
+#[test]
+fn test_enterprise_cluster_audit_log_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("audit-log")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("audit"));
+}
+
+#[test]
+fn test_enterprise_cluster_debug_info_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("debug-info")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("debug"));
+}
+
+#[test]
+fn test_enterprise_cluster_get_license_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("get-license")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("license"));
+}
+
+#[test]
+fn test_enterprise_cluster_update_license_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("update-license")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("license"));
+}
+
+#[test]
+fn test_enterprise_cluster_get_certificates_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("get-certificates")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("certificate"));
+}
+
+#[test]
+fn test_enterprise_cluster_update_certificates_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("update-certificates")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("certificate"));
+}
+
+#[test]
+fn test_enterprise_cluster_rotate_certificates_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("rotate-certificates")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("certificate"));
+}
+
+#[test]
+fn test_enterprise_cluster_get_policy_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("get-policy")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("policy"));
+}
+
+#[test]
+fn test_enterprise_cluster_update_policy_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("update-policy")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("policy"));
+}
+
+#[test]
+fn test_enterprise_cluster_get_ocsp_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("get-ocsp")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("OCSP"));
+}
+
+#[test]
+fn test_enterprise_cluster_update_ocsp_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("update-ocsp")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("OCSP"));
+}
+
+#[test]
+fn test_enterprise_cluster_maintenance_mode_enable_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("maintenance-mode-enable")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("maintenance"));
+}
+
+#[test]
+fn test_enterprise_cluster_maintenance_mode_disable_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("maintenance-mode-disable")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("maintenance"));
+}
