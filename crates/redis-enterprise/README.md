@@ -8,6 +8,7 @@ A comprehensive Rust client library for the Redis Enterprise REST API.
 - Async/await support with tokio
 - Strong typing for API requests and responses
 - Comprehensive error handling
+- Optional Tower service integration for middleware composition
 - Support for all Redis Enterprise features including:
   - Cluster management and bootstrap
   - Database (BDB) operations
@@ -22,6 +23,9 @@ A comprehensive Rust client library for the Redis Enterprise REST API.
 ```toml
 [dependencies]
 redis-enterprise = "0.1.0"
+
+# Optional: Enable Tower service integration
+redis-enterprise = { version = "0.1.0", features = ["tower-integration"] }
 ```
 
 ## Quick Start
@@ -73,6 +77,39 @@ export REDIS_ENTERPRISE_INSECURE="true"  # For self-signed certificates
 # Run an example
 cargo run --example basic
 ```
+
+## Tower Integration
+
+Enable the `tower-integration` feature to use the client with Tower middleware:
+
+```rust
+use redis_enterprise::EnterpriseClient;
+use redis_enterprise::tower_support::ApiRequest;
+use tower::ServiceExt;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = EnterpriseClient::builder()
+        .base_url("https://localhost:9443")
+        .username("admin")
+        .password("password")
+        .insecure(true)
+        .build()?;
+    
+    // Convert to a Tower service
+    let mut service = client.into_service();
+    
+    // Use the service
+    let response = service
+        .oneshot(ApiRequest::get("/v1/cluster"))
+        .await?;
+    
+    println!("Response: {:?}", response.body);
+    Ok(())
+}
+```
+
+This enables composition with Tower middleware like circuit breakers, retry, rate limiting, and more.
 
 ## API Coverage
 

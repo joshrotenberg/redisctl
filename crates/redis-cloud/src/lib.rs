@@ -284,6 +284,10 @@ mod lib_tests;
 // Re-export client types
 pub use client::{CloudClient, CloudClientBuilder};
 
+// Re-export Tower integration when feature is enabled
+#[cfg(feature = "tower-integration")]
+pub use client::tower_support;
+
 // Types module for shared models
 pub mod types;
 
@@ -336,10 +340,10 @@ pub use users::UsersHandler as UserHandler;
 // Re-export error types
 use thiserror::Error;
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, Clone)]
 pub enum CloudError {
     #[error("HTTP request failed: {0}")]
-    Request(#[from] reqwest::Error),
+    Request(String),
 
     #[error("Bad Request (400): {message}")]
     BadRequest { message: String },
@@ -369,7 +373,19 @@ pub enum CloudError {
     ConnectionError(String),
 
     #[error("JSON error: {0}")]
-    JsonError(#[from] serde_json::Error),
+    JsonError(String),
+}
+
+impl From<reqwest::Error> for CloudError {
+    fn from(err: reqwest::Error) -> Self {
+        CloudError::Request(err.to_string())
+    }
+}
+
+impl From<serde_json::Error> for CloudError {
+    fn from(err: serde_json::Error) -> Self {
+        CloudError::JsonError(err.to_string())
+    }
 }
 
 pub type Result<T> = std::result::Result<T, CloudError>;

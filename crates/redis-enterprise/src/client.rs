@@ -184,10 +184,7 @@ impl EnterpriseClient {
         trace!("Response status: {}", response.status());
 
         if response.status().is_success() {
-            let text = response
-                .text()
-                .await
-                .map_err(crate::error::RestError::RequestFailed)?;
+            let text = response.text().await?;
             Ok(text)
         } else {
             let status = response.status();
@@ -222,10 +219,7 @@ impl EnterpriseClient {
         );
 
         if response.status().is_success() {
-            let bytes = response
-                .bytes()
-                .await
-                .map_err(crate::error::RestError::RequestFailed)?;
+            let bytes = response.bytes().await?;
             Ok(bytes.to_vec())
         } else {
             let status = response.status();
@@ -505,7 +499,7 @@ impl EnterpriseClient {
                 url, error
             ))
         } else {
-            RestError::RequestFailed(error)
+            RestError::RequestFailed(error.to_string())
         }
     }
 
@@ -561,5 +555,215 @@ impl EnterpriseClient {
             .map_err(|e| self.map_reqwest_error(e, &url))?;
 
         self.handle_response(response).await
+    }
+}
+
+/// Tower Service integration for EnterpriseClient
+///
+/// This module provides Tower Service implementations for EnterpriseClient, enabling
+/// middleware composition with patterns like circuit breakers, retry, and rate limiting.
+///
+/// # Feature Flag
+///
+/// This module is only available when the `tower-integration` feature is enabled.
+///
+/// # Examples
+///
+/// ```rust,ignore
+/// use redis_enterprise::EnterpriseClient;
+/// use redis_enterprise::tower_support::ApiRequest;
+/// use tower::ServiceExt;
+///
+/// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+/// let client = EnterpriseClient::builder()
+///     .base_url("https://localhost:9443")
+///     .username("admin")
+///     .password("password")
+///     .insecure(true)
+///     .build()?;
+///
+/// // Convert to a Tower service
+/// let mut service = client.into_service();
+///
+/// // Use the service
+/// let response = service.oneshot(ApiRequest::get("/v1/cluster")).await?;
+/// println!("Status: {}", response.status);
+/// # Ok(())
+/// # }
+/// ```
+#[cfg(feature = "tower-integration")]
+pub mod tower_support {
+    use super::*;
+    use std::future::Future;
+    use std::pin::Pin;
+    use std::task::{Context, Poll};
+    use tower::Service;
+
+    /// HTTP method for API requests
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub enum Method {
+        /// GET request
+        Get,
+        /// POST request
+        Post,
+        /// PUT request
+        Put,
+        /// PATCH request
+        Patch,
+        /// DELETE request
+        Delete,
+    }
+
+    /// Tower-compatible request type for Redis Enterprise API
+    ///
+    /// This wraps the essential components of an API request in a format
+    /// suitable for Tower middleware composition.
+    #[derive(Debug, Clone)]
+    pub struct ApiRequest {
+        /// HTTP method
+        pub method: Method,
+        /// API endpoint path (e.g., "/v1/cluster")
+        pub path: String,
+        /// Optional JSON body for POST/PUT/PATCH requests
+        pub body: Option<serde_json::Value>,
+    }
+
+    impl ApiRequest {
+        /// Create a GET request
+        pub fn get(path: impl Into<String>) -> Self {
+            Self {
+                method: Method::Get,
+                path: path.into(),
+                body: None,
+            }
+        }
+
+        /// Create a POST request with a JSON body
+        pub fn post(path: impl Into<String>, body: serde_json::Value) -> Self {
+            Self {
+                method: Method::Post,
+                path: path.into(),
+                body: Some(body),
+            }
+        }
+
+        /// Create a PUT request with a JSON body
+        pub fn put(path: impl Into<String>, body: serde_json::Value) -> Self {
+            Self {
+                method: Method::Put,
+                path: path.into(),
+                body: Some(body),
+            }
+        }
+
+        /// Create a PATCH request with a JSON body
+        pub fn patch(path: impl Into<String>, body: serde_json::Value) -> Self {
+            Self {
+                method: Method::Patch,
+                path: path.into(),
+                body: Some(body),
+            }
+        }
+
+        /// Create a DELETE request
+        pub fn delete(path: impl Into<String>) -> Self {
+            Self {
+                method: Method::Delete,
+                path: path.into(),
+                body: None,
+            }
+        }
+    }
+
+    /// Tower-compatible response type
+    ///
+    /// Contains the HTTP status code and response body as JSON.
+    #[derive(Debug, Clone)]
+    pub struct ApiResponse {
+        /// HTTP status code
+        pub status: u16,
+        /// Response body as JSON
+        pub body: serde_json::Value,
+    }
+
+    impl EnterpriseClient {
+        /// Convert this client into a Tower service
+        ///
+        /// This consumes the client and returns it wrapped in a Tower service
+        /// implementation, enabling middleware composition.
+        ///
+        /// # Examples
+        ///
+        /// ```rust,ignore
+        /// use redis_enterprise::EnterpriseClient;
+        /// use tower::ServiceExt;
+        /// use redis_enterprise::tower_support::ApiRequest;
+        ///
+        /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+        /// let client = EnterpriseClient::builder()
+        ///     .base_url("https://localhost:9443")
+        ///     .username("admin")
+        ///     .password("password")
+        ///     .insecure(true)
+        ///     .build()?;
+        ///
+        /// let mut service = client.into_service();
+        /// let response = service.oneshot(ApiRequest::get("/v1/cluster")).await?;
+        /// # Ok(())
+        /// # }
+        /// ```
+        pub fn into_service(self) -> Self {
+            self
+        }
+    }
+
+    impl Service<ApiRequest> for EnterpriseClient {
+        type Response = ApiResponse;
+        type Error = RestError;
+        type Future = Pin<Box<dyn Future<Output = Result<Self::Response>> + Send>>;
+
+        fn poll_ready(
+            &mut self,
+            _cx: &mut Context<'_>,
+        ) -> Poll<std::result::Result<(), Self::Error>> {
+            // EnterpriseClient is always ready since it uses an internal connection pool
+            Poll::Ready(Ok(()))
+        }
+
+        fn call(&mut self, req: ApiRequest) -> Self::Future {
+            let client = self.clone();
+            Box::pin(async move {
+                let response: serde_json::Value = match req.method {
+                    Method::Get => client.get(&req.path).await?,
+                    Method::Post => {
+                        let body = req.body.ok_or_else(|| {
+                            RestError::ValidationError("POST request requires a body".to_string())
+                        })?;
+                        client.post(&req.path, &body).await?
+                    }
+                    Method::Put => {
+                        let body = req.body.ok_or_else(|| {
+                            RestError::ValidationError("PUT request requires a body".to_string())
+                        })?;
+                        client.put(&req.path, &body).await?
+                    }
+                    Method::Patch => {
+                        let body = req.body.ok_or_else(|| {
+                            RestError::ValidationError("PATCH request requires a body".to_string())
+                        })?;
+                        client.patch_raw(&req.path, body).await?
+                    }
+                    Method::Delete => {
+                        client.delete(&req.path).await?;
+                        serde_json::json!({"status": "deleted"})
+                    }
+                };
+
+                Ok(ApiResponse {
+                    status: 200,
+                    body: response,
+                })
+            })
+        }
     }
 }

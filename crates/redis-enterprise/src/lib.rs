@@ -367,6 +367,10 @@ mod lib_tests;
 pub use client::{EnterpriseClient, EnterpriseClientBuilder};
 pub use error::{RestError, Result};
 
+// Re-export Tower integration when feature is enabled
+#[cfg(feature = "tower-integration")]
+pub use client::tower_support;
+
 // Database management
 pub use bdb::{
     BdbHandler, CreateDatabaseRequest, CreateDatabaseRequestBuilder, Database, ModuleConfig,

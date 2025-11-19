@@ -8,6 +8,7 @@ A comprehensive Rust client library for the Redis Cloud REST API.
 - Async/await support with tokio
 - Strong typing for API requests and responses
 - Comprehensive error handling
+- Optional Tower service integration for middleware composition
 - Support for all Redis Cloud features including:
   - Subscriptions and databases
   - User and ACL management
@@ -21,6 +22,9 @@ A comprehensive Rust client library for the Redis Cloud REST API.
 ```toml
 [dependencies]
 redis-cloud = "0.1.0"
+
+# Optional: Enable Tower service integration
+redis-cloud = { version = "0.1.0", features = ["tower-integration"] }
 ```
 
 ## Quick Start
@@ -68,6 +72,37 @@ export REDIS_CLOUD_API_SECRET="your-api-secret"
 # Run an example
 cargo run --example basic
 ```
+
+## Tower Integration
+
+Enable the `tower-integration` feature to use the client with Tower middleware:
+
+```rust
+use redis_cloud::CloudClient;
+use redis_cloud::tower_support::ApiRequest;
+use tower::ServiceExt;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = CloudClient::builder()
+        .api_key("your-api-key")
+        .api_secret("your-api-secret")
+        .build()?;
+    
+    // Convert to a Tower service
+    let mut service = client.into_service();
+    
+    // Use the service
+    let response = service
+        .oneshot(ApiRequest::get("/subscriptions"))
+        .await?;
+    
+    println!("Response: {:?}", response.body);
+    Ok(())
+}
+```
+
+This enables composition with Tower middleware like circuit breakers, retry, rate limiting, and more.
 
 ## API Coverage
 

@@ -28,9 +28,15 @@ base64 = { workspace = true }
 chrono = { workspace = true }
 url = { workspace = true }
 typed-builder = "0.20"
+tower = { version = "0.5", optional = true }
+
+[features]
+tower-integration = ["tower"]
 
 [dev-dependencies]
 wiremock = { workspace = true }
 tokio = { workspace = true, features = ["rt", "macros", "test-util"] }
 pretty_assertions = { workspace = true }
 serial_test = { workspace = true }
+tower = { version = "0.5", features = ["timeout", "limit", "retry", "buffer"] }
+tower-resilience = { version = "0.3.8", features = ["retry"] }
