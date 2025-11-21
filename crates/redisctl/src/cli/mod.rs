@@ -1,0 +1,404 @@
+//! CLI structure and command definitions
+//!
+//! Defines the command-line interface using clap with a three-layer architecture:
+//! 1. Raw API access (`api` commands)
+//! 2. Human-friendly interface (`cloud`/`enterprise` commands)
+//! 3. Workflow orchestration (`workflow` commands - future)
+
+use clap::{Parser, Subcommand};
+use redisctl_config::DeploymentType;
+
+pub mod cloud;
+pub mod enterprise;
+
+pub use cloud::*;
+pub use enterprise::*;
+
+/// Redis management CLI with unified access to Cloud and Enterprise
+#[derive(Parser, Debug)]
+#[command(name = "redisctl")]
+#[command(
+    version,
+    about = "Redis management CLI for Cloud and Enterprise deployments"
+)]
+#[command(long_about = "
+Redis management CLI for Cloud and Enterprise deployments
+
+EXAMPLES:
+    # Set up a Cloud profile
+    redisctl profile set mycloud --type cloud --api-key KEY --api-secret SECRET
+
+    # Set up an Enterprise profile
+    redisctl profile set myenterprise --type enterprise --url https://cluster:9443 --username admin
+
+    # List databases
+    redisctl cloud database list
+    redisctl enterprise database list
+
+    # Get JSON output for scripting
+    redisctl cloud subscription list -o json
+
+    # Filter output with JMESPath
+    redisctl cloud database list -q 'databases[?status==`active`]'
+
+    # Direct API access
+    redisctl api cloud get /subscriptions
+    redisctl api enterprise get /v1/cluster
+
+For more help on a specific command, run:
+    redisctl <command> --help
+")]
+pub struct Cli {
+    /// Profile to use for this command
+    #[arg(long, short, global = true, env = "REDISCTL_PROFILE")]
+    pub profile: Option<String>,
+
+    /// Path to alternate configuration file
+    #[arg(long, global = true, env = "REDISCTL_CONFIG_FILE")]
+    pub config_file: Option<String>,
+
+    /// Output format
+    #[arg(long, short = 'o', global = true, value_enum, default_value = "auto")]
+    pub output: OutputFormat,
+
+    /// JMESPath query to filter output
+    #[arg(long, short = 'q', global = true)]
+    pub query: Option<String>,
+
+    /// Enable verbose logging
+    #[arg(long, short, global = true, action = clap::ArgAction::Count)]
+    pub verbose: u8,
+
+    #[command(subcommand)]
+    pub command: Commands,
+}
+
+/// Output format options
+#[derive(Debug, Clone, Copy, clap::ValueEnum)]
+pub enum OutputFormat {
+    /// Automatically choose format based on command and context
+    Auto,
+    /// JSON output
+    Json,
+    /// YAML output
+    Yaml,
+    /// Human-readable table format
+    Table,
+}
+
+/// Top-level commands
+#[derive(Subcommand, Debug)]
+pub enum Commands {
+    /// Raw API access - direct REST endpoint calls
+    #[command(name = "api")]
+    #[command(after_help = "EXAMPLES:
+    # GET request to Cloud API
+    redisctl api cloud get /subscriptions
+
+    # GET request to Enterprise API
+    redisctl api enterprise get /v1/cluster
+
+    # POST request with JSON data
+    redisctl api cloud post /subscriptions --data '{\"name\":\"my-sub\"}'
+
+    # POST request from file
+    redisctl api cloud post /subscriptions --data @subscription.json
+
+    # Output as JSON for scripting
+    redisctl api enterprise get /v1/bdbs -o json
+")]
+    Api {
+        /// Platform type (cloud or enterprise)
+        #[arg(value_enum)]
+        deployment: DeploymentType,
+
+        /// HTTP method
+        #[arg(value_parser = parse_http_method)]
+        method: HttpMethod,
+
+        /// API endpoint path (e.g., /subscriptions)
+        path: String,
+
+        /// Request body (JSON string or @file)
+        #[arg(long)]
+        data: Option<String>,
+    },
+
+    /// Profile management
+    #[command(subcommand, visible_alias = "prof", visible_alias = "pr")]
+    #[command(after_help = "EXAMPLES:
+    # Create a Cloud profile
+    redisctl profile set mycloud --type cloud --api-key KEY --api-secret SECRET
+
+    # Create an Enterprise profile
+    redisctl profile set myenterprise --type enterprise --url https://cluster:9443 --username admin
+
+    # List all profiles
+    redisctl profile list
+
+    # Show profile details
+    redisctl profile show mycloud
+
+    # Validate configuration
+    redisctl profile validate
+
+    # Set default profiles
+    redisctl profile default-cloud mycloud
+    redisctl profile default-enterprise myenterprise
+")]
+    Profile(ProfileCommands),
+
+    /// Cloud-specific operations
+    #[command(subcommand, visible_alias = "cl")]
+    Cloud(CloudCommands),
+
+    /// Enterprise-specific operations
+    #[command(subcommand, visible_alias = "ent", visible_alias = "en")]
+    Enterprise(EnterpriseCommands),
+
+    /// Files.com API key management (for support package uploads)
+    #[command(subcommand, visible_alias = "fk")]
+    FilesKey(FilesKeyCommands),
+
+    /// Version information
+    #[command(visible_alias = "ver", visible_alias = "v")]
+    Version,
+
+    /// Generate shell completions
+    #[command(visible_alias = "comp")]
+    Completions {
+        /// Shell to generate completions for
+        #[arg(value_enum)]
+        shell: Shell,
+    },
+}
+
+/// Supported shells for completion generation
+#[derive(Debug, Clone, Copy, clap::ValueEnum)]
+#[allow(clippy::enum_variant_names)]
+pub enum Shell {
+    /// Bourne Again Shell
+    Bash,
+    /// Z Shell
+    Zsh,
+    /// Friendly Interactive Shell
+    Fish,
+    /// PowerShell
+    #[value(name = "powershell", alias = "power-shell")]
+    PowerShell,
+    /// Elvish
+    Elvish,
+}
+
+/// HTTP methods for raw API access
+#[derive(Debug, Clone)]
+pub enum HttpMethod {
+    Get,
+    Post,
+    Put,
+    Patch,
+    Delete,
+}
+
+/// Parse HTTP method case-insensitively
+fn parse_http_method(s: &str) -> Result<HttpMethod, String> {
+    match s.to_lowercase().as_str() {
+        "get" => Ok(HttpMethod::Get),
+        "post" => Ok(HttpMethod::Post),
+        "put" => Ok(HttpMethod::Put),
+        "patch" => Ok(HttpMethod::Patch),
+        "delete" => Ok(HttpMethod::Delete),
+        _ => Err(format!(
+            "invalid HTTP method: {} (valid: get, post, put, patch, delete)",
+            s
+        )),
+    }
+}
+
+impl std::fmt::Display for HttpMethod {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            HttpMethod::Get => write!(f, "GET"),
+            HttpMethod::Post => write!(f, "POST"),
+            HttpMethod::Put => write!(f, "PUT"),
+            HttpMethod::Patch => write!(f, "PATCH"),
+            HttpMethod::Delete => write!(f, "DELETE"),
+        }
+    }
+}
+
+/// Profile management commands
+#[derive(Subcommand, Debug)]
+pub enum ProfileCommands {
+    /// List all configured profiles
+    #[command(visible_alias = "ls", visible_alias = "l")]
+    List,
+
+    /// Show the path to the configuration file
+    Path,
+
+    /// Show details of a specific profile
+    #[command(visible_alias = "sh", visible_alias = "get")]
+    Show {
+        /// Profile name to show
+        name: String,
+    },
+
+    /// Set or create a profile
+    #[command(visible_alias = "add", visible_alias = "create")]
+    #[command(after_help = "EXAMPLES:
+    # Create a Cloud profile
+    redisctl profile set mycloud --type cloud \\
+        --api-key A3qcymrvqpn9rrgdt40sv5f9yfxob26vx64hwddh8vminqnkgfq \\
+        --api-secret S3s8ecrrnaguqkvwfvealoe3sn25zqs4wc4lwgo4rb0ud3qm77c
+
+    # Create an Enterprise profile (password will be prompted)
+    redisctl profile set prod --type enterprise \\
+        --url https://cluster.example.com:9443 \\
+        --username admin@example.com
+
+    # Create Enterprise profile with password
+    redisctl profile set staging --type enterprise \\
+        --url https://staging:9443 \\
+        --username admin \\
+        --password mypassword
+
+    # Create Enterprise profile allowing insecure connections
+    redisctl profile set local --type enterprise \\
+        --url https://localhost:9443 \\
+        --username admin@redis.local \\
+        --insecure
+")]
+    Set {
+        /// Profile name
+        name: String,
+
+        /// Platform type: 'cloud' for Redis Cloud or 'enterprise' for Redis Enterprise
+        #[arg(long, value_enum, visible_alias = "deployment")]
+        r#type: DeploymentType,
+
+        /// API key (for Cloud profiles)
+        #[arg(long, required_if_eq("type", "cloud"))]
+        api_key: Option<String>,
+
+        /// API secret (for Cloud profiles)
+        #[arg(long, required_if_eq("type", "cloud"))]
+        api_secret: Option<String>,
+
+        /// API URL (for Cloud profiles)
+        #[arg(long, default_value = "https://api.redislabs.com/v1")]
+        api_url: String,
+
+        /// Enterprise URL (for Enterprise profiles)
+        #[arg(long, required_if_eq("type", "enterprise"))]
+        url: Option<String>,
+
+        /// Username (for Enterprise profiles)
+        #[arg(long, required_if_eq("type", "enterprise"))]
+        username: Option<String>,
+
+        /// Password (for Enterprise profiles)
+        #[arg(long)]
+        password: Option<String>,
+
+        /// Allow insecure connections (for Enterprise profiles)
+        #[arg(long)]
+        insecure: bool,
+
+        /// Store credentials in OS keyring instead of config file
+        #[cfg(feature = "secure-storage")]
+        #[arg(long)]
+        use_keyring: bool,
+    },
+
+    /// Remove a profile
+    #[command(visible_alias = "rm", visible_alias = "del", visible_alias = "delete")]
+    Remove {
+        /// Profile name to remove
+        name: String,
+    },
+
+    /// Set the default profile for enterprise commands
+    #[command(name = "default-enterprise", visible_alias = "def-ent")]
+    DefaultEnterprise {
+        /// Profile name to set as default for enterprise commands
+        name: String,
+    },
+
+    /// Set the default profile for cloud commands
+    #[command(name = "default-cloud", visible_alias = "def-cloud")]
+    DefaultCloud {
+        /// Profile name to set as default for cloud commands
+        name: String,
+    },
+
+    /// Validate configuration file and profiles
+    #[command(visible_alias = "check")]
+    #[command(after_help = "EXAMPLES:
+    # Validate all profiles and configuration
+    redisctl profile validate
+
+    # Example output:
+    # Configuration file: /Users/user/.config/redisctl/config.toml
+    # ✓ Configuration file exists and is readable
+    # ✓ Found 2 profile(s)
+    #
+    # Profile 'mycloud' (cloud): ✓ Valid
+    # Profile 'myenterprise' (enterprise): ✓ Valid
+    #
+    # ✓ Default enterprise profile: myenterprise
+    # ✓ Default cloud profile: mycloud
+    #
+    # ✓ Configuration is valid
+")]
+    Validate,
+}
+
+/// Files.com API key management commands
+#[derive(Subcommand, Debug)]
+pub enum FilesKeyCommands {
+    /// Store Files.com API key (globally or in config)
+    #[command(visible_alias = "add")]
+    Set {
+        /// The Files.com API key provided by Redis Support
+        api_key: String,
+
+        /// Store in system keyring (most secure - recommended)
+        #[cfg(feature = "secure-storage")]
+        #[arg(long)]
+        use_keyring: bool,
+
+        /// Store globally in config file (plaintext - not recommended)
+        #[arg(long, conflicts_with = "use_keyring")]
+        global: bool,
+
+        /// Store in specific profile's config (plaintext - not recommended)
+        #[arg(long, conflicts_with_all = ["use_keyring", "global"])]
+        profile: Option<String>,
+    },
+
+    /// Get the currently configured Files.com API key
+    #[command(visible_alias = "show")]
+    Get {
+        /// Show for specific profile
+        #[arg(long)]
+        profile: Option<String>,
+    },
+
+    /// Remove Files.com API key
+    #[command(visible_alias = "rm", visible_alias = "delete")]
+    Remove {
+        /// Remove from keyring
+        #[cfg(feature = "secure-storage")]
+        #[arg(long)]
+        keyring: bool,
+
+        /// Remove from global config
+        #[arg(long, conflicts_with = "keyring")]
+        global: bool,
+
+        /// Remove from specific profile
+        #[arg(long, conflicts_with_all = ["keyring", "global"])]
+        profile: Option<String>,
+    },
+}
