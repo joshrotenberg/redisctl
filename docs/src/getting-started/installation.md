@@ -1,5 +1,20 @@
 # Installation
 
+## Docker
+
+The quickest way to try redisctl with no installation:
+
+```bash
+# Run commands directly
+docker run --rm joshrotenberg/redisctl --help
+
+# With environment variables
+docker run --rm \
+  -e REDIS_CLOUD_API_KEY="your-key" \
+  -e REDIS_CLOUD_SECRET_KEY="your-secret" \
+  joshrotenberg/redisctl cloud database list
+```
+
 ## Homebrew (macOS/Linux)
 
 The easiest way to install on macOS or Linux:
@@ -76,22 +91,6 @@ cargo install --path crates/redisctl --features secure-storage
 
 # Development build with all features
 cargo build --release --all-features
-```
-
-## Docker
-
-```bash
-# Pull the image
-docker pull joshrotenberg/redisctl:latest
-
-# Run commands
-docker run --rm joshrotenberg/redisctl --help
-
-# With environment variables
-docker run --rm \
-  -e REDIS_CLOUD_API_KEY="your-key" \
-  -e REDIS_CLOUD_SECRET_KEY="your-secret" \
-  joshrotenberg/redisctl cloud database list
 ```
 
 ## Shell Completions

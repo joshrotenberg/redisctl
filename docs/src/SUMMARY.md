@@ -1,22 +1,17 @@
 # Summary
 
-[Introduction](./introduction.md)
+# Introduction
 
-# Getting Started
-
+- [Overview](./introduction.md)
+- [Quick Start](./getting-started/quickstart.md)
 - [Installation](./getting-started/installation.md)
-- [Profiles & Authentication](./getting-started/profiles.md)
-- [Common Features](./getting-started/common-features.md)
-  - [Output Formats](./getting-started/output-formats.md)
-  - [JMESPath Queries](./getting-started/jmespath-queries.md)
-  - [Async Operations](./getting-started/async-operations.md)
-- [Shell Completions](./getting-started/shell-completions.md)
 
-# Walkthrough
+# Common Features
 
-- [Overview & Concepts](./walkthrough/overview.md)
-- [Cloud Quick Examples](./walkthrough/cloud-examples.md)
-- [Enterprise Quick Examples](./walkthrough/enterprise-examples.md)
+- [Profiles & Authentication](./common-features/profiles.md)
+- [Output Formats](./common-features/output-formats.md)
+- [JMESPath Queries](./common-features/jmespath-queries.md)
+- [Async Operations](./common-features/async-operations.md)
 
 # Redis Cloud
 
@@ -49,6 +44,12 @@
   - [Diagnostics](./enterprise/operations/diagnostics.md)
   - [Migrations](./enterprise/operations/migration.md)
 
+# Walkthrough
+
+- [Overview & Concepts](./walkthrough/overview.md)
+- [Cloud Quick Examples](./walkthrough/cloud-examples.md)
+- [Enterprise Quick Examples](./walkthrough/enterprise-examples.md)
+
 # Cookbook
 
 - [Overview](./cookbook/README.md)
@@ -71,6 +72,7 @@
 
 - [Environment Variables](./reference/environment-variables.md)
 - [Configuration File](./reference/config-file.md)
+- [Shell Completions](./reference/shell-completions.md)
 - [Security](./reference/security.md)
 - [Troubleshooting](./reference/troubleshooting.md)
 - [rladmin Comparison](./reference/rladmin.md)
