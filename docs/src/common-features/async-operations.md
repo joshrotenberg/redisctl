@@ -8,10 +8,10 @@ Use `--wait` to block until the operation completes:
 
 ```bash
 # Returns immediately with task ID
-redisctl cloud database create --subscription-id 123 --data '{...}'
+redisctl cloud database create --subscription 123 --data '{...}'
 
 # Waits for completion, returns final result
-redisctl cloud database create --subscription-id 123 --data '{...}' --wait
+redisctl cloud database create --subscription 123 --data '{...}' --wait
 ```
 
 ## Polling Options
@@ -87,7 +87,7 @@ $ redisctl cloud task get abc-123
 ```bash
 # Create and get the new database ID
 DB_ID=$(redisctl cloud database create \
-  --subscription-id 123 \
+  --subscription 123 \
   --data '{"name": "mydb"}' \
   --wait \
   -q 'databaseId')

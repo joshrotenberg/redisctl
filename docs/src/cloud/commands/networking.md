@@ -9,19 +9,19 @@ Connect your Redis Cloud subscription to your VPC.
 ### List VPC Peerings
 
 ```bash
-redisctl cloud vpc-peering list --subscription-id <ID>
+redisctl cloud vpc-peering list --subscription <ID>
 ```
 
 ### Get VPC Peering
 
 ```bash
-redisctl cloud vpc-peering get --subscription-id <ID> --peering-id <PEERING_ID>
+redisctl cloud vpc-peering get --subscription <ID> --peering-id <PEERING_ID>
 ```
 
 ### Create VPC Peering
 
 ```bash
-redisctl cloud vpc-peering create --subscription-id <ID> --data '{
+redisctl cloud vpc-peering create --subscription <ID> --data '{
   "region": "us-east-1",
   "awsAccountId": "123456789012",
   "vpcId": "vpc-abc123",
@@ -32,7 +32,7 @@ redisctl cloud vpc-peering create --subscription-id <ID> --data '{
 ### Delete VPC Peering
 
 ```bash
-redisctl cloud vpc-peering delete --subscription-id <ID> --peering-id <PEERING_ID> --wait
+redisctl cloud vpc-peering delete --subscription <ID> --peering-id <PEERING_ID> --wait
 ```
 
 ### AWS Setup
@@ -49,7 +49,7 @@ After creating the peering in redisctl:
 ### Create PSC Service
 
 ```bash
-redisctl cloud psc create-service --subscription-id <ID> --data '{
+redisctl cloud psc create-service --subscription <ID> --data '{
   "region": "us-central1"
 }' --wait
 ```
@@ -57,7 +57,7 @@ redisctl cloud psc create-service --subscription-id <ID> --data '{
 ### Create PSC Endpoint
 
 ```bash
-redisctl cloud psc create-endpoint --subscription-id <ID> --data '{
+redisctl cloud psc create-endpoint --subscription <ID> --data '{
   "serviceId": "psc-123",
   "endpointName": "redis-endpoint"
 }' --wait
@@ -66,7 +66,7 @@ redisctl cloud psc create-endpoint --subscription-id <ID> --data '{
 ### List PSC Services
 
 ```bash
-redisctl cloud psc list-services --subscription-id <ID>
+redisctl cloud psc list-services --subscription <ID>
 ```
 
 ## Transit Gateway (AWS)
@@ -74,7 +74,7 @@ redisctl cloud psc list-services --subscription-id <ID>
 ### Create Transit Gateway Attachment
 
 ```bash
-redisctl cloud tgw create --subscription-id <ID> --data '{
+redisctl cloud tgw create --subscription <ID> --data '{
   "region": "us-east-1",
   "transitGatewayId": "tgw-abc123",
   "cidrs": ["10.0.0.0/16"]
@@ -84,13 +84,13 @@ redisctl cloud tgw create --subscription-id <ID> --data '{
 ### List Transit Gateway Attachments
 
 ```bash
-redisctl cloud tgw list --subscription-id <ID>
+redisctl cloud tgw list --subscription <ID>
 ```
 
 ### Delete Transit Gateway Attachment
 
 ```bash
-redisctl cloud tgw delete --subscription-id <ID> --tgw-id <TGW_ID> --wait
+redisctl cloud tgw delete --subscription <ID> --tgw-id <TGW_ID> --wait
 ```
 
 ## CIDR Allowlist
@@ -100,13 +100,13 @@ Control which IP ranges can access your subscription.
 ### Get CIDR Allowlist
 
 ```bash
-redisctl cloud subscription get-cidr --subscription-id <ID>
+redisctl cloud subscription get-cidr --subscription <ID>
 ```
 
 ### Update CIDR Allowlist
 
 ```bash
-redisctl cloud subscription update-cidr --subscription-id <ID> --data '{
+redisctl cloud subscription update-cidr --subscription <ID> --data '{
   "cidrIps": ["10.0.0.0/16", "192.168.1.0/24"],
   "securityGroupIds": ["sg-abc123"]
 }'
@@ -119,7 +119,7 @@ redisctl cloud subscription update-cidr --subscription-id <ID> --data '{
 ```bash
 # Create peering
 PEERING=$(redisctl cloud vpc-peering create \
-  --subscription-id 123456 \
+  --subscription 123456 \
   --data '{
     "region": "us-east-1",
     "awsAccountId": "123456789012",
@@ -135,13 +135,13 @@ echo "Peering ID: $(echo $PEERING | jq -r '.vpcPeeringId')"
 
 ```bash
 # VPC peerings
-redisctl cloud vpc-peering list --subscription-id 123456 -o table
+redisctl cloud vpc-peering list --subscription 123456 -o table
 
 # PSC services  
-redisctl cloud psc list-services --subscription-id 123456 -o table
+redisctl cloud psc list-services --subscription 123456 -o table
 
 # Transit gateways
-redisctl cloud tgw list --subscription-id 123456 -o table
+redisctl cloud tgw list --subscription 123456 -o table
 ```
 
 ## Active-Active Networking
@@ -150,7 +150,7 @@ For Active-Active subscriptions, use the `--active-active` flag:
 
 ```bash
 redisctl cloud vpc-peering create-active-active \
-  --subscription-id <ID> \
+  --subscription <ID> \
   --region us-east-1 \
   --data '{...}' --wait
 ```

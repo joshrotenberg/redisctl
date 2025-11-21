@@ -63,10 +63,10 @@ redisctl cloud task get abc-123-def -q 'response.error.description'
 
 ```bash
 # Using --wait flag (recommended)
-redisctl cloud database create --subscription-id 123 --data '{...}' --wait
+redisctl cloud database create --subscription 123 --data '{...}' --wait
 
 # Manual polling
-TASK_ID=$(redisctl cloud database create --subscription-id 123 --data '{...}' -q 'taskId')
+TASK_ID=$(redisctl cloud database create --subscription 123 --data '{...}' -q 'taskId')
 
 while true; do
   STATUS=$(redisctl cloud task get $TASK_ID -q 'status')

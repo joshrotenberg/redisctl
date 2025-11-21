@@ -39,7 +39,7 @@ Type-safe, ergonomic commands with named parameters and built-in help.
 
 ```bash
 redisctl cloud database create \
-  --subscription-id 123456 \
+  --subscription 123456 \
   --data @database.json \
   --wait
 

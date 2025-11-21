@@ -6,34 +6,34 @@ Manage Redis Cloud databases within subscriptions.
 
 ### List Databases
 
-List all databases in a subscription.
+List all databases across subscriptions or in a specific subscription.
 
 ```bash
-redisctl cloud database list --subscription-id <ID> [OPTIONS]
+redisctl cloud database list [OPTIONS]
 ```
 
-**Required Options:**
-- `--subscription-id <ID>` - The subscription ID
-
 **Options:**
+- `--subscription <ID>` - Filter by subscription ID
 - `-o, --output <FORMAT>` - Output format: json, yaml, or table
 - `-q, --query <JMESPATH>` - JMESPath query to filter output
 
 **Examples:**
 
 ```bash
-# List all databases in subscription
-redisctl cloud database list --subscription-id 123456
+# List all databases
+redisctl cloud database list
 
-# Show specific fields in table format
-redisctl cloud database list --subscription-id 123456 -o table
+# List databases in specific subscription
+redisctl cloud database list --subscription 123456
 
-# Filter active databases only
-redisctl cloud database list --subscription-id 123456 -q "[?status=='active']"
+# Table format
+redisctl cloud database list -o table
 
-# Get database names and endpoints
-redisctl cloud database list --subscription-id 123456 \
-  -q "[].{name: name, endpoint: publicEndpoint}"
+# Filter active databases
+redisctl cloud database list -q "[?status=='active']"
+
+# Get names and endpoints
+redisctl cloud database list -q "[].{name: name, endpoint: publicEndpoint}"
 ```
 
 ### Get Database
@@ -41,21 +41,20 @@ redisctl cloud database list --subscription-id 123456 \
 Get details of a specific database.
 
 ```bash
-redisctl cloud database get --subscription-id <SUB_ID> --database-id <DB_ID> [OPTIONS]
+redisctl cloud database get <ID> [OPTIONS]
 ```
 
-**Required Options:**
-- `--subscription-id <SUB_ID>` - The subscription ID
-- `--database-id <DB_ID>` - The database ID
+**Arguments:**
+- `<ID>` - Database ID (format: `subscription_id:database_id`)
 
 **Examples:**
 
 ```bash
 # Get database details
-redisctl cloud database get --subscription-id 123456 --database-id 789
+redisctl cloud database get 123456:789
 
 # Get connection details
-redisctl cloud database get --subscription-id 123456 --database-id 789 \
+redisctl cloud database get 123456:789 \
   -q "{endpoint: publicEndpoint, port: port, password: password}"
 ```
 
@@ -64,64 +63,54 @@ redisctl cloud database get --subscription-id 123456 --database-id 789 \
 Create a new database in a subscription.
 
 ```bash
-redisctl cloud database create --subscription-id <ID> --data <JSON> [OPTIONS]
+redisctl cloud database create --subscription <ID> [OPTIONS]
 ```
 
-**Required Options:**
-- `--subscription-id <ID>` - The subscription ID
-- `--data <JSON>` - Database configuration (inline or @file.json)
+**Required:**
+- `--subscription <ID>` - Subscription ID
 
-**Async Options:**
-- `--wait` - Wait for database creation to complete
-- `--wait-timeout <SECONDS>` - Maximum time to wait (default: 600)
-- `--wait-interval <SECONDS>` - Polling interval (default: 10)
+**Options:**
+- `--name <NAME>` - Database name
+- `--memory <GB>` - Memory limit in GB
+- `--protocol <PROTOCOL>` - redis or memcached
+- `--data <JSON>` - Full configuration as JSON
+- `--wait` - Wait for completion
 
-**Example Payload:**
+**Examples:**
+
+```bash
+# Create with flags
+redisctl cloud database create \
+  --subscription 123456 \
+  --name mydb \
+  --memory 1
+
+# Create with JSON data
+redisctl cloud database create \
+  --subscription 123456 \
+  --data @database.json \
+  --wait
+
+# Create with inline JSON
+redisctl cloud database create \
+  --subscription 123456 \
+  --data '{"name": "test-db", "memoryLimitInGb": 1}'
+```
+
+**Example JSON Payload:**
 
 ```json
 {
   "name": "production-cache",
   "memoryLimitInGb": 4,
   "protocol": "redis",
-  "port": 10000,
-  "throughputMeasurement": {
-    "by": "operations-per-second",
-    "value": 25000
-  },
   "replication": true,
   "dataPersistence": "aof-every-write",
-  "dataEvictionPolicy": "allkeys-lru",
   "modules": [
-    {
-      "name": "RedisJSON"
-    },
-    {
-      "name": "RediSearch"
-    }
-  ],
-  "alerts": [
-    {
-      "name": "dataset-size",
-      "value": 80
-    }
+    {"name": "RedisJSON"},
+    {"name": "RediSearch"}
   ]
 }
-```
-
-**Examples:**
-
-```bash
-# Create database from file
-redisctl cloud database create --subscription-id 123456 --data @database.json
-
-# Create and wait for completion
-redisctl cloud database create --subscription-id 123456 --data @database.json --wait
-
-# Create minimal database
-redisctl cloud database create --subscription-id 123456 --data '{
-  "name": "test-db",
-  "memoryLimitInGb": 1
-}'
 ```
 
 ### Update Database
@@ -129,40 +118,27 @@ redisctl cloud database create --subscription-id 123456 --data '{
 Update database configuration.
 
 ```bash
-redisctl cloud database update --subscription-id <SUB_ID> --database-id <DB_ID> --data <JSON> [OPTIONS]
+redisctl cloud database update <ID> [OPTIONS]
 ```
 
-**Required Options:**
-- `--subscription-id <SUB_ID>` - The subscription ID
-- `--database-id <DB_ID>` - The database ID
-- `--data <JSON>` - Updates to apply
+**Arguments:**
+- `<ID>` - Database ID (format: `subscription_id:database_id`)
 
-**Async Options:**
-- `--wait` - Wait for update to complete
-- `--wait-timeout <SECONDS>` - Maximum time to wait
-- `--wait-interval <SECONDS>` - Polling interval
+**Options:**
+- `--data <JSON>` - Updates to apply
+- `--wait` - Wait for completion
 
 **Examples:**
 
 ```bash
-# Increase memory limit
-redisctl cloud database update \
-  --subscription-id 123456 \
-  --database-id 789 \
+# Increase memory
+redisctl cloud database update 123456:789 \
   --data '{"memoryLimitInGb": 8}' \
   --wait
 
 # Update eviction policy
-redisctl cloud database update \
-  --subscription-id 123456 \
-  --database-id 789 \
+redisctl cloud database update 123456:789 \
   --data '{"dataEvictionPolicy": "volatile-lru"}'
-
-# Add modules
-redisctl cloud database update \
-  --subscription-id 123456 \
-  --database-id 789 \
-  --data '{"modules": [{"name": "RedisTimeSeries"}]}'
 ```
 
 ### Delete Database
@@ -170,189 +146,107 @@ redisctl cloud database update \
 Delete a database.
 
 ```bash
-redisctl cloud database delete --subscription-id <SUB_ID> --database-id <DB_ID> [OPTIONS]
+redisctl cloud database delete <ID> [OPTIONS]
 ```
 
-**Required Options:**
-- `--subscription-id <SUB_ID>` - The subscription ID
-- `--database-id <DB_ID>` - The database ID
+**Arguments:**
+- `<ID>` - Database ID (format: `subscription_id:database_id`)
 
-**Async Options:**
+**Options:**
 - `--wait` - Wait for deletion to complete
 
 **Examples:**
 
 ```bash
 # Delete database
-redisctl cloud database delete --subscription-id 123456 --database-id 789
+redisctl cloud database delete 123456:789
 
-# Delete and wait for completion
-redisctl cloud database delete --subscription-id 123456 --database-id 789 --wait
+# Delete and wait
+redisctl cloud database delete 123456:789 --wait
 ```
 
 ## Database Operations
 
 ### Backup Database
 
-Create a manual backup.
+Trigger a manual backup.
 
 ```bash
-redisctl cloud database backup --subscription-id <SUB_ID> --database-id <DB_ID> [OPTIONS]
+redisctl cloud database backup <ID> [OPTIONS]
 ```
 
 **Examples:**
 
 ```bash
-# Create backup
-redisctl cloud database backup --subscription-id 123456 --database-id 789
-
-# Create and wait
-redisctl cloud database backup --subscription-id 123456 --database-id 789 --wait
+redisctl cloud database backup 123456:789
+redisctl cloud database backup 123456:789 --wait
 ```
 
 ### Import Data
 
-Import data from a backup.
+Import data into a database.
 
 ```bash
-redisctl cloud database import --subscription-id <SUB_ID> --database-id <DB_ID> --data <JSON> [OPTIONS]
+redisctl cloud database import <ID> --data <JSON> [OPTIONS]
 ```
 
-**Example Payload:**
+**Example:**
 
-```json
-{
+```bash
+redisctl cloud database import 123456:789 --data '{
   "sourceType": "s3",
-  "importFromUri": ["s3://bucket/backup.rdb"],
-  "s3Credentials": {
-    "accessKey": "AWS_ACCESS_KEY",
-    "secretKey": "AWS_SECRET_KEY"
-  }
-}
-```
-
-### Export Data
-
-Export database data.
-
-```bash
-redisctl cloud database export --subscription-id <SUB_ID> --database-id <DB_ID> --data <JSON> [OPTIONS]
-```
-
-## Fixed Databases
-
-Fixed databases run on reserved infrastructure.
-
-### List Fixed Databases
-
-```bash
-redisctl cloud fixed-database list --subscription-id <ID>
-```
-
-### Create Fixed Database
-
-```bash
-redisctl cloud fixed-database create --subscription-id <ID> --data @fixed-db.json --wait
-```
-
-## Active-Active Databases
-
-Multi-region Active-Active (CRDB) databases.
-
-### Create Active-Active Database
-
-```bash
-redisctl cloud database create-active-active --subscription-id <ID> --data @crdb.json --wait
-```
-
-**Example Payload:**
-
-```json
-{
-  "name": "global-cache",
-  "memoryLimitInGb": 10,
-  "regions": [
-    {
-      "region": "us-east-1",
-      "localThroughputMeasurement": {
-        "by": "operations-per-second",
-        "value": 10000
-      }
-    },
-    {
-      "region": "eu-west-1",
-      "localThroughputMeasurement": {
-        "by": "operations-per-second",
-        "value": 10000
-      }
-    }
-  ]
-}
+  "importFromUri": ["s3://bucket/backup.rdb"]
+}'
 ```
 
 ## Common Patterns
 
-### Get Database Connection String
+### Get Connection String
 
 ```bash
-# Get Redis URI
-DB=$(redisctl cloud database get --subscription-id 123456 --database-id 789)
-echo "redis://:$(echo $DB | jq -r .password)@$(echo $DB | jq -r .publicEndpoint)"
+DB=$(redisctl cloud database get 123456:789)
+ENDPOINT=$(echo $DB | jq -r '.publicEndpoint')
+PASSWORD=$(echo $DB | jq -r '.password')
+echo "redis://:$PASSWORD@$ENDPOINT"
 ```
 
-### Monitor Database Metrics
+### Monitor Databases
 
 ```bash
-# Check memory usage
-redisctl cloud database get --subscription-id 123456 --database-id 789 \
-  -q "{used: usedMemoryInMB, limit: memoryLimitInGB}" | \
-  jq -r '"Memory: \(.used)MB / \(.limit)GB"'
+# Check memory usage across all databases
+redisctl cloud database list \
+  -q "[].{name: name, used: usedMemoryInMB, limit: memoryLimitInGb}" \
+  -o table
 ```
 
 ### Bulk Operations
 
 ```bash
-# Update all databases in subscription
-for db in $(redisctl cloud database list --subscription-id 123456 -q "[].databaseId" | jq -r '.[]'); do
-  echo "Updating database $db"
-  redisctl cloud database update \
-    --subscription-id 123456 \
-    --database-id $db \
-    --data '{"alerts": [{"name": "dataset-size", "value": 90}]}'
+# List all database IDs
+for db in $(redisctl cloud database list -q "[].databaseId" | jq -r '.[]'); do
+  echo "Processing $db"
 done
 ```
 
 ## Troubleshooting
 
-### Common Issues
-
-**"Database creation failed"**
+### "Database creation failed"
 - Check subscription has available resources
 - Verify region supports requested features
 - Check module compatibility
 
-**"Cannot connect to database"**
-- Verify security group/firewall rules
-- Check if database is active: `status == 'active'`
+### "Cannot connect"
+- Verify database is active: check `status` field
+- Check firewall/security group rules
 - Ensure correct endpoint and port
-
-**"Module not available"**
-- Some modules require specific Redis versions
-- Check module compatibility in subscription settings
-
-## Related Commands
-
-- [Subscriptions](./subscriptions.md) - Manage parent subscriptions
-- [ACL](./acl.md) - Configure access control
-- [Connectivity](./connectivity.md) - Set up VPC peering
 
 ## API Reference
 
-These commands use the following REST endpoints:
-- `GET /v1/subscriptions/{subId}/databases` - List databases
-- `GET /v1/subscriptions/{subId}/databases/{dbId}` - Get database
-- `POST /v1/subscriptions/{subId}/databases` - Create database
-- `PUT /v1/subscriptions/{subId}/databases/{dbId}` - Update database
-- `DELETE /v1/subscriptions/{subId}/databases/{dbId}` - Delete database
+REST endpoints:
+- `GET /v1/subscriptions/{subId}/databases` - List
+- `POST /v1/subscriptions/{subId}/databases` - Create
+- `GET /v1/subscriptions/{subId}/databases/{dbId}` - Get
+- `PUT /v1/subscriptions/{subId}/databases/{dbId}` - Update
+- `DELETE /v1/subscriptions/{subId}/databases/{dbId}` - Delete
 
 For direct API access: `redisctl api cloud get /subscriptions/123456/databases`

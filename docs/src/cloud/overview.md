@@ -15,7 +15,7 @@ redisctl api cloud post /subscriptions -d @subscription.json
 Human-friendly commands for day-to-day operations:
 ```bash
 redisctl cloud subscription list
-redisctl cloud database create --subscription-id 123 --data @db.json --wait
+redisctl cloud database create --subscription 123 --data @db.json --wait
 ```
 
 ### 3. Workflows
@@ -66,17 +66,17 @@ redisctl cloud subscription list -o table
 
 # Create database and wait
 redisctl cloud database create \
-  --subscription-id 123456 \
+  --subscription 123456 \
   --data '{"name": "cache", "memoryLimitInGb": 1}' \
   --wait
 
 # Get database connection info
-redisctl cloud database get 123456 789 \
+redisctl cloud database get 123456:789 \
   -q '{endpoint: publicEndpoint, password: password}'
 
 # Set up VPC peering
 redisctl cloud vpc-peering create \
-  --subscription-id 123456 \
+  --subscription 123456 \
   --data @peering.json \
   --wait
 ```

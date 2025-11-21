@@ -9,10 +9,10 @@ Filter and transform output using JMESPath expressions with the `-q` or `--query
 redisctl enterprise cluster get -q 'name'
 
 # Get nested field
-redisctl cloud database get 123 456 -q 'security.ssl_client_authentication'
+redisctl cloud database get 123:456 -q 'security.ssl_client_authentication'
 
 # Get multiple fields
-redisctl enterprise database get 1 -q '{name: name, memory: memory_size, port: port}'
+redisctl enterprise database get 1:-q '{name: name, memory: memory_size, port: port}'
 ```
 
 ## Array Operations

@@ -55,31 +55,28 @@ redisctl cloud subscription list -o table
 redisctl cloud subscription get 123456
 
 # List databases with specific fields
-redisctl cloud database list --subscription-id 123456 \
+redisctl cloud database list --subscription 123456 \
   -q "[].{name:name,status:status,memory:memoryLimitInGb}" \
   -o table
 
 # Create database and wait for completion
 redisctl cloud database create \
-  --subscription-id 123456 \
-  --data '{
-    "name": "sessions",
-    "memoryLimitInGb": 2,
-    "replication": true
-  }' \
+  --subscription 123456 \
+  --name sessions \
+  --memory 2 \
   --wait
 
 # Get connection details
-redisctl cloud database get 123456 789 \
+redisctl cloud database get 123456:789 \
   -q '{endpoint: publicEndpoint, password: password}'
 
 # Update database memory
-redisctl cloud database update 123456 789 \
+redisctl cloud database update 123456:789 \
   --data '{"memoryLimitInGb": 4}' \
   --wait
 
 # Delete database
-redisctl cloud database delete 123456 789 --wait
+redisctl cloud database delete 123456:789 --wait
 ```
 
 ## Workflow Examples
@@ -112,7 +109,7 @@ This single command:
 ### Get Database Connection String
 
 ```bash
-DB=$(redisctl cloud database get 123456 789)
+DB=$(redisctl cloud database get 123456:789)
 ENDPOINT=$(echo $DB | jq -r '.publicEndpoint')
 PASSWORD=$(echo $DB | jq -r '.password')
 echo "redis://:$PASSWORD@$ENDPOINT"
@@ -123,7 +120,7 @@ echo "redis://:$PASSWORD@$ENDPOINT"
 ```bash
 for sub in $(redisctl cloud subscription list -q '[].id' | jq -r '.[]'); do
   echo "=== Subscription $sub ==="
-  redisctl cloud database list --subscription-id $sub -o table
+  redisctl cloud database list --subscription $sub -o table
 done
 ```
 
@@ -131,7 +128,7 @@ done
 
 ```bash
 TASK_ID=$(redisctl cloud database create \
-  --subscription-id 123456 \
+  --subscription 123456 \
   --data @database.json \
   -q 'taskId')
 
@@ -161,7 +158,7 @@ done
 # Backup subscription and database configs
 SUB_ID=123456
 redisctl cloud subscription get $SUB_ID > subscription-$SUB_ID.json
-redisctl cloud database list --subscription-id $SUB_ID > databases-$SUB_ID.json
+redisctl cloud database list --subscription $SUB_ID > databases-$SUB_ID.json
 ```
 
 ## Next Steps

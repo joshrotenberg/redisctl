@@ -24,7 +24,7 @@ redisctl cloud database backup \
 
 # Create new database from backup
 redisctl cloud database create \
-  --subscription-id 42 \
+  --subscription 42 \
   --data '{
     "name": "migrated-db",
     "memory_limit_in_gb": 2,
@@ -100,7 +100,7 @@ For minimal downtime, use Redis replication:
 ```bash
 # Create destination database with replication source
 redisctl cloud database create \
-  --subscription-id 43 \
+  --subscription 43 \
   --data '{
     "name": "replica-db",
     "memory_limit_in_gb": 2,
@@ -125,7 +125,7 @@ redis-cli -h replica-endpoint -p 67890 INFO replication
 
 # Promote replica to master
 redisctl cloud database update \
-  --subscription-id 43 \
+  --subscription 43 \
   --database-id 67890 \
   --data '{"replica_of": []}' \
   --wait
@@ -148,7 +148,7 @@ redisctl cloud database backup \
 
 # 3. Create database in target region from backup
 redisctl cloud database create \
-  --subscription-id 55 \
+  --subscription 55 \
   --data '{
     "name": "us-west-db",
     "memory_limit_in_gb": 2,
@@ -253,7 +253,7 @@ echo "Validation successful!"
 # 1. Setup replication
 echo "Setting up replication..."
 redisctl cloud database update \
-  --subscription-id 43 \
+  --subscription 43 \
   --database-id 67890 \
   --data '{"replica_of": ["source-redis:6379"]}' \
   --wait
@@ -284,7 +284,7 @@ sleep 10
 # 5. Promote replica
 echo "Promoting replica to master..."
 redisctl cloud database update \
-  --subscription-id 43 \
+  --subscription 43 \
   --database-id 67890 \
   --data '{"replica_of": []}' \
   --wait

@@ -297,7 +297,7 @@ retry_with_backoff redisctl cloud subscription list
 ```bash
 # Verify resource exists
 redisctl cloud subscription list
-redisctl cloud database list --subscription-id 123456
+redisctl cloud database list --subscription 123456
 
 # Check ID format
 # Cloud: subscription_id:database_id
@@ -309,7 +309,7 @@ redisctl cloud database list --subscription-id 123456
 # Use correct ID format
 # Cloud
 redisctl cloud database get \
-  --subscription-id 123456 \
+  --subscription 123456 \
   --database-id 789
 
 # Enterprise  
@@ -362,7 +362,7 @@ redisctl enterprise --help
 # Download latest from GitHub releases
 
 # Check command syntax
-redisctl cloud database list --subscription-id 123  # Correct
+redisctl cloud database list --subscription 123  # Correct
 redisctl cloud database list 123                    # Incorrect
 ```
 
@@ -377,7 +377,7 @@ redisctl cloud database get --help
 
 # Provide all required arguments
 redisctl cloud database get \
-  --subscription-id 123456 \  # Required
+  --subscription 123456 \  # Required
   --database-id 789           # Required
 
 # Use environment variables for defaults
@@ -413,14 +413,14 @@ cat output.json | jq '.[] | keys'
 ```bash
 # Increase timeout
 redisctl cloud database create \
-  --subscription-id 123 \
+  --subscription 123 \
   --data @db.json \
   --wait \
   --wait-timeout 1200  # 20 minutes
 
 # Check operation status manually
 TASK_ID=$(redisctl cloud database create \
-  --subscription-id 123 \
+  --subscription 123 \
   --data @db.json \
   -q "taskId")
 
@@ -443,7 +443,7 @@ done
 ```bash
 # Check if operation returns task ID
 redisctl cloud database create \
-  --subscription-id 123 \
+  --subscription 123 \
   --data @db.json \
   -o json | jq .
 
@@ -511,7 +511,7 @@ redisctl cloud database list -q "[0:5]"  # First 5 only
 
 # Parallel processing
 for id in $(cat database-ids.txt); do
-  redisctl cloud database get --subscription-id 123 --database-id $id &
+  redisctl cloud database get --subscription 123 --database-id $id &
 done
 wait
 ```
@@ -531,10 +531,10 @@ while true; do
 done
 
 # Stream to file
-redisctl cloud database list --subscription-id 123 > databases.json
+redisctl cloud database list --subscription 123 > databases.json
 
 # Process with streaming tools
-redisctl cloud database list --subscription-id 123 | jq -c '.[]' | while read db; do
+redisctl cloud database list --subscription 123 | jq -c '.[]' | while read db; do
   echo "Processing: $(echo $db | jq -r .name)"
 done
 ```
@@ -616,13 +616,13 @@ When reporting issues, include:
 redisctl --version
 
 # Command that failed
-redisctl cloud database list --subscription-id 123
+redisctl cloud database list --subscription 123
 
 # Error message
 # Full error output
 
 # Debug output
-RUST_LOG=debug redisctl cloud database list --subscription-id 123 2>&1
+RUST_LOG=debug redisctl cloud database list --subscription 123 2>&1
 
 # Environment
 uname -a

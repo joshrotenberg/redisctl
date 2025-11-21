@@ -223,7 +223,7 @@ SUBS=$(redisctl cloud subscription list -q "[].id" | jq -r '.[]')
 # List databases for each subscription
 for sub in $SUBS; do
   echo "Subscription $sub:"
-  redisctl cloud database list --subscription-id $sub
+  redisctl cloud database list --subscription $sub
 done
 ```
 
@@ -244,7 +244,7 @@ redisctl cloud subscription get 123456 -q "databases[].{name: name, memory: memo
 - Check that your API key has access to the subscription
 
 **"Cannot delete subscription with active databases"**
-- Delete all databases first: `redisctl cloud database list --subscription-id <ID>`
+- Delete all databases first: `redisctl cloud database list --subscription <ID>`
 - Then delete each database before deleting the subscription
 
 **"Operation timeout"**

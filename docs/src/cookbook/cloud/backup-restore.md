@@ -35,7 +35,7 @@ View your database's backup settings:
 
 ```bash
 redisctl cloud database get \
-  --subscription-id 42 \
+  --subscription 42 \
   --database-id 12345 \
   -o json \
   -q '{
@@ -60,7 +60,7 @@ If backups aren't configured, enable them:
 
 ```bash
 redisctl cloud database update \
-  --subscription-id 42 \
+  --subscription 42 \
   --database-id 12345 \
   --data '{
     "data_persistence": "aof-every-1-second",
@@ -133,7 +133,7 @@ View all backups for a database:
 ```bash
 # Get subscription backup info
 redisctl cloud subscription get \
-  --subscription-id 42 \
+  --subscription 42 \
   -o json \
   -q 'databases[?database_id==`12345`].backup_status'
 ```
@@ -147,7 +147,7 @@ If you need to restore to a previous state:
 ```bash
 # Create new database from backup
 redisctl cloud database create \
-  --subscription-id 42 \
+  --subscription 42 \
   --data '{
     "name": "restored-db",
     "memory_limit_in_gb": 1,
@@ -167,7 +167,7 @@ For databases with AOF persistence:
 ```bash
 # Create database with specific backup
 redisctl cloud database create \
-  --subscription-id 42 \
+  --subscription 42 \
   --data '{
     "name": "pit-restore",
     "memory_limit_in_gb": 2,
@@ -193,7 +193,7 @@ BACKUP_ID=$(redisctl cloud database backup-status \
 
 # Create staging database from production backup
 redisctl cloud database create \
-  --subscription-id 42 \
+  --subscription 42 \
   --data '{
     "name": "staging-db",
     "memory_limit_in_gb": 1,
@@ -212,7 +212,7 @@ Store backups in your own AWS S3 bucket:
 
 ```bash
 redisctl cloud database update \
-  --subscription-id 42 \
+  --subscription 42 \
   --database-id 12345 \
   --data '{
     "backup_path": "s3://my-backup-bucket/redis-backups",
@@ -228,7 +228,7 @@ Store backups in Google Cloud Storage:
 
 ```bash
 redisctl cloud database update \
-  --subscription-id 42 \
+  --subscription 42 \
   --database-id 12345 \
   --data '{
     "backup_path": "gs://my-backup-bucket/redis-backups",
@@ -243,7 +243,7 @@ Store backups in Azure:
 
 ```bash
 redisctl cloud database update \
-  --subscription-id 42 \
+  --subscription 42 \
   --database-id 12345 \
   --data '{
     "backup_path": "abs://my-storage-account/redis-backups",
@@ -323,7 +323,7 @@ echo "$BACKUP_ID" > .last-backup-id
 ```bash
 # Create test database from backup
 redisctl cloud database create \
-  --subscription-id 42 \
+  --subscription 42 \
   --data '{
     "name": "backup-verify",
     "memory_limit_in_gb": 1,
@@ -338,7 +338,7 @@ redis-cli -h backup-verify-endpoint -p 12346 GET test-key
 
 # Clean up test database
 redisctl cloud database delete \
-  --subscription-id 42 \
+  --subscription 42 \
   --database-id 67890 \
   --wait
 ```
@@ -400,7 +400,7 @@ echo "Backup health OK - Last backup: $AGE_HOURS hours ago"
 ```bash
 # Save current database configuration
 redisctl cloud database get \
-  --subscription-id 42 \
+  --subscription 42 \
   --database-id 12345 \
   -o json > database-config-$(date +%Y%m%d).json
 

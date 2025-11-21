@@ -82,7 +82,7 @@ echo "Created subscription: $SUB_ID"
 
 # Set up VPC peering
 redisctl cloud vpc-peering create \
-  --subscription-id $SUB_ID \
+  --subscription $SUB_ID \
   --data @peering.json \
   --wait
 
@@ -90,7 +90,7 @@ echo "VPC peering created - accept in AWS console"
 
 # Create database
 DB_ID=$(redisctl cloud database create \
-  --subscription-id $SUB_ID \
+  --subscription $SUB_ID \
   --data @database.json \
   --wait \
   -q 'databaseId')
@@ -99,7 +99,7 @@ echo "Created database: $DB_ID"
 
 # Get connection info
 redisctl cloud database get \
-  --subscription-id $SUB_ID \
+  --subscription $SUB_ID \
   --database-id $DB_ID \
   -q '{endpoint: publicEndpoint, password: password}'
 ```
@@ -114,7 +114,7 @@ Workflows handle errors gracefully:
 ```bash
 # If workflow fails, check what was created
 redisctl cloud subscription list -o table
-redisctl cloud vpc-peering list --subscription-id <ID>
+redisctl cloud vpc-peering list --subscription <ID>
 ```
 
 ## Comparison: Workflow vs Manual
@@ -138,10 +138,10 @@ while [ "$(redisctl cloud subscription get $SUB_ID -q 'status')" != "active" ]; 
 done
 
 # 3. Create database
-redisctl cloud database create --subscription-id $SUB_ID --data '{...}' --wait
+redisctl cloud database create --subscription $SUB_ID --data '{...}' --wait
 
 # 4. Get connection info
-redisctl cloud database list --subscription-id $SUB_ID
+redisctl cloud database list --subscription $SUB_ID
 ```
 
 The workflow handles all the waiting, polling, and sequencing automatically.
