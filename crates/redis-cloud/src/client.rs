@@ -10,6 +10,7 @@ use crate::{CloudError as RestError, Result};
 use reqwest::Client;
 use serde::Serialize;
 use std::sync::Arc;
+use tracing::{debug, instrument, trace};
 
 /// Builder for constructing a CloudClient with custom configuration
 ///
@@ -134,8 +135,10 @@ impl CloudClient {
     }
 
     /// Make a GET request with API key authentication
+    #[instrument(skip(self), fields(method = "GET"))]
     pub async fn get<T: serde::de::DeserializeOwned>(&self, path: &str) -> Result<T> {
         let url = self.normalize_url(path);
+        debug!("GET {}", url);
 
         // Redis Cloud API uses these headers for authentication
         let response = self
@@ -146,16 +149,20 @@ impl CloudClient {
             .send()
             .await?;
 
+        trace!("Response status: {}", response.status());
         self.handle_response(response).await
     }
 
     /// Make a POST request
+    #[instrument(skip(self, body), fields(method = "POST"))]
     pub async fn post<B: Serialize, T: serde::de::DeserializeOwned>(
         &self,
         path: &str,
         body: &B,
     ) -> Result<T> {
         let url = self.normalize_url(path);
+        debug!("POST {}", url);
+        trace!("Request body: {:?}", serde_json::to_value(body).ok());
 
         // Same backwards header naming as GET
         let response = self
@@ -167,16 +174,20 @@ impl CloudClient {
             .send()
             .await?;
 
+        trace!("Response status: {}", response.status());
         self.handle_response(response).await
     }
 
     /// Make a PUT request
+    #[instrument(skip(self, body), fields(method = "PUT"))]
     pub async fn put<B: Serialize, T: serde::de::DeserializeOwned>(
         &self,
         path: &str,
         body: &B,
     ) -> Result<T> {
         let url = self.normalize_url(path);
+        debug!("PUT {}", url);
+        trace!("Request body: {:?}", serde_json::to_value(body).ok());
 
         // Same backwards header naming as GET
         let response = self
@@ -188,12 +199,15 @@ impl CloudClient {
             .send()
             .await?;
 
+        trace!("Response status: {}", response.status());
         self.handle_response(response).await
     }
 
     /// Make a DELETE request
+    #[instrument(skip(self), fields(method = "DELETE"))]
     pub async fn delete(&self, path: &str) -> Result<()> {
         let url = self.normalize_url(path);
+        debug!("DELETE {}", url);
 
         // Same backwards header naming as GET
         let response = self
@@ -204,6 +218,7 @@ impl CloudClient {
             .send()
             .await?;
 
+        trace!("Response status: {}", response.status());
         if response.status().is_success() {
             Ok(())
         } else {
@@ -227,27 +242,33 @@ impl CloudClient {
     }
 
     /// Execute raw GET request returning JSON Value
+    #[instrument(skip(self), fields(method = "GET"))]
     pub async fn get_raw(&self, path: &str) -> Result<serde_json::Value> {
         self.get(path).await
     }
 
     /// Execute raw POST request with JSON body
+    #[instrument(skip(self, body), fields(method = "POST"))]
     pub async fn post_raw(&self, path: &str, body: serde_json::Value) -> Result<serde_json::Value> {
         self.post(path, &body).await
     }
 
     /// Execute raw PUT request with JSON body
+    #[instrument(skip(self, body), fields(method = "PUT"))]
     pub async fn put_raw(&self, path: &str, body: serde_json::Value) -> Result<serde_json::Value> {
         self.put(path, &body).await
     }
 
     /// Execute raw PATCH request with JSON body
+    #[instrument(skip(self, body), fields(method = "PATCH"))]
     pub async fn patch_raw(
         &self,
         path: &str,
         body: serde_json::Value,
     ) -> Result<serde_json::Value> {
         let url = self.normalize_url(path);
+        debug!("PATCH {}", url);
+        trace!("Request body: {:?}", body);
 
         // Use backwards header names for compatibility
         let response = self
@@ -259,12 +280,15 @@ impl CloudClient {
             .send()
             .await?;
 
+        trace!("Response status: {}", response.status());
         self.handle_response(response).await
     }
 
     /// Execute raw DELETE request returning any response body
+    #[instrument(skip(self), fields(method = "DELETE"))]
     pub async fn delete_raw(&self, path: &str) -> Result<serde_json::Value> {
         let url = self.normalize_url(path);
+        debug!("DELETE {}", url);
 
         // Use backwards header names for compatibility
         let response = self
@@ -275,6 +299,7 @@ impl CloudClient {
             .send()
             .await?;
 
+        trace!("Response status: {}", response.status());
         if response.status().is_success() {
             if response.content_length() == Some(0) {
                 Ok(serde_json::json!({"status": "deleted"}))
@@ -302,12 +327,15 @@ impl CloudClient {
     }
 
     /// Execute DELETE request with JSON body (used by some endpoints like PrivateLink principals)
+    #[instrument(skip(self, body), fields(method = "DELETE"))]
     pub async fn delete_with_body<T: serde::de::DeserializeOwned>(
         &self,
         path: &str,
         body: serde_json::Value,
     ) -> Result<T> {
         let url = self.normalize_url(path);
+        debug!("DELETE {} (with body)", url);
+        trace!("Request body: {:?}", body);
 
         let response = self
             .client
@@ -318,6 +346,7 @@ impl CloudClient {
             .send()
             .await?;
 
+        trace!("Response status: {}", response.status());
         self.handle_response(response).await
     }
 
