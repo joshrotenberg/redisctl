@@ -1332,6 +1332,12 @@ pub enum EnterpriseStatsCommands {
     Database {
         /// Database ID
         id: u32,
+        /// Stream stats continuously
+        #[arg(long, short = 'f')]
+        follow: bool,
+        /// Poll interval in seconds (for --follow)
+        #[arg(long, default_value = "5")]
+        poll_interval: u64,
     },
 
     /// Get database shard statistics
@@ -1353,6 +1359,12 @@ pub enum EnterpriseStatsCommands {
     Node {
         /// Node ID
         id: u32,
+        /// Stream stats continuously
+        #[arg(long, short = 'f')]
+        follow: bool,
+        /// Poll interval in seconds (for --follow)
+        #[arg(long, default_value = "5")]
+        poll_interval: u64,
     },
 
     /// Get node metrics over time
@@ -1365,7 +1377,14 @@ pub enum EnterpriseStatsCommands {
     },
 
     /// Get cluster-wide statistics
-    Cluster,
+    Cluster {
+        /// Stream stats continuously
+        #[arg(long, short = 'f')]
+        follow: bool,
+        /// Poll interval in seconds (for --follow)
+        #[arg(long, default_value = "5")]
+        poll_interval: u64,
+    },
 
     /// Get cluster metrics over time
     ClusterMetrics {
