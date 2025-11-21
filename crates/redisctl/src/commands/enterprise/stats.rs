@@ -5,7 +5,9 @@ use crate::cli::{EnterpriseStatsCommands, OutputFormat};
 use crate::connection::ConnectionManager;
 use crate::error::Result as CliResult;
 use anyhow::Context;
+use futures::StreamExt;
 use redis_enterprise::stats::StatsHandler;
+use std::time::Duration;
 
 use super::utils::*;
 
@@ -18,8 +20,24 @@ pub async fn handle_stats_command(
     query: Option<&str>,
 ) -> CliResult<()> {
     match cmd {
-        EnterpriseStatsCommands::Database { id } => {
-            handle_database_stats(conn_mgr, profile_name, *id, output_format, query).await
+        EnterpriseStatsCommands::Database {
+            id,
+            follow,
+            poll_interval,
+        } => {
+            if *follow {
+                handle_database_stats_stream(
+                    conn_mgr,
+                    profile_name,
+                    *id,
+                    *poll_interval,
+                    output_format,
+                    query,
+                )
+                .await
+            } else {
+                handle_database_stats(conn_mgr, profile_name, *id, output_format, query).await
+            }
         }
         EnterpriseStatsCommands::DatabaseShards { id } => {
             handle_database_shard_stats(conn_mgr, profile_name, *id, output_format, query).await
@@ -28,14 +46,44 @@ pub async fn handle_stats_command(
             handle_database_metrics(conn_mgr, profile_name, *id, interval, output_format, query)
                 .await
         }
-        EnterpriseStatsCommands::Node { id } => {
-            handle_node_stats(conn_mgr, profile_name, *id, output_format, query).await
+        EnterpriseStatsCommands::Node {
+            id,
+            follow,
+            poll_interval,
+        } => {
+            if *follow {
+                handle_node_stats_stream(
+                    conn_mgr,
+                    profile_name,
+                    *id,
+                    *poll_interval,
+                    output_format,
+                    query,
+                )
+                .await
+            } else {
+                handle_node_stats(conn_mgr, profile_name, *id, output_format, query).await
+            }
         }
         EnterpriseStatsCommands::NodeMetrics { id, interval } => {
             handle_node_metrics(conn_mgr, profile_name, *id, interval, output_format, query).await
         }
-        EnterpriseStatsCommands::Cluster => {
-            handle_cluster_stats(conn_mgr, profile_name, output_format, query).await
+        EnterpriseStatsCommands::Cluster {
+            follow,
+            poll_interval,
+        } => {
+            if *follow {
+                handle_cluster_stats_stream(
+                    conn_mgr,
+                    profile_name,
+                    *poll_interval,
+                    output_format,
+                    query,
+                )
+                .await
+            } else {
+                handle_cluster_stats(conn_mgr, profile_name, output_format, query).await
+            }
         }
         EnterpriseStatsCommands::ClusterMetrics { interval } => {
             handle_cluster_metrics(conn_mgr, profile_name, interval, output_format, query).await
@@ -71,6 +119,37 @@ async fn handle_database_stats(
     let stats_json = serde_json::to_value(response).context("Failed to serialize stats")?;
     let data = handle_output(stats_json, output_format, query)?;
     print_formatted_output(data, output_format)?;
+    Ok(())
+}
+
+/// Handle streaming database statistics
+async fn handle_database_stats_stream(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
+    database_id: u32,
+    poll_interval: u64,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> CliResult<()> {
+    let client = conn_mgr.create_enterprise_client(profile_name).await?;
+    let stats_handler = StatsHandler::new(client);
+    let mut stream = stats_handler.stream_database(database_id, Duration::from_secs(poll_interval));
+
+    while let Some(result) = stream.next().await {
+        match result {
+            Ok(stats) => {
+                let stats_json =
+                    serde_json::to_value(stats).context("Failed to serialize stats")?;
+                let data = handle_output(stats_json, output_format, query)?;
+                print_formatted_output(data, output_format)?;
+                println!(); // Separator between polls
+            }
+            Err(e) => {
+                eprintln!("Error fetching stats: {}", e);
+                break;
+            }
+        }
+    }
     Ok(())
 }
 
@@ -134,6 +213,37 @@ async fn handle_node_stats(
     Ok(())
 }
 
+/// Handle streaming node statistics
+async fn handle_node_stats_stream(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
+    node_id: u32,
+    poll_interval: u64,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> CliResult<()> {
+    let client = conn_mgr.create_enterprise_client(profile_name).await?;
+    let stats_handler = StatsHandler::new(client);
+    let mut stream = stats_handler.stream_node(node_id, Duration::from_secs(poll_interval));
+
+    while let Some(result) = stream.next().await {
+        match result {
+            Ok(stats) => {
+                let stats_json =
+                    serde_json::to_value(stats).context("Failed to serialize stats")?;
+                let data = handle_output(stats_json, output_format, query)?;
+                print_formatted_output(data, output_format)?;
+                println!();
+            }
+            Err(e) => {
+                eprintln!("Error fetching stats: {}", e);
+                break;
+            }
+        }
+    }
+    Ok(())
+}
+
 /// Handle node metrics over time
 async fn handle_node_metrics(
     conn_mgr: &ConnectionManager,
@@ -171,6 +281,36 @@ async fn handle_cluster_stats(
     let stats_json = serde_json::to_value(response).context("Failed to serialize stats")?;
     let data = handle_output(stats_json, output_format, query)?;
     print_formatted_output(data, output_format)?;
+    Ok(())
+}
+
+/// Handle streaming cluster statistics
+async fn handle_cluster_stats_stream(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
+    poll_interval: u64,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> CliResult<()> {
+    let client = conn_mgr.create_enterprise_client(profile_name).await?;
+    let stats_handler = StatsHandler::new(client);
+    let mut stream = stats_handler.stream_cluster(Duration::from_secs(poll_interval));
+
+    while let Some(result) = stream.next().await {
+        match result {
+            Ok(stats) => {
+                let stats_json =
+                    serde_json::to_value(stats).context("Failed to serialize stats")?;
+                let data = handle_output(stats_json, output_format, query)?;
+                print_formatted_output(data, output_format)?;
+                println!();
+            }
+            Err(e) => {
+                eprintln!("Error fetching stats: {}", e);
+                break;
+            }
+        }
+    }
     Ok(())
 }
 
@@ -275,13 +415,24 @@ mod tests {
         // Test that all stats commands can be constructed
 
         // Database stats
-        let _cmd = EnterpriseStatsCommands::Database { id: 1 };
+        let _cmd = EnterpriseStatsCommands::Database {
+            id: 1,
+            follow: false,
+            poll_interval: 5,
+        };
 
         // Node stats
-        let _cmd = EnterpriseStatsCommands::Node { id: 1 };
+        let _cmd = EnterpriseStatsCommands::Node {
+            id: 1,
+            follow: false,
+            poll_interval: 5,
+        };
 
         // Cluster stats
-        let _cmd = EnterpriseStatsCommands::Cluster;
+        let _cmd = EnterpriseStatsCommands::Cluster {
+            follow: false,
+            poll_interval: 5,
+        };
 
         // Export stats
         let _cmd = EnterpriseStatsCommands::Export {

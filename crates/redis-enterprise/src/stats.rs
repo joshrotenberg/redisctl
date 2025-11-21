@@ -60,8 +60,12 @@
 
 use crate::client::RestClient;
 use crate::error::Result;
+use futures::stream::Stream;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::pin::Pin;
+use std::time::Duration;
+use tokio::time::sleep;
 
 /// Stats query parameters
 #[derive(Debug, Serialize)]
@@ -296,4 +300,83 @@ impl StatsHandler {
     }
 
     // raw variant removed: use shards()
+
+    /// Stream cluster stats in real-time by polling
+    ///
+    /// # Arguments
+    /// * `poll_interval` - Time to wait between polls
+    ///
+    /// # Returns
+    /// A stream of stats responses
+    pub fn stream_cluster(
+        &self,
+        poll_interval: Duration,
+    ) -> Pin<Box<dyn Stream<Item = Result<LastStatsResponse>> + Send + '_>> {
+        Box::pin(async_stream::stream! {
+            loop {
+                match self.cluster_last().await {
+                    Ok(stats) => yield Ok(stats),
+                    Err(e) => {
+                        yield Err(e);
+                        break;
+                    }
+                }
+                sleep(poll_interval).await;
+            }
+        })
+    }
+
+    /// Stream node stats in real-time by polling
+    ///
+    /// # Arguments
+    /// * `uid` - Node ID
+    /// * `poll_interval` - Time to wait between polls
+    ///
+    /// # Returns
+    /// A stream of stats responses
+    pub fn stream_node(
+        &self,
+        uid: u32,
+        poll_interval: Duration,
+    ) -> Pin<Box<dyn Stream<Item = Result<LastStatsResponse>> + Send + '_>> {
+        Box::pin(async_stream::stream! {
+            loop {
+                match self.node_last(uid).await {
+                    Ok(stats) => yield Ok(stats),
+                    Err(e) => {
+                        yield Err(e);
+                        break;
+                    }
+                }
+                sleep(poll_interval).await;
+            }
+        })
+    }
+
+    /// Stream database stats in real-time by polling
+    ///
+    /// # Arguments
+    /// * `uid` - Database ID
+    /// * `poll_interval` - Time to wait between polls
+    ///
+    /// # Returns
+    /// A stream of stats responses
+    pub fn stream_database(
+        &self,
+        uid: u32,
+        poll_interval: Duration,
+    ) -> Pin<Box<dyn Stream<Item = Result<LastStatsResponse>> + Send + '_>> {
+        Box::pin(async_stream::stream! {
+            loop {
+                match self.database_last(uid).await {
+                    Ok(stats) => yield Ok(stats),
+                    Err(e) => {
+                        yield Err(e);
+                        break;
+                    }
+                }
+                sleep(poll_interval).await;
+            }
+        })
+    }
 }
