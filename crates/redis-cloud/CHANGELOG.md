@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.2](https://github.com/joshrotenberg/redisctl/compare/redis-cloud-v0.7.1...redis-cloud-v0.7.2) - 2025-11-24
+
+### Added
+
+- *(redis-cloud)* add tracing instrumentation to API client ([#452](https://github.com/joshrotenberg/redisctl/pull/452))
+- Add optional Tower service integration to API clients ([#447](https://github.com/joshrotenberg/redisctl/pull/447))
+
+### Fixed
+
+- *(release)* improve Homebrew formula auto-update ([#433](https://github.com/joshrotenberg/redisctl/pull/433))
+
 ## [0.7.1](https://github.com/joshrotenberg/redisctl/compare/redis-cloud-v0.7.0...redis-cloud-v0.7.1) - 2025-10-29
 
 ### Added
