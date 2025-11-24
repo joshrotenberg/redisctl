@@ -192,12 +192,6 @@ checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 
 [[package]]
 name = "base64"
-version = "0.21.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9d297deb1925b89f2ccc13d7635fa0714f12c87adce1c75356b39ca9b7178567"
-
-[[package]]
-name = "base64"
 version = "0.22.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
@@ -402,9 +396,9 @@ dependencies = [
 
 [[package]]
 name = "config"
-version = "0.15.18"
+version = "0.15.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "180e549344080374f9b32ed41bf3b6b57885ff6a289367b3dbc10eea8acc1918"
+checksum = "b30fa8254caad766fc03cb0ccae691e14bf3bd72bfff27f72802ce729551b3d6"
 dependencies = [
  "async-trait",
  "convert_case",
@@ -431,6 +425,19 @@ dependencies = [
  "once_cell",
  "unicode-width",
  "windows-sys 0.59.0",
+]
+
+[[package]]
+name = "console"
+version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b430743a6eb14e9764d4260d4c0d8123087d504eeb9c48f2b2a5e810dd369df4"
+dependencies = [
+ "encode_unicode",
+ "libc",
+ "once_cell",
+ "unicode-width",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -636,7 +643,7 @@ version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "658bce805d770f407bc62102fca7c2c64ceef2fbcb2b8bd19d2765ce093980de"
 dependencies = [
- "console",
+ "console 0.15.11",
  "shell-words",
  "tempfile",
  "thiserror 1.0.69",
@@ -692,7 +699,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -809,7 +816,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -1229,7 +1236,7 @@ version = "0.1.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3c6995591a8f1380fcb4ba966a252a4b29188d51d2b89e3a252f5305be65aea8"
 dependencies = [
- "base64 0.22.1",
+ "base64",
  "bytes",
  "futures-channel",
  "futures-core",
@@ -1392,14 +1399,14 @@ dependencies = [
 
 [[package]]
 name = "indicatif"
-version = "0.17.11"
+version = "0.18.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "183b3088984b400f4cfac3620d5e076c84da5364016b4f49473de574b2586235"
+checksum = "9375e112e4b463ec1b1c6c011953545c65a30164fbab5b581df32b3abf0dcb88"
 dependencies = [
- "console",
- "number_prefix",
+ "console 0.16.1",
  "portable-atomic",
  "unicode-width",
+ "unit-prefix",
  "web-time",
 ]
 
@@ -1712,12 +1719,6 @@ dependencies = [
  "hermit-abi",
  "libc",
 ]
-
-[[package]]
-name = "number_prefix"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "830b246a0e5f20af87141b25c173cd1b609bd7779a4617d6ec582abaf90870f3"
 
 [[package]]
 name = "once_cell"
@@ -2173,7 +2174,7 @@ version = "0.7.2"
 dependencies = [
  "anyhow",
  "async-trait",
- "base64 0.22.1",
+ "base64",
  "chrono",
  "pretty_assertions",
  "reqwest",
@@ -2198,7 +2199,7 @@ dependencies = [
  "anyhow",
  "async-stream",
  "async-trait",
- "base64 0.22.1",
+ "base64",
  "chrono",
  "env_logger",
  "futures",
@@ -2333,7 +2334,7 @@ version = "0.12.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d429f34c8092b2d42c7c93cec323bb4adeb7c67698f70839adec842ec10c7ceb"
 dependencies = [
- "base64 0.22.1",
+ "base64",
  "bytes",
  "encoding_rs",
  "futures-core",
@@ -2389,14 +2390,16 @@ dependencies = [
 
 [[package]]
 name = "ron"
-version = "0.8.1"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b91f7eff05f748767f183df4320a63d6936e9c6107d97c9e6bdd9784f4289c94"
+checksum = "fd490c5b18261893f14449cbd28cb9c0b637aebf161cd77900bfdedaff21ec32"
 dependencies = [
- "base64 0.21.7",
  "bitflags",
+ "once_cell",
  "serde",
  "serde_derive",
+ "typeid",
+ "unicode-ident",
 ]
 
 [[package]]
@@ -2446,7 +2449,7 @@ dependencies = [
  "errno 0.3.14",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -2920,7 +2923,7 @@ dependencies = [
  "getrandom 0.3.3",
  "once_cell",
  "rustix",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -3386,6 +3389,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4ac048d71ede7ee76d585517add45da530660ef4390e49b098733c6e897f254"
 
 [[package]]
+name = "unit-prefix"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "81e544489bf3d8ef66c953931f56617f423cd4b5494be343d9b9d3dda037b9a3"
+
+[[package]]
 name = "unsafe-libyaml"
 version = "0.2.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3641,7 +3650,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -3925,7 +3934,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "08db1edfb05d9b3c1542e521aea074442088292f00b5f28e435c714a98f85031"
 dependencies = [
  "assert-json-diff",
- "base64 0.22.1",
+ "base64",
  "deadpool",
  "futures",
  "http",
