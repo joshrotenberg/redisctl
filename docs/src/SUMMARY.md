@@ -1,30 +1,54 @@
 # Summary
 
-[Introduction](./introduction.md)
+# Introduction
 
-# Getting Started
-
+- [Overview](./introduction.md)
+- [Quick Start](./getting-started/quickstart.md)
 - [Installation](./getting-started/installation.md)
-- [Docker Quick Start](./getting-started/docker.md)
-- [Configuration](./getting-started/configuration.md)
-- [Authentication](./getting-started/authentication.md)
-- [Examples](./getting-started/examples.md)
-- [Shell Completions](./getting-started/shell-completions.md)
-- [Quick Start Guide](./getting-started/quickstart.md)
 
-# Complete Walkthrough
+# Common Features
 
-- [8. Introduction](./walkthrough/README.md)
-  - [8.1 The Problem](./walkthrough/01-problem.md)
-  - [8.2 Enter redisctl](./walkthrough/02-solution.md)
-  - [8.3 Installation & Setup](./walkthrough/03-setup.md)
-  - [8.4 Raw API Layer](./walkthrough/04-raw-api.md)
-  - [8.5 Human-Friendly Layer](./walkthrough/05-human-friendly.md)
-  - [8.6 Workflows Layer](./walkthrough/06-workflows.md)
-  - [8.7 Advanced Features](./walkthrough/07-advanced.md)
-  - [8.8 Library Architecture](./walkthrough/08-libraries.md)
-  - [8.9 Next Steps](./walkthrough/09-next-steps.md)
-  - [8.10 Appendix: rladmin vs redisctl](./walkthrough/rladmin-comparison.md)
+- [Profiles & Authentication](./common-features/profiles.md)
+- [Output Formats](./common-features/output-formats.md)
+- [JMESPath Queries](./common-features/jmespath-queries.md)
+- [Async Operations](./common-features/async-operations.md)
+
+# Redis Cloud
+
+- [Overview](./cloud/overview.md)
+- [API Layer](./cloud/api.md)
+- [Commands]()
+  - [Databases](./cloud/commands/databases.md)
+  - [Subscriptions](./cloud/commands/subscriptions.md)
+  - [Access Control](./cloud/commands/access-control.md)
+  - [Networking](./cloud/commands/networking.md)
+  - [Tasks](./cloud/commands/tasks.md)
+- [Workflows](./cloud/workflows.md)
+
+# Redis Enterprise
+
+- [Overview](./enterprise/overview.md)
+- [API Layer](./enterprise/api.md)
+- [Commands]()
+  - [Cluster](./enterprise/commands/cluster.md)
+  - [Databases](./enterprise/commands/databases.md)
+  - [Nodes](./enterprise/commands/nodes.md)
+  - [Access Control](./enterprise/commands/access-control.md)
+  - [Monitoring](./enterprise/commands/monitoring.md)
+  - [Active-Active](./enterprise/commands/active-active.md)
+- [Workflows](./enterprise/workflows.md)
+- [Operations](./enterprise/operations.md)
+  - [Support Package](./enterprise/operations/support-package.md)
+  - [License Management](./enterprise/operations/license.md)
+  - [Debug Info](./enterprise/operations/debuginfo.md)
+  - [Diagnostics](./enterprise/operations/diagnostics.md)
+  - [Migrations](./enterprise/operations/migration.md)
+
+# Walkthrough
+
+- [Overview & Concepts](./walkthrough/overview.md)
+- [Cloud Quick Examples](./walkthrough/cloud-examples.md)
+- [Enterprise Quick Examples](./walkthrough/enterprise-examples.md)
 
 # Cookbook
 
@@ -44,100 +68,14 @@
   - [Configure Replication](./cookbook/enterprise/configure-replication.md)
   - [Configure Redis ACLs](./cookbook/enterprise/configure-redis-acls.md)
 
-# Redis Cloud
-
-- [Overview](./cloud/overview.md)
-- [Core Resources]()
-  - [Subscriptions](./cloud/core-resources/subscriptions.md)
-  - [Databases](./cloud/core-resources/databases.md)
-- [Access Control]()
-  - [Users](./cloud/access-control/users.md)
-  - [ACLs](./cloud/access-control/acl.md)
-- [Networking]()
-  - [Connectivity (VPC, PSC, TGW)](./cloud/networking/connectivity.md)
-- [Operations]()
-  - [Tasks](./cloud/operations/tasks.md)
-  - [Workflows](./cloud/operations/workflows.md)
-- [Examples](./cloud/examples.md)
-- [Human-Friendly Commands](./cloud/human-commands.md)
-- [All Commands](./cloud/commands.md)
-
-# Redis Enterprise
-
-- [Overview](./enterprise/overview.md)
-- [Core Resources]()
-  - [Cluster](./enterprise/core-resources/cluster.md)
-  - [Databases](./enterprise/core-resources/databases.md)
-  - [Nodes](./enterprise/core-resources/nodes.md)
-  - [Shards](./enterprise/core-resources/shards.md)
-  - [Modules](./enterprise/core-resources/modules.md)
-  - [Database Groups](./enterprise/core-resources/bdb-groups.md)
-- [Access Control]()
-  - [Users & Roles](./enterprise/access-control/users.md)
-  - [LDAP Integration](./enterprise/access-control/ldap.md)
-- [Active-Active]()
-  - [CRDB Operations](./enterprise/active-active/crdb.md)
-  - [CRDB Tasks](./enterprise/active-active/crdb-tasks.md)
-- [Monitoring]()
-  - [Statistics](./enterprise/monitoring/stats.md)
-  - [Logs](./enterprise/monitoring/logs.md)
-  - [Alerts](./enterprise/monitoring/alerts.md)
-  - [Usage Reports](./enterprise/monitoring/usage-report.md)
-- [Operations]()
-  - [Support Package](./enterprise/operations/support-package.md)
-  - [Debug Info](./enterprise/operations/debuginfo.md)
-  - [Diagnostics](./enterprise/operations/diagnostics.md)
-  - [License Management](./enterprise/operations/license.md)
-  - [Migrations](./enterprise/operations/migration.md)
-- [Advanced]()
-  - [Actions](./enterprise/advanced/actions.md)
-  - [Workflows](./enterprise/advanced/workflows.md)
-  - [Job Scheduler](./enterprise/advanced/job-scheduler.md)
-  - [Bootstrap](./enterprise/advanced/bootstrap.md)
-  - [Proxies](./enterprise/advanced/proxy.md)
-  - [Endpoints](./enterprise/advanced/endpoints.md)
-  - [Services](./enterprise/advanced/services.md)
-  - [CM Settings](./enterprise/advanced/cm-settings.md)
-  - [OCSP](./enterprise/advanced/ocsp.md)
-  - [DNS Suffix](./enterprise/advanced/suffix.md)
-  - [JSON Schema](./enterprise/advanced/jsonschema.md)
-- [Examples](./enterprise/examples.md)
-- [Human-Friendly Commands](./enterprise/human-commands.md)
-- [All Commands](./enterprise/commands.md)
-- [API Access](./enterprise/api-access.md)
-
-# Common Features
-
-- [Output Formats](./common-features/output-formats.md)
-- [JMESPath Queries](./common-features/jmespath-queries.md)
-- [Async Operations](./common-features/async-operations.md)
-- [Raw API Access](./common-features/raw-api.md)
-- [Secure Storage](./common-features/secure-storage.md)
-
-# Comparison
-
-- [rladmin vs redisctl](./comparison/rladmin.md)
-
-# Tutorials
-
-- [CI/CD Integration](./tutorials/cicd.md)
-- [Common Recipes](./tutorials/common-recipes.md)
-- [Disaster Recovery](./tutorials/disaster-recovery.md)
-- [Monitoring Setup](./tutorials/monitoring.md)
-- [Network Security](./tutorials/network-security.md)
-- [Production Databases](./tutorials/production-databases.md)
-
 # Reference
 
 - [Environment Variables](./reference/environment-variables.md)
 - [Configuration File](./reference/config-file.md)
+- [Shell Completions](./reference/shell-completions.md)
 - [Security](./reference/security.md)
-- [Best Practices](./reference/best-practices.md)
 - [Troubleshooting](./reference/troubleshooting.md)
-
-# API Reference
-
-- [API Overview](./api-reference/api.md)
+- [rladmin Comparison](./reference/rladmin.md)
 
 # Developer
 

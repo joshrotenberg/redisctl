@@ -21,19 +21,19 @@ Create a read-only user for your application:
 ```bash
 # Create Redis rule
 redisctl cloud acl create-redis-rule \
-  --subscription-id YOUR_SUB_ID \
+  --subscription YOUR_SUB_ID \
   --data '{"name": "readonly-rule", "rule": "+@read ~*"}' \
   --wait
 
 # Create role with the rule
 redisctl cloud acl create-role \
-  --subscription-id YOUR_SUB_ID \
+  --subscription YOUR_SUB_ID \
   --data '{"name": "readonly-role", "redis_rules": [{"rule_name": "readonly-rule"}]}' \
   --wait
 
 # Create user with the role
 redisctl cloud acl create-acl-user \
-  --subscription-id YOUR_SUB_ID \
+  --subscription YOUR_SUB_ID \
   --data '{"name": "app-reader", "role": "readonly-role", "password": "SecurePass123!"}' \
   --wait
 ```
@@ -51,13 +51,13 @@ Redis Cloud uses a three-level ACL system:
 
 ```bash
 # View current Redis rules
-redisctl cloud acl list-redis-rules --subscription-id 42 -o table
+redisctl cloud acl list-redis-rules --subscription 42 -o table
 
 # View current roles
-redisctl cloud acl list-roles --subscription-id 42 -o table
+redisctl cloud acl list-roles --subscription 42 -o table
 
 # View current users
-redisctl cloud acl list-acl-users --subscription-id 42 -o table
+redisctl cloud acl list-acl-users --subscription 42 -o table
 ```
 
 ### 2. Create Redis ACL Rules
@@ -69,7 +69,7 @@ Redis rules use standard Redis ACL syntax.
 **Read-only access:**
 ```bash
 redisctl cloud acl create-redis-rule \
-  --subscription-id 42 \
+  --subscription 42 \
   --data '{
     "name": "readonly",
     "rule": "+@read ~*"
@@ -80,7 +80,7 @@ redisctl cloud acl create-redis-rule \
 **Write-only to specific keys:**
 ```bash
 redisctl cloud acl create-redis-rule \
-  --subscription-id 42 \
+  --subscription 42 \
   --data '{
     "name": "write-metrics",
     "rule": "+set +del ~metrics:*"
@@ -91,7 +91,7 @@ redisctl cloud acl create-redis-rule \
 **Full access except dangerous commands:**
 ```bash
 redisctl cloud acl create-redis-rule \
-  --subscription-id 42 \
+  --subscription 42 \
   --data '{
     "name": "safe-admin",
     "rule": "+@all -@dangerous ~*"
@@ -102,7 +102,7 @@ redisctl cloud acl create-redis-rule \
 **Access to specific key prefix:**
 ```bash
 redisctl cloud acl create-redis-rule \
-  --subscription-id 42 \
+  --subscription 42 \
   --data '{
     "name": "user-sessions",
     "rule": "+@all ~session:*"
@@ -117,7 +117,7 @@ Roles combine one or more Redis rules:
 ```bash
 # Simple role with one rule
 redisctl cloud acl create-role \
-  --subscription-id 42 \
+  --subscription 42 \
   --data '{
     "name": "readonly-role",
     "redis_rules": [
@@ -128,7 +128,7 @@ redisctl cloud acl create-role \
 
 # Complex role with multiple rules
 redisctl cloud acl create-role \
-  --subscription-id 42 \
+  --subscription 42 \
   --data '{
     "name": "app-worker",
     "redis_rules": [
@@ -145,7 +145,7 @@ Users are assigned a role and password:
 
 ```bash
 redisctl cloud acl create-acl-user \
-  --subscription-id 42 \
+  --subscription 42 \
   --data '{
     "name": "app-reader",
     "role": "readonly-role",
@@ -177,12 +177,12 @@ After creating users, assign them to specific databases:
 ```bash
 # Get database ID
 redisctl cloud database list \
-  --subscription-id 42 \
+  --subscription 42 \
   -q '[].{id: database_id, name: name}'
 
 # Update database with ACL users
 redisctl cloud database update \
-  --subscription-id 42 \
+  --subscription 42 \
   --database-id 12345 \
   --data '{
     "security": {
@@ -199,7 +199,7 @@ Connect to your database with the new user:
 ```bash
 # Get database endpoint
 redisctl cloud database get \
-  --subscription-id 42 \
+  --subscription 42 \
   --database-id 12345 \
   -q '{endpoint: public_endpoint, port: port}'
 
@@ -230,25 +230,25 @@ Separate users for read, write, and admin operations:
 
 ```bash
 # Read-only for queries
-redisctl cloud acl create-redis-rule --subscription-id 42 \
+redisctl cloud acl create-redis-rule --subscription 42 \
   --data '{"name": "app-read", "rule": "+@read +@connection ~*"}' --wait
 
 # Write access for updates
-redisctl cloud acl create-redis-rule --subscription-id 42 \
+redisctl cloud acl create-redis-rule --subscription 42 \
   --data '{"name": "app-write", "rule": "+@write +@read +@connection ~*"}' --wait
 
 # Admin for maintenance
-redisctl cloud acl create-redis-rule --subscription-id 42 \
+redisctl cloud acl create-redis-rule --subscription 42 \
   --data '{"name": "app-admin", "rule": "+@all ~*"}' --wait
 
 # Create roles and users
-redisctl cloud acl create-role --subscription-id 42 \
+redisctl cloud acl create-role --subscription 42 \
   --data '{"name": "reader", "redis_rules": [{"rule_name": "app-read"}]}' --wait
 
-redisctl cloud acl create-role --subscription-id 42 \
+redisctl cloud acl create-role --subscription 42 \
   --data '{"name": "writer", "redis_rules": [{"rule_name": "app-write"}]}' --wait
 
-redisctl cloud acl create-role --subscription-id 42 \
+redisctl cloud acl create-role --subscription 42 \
   --data '{"name": "admin", "redis_rules": [{"rule_name": "app-admin"}]}' --wait
 ```
 
@@ -258,18 +258,18 @@ Isolate tenants by key prefix:
 
 ```bash
 # Tenant A access
-redisctl cloud acl create-redis-rule --subscription-id 42 \
+redisctl cloud acl create-redis-rule --subscription 42 \
   --data '{"name": "tenant-a", "rule": "+@all ~tenant:a:*"}' --wait
 
 # Tenant B access
-redisctl cloud acl create-redis-rule --subscription-id 42 \
+redisctl cloud acl create-redis-rule --subscription 42 \
   --data '{"name": "tenant-b", "rule": "+@all ~tenant:b:*"}' --wait
 
 # Create roles and users
-redisctl cloud acl create-role --subscription-id 42 \
+redisctl cloud acl create-role --subscription 42 \
   --data '{"name": "tenant-a-role", "redis_rules": [{"rule_name": "tenant-a"}]}' --wait
 
-redisctl cloud acl create-acl-user --subscription-id 42 \
+redisctl cloud acl create-acl-user --subscription 42 \
   --data '{"name": "tenant-a-user", "role": "tenant-a-role", "password": "TenantAPass123!"}' --wait
 ```
 
@@ -312,7 +312,7 @@ EOF
 # Create rules
 jq -r '.rules[] | @json' acl-setup.json | while read rule; do
   redisctl cloud acl create-redis-rule \
-    --subscription-id 42 \
+    --subscription 42 \
     --data "$rule" \
     --wait
 done
@@ -320,7 +320,7 @@ done
 # Create roles
 jq -r '.roles[] | @json' acl-setup.json | while read role; do
   redisctl cloud acl create-role \
-    --subscription-id 42 \
+    --subscription 42 \
     --data "$role" \
     --wait
 done
@@ -328,7 +328,7 @@ done
 # Create users
 jq -r '.users[] | @json' acl-setup.json | while read user; do
   redisctl cloud acl create-acl-user \
-    --subscription-id 42 \
+    --subscription 42 \
     --data "$user" \
     --wait
 done
@@ -364,13 +364,13 @@ Common patterns in Redis ACL rules:
 ```bash
 # Get specific user details
 redisctl cloud acl get-acl-user \
-  --subscription-id 42 \
+  --subscription 42 \
   --user-id 456 \
   -o json
 
 # List all users with their roles
 redisctl cloud acl list-acl-users \
-  --subscription-id 42 \
+  --subscription 42 \
   -o json \
   -q '[].{name: name, role: role, id: id}'
 ```
@@ -380,7 +380,7 @@ redisctl cloud acl list-acl-users \
 ```bash
 # Update existing rule
 redisctl cloud acl update-redis-rule \
-  --subscription-id 42 \
+  --subscription 42 \
   --rule-id 789 \
   --data '{
     "name": "readonly",
@@ -393,7 +393,7 @@ redisctl cloud acl update-redis-rule \
 
 ```bash
 redisctl cloud acl update-acl-user \
-  --subscription-id 42 \
+  --subscription 42 \
   --user-id 456 \
   --data '{
     "password": "NewSecurePass456!"
@@ -406,19 +406,19 @@ redisctl cloud acl update-acl-user \
 ```bash
 # Delete user
 redisctl cloud acl delete-acl-user \
-  --subscription-id 42 \
+  --subscription 42 \
   --user-id 456 \
   --wait
 
 # Delete role
 redisctl cloud acl delete-role \
-  --subscription-id 42 \
+  --subscription 42 \
   --role-id 321 \
   --wait
 
 # Delete Redis rule
 redisctl cloud acl delete-redis-rule \
-  --subscription-id 42 \
+  --subscription 42 \
   --rule-id 789 \
   --wait
 ```
@@ -463,10 +463,10 @@ Error: NOPERM this user has no permissions to run the 'set' command
 **Solution:** Review and update the user's role and rules:
 ```bash
 # Check user's role
-redisctl cloud acl get-acl-user --subscription-id 42 --user-id 456 -q 'role'
+redisctl cloud acl get-acl-user --subscription 42 --user-id 456 -q 'role'
 
 # Check role's rules
-redisctl cloud acl list-roles --subscription-id 42 -q '[?name==`readonly-role`]'
+redisctl cloud acl list-roles --subscription 42 -q '[?name==`readonly-role`]'
 ```
 
 ## Best Practices

@@ -78,7 +78,7 @@ EOF
     REDIS_CLOUD_API_SECRET: ${{ secrets.REDIS_API_SECRET }}
   run: |
     redisctl cloud database create \
-      --subscription-id 12345 \
+      --subscription 12345 \
       --data @database.json \
       --wait
 ```

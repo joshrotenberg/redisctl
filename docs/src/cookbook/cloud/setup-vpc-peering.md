@@ -17,7 +17,7 @@ If you already have your VPC details:
 
 ```bash
 redisctl cloud connectivity vpc-peering create \
-  --subscription-id YOUR_SUB_ID \
+  --subscription YOUR_SUB_ID \
   --data '{
     "provider_name": "AWS",
     "aws_account_id": "123456789012",
@@ -74,7 +74,7 @@ You'll need these details from your cloud provider:
 
 ```bash
 redisctl cloud connectivity vpc-peering create \
-  --subscription-id 42 \
+  --subscription 42 \
   --data '{
     "provider_name": "AWS",
     "aws_account_id": "123456789012",
@@ -90,7 +90,7 @@ redisctl cloud connectivity vpc-peering create \
 
 ```bash
 redisctl cloud connectivity vpc-peering create \
-  --subscription-id 42 \
+  --subscription 42 \
   --data '{
     "provider_name": "GCP",
     "gcp_project_id": "my-project-123",
@@ -106,7 +106,7 @@ redisctl cloud connectivity vpc-peering create \
 
 ```bash
 redisctl cloud connectivity vpc-peering create \
-  --subscription-id 42 \
+  --subscription 42 \
   --data '{
     "provider_name": "Azure",
     "azure_subscription_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
@@ -141,7 +141,7 @@ For AWS, you must accept the peering request in your AWS console:
 ```bash
 # Get the AWS peering connection ID
 redisctl cloud connectivity vpc-peering get \
-  --subscription-id 42 \
+  --subscription 42 \
   --peering-id 123 \
   -q 'aws_peering_id'
 
@@ -168,7 +168,7 @@ Add routes to your VPC route tables to direct Redis traffic through the peering 
 ```bash
 # Get Redis Cloud CIDR
 redisctl cloud subscription get \
-  --subscription-id 42 \
+  --subscription 42 \
   -q 'deployment.regions[0].networking.cidr'
 
 # Output: "172.31.0.0/24"
@@ -200,7 +200,7 @@ Check peering status:
 
 ```bash
 redisctl cloud connectivity vpc-peering get \
-  --subscription-id 42 \
+  --subscription 42 \
   --peering-id 123 \
   -o json -q '{status: status, aws_peering_id: aws_peering_id}'
 ```
@@ -214,7 +214,7 @@ Get your database endpoint and test from an instance in your VPC:
 ```bash
 # Get database endpoint
 redisctl cloud database get \
-  --subscription-id 42 \
+  --subscription 42 \
   --database-id 12345 \
   -q 'private_endpoint'
 
@@ -228,12 +228,12 @@ For Active-Active (CRDB) databases, peer with each region:
 
 ```bash
 # List Active-Active regions
-redisctl cloud subscription get --subscription-id 42 \
+redisctl cloud subscription get --subscription 42 \
   -q 'deployment.regions[].{region: region, cidr: networking.cidr}'
 
 # Create peering for each region
 redisctl cloud connectivity vpc-peering create-aa \
-  --subscription-id 42 \
+  --subscription 42 \
   --region-id 1 \
   --data '{
     "provider_name": "AWS",
@@ -262,7 +262,7 @@ cat > vpc-peering.json << 'EOF'
 EOF
 
 redisctl cloud connectivity vpc-peering create \
-  --subscription-id 42 \
+  --subscription 42 \
   --data @vpc-peering.json \
   --wait
 ```
@@ -309,7 +309,7 @@ List all peerings for a subscription:
 
 ```bash
 redisctl cloud connectivity vpc-peering list \
-  --subscription-id 42 \
+  --subscription 42 \
   -o table \
   -q '[].{id: id, status: status, provider: provider_name, region: region}'
 ```
@@ -318,7 +318,7 @@ redisctl cloud connectivity vpc-peering list \
 
 ```bash
 redisctl cloud connectivity vpc-peering delete \
-  --subscription-id 42 \
+  --subscription 42 \
   --peering-id 123 \
   --wait
 ```

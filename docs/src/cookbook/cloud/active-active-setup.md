@@ -32,7 +32,7 @@ redisctl cloud subscription create \
 
 # Create Active-Active database
 redisctl cloud database create \
-  --subscription-id 42 \
+  --subscription 42 \
   --data '{
     "name": "global-cache",
     "memory_limit_in_gb": 2,
@@ -99,7 +99,7 @@ redisctl cloud subscription create \
 
 ```bash
 redisctl cloud database create \
-  --subscription-id 42 \
+  --subscription 42 \
   --data '{
     "name": "global-sessions",
     "memory_limit_in_gb": 5,
@@ -124,7 +124,7 @@ redisctl cloud database create \
 ```bash
 # Get all regional endpoints
 redisctl cloud database get \
-  --subscription-id 42 \
+  --subscription 42 \
   --database-id 12345 \
   -o json \
   -q '{
@@ -189,7 +189,7 @@ r = redis.Redis(
 ```bash
 # US East peering
 redisctl cloud connectivity vpc-peering create-aa \
-  --subscription-id 42 \
+  --subscription 42 \
   --region-id 1 \
   --data '{
     "provider_name": "AWS",
@@ -202,7 +202,7 @@ redisctl cloud connectivity vpc-peering create-aa \
 
 # EU West peering
 redisctl cloud connectivity vpc-peering create-aa \
-  --subscription-id 42 \
+  --subscription 42 \
   --region-id 2 \
   --data '{
     "provider_name": "AWS",
@@ -255,7 +255,7 @@ redis.set('user:status', 'active')  # May conflict with other region
 ```bash
 # Get replication status for all regions
 redisctl cloud database get \
-  --subscription-id 42 \
+  --subscription 42 \
   --database-id 12345 \
   -o json \
   -q 'regions[].{
@@ -270,7 +270,7 @@ redisctl cloud database get \
 ```bash
 # Check inter-region bandwidth usage
 redisctl cloud subscription get \
-  --subscription-id 42 \
+  --subscription 42 \
   -q 'deployment.regions[].{
     region: region,
     sync_traffic_gb: sync_traffic_gb_per_month
@@ -284,7 +284,7 @@ redisctl cloud subscription get \
 ```bash
 # Add new region to subscription
 redisctl cloud subscription update \
-  --subscription-id 42 \
+  --subscription 42 \
   --data '{
     "add_regions": [
       {
@@ -304,7 +304,7 @@ redisctl cloud subscription update \
 
 ```bash
 redisctl cloud subscription update \
-  --subscription-id 42 \
+  --subscription 42 \
   --data '{
     "remove_regions": ["ap-southeast-1"]
   }' \
@@ -323,7 +323,7 @@ If a region becomes unavailable:
 ```bash
 # Check region health
 redisctl cloud database get \
-  --subscription-id 42 \
+  --subscription 42 \
   --database-id 12345 \
   -q 'regions[].{region: region, status: status}'
 
@@ -338,7 +338,7 @@ redisctl cloud database get \
 ```bash
 # Check sync costs
 redisctl cloud subscription get \
-  --subscription-id 42 \
+  --subscription 42 \
   -o json \
   -q '{
     monthly_sync_gb: (deployment.regions | map(&sync_traffic_gb_per_month, @) | sum(@)),
@@ -351,7 +351,7 @@ redisctl cloud subscription get \
 ```bash
 # Use read replicas in regions with heavy reads
 redisctl cloud database update \
-  --subscription-id 42 \
+  --subscription 42 \
   --database-id 12345 \
   --data '{
     "replication": true,
@@ -405,7 +405,7 @@ def get_top_players(n=10):
 # Check network connectivity between regions
 # Increase bandwidth allocation
 redisctl cloud subscription update \
-  --subscription-id 42 \
+  --subscription 42 \
   --data '{"bandwidth_gb_per_month": 500}' \
   --wait
 ```

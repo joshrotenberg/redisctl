@@ -1,153 +1,138 @@
 # Async Operations
 
-The `redisctl` CLI provides comprehensive support for asynchronous operations across both Redis Cloud and Redis Enterprise APIs. All create, update, and delete operations support the `--wait` flag family for tracking long-running operations.
+Many Redis Cloud and Enterprise operations are asynchronous - they return immediately with a task ID while the work happens in the background. redisctl handles this automatically.
 
-## Overview
+## The --wait Flag
 
-Many Redis Cloud API operations are asynchronous, returning immediately with a task ID while the operation continues in the background. The `--wait` flags allow you to:
-
-- Wait for operations to complete before returning
-- Track progress with visual indicators
-- Set custom timeouts for long operations
-- Configure polling intervals
-
-## Wait Flag Options
-
-| Flag | Description | Default |
-|------|-------------|---------|
-| `--wait` | Wait for operation to complete | Timeout: 600s |
-| `--wait-timeout <seconds>` | Custom timeout duration | 600 |
-| `--wait-interval <seconds>` | Polling interval | 10 |
-
-## Basic Usage
+Use `--wait` to block until the operation completes:
 
 ```bash
-# Create database and wait for completion
-redisctl cloud database create --subscription-id 12345 \
-  --data @database.json --wait
+# Returns immediately with task ID
+redisctl cloud database create --subscription 123 --data '{...}'
 
-# With custom timeout for large operations
-redisctl cloud database create --subscription-id 12345 \
-  --data @large-db.json --wait --wait-timeout 1800
-
-# With faster polling for quick operations
-redisctl cloud database update --subscription-id 12345 \
-  --database-id 67890 --data @updates.json \
-  --wait --wait-interval 2
+# Waits for completion, returns final result
+redisctl cloud database create --subscription 123 --data '{...}' --wait
 ```
 
-## Progress Tracking
+## Polling Options
 
-When using the `--wait` flag, redisctl provides real-time progress tracking:
+Control how redisctl polls for completion:
 
+```bash
+redisctl cloud subscription create \
+  --data '{...}' \
+  --wait \
+  --poll-interval 10 \    # Check every 10 seconds (default: 5)
+  --max-wait 600          # Timeout after 10 minutes (default: 300)
 ```
-Creating database...
-⠋ Waiting for task 12345 to complete... (10s)
-⠙ Status: processing (20s)
-⠹ Status: processing (30s)
-✓ Database creation completed successfully
+
+## Task Management
+
+### Check Task Status
+
+```bash
+# Cloud
+redisctl cloud task get <task-id>
+
+# Enterprise
+redisctl enterprise action get <action-id>
 ```
 
-## Supported Operations
+### List Recent Tasks
 
-Async operations are supported across all major command categories:
+```bash
+# Cloud - list all tasks
+redisctl cloud task list
 
-- [Database Operations](./database-operations.md) - Create, update, delete, import, backup, migrate
-- [Subscription Management](./subscription-management.md) - Regular and fixed subscriptions
-- [Network Connectivity](./network-connectivity.md) - VPC Peering, PSC, Transit Gateway
-- [ACL Management](./acl-management.md) - Rules, roles, and users
-- [User & Account Management](./user-management.md) - Users and provider accounts
+# Enterprise - list actions
+redisctl enterprise action list
+```
+
+## Common Async Operations
+
+### Redis Cloud
+
+- `subscription create/delete`
+- `database create/update/delete`
+- `vpc-peering create/delete`
+- `cloud-account create/delete`
+
+### Redis Enterprise
+
+- `database create/update/delete`
+- `cluster join/remove-node`
+- `module upload`
 
 ## Error Handling
 
-### Timeout Behavior
-
-If an operation exceeds the timeout:
-- The CLI exits with an error
-- The task continues running in the background
-- You can check status using the task ID
+When `--wait` is used and an operation fails:
 
 ```bash
-# Operation times out
-Error: Operation timed out after 600 seconds. Task 12345 is still running.
+$ redisctl cloud database create --data '{...}' --wait
+Error: Task failed: Invalid memory configuration
 
-# Check task status manually
-redisctl cloud task get 12345
+# Check task details
+$ redisctl cloud task get abc-123
+{
+  "taskId": "abc-123",
+  "status": "failed",
+  "error": "Invalid memory configuration"
+}
 ```
 
-### Recovery Options
+## Scripting Patterns
+
+### Wait and Extract Result
 
 ```bash
-# Retry with longer timeout
-redisctl cloud database create --data @database.json \
-  --wait --wait-timeout 1800
+# Create and get the new database ID
+DB_ID=$(redisctl cloud database create \
+  --subscription 123 \
+  --data '{"name": "mydb"}' \
+  --wait \
+  -q 'databaseId')
 
-# Check task status without waiting
-redisctl cloud task list --status pending
+echo "Created database: $DB_ID"
 ```
 
-## Best Practices
-
-### Choosing Timeouts
-
-- **Small operations**: Default 600s is usually sufficient
-- **Large databases**: Increase to 1800s (30 min) or more
-- **Bulk operations**: Consider 3600s (1 hour) for very large datasets
-- **Network operations**: May need longer timeouts in some regions
-
-### Polling Intervals
-
-- **Default (10s)**: Good balance for most operations
-- **Fast operations (2-5s)**: For operations you expect to complete quickly
-- **Long operations (30-60s)**: Reduce API calls for very long operations
-
-### Automation
-
-The `--wait` flags are designed for automation:
+### Fire and Forget
 
 ```bash
-#!/bin/bash
-# CI/CD pipeline example
-set -e  # Exit on error
-
-# Create infrastructure
-redisctl cloud subscription create --data @prod-sub.json \
-  --wait --wait-timeout 1800
-
-SUB_ID=$(redisctl cloud subscription list -q "[0].id" -o json)
-
-redisctl cloud database create --subscription-id $SUB_ID \
-  --data @prod-db.json --wait --wait-timeout 900
-
-echo "Infrastructure ready!"
-```
-
-## Parallel Operations
-
-You can run multiple async operations in parallel:
-
-```bash
-#!/bin/bash
-# Create multiple databases in parallel
-for i in {1..5}; do
-  redisctl cloud database create --subscription-id 12345 \
-    --data @db-$i.json --wait &
-done
-
-# Wait for all background jobs
+# Start multiple operations in parallel
+redisctl cloud database delete 123 456 &
+redisctl cloud database delete 123 789 &
 wait
-echo "All databases created!"
 ```
 
-## Implementation Details
+### Custom Polling
 
-All async operations use the centralized `handle_async_response` function which:
-- Extracts task IDs from API responses
-- Polls for task completion
-- Provides consistent progress indicators
-- Handles timeouts and errors uniformly
+```bash
+# Start operation
+TASK_ID=$(redisctl cloud database create --data '{...}' -q 'taskId')
 
-The system automatically detects task IDs from various response formats:
-- `taskId` field in response
-- `links` array with task references
-- Nested task objects
+# Custom polling loop
+while true; do
+  STATUS=$(redisctl cloud task get $TASK_ID -q 'status')
+  echo "Status: $STATUS"
+  
+  if [ "$STATUS" = "completed" ] || [ "$STATUS" = "failed" ]; then
+    break
+  fi
+  
+  sleep 10
+done
+```
+
+## Timeouts
+
+If an operation exceeds `--max-wait`:
+
+```bash
+$ redisctl cloud subscription create --data '{...}' --wait --max-wait 60
+Error: Operation timed out after 60 seconds. Task ID: abc-123
+
+# Check manually
+$ redisctl cloud task get abc-123
+```
+
+The operation continues in the background - only the CLI stops waiting.

@@ -12,7 +12,7 @@ If you already have a subscription, create a database with one command:
 
 ```bash
 redisctl cloud database create \
-  --subscription-id YOUR_SUBSCRIPTION_ID \
+  --subscription YOUR_SUBSCRIPTION_ID \
   --data '{"name": "my-first-db", "memoryLimitInGb": 1}' \
   --wait
 ```
@@ -64,7 +64,7 @@ Use the subscription ID from step 1:
 
 ```bash
 redisctl cloud database create \
-  --subscription-id 42 \
+  --subscription 42 \
   --data '{
     "name": "my-first-db",
     "memoryLimitInGb": 1,
@@ -104,7 +104,7 @@ Retrieve your database credentials:
 
 ```bash
 redisctl cloud database get \
-  --subscription-id 42 \
+  --subscription 42 \
   --database-id 12345 \
   -o json \
   -q '{endpoint: public_endpoint, password: password}'
@@ -159,7 +159,7 @@ EOF
 
 # Create database
 redisctl cloud database create \
-  --subscription-id 42 \
+  --subscription 42 \
   --data @database-config.json \
   --wait
 ```
@@ -170,7 +170,7 @@ Use `-o json` for scripts:
 
 ```bash
 DB_INFO=$(redisctl cloud database create \
-  --subscription-id 42 \
+  --subscription 42 \
   --data '{"name": "api-cache", "memoryLimitInGb": 2}' \
   --wait \
   -o json)
@@ -210,7 +210,7 @@ Error: 400 Bad Request - Invalid memory limit
 
 **Solution:** Check subscription limits:
 ```bash
-redisctl cloud subscription get --subscription-id 42 -q 'pricing'
+redisctl cloud subscription get --subscription 42 -q 'pricing'
 ```
 
 ## Next Steps

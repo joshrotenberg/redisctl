@@ -1,20 +1,10 @@
 # Introduction
 
-**redisctl** is the first command-line tool for managing Redis Cloud and Redis Enterprise deployments.
+**redisctl** is a command-line tool for managing Redis Cloud and Redis Enterprise deployments.
 
-## The Problem
+## Features
 
-Before redisctl existed, managing Redis deployments meant:
-
-- Manual UI clicking with no scriptability
-- Writing fragile bash scripts with curl and jq
-- Manual polling loops to wait for operations
-- Credential exposure on command lines
-- Every operator reinventing the same scripts
-
-## The Solution
-
-redisctl provides a first-class CLI experience with:
+redisctl provides:
 
 - **Type-Safe API Clients** - Catch errors at compile time
 - **Async Operation Handling** - Automatic polling with `--wait`
@@ -43,21 +33,16 @@ redisctl cloud database create --subscription $SUB --name mydb --wait
 ## Installation
 
 ```bash
+# Docker (quick start)
+docker run ghcr.io/joshrotenberg/redisctl:latest --help
+
 # macOS/Linux
 brew install joshrotenberg/brew/redisctl
 
 # Or download from GitHub releases
-# Or use Docker
-docker run ghcr.io/joshrotenberg/redisctl:latest --help
 ```
 
-See [Installation](./getting-started/installation.md) for all methods.
-
-## Quick Start Paths
-
-- **Redis Cloud Users**: Start with [Cloud Quick Start](./getting-started/quickstart.md#redis-cloud-quick-start)
-- **Redis Enterprise Users**: Start with [Enterprise Quick Start](./getting-started/quickstart.md#redis-enterprise-quick-start)  
-- **Developers**: Check out [Library Documentation](./developer/library-usage.md)
+See [Installation](./getting-started/installation.md) for all methods, or try the [Quick Start](./getting-started/quickstart.md) with Docker.
 
 ## Architecture
 

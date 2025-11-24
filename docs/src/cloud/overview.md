@@ -1,54 +1,96 @@
 # Redis Cloud Overview
 
-Redis Cloud is a fully-managed database-as-a-service offering. `redisctl` provides comprehensive access to the Redis Cloud REST API.
+Redis Cloud is Redis's fully managed database service. redisctl provides complete CLI access to the Redis Cloud API.
+
+## Three-Tier Access
+
+### 1. API Layer
+Direct REST access for scripting and automation:
+```bash
+redisctl api cloud get /subscriptions
+redisctl api cloud post /subscriptions -d @subscription.json
+```
+
+### 2. Commands
+Human-friendly commands for day-to-day operations:
+```bash
+redisctl cloud subscription list
+redisctl cloud database create --subscription 123 --data @db.json --wait
+```
+
+### 3. Workflows
+Multi-step operations:
+```bash
+redisctl cloud workflow subscription-setup --name prod --region us-east-1
+```
+
+## Key Concepts
+
+### Subscriptions
+Subscriptions are the top-level container for databases. They define:
+- Cloud provider (AWS, GCP, Azure)
+- Region
+- Memory allocation
+- Networking configuration
+
+### Databases
+Databases run within subscriptions. Each database has:
+- Memory limit
+- Modules (RedisJSON, RediSearch, etc.)
+- Persistence settings
+- Access credentials
+
+### Tasks
+Most operations are async and return task IDs. Use `--wait` to block until completion.
 
 ## Authentication
 
 Redis Cloud uses API key authentication:
 
 ```bash
-# Set credentials
-export REDIS_CLOUD_API_KEY="your-account-key"
-export REDIS_CLOUD_API_SECRET="your-secret-key"
+# Environment variables
+export REDIS_CLOUD_API_KEY="your-key"
+export REDIS_CLOUD_SECRET_KEY="your-secret"
 
-# Test connection
-redisctl api cloud get /
+# Or profile
+redisctl profile set cloud --deployment-type cloud --api-key "..." --api-secret "..."
 ```
 
-## Command Structure
+Get your API keys from [app.redislabs.com](https://app.redislabs.com) → Account Settings → API Keys.
 
-Redis Cloud commands follow this pattern:
-
-```
-redisctl cloud <resource> <action> [options]
-```
-
-Resources include:
-- `subscription` - Manage subscriptions
-- `database` - Manage databases
-- `account` - Account information
-- `user` - User management
-- `acl` - Access control lists
-- `backup` - Backup operations
-
-## Common Operations
+## Quick Examples
 
 ```bash
-# List all subscriptions
-redisctl cloud subscription list
+# List subscriptions
+redisctl cloud subscription list -o table
 
-# Get subscription details
-redisctl cloud subscription get 12345
+# Create database and wait
+redisctl cloud database create \
+  --subscription 123456 \
+  --data '{"name": "cache", "memoryLimitInGb": 1}' \
+  --wait
 
-# List databases in a subscription
-redisctl cloud database list --subscription-id 12345
+# Get database connection info
+redisctl cloud database get 123456:789 \
+  -q '{endpoint: publicEndpoint, password: password}'
 
-# Get database details
-redisctl cloud database get --subscription-id 12345 --database-id 67890
+# Set up VPC peering
+redisctl cloud vpc-peering create \
+  --subscription 123456 \
+  --data @peering.json \
+  --wait
 ```
+
+## Command Groups
+
+- **[Databases](./commands/databases.md)** - Create, update, delete databases
+- **[Subscriptions](./commands/subscriptions.md)** - Manage subscriptions
+- **[Access Control](./commands/access-control.md)** - Users, roles, ACLs
+- **[Networking](./commands/networking.md)** - VPC, PSC, Transit Gateway
+- **[Tasks](./commands/tasks.md)** - Monitor async operations
 
 ## Next Steps
 
-- [Human-Friendly Commands](./human-commands.md) - High-level command reference
-- [Raw API Access](./api-access.md) - Direct API endpoint access
-- [Examples](./examples.md) - Real-world usage examples
+- [API Layer](./api.md) - Direct REST access
+- [Workflows](./workflows.md) - Multi-step operations
+- [Cloud Cookbook](../cookbook/README.md) - Practical recipes
