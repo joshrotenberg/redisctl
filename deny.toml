@@ -13,7 +13,10 @@ targets = [
 [advisories]
 db-path = "~/.cargo/advisory-db"
 db-urls = ["https://github.com/rustsec/advisory-db"]
-ignore = []
+# Unmaintained crates that are transitive dependencies with no safe upgrade path
+ignore = [
+    "RUSTSEC-2025-0120",  # json5 unmaintained (via config 0.15.19, no upgrade available)
+]
 
 [licenses]
 # List of allowed licenses
