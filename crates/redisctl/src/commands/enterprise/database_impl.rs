@@ -208,6 +208,108 @@ pub async fn delete_database(
     Ok(())
 }
 
+/// Watch database status changes
+pub async fn watch_database(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
+    id: u32,
+    poll_interval: u64,
+    query: Option<&str>,
+) -> CliResult<()> {
+    use futures::StreamExt;
+    use tokio::signal;
+
+    let client = conn_mgr.create_enterprise_client(profile_name).await?;
+    let handler = redis_enterprise::BdbHandler::new(client);
+    let mut stream = handler.watch_database(id, std::time::Duration::from_secs(poll_interval));
+
+    println!("Watching database {} (Ctrl+C to stop)...\n", id);
+
+    loop {
+        tokio::select! {
+            _ = signal::ctrl_c() => {
+                println!("\nStopping database watch...");
+                break;
+            }
+            result = stream.next() => {
+                match result {
+                    Some(Ok((db_info, prev_status))) => {
+                        let current_status = db_info.status.as_deref().unwrap_or("unknown");
+                        let timestamp = chrono::Utc::now().format("%H:%M:%S");
+
+                        // Check if this is a status change
+                        if let Some(old_status) = prev_status {
+                            // Status transition detected
+                            println!(
+                                "[{}] Database {}: {} -> {} (TRANSITION)",
+                                timestamp, id, old_status, current_status
+                            );
+
+                            // Show key metrics during transition
+                            if let Some(memory_used) = db_info.memory_used
+                                && let Some(memory_size) = db_info.memory_size {
+                                    let usage_pct = (memory_used as f64 / memory_size as f64) * 100.0;
+                                    println!("  Memory: {} / {} ({:.1}%)",
+                                        format_bytes(memory_used),
+                                        format_bytes(memory_size),
+                                        usage_pct
+                                    );
+                                }
+
+                            if let Some(shards) = db_info.shards_count {
+                                println!("  Shards: {}", shards);
+                            }
+                        } else {
+                            // Regular status update (no change)
+                            print!("[{}] Database {}: {}", timestamp, id, current_status);
+
+                            // Apply JMESPath query if provided
+                            if query.is_some() {
+                                let db_json = serde_json::to_value(&db_info)
+                                    .map_err(|e| RedisCtlError::from(anyhow::anyhow!("Serialization error: {}", e)))?;
+                                let filtered = handle_output(db_json, OutputFormat::Json, query)?;
+                                print!(" | {}", serde_json::to_string(&filtered)?);
+                            } else {
+                                // Show brief metrics
+                                if let Some(memory_used) = db_info.memory_used {
+                                    print!(" | mem: {}", format_bytes(memory_used));
+                                }
+                                if let Some(shards) = db_info.shards_count {
+                                    print!(" | shards: {}", shards);
+                                }
+                            }
+                            println!();
+                        }
+                    }
+                    Some(Err(e)) => {
+                        eprintln!("Error watching database: {}", e);
+                        break;
+                    }
+                    None => {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
+/// Format bytes into human-readable format
+fn format_bytes(bytes: u64) -> String {
+    const UNITS: &[&str] = &["B", "KB", "MB", "GB", "TB"];
+    let mut size = bytes as f64;
+    let mut unit_index = 0;
+
+    while size >= 1024.0 && unit_index < UNITS.len() - 1 {
+        size /= 1024.0;
+        unit_index += 1;
+    }
+
+    format!("{:.2}{}", size, UNITS[unit_index])
+}
+
 /// Export database
 pub async fn export_database(
     conn_mgr: &ConnectionManager,

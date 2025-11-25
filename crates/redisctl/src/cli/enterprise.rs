@@ -451,6 +451,15 @@ NOTE: Memory size is in bytes. Common values:
         force: bool,
     },
 
+    /// Watch database status changes in real-time
+    Watch {
+        /// Database ID
+        id: u32,
+        /// Poll interval in seconds
+        #[arg(long, default_value = "5")]
+        poll_interval: u64,
+    },
+
     /// Export database
     Export {
         /// Database ID
