@@ -8,6 +8,7 @@ use anyhow::Context;
 use futures::StreamExt;
 use redis_enterprise::stats::StatsHandler;
 use std::time::Duration;
+use tokio::signal;
 
 use super::utils::*;
 
@@ -135,18 +136,37 @@ async fn handle_database_stats_stream(
     let stats_handler = StatsHandler::new(client);
     let mut stream = stats_handler.stream_database(database_id, Duration::from_secs(poll_interval));
 
-    while let Some(result) = stream.next().await {
-        match result {
-            Ok(stats) => {
-                let stats_json =
-                    serde_json::to_value(stats).context("Failed to serialize stats")?;
-                let data = handle_output(stats_json, output_format, query)?;
-                print_formatted_output(data, output_format)?;
-                println!(); // Separator between polls
-            }
-            Err(e) => {
-                eprintln!("Error fetching stats: {}", e);
+    println!(
+        "Streaming database {} stats (Ctrl+C to stop)...\n",
+        database_id
+    );
+
+    loop {
+        tokio::select! {
+            // Handle Ctrl+C
+            _ = signal::ctrl_c() => {
+                println!("\nStopping stats stream...");
                 break;
+            }
+            // Handle next stats entry
+            result = stream.next() => {
+                match result {
+                    Some(Ok(stats)) => {
+                        let stats_json =
+                            serde_json::to_value(stats).context("Failed to serialize stats")?;
+                        let data = handle_output(stats_json, output_format, query)?;
+                        print_formatted_output(data, output_format)?;
+                        println!(); // Separator between polls
+                    }
+                    Some(Err(e)) => {
+                        eprintln!("Error fetching stats: {}", e);
+                        break;
+                    }
+                    None => {
+                        // Stream ended
+                        break;
+                    }
+                }
             }
         }
     }
@@ -226,18 +246,31 @@ async fn handle_node_stats_stream(
     let stats_handler = StatsHandler::new(client);
     let mut stream = stats_handler.stream_node(node_id, Duration::from_secs(poll_interval));
 
-    while let Some(result) = stream.next().await {
-        match result {
-            Ok(stats) => {
-                let stats_json =
-                    serde_json::to_value(stats).context("Failed to serialize stats")?;
-                let data = handle_output(stats_json, output_format, query)?;
-                print_formatted_output(data, output_format)?;
-                println!();
-            }
-            Err(e) => {
-                eprintln!("Error fetching stats: {}", e);
+    println!("Streaming node {} stats (Ctrl+C to stop)...\n", node_id);
+
+    loop {
+        tokio::select! {
+            _ = signal::ctrl_c() => {
+                println!("\nStopping stats stream...");
                 break;
+            }
+            result = stream.next() => {
+                match result {
+                    Some(Ok(stats)) => {
+                        let stats_json =
+                            serde_json::to_value(stats).context("Failed to serialize stats")?;
+                        let data = handle_output(stats_json, output_format, query)?;
+                        print_formatted_output(data, output_format)?;
+                        println!();
+                    }
+                    Some(Err(e)) => {
+                        eprintln!("Error fetching stats: {}", e);
+                        break;
+                    }
+                    None => {
+                        break;
+                    }
+                }
             }
         }
     }
@@ -296,18 +329,31 @@ async fn handle_cluster_stats_stream(
     let stats_handler = StatsHandler::new(client);
     let mut stream = stats_handler.stream_cluster(Duration::from_secs(poll_interval));
 
-    while let Some(result) = stream.next().await {
-        match result {
-            Ok(stats) => {
-                let stats_json =
-                    serde_json::to_value(stats).context("Failed to serialize stats")?;
-                let data = handle_output(stats_json, output_format, query)?;
-                print_formatted_output(data, output_format)?;
-                println!();
-            }
-            Err(e) => {
-                eprintln!("Error fetching stats: {}", e);
+    println!("Streaming cluster stats (Ctrl+C to stop)...\n");
+
+    loop {
+        tokio::select! {
+            _ = signal::ctrl_c() => {
+                println!("\nStopping stats stream...");
                 break;
+            }
+            result = stream.next() => {
+                match result {
+                    Some(Ok(stats)) => {
+                        let stats_json =
+                            serde_json::to_value(stats).context("Failed to serialize stats")?;
+                        let data = handle_output(stats_json, output_format, query)?;
+                        print_formatted_output(data, output_format)?;
+                        println!();
+                    }
+                    Some(Err(e)) => {
+                        eprintln!("Error fetching stats: {}", e);
+                        break;
+                    }
+                    None => {
+                        break;
+                    }
+                }
             }
         }
     }
