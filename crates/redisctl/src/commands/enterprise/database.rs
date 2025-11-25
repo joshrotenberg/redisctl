@@ -74,6 +74,9 @@ pub async fn handle_database_command(
             )
             .await
         }
+        EnterpriseDatabaseCommands::Watch { id, poll_interval } => {
+            database_impl::watch_database(conn_mgr, profile_name, *id, *poll_interval, query).await
+        }
         EnterpriseDatabaseCommands::Export { id, data } => {
             database_impl::export_database(conn_mgr, profile_name, *id, data, output_format, query)
                 .await

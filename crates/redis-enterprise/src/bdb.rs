@@ -74,13 +74,19 @@
 
 use crate::client::RestClient;
 use crate::error::Result;
+use futures::stream::Stream;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::pin::Pin;
+use std::time::Duration;
+use tokio::time::sleep;
 use typed_builder::TypedBuilder;
 
 // Aliases for easier use
 pub type Database = DatabaseInfo;
 pub type BdbHandler = DatabaseHandler;
+pub type DatabaseWatchStream<'a> =
+    Pin<Box<dyn Stream<Item = Result<(DatabaseInfo, Option<String>)>> + Send + 'a>>;
 
 /// Response from database action operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -980,5 +986,85 @@ impl DatabaseHandler {
     /// Create database using v2 API (supports recovery plan)
     pub async fn create_v2(&self, request: Value) -> Result<DatabaseInfo> {
         self.client.post("/v2/bdbs", &request).await
+    }
+
+    /// Watch database status changes in real-time
+    ///
+    /// Polls the database endpoint and yields updates when status changes occur.
+    /// Useful for monitoring database operations like upgrades, migrations, backups, etc.
+    ///
+    /// # Arguments
+    /// * `uid` - Database ID to watch
+    /// * `poll_interval` - Time to wait between polls
+    ///
+    /// # Returns
+    /// A stream of `(DatabaseInfo, Option<String>)` tuples where:
+    /// - `DatabaseInfo` - Current database state
+    /// - `Option<String>` - Previous status (None on first poll, Some on status change)
+    ///
+    /// # Example
+    /// ```no_run
+    /// use redis_enterprise::{EnterpriseClient, BdbHandler as DatabaseHandler};
+    /// use futures::StreamExt;
+    /// use std::time::Duration;
+    ///
+    /// # async fn example(client: EnterpriseClient) -> Result<(), Box<dyn std::error::Error>> {
+    /// let handler = DatabaseHandler::new(client);
+    /// let mut stream = handler.watch_database(1, Duration::from_secs(5));
+    ///
+    /// while let Some(result) = stream.next().await {
+    ///     match result {
+    ///         Ok((db_info, prev_status)) => {
+    ///             if let Some(old_status) = prev_status {
+    ///                 println!("Status changed: {} -> {}", old_status, db_info.status.unwrap_or_default());
+    ///             } else {
+    ///                 println!("Initial status: {}", db_info.status.unwrap_or_default());
+    ///             }
+    ///         }
+    ///         Err(e) => eprintln!("Error: {}", e),
+    ///     }
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn watch_database(&self, uid: u32, poll_interval: Duration) -> DatabaseWatchStream<'_> {
+        Box::pin(async_stream::stream! {
+            let mut last_status: Option<String> = None;
+
+            loop {
+                match self.info(uid).await {
+                    Ok(db_info) => {
+                        let current_status = db_info.status.clone();
+
+                        // Check if status changed
+                        let status_changed = match (&last_status, &current_status) {
+                            (Some(old), Some(new)) => old != new,
+                            (None, Some(_)) => false, // First poll, not a change
+                            (Some(_), None) => true,  // Status disappeared
+                            (None, None) => false,
+                        };
+
+                        // Yield the database info with previous status if changed
+                        if status_changed {
+                            yield Ok((db_info, last_status.clone()));
+                        } else if last_status.is_none() {
+                            // First poll - always yield
+                            yield Ok((db_info, None));
+                        } else {
+                            // Status unchanged - yield current state for monitoring
+                            yield Ok((db_info, None));
+                        }
+
+                        last_status = current_status;
+                    }
+                    Err(e) => {
+                        yield Err(e);
+                        break;
+                    }
+                }
+
+                sleep(poll_interval).await;
+            }
+        })
     }
 }
