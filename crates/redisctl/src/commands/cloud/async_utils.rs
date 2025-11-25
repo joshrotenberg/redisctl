@@ -270,3 +270,209 @@ fn print_task_details(task: &Value) -> CliResult<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn test_is_terminal_state_completed_variants() {
+        assert!(is_terminal_state("completed"));
+        assert!(is_terminal_state("complete"));
+        assert!(is_terminal_state("succeeded"));
+        assert!(is_terminal_state("success"));
+        assert!(is_terminal_state("COMPLETED")); // case insensitive
+    }
+
+    #[test]
+    fn test_is_terminal_state_failed_variants() {
+        assert!(is_terminal_state("failed"));
+        assert!(is_terminal_state("error"));
+        assert!(is_terminal_state("processing-error"));
+        assert!(is_terminal_state("ERROR")); // case insensitive
+    }
+
+    #[test]
+    fn test_is_terminal_state_cancelled() {
+        assert!(is_terminal_state("cancelled"));
+        assert!(is_terminal_state("CANCELLED"));
+    }
+
+    #[test]
+    fn test_is_terminal_state_non_terminal() {
+        assert!(!is_terminal_state("processing"));
+        assert!(!is_terminal_state("running"));
+        assert!(!is_terminal_state("in_progress"));
+        assert!(!is_terminal_state("pending"));
+        assert!(!is_terminal_state("unknown"));
+        assert!(!is_terminal_state(""));
+    }
+
+    #[test]
+    fn test_get_task_state_from_status() {
+        let task = json!({"status": "completed"});
+        assert_eq!(get_task_state(&task), "completed");
+    }
+
+    #[test]
+    fn test_get_task_state_from_state() {
+        let task = json!({"state": "processing"});
+        assert_eq!(get_task_state(&task), "processing");
+    }
+
+    #[test]
+    fn test_get_task_state_status_priority() {
+        // status takes priority over state
+        let task = json!({"status": "completed", "state": "processing"});
+        assert_eq!(get_task_state(&task), "completed");
+    }
+
+    #[test]
+    fn test_get_task_state_unknown() {
+        let task = json!({"foo": "bar"});
+        assert_eq!(get_task_state(&task), "unknown");
+    }
+
+    #[test]
+    fn test_get_task_state_empty() {
+        let task = json!({});
+        assert_eq!(get_task_state(&task), "unknown");
+    }
+
+    #[test]
+    fn test_format_task_state_success_variants() {
+        assert_eq!(format_task_state("completed"), "✓ completed");
+        assert_eq!(format_task_state("complete"), "✓ complete");
+        assert_eq!(format_task_state("succeeded"), "✓ succeeded");
+        assert_eq!(format_task_state("success"), "✓ success");
+        assert_eq!(format_task_state("COMPLETED"), "✓ COMPLETED");
+    }
+
+    #[test]
+    fn test_format_task_state_failure_variants() {
+        assert_eq!(format_task_state("failed"), "✗ failed");
+        assert_eq!(format_task_state("error"), "✗ error");
+        assert_eq!(format_task_state("processing-error"), "✗ processing-error");
+        assert_eq!(format_task_state("ERROR"), "✗ ERROR");
+    }
+
+    #[test]
+    fn test_format_task_state_cancelled() {
+        assert_eq!(format_task_state("cancelled"), "⊘ cancelled");
+        assert_eq!(format_task_state("CANCELLED"), "⊘ CANCELLED");
+    }
+
+    #[test]
+    fn test_format_task_state_in_progress_variants() {
+        assert_eq!(format_task_state("processing"), "⟳ processing");
+        assert_eq!(format_task_state("running"), "⟳ running");
+        assert_eq!(format_task_state("in_progress"), "⟳ in_progress");
+    }
+
+    #[test]
+    fn test_format_task_state_unknown() {
+        assert_eq!(format_task_state("pending"), "pending");
+        assert_eq!(format_task_state("unknown"), "unknown");
+        assert_eq!(format_task_state("custom_state"), "custom_state");
+    }
+
+    #[test]
+    fn test_print_task_details_full() {
+        let task = json!({
+            "taskId": "task-123",
+            "status": "completed",
+            "description": "Create database",
+            "progress": 100,
+            "createdAt": "2025-01-01T00:00:00Z",
+            "updatedAt": "2025-01-01T00:05:00Z"
+        });
+
+        let result = print_task_details(&task);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_print_task_details_with_error() {
+        let task = json!({
+            "taskId": "task-456",
+            "status": "failed",
+            "error": "Database creation failed",
+            "description": "Create database"
+        });
+
+        let result = print_task_details(&task);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_print_task_details_with_error_message() {
+        let task = json!({
+            "taskId": "task-789",
+            "status": "failed",
+            "errorMessage": "Invalid configuration"
+        });
+
+        let result = print_task_details(&task);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_print_task_details_with_nested_error_object() {
+        let task = json!({
+            "taskId": "task-nested",
+            "status": "failed",
+            "response": {
+                "error": {
+                    "type": "ValidationError",
+                    "status": "400",
+                    "description": "Invalid database configuration"
+                }
+            }
+        });
+
+        let result = print_task_details(&task);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_print_task_details_with_nested_error_string() {
+        let task = json!({
+            "taskId": "task-string-error",
+            "status": "failed",
+            "response": {
+                "error": "Simple error message"
+            }
+        });
+
+        let result = print_task_details(&task);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_print_task_details_minimal() {
+        let task = json!({"id": "task-minimal"});
+        let result = print_task_details(&task);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_print_task_details_alternative_field_names() {
+        let task = json!({
+            "id": "task-alt",
+            "state": "processing",
+            "created_at": "2025-01-01T00:00:00Z",
+            "updated_at": "2025-01-01T00:01:00Z"
+        });
+
+        let result = print_task_details(&task);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_print_task_details_empty() {
+        let task = json!({});
+        let result = print_task_details(&task);
+        assert!(result.is_ok());
+    }
+}
