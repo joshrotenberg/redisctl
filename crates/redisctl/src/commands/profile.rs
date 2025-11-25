@@ -385,6 +385,7 @@ async fn handle_set(
                     api_url: api_url.to_string(),
                 },
                 files_api_key: None,
+                resilience: None,
             }
         }
         redisctl_config::DeploymentType::Enterprise => {
@@ -444,6 +445,7 @@ async fn handle_set(
                     insecure: *insecure,
                 },
                 files_api_key: None,
+                resilience: None,
             }
         }
     };
