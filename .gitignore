@@ -40,3 +40,8 @@ tmp/
 # mdBook build output
 docs/book/
 support-package-*.tar.gz
+coverage_analysis.md
+coverage_output.txt
+lcov.info
+*.profraw
+target/tarpaulin/
