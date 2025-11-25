@@ -19,8 +19,8 @@ path = "src/main.rs"
 
 [dependencies]
 redisctl-config = { version = "0.1.1", path = "../redisctl-config" }
-redis-cloud = { version = "0.7.1", path = "../redis-cloud" }
-redis-enterprise = { version = "0.6.4", path = "../redis-enterprise" }
+redis-cloud = { version = "0.7.1", path = "../redis-cloud", features = ["tower-integration"] }
+redis-enterprise = { version = "0.6.4", path = "../redis-enterprise", features = ["tower-integration"] }
 files-sdk = { workspace = true, optional = true }
 
 # CLI dependencies
@@ -55,6 +55,10 @@ config = { workspace = true }
 
 # Keyring for Files.com API key storage (separate from profile credentials)
 keyring = { version = "3.6", optional = true, features = ["apple-native", "windows-native", "linux-native"] }
+
+# Tower and resilience patterns
+tower = { version = "0.5", features = ["util", "timeout", "buffer", "ready-cache"] }
+tower-resilience = { version = "0.1", features = ["circuitbreaker", "retry", "ratelimiter"] }
 
 [target.'cfg(unix)'.dependencies]
 pager = "0.16"
