@@ -8,9 +8,13 @@
 
 use crate::{CloudError as RestError, Result};
 use reqwest::Client;
+use reqwest::header::{HeaderMap, HeaderValue, USER_AGENT};
 use serde::Serialize;
 use std::sync::Arc;
 use tracing::{debug, instrument, trace};
+
+/// Default user agent for the Redis Cloud client
+const DEFAULT_USER_AGENT: &str = concat!("redis-cloud/", env!("CARGO_PKG_VERSION"));
 
 /// Builder for constructing a CloudClient with custom configuration
 ///
@@ -43,6 +47,7 @@ pub struct CloudClientBuilder {
     api_secret: Option<String>,
     base_url: String,
     timeout: std::time::Duration,
+    user_agent: String,
 }
 
 impl Default for CloudClientBuilder {
@@ -52,6 +57,7 @@ impl Default for CloudClientBuilder {
             api_secret: None,
             base_url: "https://api.redislabs.com/v1".to_string(),
             timeout: std::time::Duration::from_secs(30),
+            user_agent: DEFAULT_USER_AGENT.to_string(),
         }
     }
 }
@@ -86,6 +92,16 @@ impl CloudClientBuilder {
         self
     }
 
+    /// Set the user agent string for HTTP requests
+    ///
+    /// The default user agent is `redis-cloud/{version}`.
+    /// This can be overridden to identify specific clients, for example:
+    /// `redisctl/1.2.3` or `my-app/1.0.0`.
+    pub fn user_agent(mut self, user_agent: impl Into<String>) -> Self {
+        self.user_agent = user_agent.into();
+        self
+    }
+
     /// Build the client
     pub fn build(self) -> Result<CloudClient> {
         let api_key = self
@@ -95,8 +111,16 @@ impl CloudClientBuilder {
             .api_secret
             .ok_or_else(|| RestError::ConnectionError("API secret is required".to_string()))?;
 
+        let mut default_headers = HeaderMap::new();
+        default_headers.insert(
+            USER_AGENT,
+            HeaderValue::from_str(&self.user_agent)
+                .map_err(|e| RestError::ConnectionError(format!("Invalid user agent: {}", e)))?,
+        );
+
         let client = Client::builder()
             .timeout(self.timeout)
+            .default_headers(default_headers)
             .build()
             .map_err(|e| RestError::ConnectionError(e.to_string()))?;
 

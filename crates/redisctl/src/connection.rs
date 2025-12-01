@@ -5,6 +5,9 @@ use anyhow::Context;
 use redisctl_config::{Config, DeploymentType};
 use tracing::{debug, info, trace};
 
+/// User agent string for redisctl HTTP requests
+const REDISCTL_USER_AGENT: &str = concat!("redisctl/", env!("CARGO_PKG_VERSION"));
+
 /// Connection manager for creating authenticated clients
 #[allow(dead_code)] // Used by binary target
 #[derive(Clone)]
@@ -161,6 +164,7 @@ impl ConnectionManager {
             .api_key(&final_api_key)
             .api_secret(&final_api_secret)
             .base_url(&final_api_url)
+            .user_agent(REDISCTL_USER_AGENT)
             .build()
             .context("Failed to create Redis Cloud client")?;
 
@@ -306,7 +310,8 @@ impl ConnectionManager {
         // Build the Enterprise client
         let mut builder = redis_enterprise::EnterpriseClient::builder()
             .base_url(&final_url)
-            .username(&final_username);
+            .username(&final_username)
+            .user_agent(REDISCTL_USER_AGENT);
 
         // Add password if provided
         if let Some(ref password) = final_password {

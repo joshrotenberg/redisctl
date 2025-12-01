@@ -1,11 +1,15 @@
 //! REST API client implementation
 
 use crate::error::{RestError, Result};
+use reqwest::header::{HeaderMap, HeaderValue, USER_AGENT};
 use reqwest::{Client, Response};
 use serde::{Serialize, de::DeserializeOwned};
 use std::sync::Arc;
 use std::time::Duration;
 use tracing::{debug, trace};
+
+/// Default user agent for the Redis Enterprise client
+const DEFAULT_USER_AGENT: &str = concat!("redis-enterprise/", env!("CARGO_PKG_VERSION"));
 
 // Legacy alias for backwards compatibility during migration
 pub type RestConfig = EnterpriseClientBuilder;
@@ -18,6 +22,7 @@ pub struct EnterpriseClientBuilder {
     password: Option<String>,
     timeout: Duration,
     insecure: bool,
+    user_agent: String,
 }
 
 impl Default for EnterpriseClientBuilder {
@@ -28,6 +33,7 @@ impl Default for EnterpriseClientBuilder {
             password: None,
             timeout: Duration::from_secs(30),
             insecure: false,
+            user_agent: DEFAULT_USER_AGENT.to_string(),
         }
     }
 }
@@ -68,14 +74,32 @@ impl EnterpriseClientBuilder {
         self
     }
 
+    /// Set the user agent string for HTTP requests
+    ///
+    /// The default user agent is `redis-enterprise/{version}`.
+    /// This can be overridden to identify specific clients, for example:
+    /// `redisctl/1.2.3` or `my-app/1.0.0`.
+    pub fn user_agent(mut self, user_agent: impl Into<String>) -> Self {
+        self.user_agent = user_agent.into();
+        self
+    }
+
     /// Build the client
     pub fn build(self) -> Result<EnterpriseClient> {
         let username = self.username.unwrap_or_default();
         let password = self.password.unwrap_or_default();
 
+        let mut default_headers = HeaderMap::new();
+        default_headers.insert(
+            USER_AGENT,
+            HeaderValue::from_str(&self.user_agent)
+                .map_err(|e| RestError::ConnectionError(format!("Invalid user agent: {}", e)))?,
+        );
+
         let client_builder = Client::builder()
             .timeout(self.timeout)
-            .danger_accept_invalid_certs(self.insecure);
+            .danger_accept_invalid_certs(self.insecure)
+            .default_headers(default_headers);
 
         let client = client_builder
             .build()
