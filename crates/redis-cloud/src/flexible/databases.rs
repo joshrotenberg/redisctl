@@ -1548,4 +1548,43 @@ impl DatabaseHandler {
             )
             .await
     }
+
+    /// Get available target Redis versions for upgrade
+    /// Gets a list of Redis versions that the database can be upgraded to.
+    ///
+    /// GET /subscriptions/{subscriptionId}/databases/{databaseId}/available-target-versions
+    pub async fn get_available_target_versions(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+    ) -> Result<Value> {
+        self.client
+            .get_raw(&format!(
+                "/subscriptions/{}/databases/{}/available-target-versions",
+                subscription_id, database_id
+            ))
+            .await
+    }
+
+    /// Flush Pro database (standard, non-Active-Active)
+    /// Deletes all data from the specified Pro database.
+    ///
+    /// PUT /subscriptions/{subscriptionId}/databases/{databaseId}/flush
+    pub async fn flush_database(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+    ) -> Result<TaskStateUpdate> {
+        // Empty body for standard flush
+        self.client
+            .put_raw(
+                &format!(
+                    "/subscriptions/{}/databases/{}/flush",
+                    subscription_id, database_id
+                ),
+                serde_json::json!({}),
+            )
+            .await
+            .and_then(|v| serde_json::from_value(v).map_err(Into::into))
+    }
 }

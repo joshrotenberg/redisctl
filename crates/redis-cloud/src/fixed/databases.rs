@@ -1197,4 +1197,25 @@ impl FixedDatabaseHandler {
     ) -> Result<CloudTags> {
         self.get_tags(subscription_id, database_id).await
     }
+
+    // ========================================================================
+    // New endpoints
+    // ========================================================================
+
+    /// Get available target Redis versions for upgrade
+    /// Gets a list of Redis versions that the Essentials database can be upgraded to.
+    ///
+    /// GET /fixed/subscriptions/{subscriptionId}/databases/{databaseId}/available-target-versions
+    pub async fn get_available_target_versions(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+    ) -> Result<Value> {
+        self.client
+            .get_raw(&format!(
+                "/fixed/subscriptions/{}/databases/{}/available-target-versions",
+                subscription_id, database_id
+            ))
+            .await
+    }
 }

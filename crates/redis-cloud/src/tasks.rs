@@ -160,8 +160,16 @@ impl TasksHandler {
     /// Gets a list of all currently running tasks for this account.
     ///
     /// GET /tasks
-    pub async fn get_all_tasks(&self) -> Result<()> {
+    pub async fn get_all_tasks(&self) -> Result<Vec<TaskStateUpdate>> {
         self.client.get("/tasks").await
+    }
+
+    /// Get tasks (raw JSON)
+    /// Gets a list of all currently running tasks for this account.
+    ///
+    /// GET /tasks
+    pub async fn get_all_tasks_raw(&self) -> Result<serde_json::Value> {
+        self.client.get_raw("/tasks").await
     }
 
     /// Get a single task

@@ -209,12 +209,33 @@ pub async fn handle_database_command(
             super::database_impl::delete_tag(conn_mgr, profile_name, id, key, output_format, query)
                 .await
         }
+        CloudDatabaseCommands::Flush { id, force } => {
+            super::database_impl::flush_database(
+                conn_mgr,
+                profile_name,
+                id,
+                *force,
+                output_format,
+                query,
+            )
+            .await
+        }
         CloudDatabaseCommands::FlushCrdb { id, force } => {
             super::database_impl::flush_crdb(
                 conn_mgr,
                 profile_name,
                 id,
                 *force,
+                output_format,
+                query,
+            )
+            .await
+        }
+        CloudDatabaseCommands::AvailableVersions { id } => {
+            super::database_impl::get_available_versions(
+                conn_mgr,
+                profile_name,
+                id,
                 output_format,
                 query,
             )
