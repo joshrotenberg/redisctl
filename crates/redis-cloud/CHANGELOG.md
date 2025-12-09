@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.3](https://github.com/joshrotenberg/redisctl/compare/redis-cloud-v0.7.2...redis-cloud-v0.7.3) - 2025-12-09
+
+### Added
+
+- *(cloud)* add delete endpoint for PrivateLink ([#487](https://github.com/joshrotenberg/redisctl/pull/487))
+- *(cloud)* add upgrade endpoints for Essentials databases ([#488](https://github.com/joshrotenberg/redisctl/pull/488))
+
 ## [0.7.2](https://github.com/joshrotenberg/redisctl/compare/redis-cloud-v0.7.1...redis-cloud-v0.7.2) - 2025-12-09
 
 ### Added

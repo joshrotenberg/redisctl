@@ -1,6 +1,6 @@
 [package]
 name = "redisctl"
-version = "0.7.0"
+version = "0.7.1"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -19,7 +19,7 @@ path = "src/main.rs"
 
 [dependencies]
 redisctl-config = { version = "0.2.0", path = "../redisctl-config" }
-redis-cloud = { version = "0.7.2", path = "../redis-cloud", features = ["tower-integration"] }
+redis-cloud = { version = "0.7.3", path = "../redis-cloud", features = ["tower-integration"] }
 redis-enterprise = { version = "0.7.0", path = "../redis-enterprise", features = ["tower-integration"] }
 files-sdk = { workspace = true, optional = true }
 
