@@ -2,9 +2,30 @@
 
 use anyhow::{Context, Result};
 use comfy_table::Table;
-use jmespath::compile;
+use jmespath::Runtime;
 use serde::Serialize;
 use serde_json::Value;
+use std::sync::OnceLock;
+
+/// Global JMESPath runtime with extended functions
+static JMESPATH_RUNTIME: OnceLock<Runtime> = OnceLock::new();
+
+/// Get or initialize the JMESPath runtime with extended functions
+pub fn get_jmespath_runtime() -> &'static Runtime {
+    JMESPATH_RUNTIME.get_or_init(|| {
+        let mut runtime = Runtime::new();
+        runtime.register_builtin_functions();
+        jmespath_extensions::register_all(&mut runtime);
+        runtime
+    })
+}
+
+/// Compile a JMESPath expression using the extended runtime
+pub fn compile_jmespath(
+    query: &str,
+) -> Result<jmespath::Expression<'static>, jmespath::JmespathError> {
+    get_jmespath_runtime().compile(query)
+}
 
 #[derive(Debug, Clone, Copy, clap::ValueEnum, Default)]
 pub enum OutputFormat {
@@ -31,9 +52,12 @@ pub fn print_output<T: Serialize>(
 ) -> Result<()> {
     let mut json_value = serde_json::to_value(data)?;
 
-    // Apply JMESPath query if provided
+    // Apply JMESPath query if provided (using extended runtime with 150+ functions)
     if let Some(query_str) = query {
-        let expr = compile(query_str).context("Invalid JMESPath expression")?;
+        let runtime = get_jmespath_runtime();
+        let expr = runtime
+            .compile(query_str)
+            .context("Invalid JMESPath expression")?;
         // Convert Value to string then parse as Variable
         let json_str = serde_json::to_string(&json_value)?;
         let data = jmespath::Variable::from_json(&json_str)

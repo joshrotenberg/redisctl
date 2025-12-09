@@ -86,6 +86,84 @@ redisctl enterprise database list -q 'length(@)'
 redisctl cloud subscription list -q 'length(@) == `0`'
 ```
 
+## Extended Functions
+
+redisctl includes 150+ extended JMESPath functions beyond the standard built-ins.
+
+### String Functions
+
+```bash
+# Uppercase/lowercase
+redisctl enterprise database list -q '[].{name: name, status: upper(status)}'
+
+# String manipulation
+redisctl enterprise cluster get -q 'split(name, `-`)'
+redisctl enterprise database list -q '[].{name: trim(name)}'
+```
+
+### Type Functions
+
+```bash
+# Type checking
+redisctl enterprise database get 1 -q '{name: name, type: type_of(memory_size)}'
+
+# Default values for missing fields
+redisctl cloud database get 123:456 -q '{name: name, region: default(region, `"unknown"`)}'
+
+# Check if empty
+redisctl enterprise database get 1 -q '{name: name, has_endpoints: not(is_empty(endpoints))}'
+```
+
+### Math Functions
+
+```bash
+# Rounding
+redisctl enterprise database list -q '[].{name: name, memory_gb: round(memory_size / `1073741824`, `2`)}'
+
+# Min/max
+redisctl enterprise database list -q 'max_by(@, &memory_size).name'
+```
+
+### Utility Functions
+
+```bash
+# Conditional output
+redisctl enterprise database list -q '[].{name: name, healthy: if(status == `"active"`, `"YES"`, `"NO"`)}'
+
+# Coalesce (first non-null)
+redisctl cloud database get 123:456 -q '{region: coalesce(region, cloud_region, `"default"`)}'
+
+# Unique values
+redisctl enterprise database list -q 'unique([].status)'
+```
+
+### Date/Time Functions
+
+```bash
+# Current timestamp
+redisctl enterprise cluster get -q '{name: name, checked_at: now()}'
+
+# Format dates
+redisctl cloud subscription list -q '[].{name: name, created: format_date(createdAt, `"%Y-%m-%d"`)}'
+```
+
+### Validation Functions
+
+```bash
+# Validate IPs
+redisctl enterprise database list -q '[].{name: name, valid_endpoint: is_ipv4(endpoints[0].addr)}'
+```
+
+### Encoding Functions
+
+```bash
+# Base64 decode
+redisctl enterprise cluster get -q '{decoded: base64_decode(encoded_field)}'
+```
+
+For a complete list of extended functions, see the
+[jmespath-extensions documentation](https://github.com/joshrotenberg/jmespath-extensions).
+
 ## JMESPath Reference
 
 - Strings: `'value'` (single quotes)

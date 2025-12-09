@@ -193,9 +193,9 @@ pub fn provider_short_name(provider: &str) -> &str {
     }
 }
 
-/// Apply JMESPath query to JSON data
+/// Apply JMESPath query to JSON data (using extended runtime with 150+ functions)
 pub fn apply_jmespath(data: &Value, query: &str) -> CliResult<Value> {
-    let expr = jmespath::compile(query)
+    let expr = crate::output::compile_jmespath(query)
         .with_context(|| format!("Invalid JMESPath expression: {}", query))?;
 
     let result = expr
