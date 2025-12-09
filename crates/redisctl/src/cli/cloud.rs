@@ -1368,6 +1368,18 @@ pub enum CloudDatabaseCommands {
         force: bool,
     },
 
+    /// Update Active-Active database regions
+    #[command(name = "update-aa-regions")]
+    UpdateAaRegions {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+        /// JSON file with region configuration (use @filename or - for stdin)
+        file: String,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
+    },
+
     /// Get available Redis versions for upgrade
     AvailableVersions {
         /// Database ID (format: subscription_id:database_id)

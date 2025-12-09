@@ -243,6 +243,22 @@ pub async fn handle_database_command(
             )
             .await
         }
+        CloudDatabaseCommands::UpdateAaRegions {
+            id,
+            file,
+            async_ops,
+        } => {
+            super::database_impl::update_aa_regions(
+                conn_mgr,
+                profile_name,
+                id,
+                file,
+                async_ops,
+                output_format,
+                query,
+            )
+            .await
+        }
         CloudDatabaseCommands::AvailableVersions { id } => {
             super::database_impl::get_available_versions(
                 conn_mgr,
