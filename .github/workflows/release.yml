@@ -42,7 +42,7 @@ on:
   pull_request:
   push:
     tags:
-      - "redisctl-v[0-9]+.[0-9]+.[0-9]+*"
+      - '**[0-9]+.[0-9]+.[0-9]+*'
 
 jobs:
   # Run 'dist plan' (or host) to determine what tasks we need to do
@@ -64,7 +64,7 @@ jobs:
         # we specify bash to get pipefail; it guards against the `curl` command
         # failing. otherwise `sh` won't catch that `curl` returned non-0
         shell: bash
-        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.29.0/cargo-dist-installer.sh | sh"
+        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.30.1/cargo-dist-installer.sh | sh"
       - name: Cache dist
         uses: actions/upload-artifact@v4
         with:
@@ -217,8 +217,8 @@ jobs:
       - plan
       - build-local-artifacts
       - build-global-artifacts
-    # Only run if we're "publishing", and only if local and global didn't fail (skipped is fine)
-    if: ${{ always() && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success') && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') }}
+    # Only run if we're "publishing", and only if plan, local and global didn't fail (skipped is fine)
+    if: ${{ always() && needs.plan.result == 'success' && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success') && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     runs-on: "ubuntu-22.04"
@@ -277,32 +277,6 @@ jobs:
           echo "$ANNOUNCEMENT_BODY" > $RUNNER_TEMP/notes.txt
 
           gh release create "${{ needs.plan.outputs.tag }}" --target "$RELEASE_COMMIT" $PRERELEASE_FLAG --title "$ANNOUNCEMENT_TITLE" --notes-file "$RUNNER_TEMP/notes.txt" artifacts/*
-
-  update_brew_formula:
-    name: Update Brew Formula
-    runs-on: ubuntu-latest
-    needs: [plan, host]
-    if: ${{ needs.plan.outputs.publishing == 'true' }}
-    steps:
-      - name: Extract version from tag
-        id: extract_version
-        run: |
-          TAG="${{ github.ref_name }}"
-          # Strip 'redisctl-v' prefix to get version number (e.g., redisctl-v0.6.6 -> 0.6.6)
-          VERSION="${TAG#redisctl-v}"
-          # Add 'v' prefix for Homebrew (e.g., 0.6.6 -> v0.6.6)
-          echo "version=v${VERSION}" >> $GITHUB_OUTPUT
-          echo "Extracted version: v${VERSION}"
-
-      - uses: mislav/bump-homebrew-formula-action@v3.1
-        with:
-          formula-name: redisctl
-          formula-path: Formula/redisctl.rb
-          base-branch: main
-          tag-name: ${{ steps.extract_version.outputs.version }}
-          homebrew-tap: joshrotenberg/homebrew-brew
-        env:
-          COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
 
   announce:
     needs:
