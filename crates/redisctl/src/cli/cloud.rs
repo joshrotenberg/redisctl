@@ -805,6 +805,9 @@ pub enum CloudCommands {
     /// Workflow operations for multi-step tasks
     #[command(subcommand)]
     Workflow(CloudWorkflowCommands),
+    /// Cost report operations (Beta)
+    #[command(subcommand, name = "cost-report")]
+    CostReport(CloudCostReportCommands),
 }
 #[derive(Debug, Subcommand)]
 pub enum CloudWorkflowCommands {
@@ -813,6 +816,89 @@ pub enum CloudWorkflowCommands {
     /// Complete subscription setup with optional database
     #[command(name = "subscription-setup")]
     SubscriptionSetup(crate::workflows::cloud::subscription_setup::SubscriptionSetupArgs),
+}
+
+/// Cloud Cost Report Commands (Beta)
+#[derive(Debug, Clone, Subcommand)]
+pub enum CloudCostReportCommands {
+    /// Generate a cost report in FOCUS format
+    #[command(after_help = "EXAMPLES:
+    # Generate a cost report for January 2025
+    redisctl cloud cost-report generate --start-date 2025-01-01 --end-date 2025-01-31
+
+    # Generate CSV report filtered by subscription
+    redisctl cloud cost-report generate --start-date 2025-01-01 --end-date 2025-01-31 \\
+      --subscription 123 --format csv
+
+    # Generate JSON report filtered by region and tags
+    redisctl cloud cost-report generate --start-date 2025-01-01 --end-date 2025-01-31 \\
+      --format json --region us-east-1 --tag team:marketing
+
+    # Generate report for Pro subscriptions only
+    redisctl cloud cost-report generate --start-date 2025-01-01 --end-date 2025-01-31 \\
+      --subscription-type pro
+
+NOTE: The maximum date range is 40 days. Cost reports are generated asynchronously.
+      Use --wait to wait for completion, or use 'cloud task get' to check status.
+      Once complete, use 'cloud cost-report download' with the costReportId from the task.
+")]
+    Generate {
+        /// Start date (YYYY-MM-DD format)
+        #[arg(long)]
+        start_date: String,
+
+        /// End date (YYYY-MM-DD format, max 40 days from start)
+        #[arg(long)]
+        end_date: String,
+
+        /// Output format (csv or json)
+        #[arg(long, value_parser = ["csv", "json"], default_value = "csv")]
+        format: String,
+
+        /// Filter by subscription IDs (can be specified multiple times)
+        #[arg(long = "subscription", value_name = "ID")]
+        subscription_ids: Vec<i32>,
+
+        /// Filter by database IDs (can be specified multiple times)
+        #[arg(long = "database", value_name = "ID")]
+        database_ids: Vec<i32>,
+
+        /// Filter by subscription type (pro or essentials)
+        #[arg(long, value_parser = ["pro", "essentials"])]
+        subscription_type: Option<String>,
+
+        /// Filter by regions (can be specified multiple times)
+        #[arg(long = "region", value_name = "REGION")]
+        regions: Vec<String>,
+
+        /// Filter by tags (format: key:value, can be specified multiple times)
+        #[arg(long = "tag", value_name = "KEY:VALUE")]
+        tags: Vec<String>,
+
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
+    },
+
+    /// Download a generated cost report
+    #[command(after_help = "EXAMPLES:
+    # Download cost report to stdout
+    redisctl cloud cost-report download cost-report-12345-abcdef
+
+    # Download cost report to a file
+    redisctl cloud cost-report download cost-report-12345-abcdef --output report.csv
+
+NOTE: The costReportId is returned in the task response after the generation completes.
+      Check task status with 'redisctl cloud task get <task-id>' to get the costReportId.
+")]
+    Download {
+        /// Cost report ID (from the completed generation task)
+        cost_report_id: String,
+
+        /// Output file path (defaults to stdout if not specified)
+        #[arg(long, short)]
+        output: Option<String>,
+    },
 }
 
 /// Enterprise workflow commands
