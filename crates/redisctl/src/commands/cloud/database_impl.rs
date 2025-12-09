@@ -886,6 +886,47 @@ pub async fn flush_crdb(
     Ok(())
 }
 
+/// Update Active-Active database regions
+pub async fn update_aa_regions(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
+    id: &str,
+    file: &str,
+    async_ops: &AsyncOperationArgs,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> CliResult<()> {
+    let (subscription_id, database_id) = parse_database_id(id)?;
+    let client = conn_mgr.create_cloud_client(profile_name).await?;
+
+    // Read the request body from file
+    let file_content = read_file_input(file)?;
+    let request_body: Value =
+        serde_json::from_str(&file_content).context("Failed to parse JSON input")?;
+
+    let response = client
+        .put_raw(
+            &format!(
+                "/subscriptions/{}/databases/{}/regions",
+                subscription_id, database_id
+            ),
+            request_body,
+        )
+        .await
+        .context("Failed to update Active-Active database regions")?;
+
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        response,
+        async_ops,
+        output_format,
+        query,
+        "Update AA regions",
+    )
+    .await
+}
+
 /// Get Redis version upgrade status
 pub async fn get_upgrade_status(
     conn_mgr: &ConnectionManager,
