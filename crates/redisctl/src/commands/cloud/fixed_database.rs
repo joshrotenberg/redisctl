@@ -400,5 +400,17 @@ pub async fn handle_fixed_database_command(
             eprintln!("Tag '{}' deleted successfully", key);
             Ok(())
         }
+        CloudFixedDatabaseCommands::AvailableVersions { id } => {
+            let (subscription_id, database_id) = parse_fixed_database_id(id)?;
+
+            let json_response = handler
+                .get_available_target_versions(subscription_id, database_id)
+                .await
+                .context("Failed to get available versions")?;
+
+            let data = handle_output(json_response, output_format, query)?;
+            print_formatted_output(data, output_format)?;
+            Ok(())
+        }
     }
 }
