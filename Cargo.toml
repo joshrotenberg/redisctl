@@ -30,13 +30,12 @@ documentation = "https://docs.rs/redisctl"
 # Config for 'dist'
 [workspace.metadata.dist]
 # The preferred dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.29.0"
+cargo-dist-version = "0.30.1"
 # CI backends to support
 ci = "github"
 # The installers to generate for each app
 installers = ["shell", "powershell"]
 # Target platforms to build apps for (Rust target-triple syntax)
-# Note: x86_64-unknown-linux-musl removed due to keyring incompatibility with musl
 targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc"]
 # Which actions to run on pull requests
 pr-run-mode = "plan"
@@ -46,7 +45,7 @@ create-release = true
 install-path = "CARGO_HOME"
 # Whether to install an updater program
 install-updater = false
-# Allow custom modifications to generated CI files
+# Skip checking whether the specified configuration files are up to date
 allow-dirty = ["ci"]
 
 [workspace.dependencies]
