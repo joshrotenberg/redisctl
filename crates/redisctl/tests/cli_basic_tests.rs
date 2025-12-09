@@ -669,6 +669,50 @@ fn test_cloud_workflow_help() {
         .stdout(predicate::str::contains("Workflow operations"));
 }
 
+#[test]
+fn test_cloud_cost_report_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("cost-report")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Cost report operations"))
+        .stdout(predicate::str::contains("generate"))
+        .stdout(predicate::str::contains("download"));
+}
+
+#[test]
+fn test_cloud_cost_report_generate_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("cost-report")
+        .arg("generate")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Generate a cost report"))
+        .stdout(predicate::str::contains("--start-date"))
+        .stdout(predicate::str::contains("--end-date"))
+        .stdout(predicate::str::contains("--format"))
+        .stdout(predicate::str::contains("--subscription"))
+        .stdout(predicate::str::contains("--region"))
+        .stdout(predicate::str::contains("--tag"));
+}
+
+#[test]
+fn test_cloud_cost_report_download_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("cost-report")
+        .arg("download")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Download a generated cost report"))
+        .stdout(predicate::str::contains("--output"));
+}
+
 // === ENTERPRISE SUBCOMMAND HELP TESTS ===
 
 #[test]

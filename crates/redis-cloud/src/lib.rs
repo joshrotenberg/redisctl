@@ -296,6 +296,7 @@ pub mod account;
 pub mod acl;
 pub mod cloud_accounts;
 pub mod connectivity;
+pub mod cost_report;
 pub mod fixed;
 pub mod flexible;
 pub mod tasks;
@@ -334,6 +335,8 @@ pub use flexible::subscriptions::SubscriptionHandler;
 pub use flexible::databases::DatabaseHandler as DatabasesHandler;
 pub use flexible::subscriptions::SubscriptionHandler as SubscriptionsHandler;
 
+pub use cost_report::CostReportHandler;
+pub use cost_report::{CostReportCreateRequest, CostReportFormat, SubscriptionType, Tag};
 pub use tasks::TasksHandler as TaskHandler;
 pub use users::UsersHandler as UserHandler;
 

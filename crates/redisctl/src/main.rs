@@ -962,5 +962,14 @@ async fn execute_cloud_command(
             .await
         }
         Workflow(workflow_cmd) => handle_cloud_workflow_command(conn_mgr, cli, workflow_cmd).await,
+        CostReport(cost_report_cmd) => {
+            commands::cloud::cost_report::handle_cost_report_command(
+                conn_mgr,
+                cli.profile.as_deref(),
+                cost_report_cmd.clone(),
+                cli.output,
+            )
+            .await
+        }
     }
 }

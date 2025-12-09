@@ -271,6 +271,50 @@ impl CloudClient {
         self.get(path).await
     }
 
+    /// Execute GET request returning raw bytes
+    ///
+    /// Useful for downloading binary content like cost reports or other files.
+    #[instrument(skip(self), fields(method = "GET"))]
+    pub async fn get_bytes(&self, path: &str) -> Result<Vec<u8>> {
+        let url = self.normalize_url(path);
+        debug!("GET {} (bytes)", url);
+
+        let response = self
+            .client
+            .get(&url)
+            .header("x-api-key", &self.api_key)
+            .header("x-api-secret-key", &self.api_secret)
+            .send()
+            .await?;
+
+        trace!("Response status: {}", response.status());
+        let status = response.status();
+
+        if status.is_success() {
+            response
+                .bytes()
+                .await
+                .map(|b| b.to_vec())
+                .map_err(|e| RestError::ConnectionError(format!("Failed to read response: {}", e)))
+        } else {
+            let text = response.text().await.unwrap_or_default();
+
+            match status.as_u16() {
+                400 => Err(RestError::BadRequest { message: text }),
+                401 => Err(RestError::AuthenticationFailed { message: text }),
+                403 => Err(RestError::Forbidden { message: text }),
+                404 => Err(RestError::NotFound { message: text }),
+                412 => Err(RestError::PreconditionFailed),
+                500 => Err(RestError::InternalServerError { message: text }),
+                503 => Err(RestError::ServiceUnavailable { message: text }),
+                _ => Err(RestError::ApiError {
+                    code: status.as_u16(),
+                    message: text,
+                }),
+            }
+        }
+    }
+
     /// Execute raw POST request with JSON body
     #[instrument(skip(self, body), fields(method = "POST"))]
     pub async fn post_raw(&self, path: &str, body: serde_json::Value) -> Result<serde_json::Value> {
