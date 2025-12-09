@@ -9,7 +9,6 @@ use std::io::{self, Write};
 use tabled::Tabled;
 use unicode_segmentation::UnicodeSegmentation;
 
-#[cfg(unix)]
 use std::io::IsTerminal;
 
 use crate::cli::OutputFormat;
@@ -55,44 +54,42 @@ pub fn extract_field(value: &Value, field: &str, default: &str) -> String {
 
 /// Output with automatic pager for long content
 pub fn output_with_pager(content: &str) {
-    // Check if we should use a pager (Unix only)
-    #[cfg(unix)]
-    {
-        use std::io::Write;
-        use std::process::{Command, Stdio};
+    use std::io::Write;
+    use std::process::{Command, Stdio};
 
-        let lines: Vec<&str> = content.lines().collect();
-        if should_use_pager(&lines) {
-            // Get pager command from environment or use default
-            let pager_cmd = std::env::var("PAGER").unwrap_or_else(|_| "less -R".to_string());
+    let lines: Vec<&str> = content.lines().collect();
+    if should_use_pager(&lines) {
+        // Get pager command from environment or use platform-specific default
+        let default_pager = if cfg!(windows) { "more" } else { "less -R" };
+        let pager_cmd = std::env::var("PAGER").unwrap_or_else(|_| default_pager.to_string());
 
-            // Split pager command into program and args
-            let mut parts = pager_cmd.split_whitespace();
-            let program = parts.next().unwrap_or("less");
-            let args: Vec<&str> = parts.collect();
+        // Split pager command into program and args
+        let mut parts = pager_cmd.split_whitespace();
+        let default_program = if cfg!(windows) { "more" } else { "less" };
+        let program = parts.next().unwrap_or(default_program);
+        let args: Vec<&str> = parts.collect();
 
-            // Try to spawn pager process
-            match Command::new(program)
-                .args(&args)
-                .stdin(Stdio::piped())
-                .spawn()
-            {
-                Ok(mut child) => {
-                    // Write content to pager's stdin
-                    if let Some(mut stdin) = child.stdin.take() {
-                        let _ = stdin.write_all(content.as_bytes());
-                        let _ = stdin.flush();
-                        // Close stdin to signal EOF to pager
-                        drop(stdin);
-                    }
-
-                    // Wait for pager to finish
-                    let _ = child.wait();
-                    return;
+        // Try to spawn pager process
+        match Command::new(program)
+            .args(&args)
+            .stdin(Stdio::piped())
+            .spawn()
+        {
+            Ok(mut child) => {
+                // Write content to pager's stdin
+                if let Some(mut stdin) = child.stdin.take() {
+                    let _ = stdin.write_all(content.as_bytes());
+                    let _ = stdin.flush();
+                    // Close stdin to signal EOF to pager
+                    drop(stdin);
                 }
-                Err(_) => {
-                    // If pager fails to spawn, fall through to regular println
-                }
+
+                // Wait for pager to finish
+                let _ = child.wait();
+                return;
+            }
+            Err(_) => {
+                // If pager fails to spawn, fall through to regular println
             }
         }
     }
@@ -100,8 +97,7 @@ pub fn output_with_pager(content: &str) {
     println!("{}", content);
 }
 
-/// Check if we should use a pager for output (Unix only)
-#[cfg(unix)]
+/// Check if we should use a pager for output
 fn should_use_pager(lines: &[&str]) -> bool {
     // Only page if we're in a TTY
     if !std::io::stdout().is_terminal() {
