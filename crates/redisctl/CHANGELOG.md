@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0](https://github.com/joshrotenberg/redisctl/compare/redisctl-v0.6.6...redisctl-v0.7.0) - 2025-12-09
+
+### Added
+
+- add user agent header to HTTP requests ([#473](https://github.com/joshrotenberg/redisctl/pull/473))
+- *(enterprise)* add database watch command for real-time status monitoring ([#458](https://github.com/joshrotenberg/redisctl/pull/458))
+- *(enterprise)* improve stats streaming UX with Ctrl+C handling ([#457](https://github.com/joshrotenberg/redisctl/pull/457))
+- *(redis-enterprise)* add stats streaming with --follow flag ([#455](https://github.com/joshrotenberg/redisctl/pull/455))
+- add first-class parameters to major create commands ([#449](https://github.com/joshrotenberg/redisctl/pull/449))
+- add database upgrade command for Redis version upgrades ([#442](https://github.com/joshrotenberg/redisctl/pull/442))
+- [**breaking**] improve CLI help text accuracy and add comprehensive test coverage ([#444](https://github.com/joshrotenberg/redisctl/pull/444))
+- add payment-method commands to CLI ([#439](https://github.com/joshrotenberg/redisctl/pull/439))
+- make --config-file take precedence over environment variables ([#438](https://github.com/joshrotenberg/redisctl/pull/438))
+
+### Fixed
+
+- upgrade indicatif to 0.18 to resolve RUSTSEC-2025-0119 ([#474](https://github.com/joshrotenberg/redisctl/pull/474))
+- *(release)* improve Homebrew formula auto-update ([#433](https://github.com/joshrotenberg/redisctl/pull/433))
+
+### Other
+
+- *(redisctl)* add async_utils unit tests ([#472](https://github.com/joshrotenberg/redisctl/pull/472))
+- split cli.rs into cloud.rs and enterprise.rs modules ([#454](https://github.com/joshrotenberg/redisctl/pull/454))
+- update presentation materials with first-class parameters feature ([#450](https://github.com/joshrotenberg/redisctl/pull/450))
+- add comprehensive CLI test coverage  ([#448](https://github.com/joshrotenberg/redisctl/pull/448))
+- add comprehensive CLI tests with assert_cmd ([#435](https://github.com/joshrotenberg/redisctl/pull/435))
+
 ## [0.6.6](https://github.com/joshrotenberg/redisctl/compare/redisctl-v0.6.5...redisctl-v0.6.6) - 2025-10-29
 
 ### Added
