@@ -650,6 +650,12 @@ pub enum CloudFixedDatabaseCommands {
         #[arg(long)]
         key: String,
     },
+    /// Get available Redis versions for upgrade
+    #[command(name = "available-versions")]
+    AvailableVersions {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+    },
 }
 
 /// Cloud Fixed Subscription Commands
