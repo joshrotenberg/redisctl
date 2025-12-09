@@ -2808,3 +2808,18 @@ fn test_cloud_fixed_database_upgrade_redis_help() {
         .stdout(predicate::str::contains("Upgrade Redis version"))
         .stdout(predicate::str::contains("--version"));
 }
+
+#[test]
+fn test_cloud_connectivity_privatelink_delete_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("connectivity")
+        .arg("privatelink")
+        .arg("delete")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Delete PrivateLink"))
+        .stdout(predicate::str::contains("--subscription"))
+        .stdout(predicate::str::contains("--force"));
+}

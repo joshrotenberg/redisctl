@@ -171,6 +171,25 @@ impl PrivateLinkHandler {
             .await
     }
 
+    /// Delete PrivateLink
+    ///
+    /// Deletes the AWS PrivateLink configuration for a subscription.
+    ///
+    /// DELETE /subscriptions/{subscriptionId}/private-link
+    ///
+    /// # Arguments
+    ///
+    /// * `subscription_id` - The subscription ID
+    ///
+    /// # Returns
+    ///
+    /// Returns task information for tracking the deletion
+    pub async fn delete(&self, subscription_id: i32) -> Result<Value> {
+        self.client
+            .delete_raw(&format!("/subscriptions/{}/private-link", subscription_id))
+            .await
+    }
+
     /// Get Active-Active PrivateLink configuration
     ///
     /// Gets the AWS PrivateLink configuration for an Active-Active (CRDB) subscription region.
