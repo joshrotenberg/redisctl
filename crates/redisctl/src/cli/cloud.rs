@@ -485,6 +485,9 @@ pub enum PrivateLinkCommands {
 /// Cloud Task Commands
 #[derive(Subcommand, Debug)]
 pub enum CloudTaskCommands {
+    /// List all tasks for this account
+    #[command(alias = "ls")]
+    List,
     /// Get task status and details
     Get {
         /// Task ID (UUID format)
@@ -1335,6 +1338,15 @@ pub enum CloudDatabaseCommands {
         key: String,
     },
 
+    /// Flush database (deletes all data)
+    Flush {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+    },
+
     /// Flush Active-Active database
     FlushCrdb {
         /// Database ID (format: subscription_id:database_id)
@@ -1342,6 +1354,12 @@ pub enum CloudDatabaseCommands {
         /// Skip confirmation prompt
         #[arg(long)]
         force: bool,
+    },
+
+    /// Get available Redis versions for upgrade
+    AvailableVersions {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
     },
 
     /// Get Redis version upgrade status

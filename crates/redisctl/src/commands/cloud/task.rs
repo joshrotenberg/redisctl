@@ -23,6 +23,7 @@ pub async fn handle_task_command(
     query: Option<&str>,
 ) -> CliResult<()> {
     match command {
+        CloudTaskCommands::List => list_tasks(conn_mgr, profile_name, output_format, query).await,
         CloudTaskCommands::Get { id } => {
             get_task(conn_mgr, profile_name, id, output_format, query).await
         }
@@ -57,6 +58,128 @@ pub async fn handle_task_command(
             .await
         }
     }
+}
+
+/// List all tasks for this account
+async fn list_tasks(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> CliResult<()> {
+    let client = conn_mgr.create_cloud_client(profile_name).await?;
+    let tasks = client
+        .get_raw("/tasks")
+        .await
+        .with_context(|| "Failed to fetch tasks")
+        .map_err(|e| RedisCtlError::ApiError {
+            message: e.to_string(),
+        })?;
+
+    // Apply JMESPath query if provided
+    let data = if let Some(q) = query {
+        super::utils::apply_jmespath(&tasks, q)?
+    } else {
+        tasks
+    };
+
+    match output_format {
+        OutputFormat::Auto | OutputFormat::Table => {
+            print_tasks_table(&data)?;
+        }
+        OutputFormat::Json => {
+            print_output(data, crate::output::OutputFormat::Json, None).map_err(|e| {
+                RedisCtlError::OutputError {
+                    message: e.to_string(),
+                }
+            })?;
+        }
+        OutputFormat::Yaml => {
+            print_output(data, crate::output::OutputFormat::Yaml, None).map_err(|e| {
+                RedisCtlError::OutputError {
+                    message: e.to_string(),
+                }
+            })?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Print tasks in table format
+fn print_tasks_table(tasks: &Value) -> CliResult<()> {
+    use tabled::{Table, Tabled, settings::Style};
+
+    #[derive(Tabled)]
+    struct TaskRow {
+        #[tabled(rename = "Task ID")]
+        task_id: String,
+        #[tabled(rename = "Status")]
+        status: String,
+        #[tabled(rename = "Command")]
+        command: String,
+        #[tabled(rename = "Progress")]
+        progress: String,
+        #[tabled(rename = "Description")]
+        description: String,
+    }
+
+    let tasks_array = match tasks.as_array() {
+        Some(arr) => arr,
+        None => {
+            println!("No tasks found");
+            return Ok(());
+        }
+    };
+
+    if tasks_array.is_empty() {
+        println!("No tasks found");
+        return Ok(());
+    }
+
+    let rows: Vec<TaskRow> = tasks_array
+        .iter()
+        .map(|task| {
+            let status = task
+                .get("status")
+                .or_else(|| task.get("state"))
+                .and_then(|s| s.as_str())
+                .unwrap_or("unknown");
+
+            TaskRow {
+                task_id: task
+                    .get("taskId")
+                    .or_else(|| task.get("id"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("-")
+                    .to_string(),
+                status: format_task_state(status),
+                command: task
+                    .get("commandType")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("-")
+                    .to_string(),
+                progress: task
+                    .get("progress")
+                    .and_then(|p| p.as_u64())
+                    .map(|p| format!("{}%", p))
+                    .unwrap_or_else(|| "-".to_string()),
+                description: task
+                    .get("description")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("-")
+                    .chars()
+                    .take(40)
+                    .collect::<String>(),
+            }
+        })
+        .collect();
+
+    let mut table = Table::new(&rows);
+    table.with(Style::rounded());
+    println!("{}", table);
+
+    Ok(())
 }
 
 /// Get task status and details

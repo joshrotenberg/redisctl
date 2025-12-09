@@ -713,6 +713,119 @@ pub async fn delete_tag(
     Ok(())
 }
 
+/// Flush standard (non-Active-Active) database
+pub async fn flush_database(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
+    id: &str,
+    force: bool,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> CliResult<()> {
+    let (subscription_id, database_id) = parse_database_id(id)?;
+
+    // Confirmation prompt unless --force is used
+    if !force {
+        use dialoguer::Confirm;
+        let confirm = Confirm::new()
+            .with_prompt(format!(
+                "Are you sure you want to flush database {}? This will delete all data!",
+                id
+            ))
+            .default(false)
+            .interact()
+            .map_err(|e| RedisCtlError::InvalidInput {
+                message: format!("Failed to read confirmation: {}", e),
+            })?;
+
+        if !confirm {
+            println!("Flush operation cancelled");
+            return Ok(());
+        }
+    }
+
+    let client = conn_mgr.create_cloud_client(profile_name).await?;
+
+    let response = client
+        .put_raw(
+            &format!(
+                "/subscriptions/{}/databases/{}/flush",
+                subscription_id, database_id
+            ),
+            json!({}),
+        )
+        .await
+        .context("Failed to flush database")?;
+
+    let result = if let Some(q) = query {
+        apply_jmespath(&response, q)?
+    } else {
+        response
+    };
+
+    match output_format {
+        OutputFormat::Table => {
+            println!("Database flush initiated");
+            if let Some(task_id) = result.get("taskId") {
+                println!("Task ID: {}", task_id);
+            }
+        }
+        _ => print_json_or_yaml(result, output_format)?,
+    }
+
+    Ok(())
+}
+
+/// Get available Redis versions for upgrade
+pub async fn get_available_versions(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
+    id: &str,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> CliResult<()> {
+    let (subscription_id, database_id) = parse_database_id(id)?;
+    let client = conn_mgr.create_cloud_client(profile_name).await?;
+
+    let response = client
+        .get_raw(&format!(
+            "/subscriptions/{}/databases/{}/available-target-versions",
+            subscription_id, database_id
+        ))
+        .await
+        .context("Failed to get available versions")?;
+
+    let result = if let Some(q) = query {
+        apply_jmespath(&response, q)?
+    } else {
+        response
+    };
+
+    match output_format {
+        OutputFormat::Table => {
+            if let Some(versions) = result.as_array() {
+                if versions.is_empty() {
+                    println!("No upgrade versions available");
+                } else {
+                    println!("Available Redis versions for upgrade:");
+                    for v in versions {
+                        if let Some(version) = v.as_str() {
+                            println!("  - {}", version);
+                        } else {
+                            println!("  - {}", v);
+                        }
+                    }
+                }
+            } else {
+                print_json_or_yaml(result, output_format)?;
+            }
+        }
+        _ => print_json_or_yaml(result, output_format)?,
+    }
+
+    Ok(())
+}
+
 /// Flush Active-Active database
 pub async fn flush_crdb(
     conn_mgr: &ConnectionManager,
