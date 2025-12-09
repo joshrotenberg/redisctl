@@ -480,6 +480,18 @@ pub enum PrivateLinkCommands {
         #[arg(long)]
         region: Option<i32>,
     },
+    /// Delete PrivateLink configuration
+    Delete {
+        /// Subscription ID
+        #[arg(long)]
+        subscription: i32,
+        /// Skip confirmation prompt
+        #[arg(long)]
+        force: bool,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
+    },
 }
 
 /// Cloud Task Commands

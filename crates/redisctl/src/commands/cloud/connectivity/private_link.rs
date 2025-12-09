@@ -64,6 +64,22 @@ pub async fn handle_private_link_command(
             subscription,
             region,
         } => handle_get_script(&handler, *subscription, *region, output_format, query).await,
+        PrivateLinkCommands::Delete {
+            subscription,
+            force,
+            async_ops,
+        } => {
+            let params = ConnectivityOperationParams {
+                conn_mgr,
+                profile_name,
+                client: &client,
+                subscription_id: *subscription,
+                async_ops,
+                output_format,
+                query,
+            };
+            handle_delete(&handler, &params, *force).await
+        }
     }
 }
 
@@ -207,4 +223,45 @@ async fn handle_get_script(
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
     Ok(())
+}
+
+/// Delete PrivateLink configuration
+async fn handle_delete(
+    handler: &PrivateLinkHandler,
+    params: &ConnectivityOperationParams<'_>,
+    force: bool,
+) -> CliResult<()> {
+    // Confirmation prompt unless --force is used
+    if !force {
+        use dialoguer::Confirm;
+        let confirm = Confirm::new()
+            .with_prompt(format!(
+                "Are you sure you want to delete PrivateLink for subscription {}?",
+                params.subscription_id
+            ))
+            .default(false)
+            .interact()
+            .map_err(|e| anyhow::anyhow!("Failed to read confirmation: {}", e))?;
+
+        if !confirm {
+            println!("Delete operation cancelled");
+            return Ok(());
+        }
+    }
+
+    let result = handler
+        .delete(params.subscription_id)
+        .await
+        .context("Failed to delete PrivateLink")?;
+
+    handle_async_response(
+        params.conn_mgr,
+        params.profile_name,
+        result,
+        params.async_ops,
+        params.output_format,
+        params.query,
+        "Delete PrivateLink",
+    )
+    .await
 }
