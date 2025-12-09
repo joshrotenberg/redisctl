@@ -1218,4 +1218,45 @@ impl FixedDatabaseHandler {
             ))
             .await
     }
+
+    /// Get Essentials database version upgrade status
+    /// Gets information on the latest upgrade attempt for this Essentials database.
+    ///
+    /// GET /fixed/subscriptions/{subscriptionId}/databases/{databaseId}/upgrade
+    pub async fn get_upgrade_status(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+    ) -> Result<Value> {
+        self.client
+            .get_raw(&format!(
+                "/fixed/subscriptions/{}/databases/{}/upgrade",
+                subscription_id, database_id
+            ))
+            .await
+    }
+
+    /// Upgrade Essentials database Redis version
+    /// Upgrades the specified Essentials database to a later Redis version.
+    ///
+    /// POST /fixed/subscriptions/{subscriptionId}/databases/{databaseId}/upgrade
+    pub async fn upgrade_redis_version(
+        &self,
+        subscription_id: i32,
+        database_id: i32,
+        target_version: &str,
+    ) -> Result<Value> {
+        let request = serde_json::json!({
+            "targetVersion": target_version
+        });
+        self.client
+            .post_raw(
+                &format!(
+                    "/fixed/subscriptions/{}/databases/{}/upgrade",
+                    subscription_id, database_id
+                ),
+                request,
+            )
+            .await
+    }
 }

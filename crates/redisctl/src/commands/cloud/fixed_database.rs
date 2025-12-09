@@ -400,6 +400,7 @@ pub async fn handle_fixed_database_command(
             eprintln!("Tag '{}' deleted successfully", key);
             Ok(())
         }
+
         CloudFixedDatabaseCommands::AvailableVersions { id } => {
             let (subscription_id, database_id) = parse_fixed_database_id(id)?;
 
@@ -411,6 +412,42 @@ pub async fn handle_fixed_database_command(
             let data = handle_output(json_response, output_format, query)?;
             print_formatted_output(data, output_format)?;
             Ok(())
+        }
+
+        CloudFixedDatabaseCommands::UpgradeStatus { id } => {
+            let (subscription_id, database_id) = parse_fixed_database_id(id)?;
+            let result = handler
+                .get_upgrade_status(subscription_id, database_id)
+                .await
+                .context("Failed to get upgrade status")?;
+
+            let data = handle_output(result, output_format, query)?;
+            print_formatted_output(data, output_format)?;
+            Ok(())
+        }
+
+        CloudFixedDatabaseCommands::UpgradeRedis {
+            id,
+            version,
+            async_ops,
+        } => {
+            let (subscription_id, database_id) = parse_fixed_database_id(id)?;
+
+            let result = handler
+                .upgrade_redis_version(subscription_id, database_id, version)
+                .await
+                .context("Failed to upgrade Redis version")?;
+
+            handle_async_response(
+                conn_mgr,
+                profile_name,
+                result,
+                async_ops,
+                output_format,
+                query,
+                "Redis version upgrade initiated",
+            )
+            .await
         }
     }
 }

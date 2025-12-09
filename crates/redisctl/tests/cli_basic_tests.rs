@@ -2782,3 +2782,29 @@ fn test_cloud_database_update_tag_help() {
         .stdout(predicate::str::contains("--key"))
         .stdout(predicate::str::contains("--value"));
 }
+
+#[test]
+fn test_cloud_fixed_database_upgrade_status_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("fixed-database")
+        .arg("upgrade-status")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("upgrade status"))
+        .stdout(predicate::str::contains("subscription_id:database_id"));
+}
+
+#[test]
+fn test_cloud_fixed_database_upgrade_redis_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("fixed-database")
+        .arg("upgrade-redis")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Upgrade Redis version"))
+        .stdout(predicate::str::contains("--version"));
+}
