@@ -2768,3 +2768,17 @@ fn test_enterprise_cluster_maintenance_mode_disable_help() {
         .success()
         .stdout(predicate::str::contains("maintenance"));
 }
+
+#[test]
+fn test_cloud_database_update_tag_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("update-tag")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Update a single tag value"))
+        .stdout(predicate::str::contains("--key"))
+        .stdout(predicate::str::contains("--value"));
+}

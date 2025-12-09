@@ -1329,6 +1329,18 @@ pub enum CloudDatabaseCommands {
         data: String,
     },
 
+    /// Update a single tag value
+    UpdateTag {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+        /// Tag key
+        #[arg(long)]
+        key: String,
+        /// Tag value
+        #[arg(long)]
+        value: String,
+    },
+
     /// Delete a tag from database
     DeleteTag {
         /// Database ID (format: subscription_id:database_id)

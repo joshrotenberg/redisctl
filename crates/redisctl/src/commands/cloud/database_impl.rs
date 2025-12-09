@@ -680,6 +680,50 @@ pub async fn update_tags(
     Ok(())
 }
 
+/// Update a single tag value
+pub async fn update_tag(
+    conn_mgr: &ConnectionManager,
+    profile_name: Option<&str>,
+    id: &str,
+    key: &str,
+    value: &str,
+    output_format: OutputFormat,
+    query: Option<&str>,
+) -> CliResult<()> {
+    let (subscription_id, database_id) = parse_database_id(id)?;
+    let client = conn_mgr.create_cloud_client(profile_name).await?;
+
+    let request = json!({
+        "value": value
+    });
+
+    let response = client
+        .put_raw(
+            &format!(
+                "/subscriptions/{}/databases/{}/tags/{}",
+                subscription_id, database_id, key
+            ),
+            request,
+        )
+        .await
+        .context("Failed to update tag")?;
+
+    let result = if let Some(q) = query {
+        apply_jmespath(&response, q)?
+    } else {
+        response
+    };
+
+    match output_format {
+        OutputFormat::Table => {
+            println!("Tag '{}' updated successfully", key);
+        }
+        _ => print_json_or_yaml(result, output_format)?,
+    }
+
+    Ok(())
+}
+
 /// Delete a tag from database
 pub async fn delete_tag(
     conn_mgr: &ConnectionManager,

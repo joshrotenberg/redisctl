@@ -205,6 +205,18 @@ pub async fn handle_database_command(
             )
             .await
         }
+        CloudDatabaseCommands::UpdateTag { id, key, value } => {
+            super::database_impl::update_tag(
+                conn_mgr,
+                profile_name,
+                id,
+                key,
+                value,
+                output_format,
+                query,
+            )
+            .await
+        }
         CloudDatabaseCommands::DeleteTag { id, key } => {
             super::database_impl::delete_tag(conn_mgr, profile_name, id, key, output_format, query)
                 .await
