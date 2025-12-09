@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/joshrotenberg/redisctl/compare/redisctl-config-v0.1.1...redisctl-config-v0.2.0) - 2025-12-09
+
+### Added
+
+- *(cli)* add tower-resilience integration framework ([#459](https://github.com/joshrotenberg/redisctl/pull/459))
+
 ## [0.1.1](https://github.com/joshrotenberg/redisctl/compare/redisctl-config-v0.1.0...redisctl-config-v0.1.1) - 2025-10-29
 
 ### Added
