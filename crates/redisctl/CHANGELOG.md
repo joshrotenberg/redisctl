@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1](https://github.com/joshrotenberg/redisctl/compare/redisctl-v0.7.0...redisctl-v0.7.1) - 2025-12-09
+
+### Added
+
+- add cross-platform pager support for Windows ([#491](https://github.com/joshrotenberg/redisctl/pull/491))
+- *(cloud)* add delete endpoint for PrivateLink ([#487](https://github.com/joshrotenberg/redisctl/pull/487))
+- *(cloud)* add upgrade endpoints for Essentials databases ([#488](https://github.com/joshrotenberg/redisctl/pull/488))
+- *(cloud)* add available-versions command for Essentials databases ([#485](https://github.com/joshrotenberg/redisctl/pull/485))
+- *(cloud)* add update-aa-regions command for Active-Active databases ([#486](https://github.com/joshrotenberg/redisctl/pull/486))
+- *(cloud)* add update single tag endpoint for Pro databases ([#489](https://github.com/joshrotenberg/redisctl/pull/489))
+
 ## [0.7.0](https://github.com/joshrotenberg/redisctl/compare/redisctl-v0.6.6...redisctl-v0.7.0) - 2025-12-09
 
 ### Added
