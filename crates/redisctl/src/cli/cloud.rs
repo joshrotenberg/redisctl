@@ -656,6 +656,24 @@ pub enum CloudFixedDatabaseCommands {
         /// Database ID (format: subscription_id:database_id)
         id: String,
     },
+    /// Get Redis version upgrade status
+    #[command(name = "upgrade-status")]
+    UpgradeStatus {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+    },
+    /// Upgrade Redis version
+    #[command(name = "upgrade-redis")]
+    UpgradeRedis {
+        /// Database ID (format: subscription_id:database_id)
+        id: String,
+        /// Target Redis version
+        #[arg(long)]
+        version: String,
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
+    },
 }
 
 /// Cloud Fixed Subscription Commands
