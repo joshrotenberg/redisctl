@@ -47,18 +47,10 @@ jobs:
           components: rustfmt, clippy
 
       - name: Cache cargo registry and build
-        uses: actions/cache@v4
+        uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2.7.8
         with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-quick-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-quick-
-            ${{ runner.os }}-cargo-
+          prefix-key: "v1-rust"
+          shared-key: "quick"
 
       - name: Check formatting
         run: cargo fmt --all -- --check
@@ -84,19 +76,10 @@ jobs:
           toolchain: stable
 
       - name: Cache cargo registry and build
-        uses: actions/cache@v4
+        uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2.7.8
         with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-test-${{ matrix.package }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-test-${{ matrix.package }}-
-            ${{ runner.os }}-cargo-test-
-            ${{ runner.os }}-cargo-
+          prefix-key: "v1-rust"
+          shared-key: "test-${{ matrix.package }}"
 
       - name: Run unit tests
         run: cargo test --package ${{ matrix.package }} --lib --all-features
@@ -115,18 +98,10 @@ jobs:
           toolchain: stable
 
       - name: Cache cargo registry and build
-        uses: actions/cache@v4
+        uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2.7.8
         with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-integration-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-integration-
-            ${{ runner.os }}-cargo-
+          prefix-key: "v1-rust"
+          shared-key: "integration"
 
       - name: Run integration tests
         run: cargo test --workspace --test '*' --all-features
@@ -156,18 +131,10 @@ jobs:
           toolchain: stable
 
       - name: Cache cargo registry and build
-        uses: actions/cache@v4
+        uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2.7.8
         with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-build-
-            ${{ runner.os }}-cargo-
+          prefix-key: "v1-rust"
+          shared-key: "build"
 
       - name: Build binary
         run: cargo build --release --bin redisctl
@@ -192,18 +159,10 @@ jobs:
           toolchain: stable
 
       - name: Cache cargo registry and build
-        uses: actions/cache@v4
+        uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2.7.8
         with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-coverage-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-coverage-
-            ${{ runner.os }}-cargo-
+          prefix-key: "v1-rust"
+          shared-key: "coverage"
 
       - name: Install tarpaulin
         uses: taiki-e/install-action@v2
