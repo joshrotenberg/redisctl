@@ -44,6 +44,9 @@ pub struct Profile {
     /// Supports keyring: prefix for secure storage.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub files_api_key: Option<String>,
+    /// Resilience configuration for this profile
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resilience: Option<crate::ResilienceConfig>,
 }
 
 /// Supported deployment types
@@ -460,6 +463,7 @@ mod tests {
                 api_url: "https://api.redislabs.com/v1".to_string(),
             },
             files_api_key: None,
+            resilience: None,
         };
 
         config.set_profile("test".to_string(), cloud_profile);
@@ -482,6 +486,7 @@ mod tests {
                 api_url: "url".to_string(),
             },
             files_api_key: None,
+            resilience: None,
         };
 
         let (key, secret, url) = cloud_profile.cloud_credentials().unwrap();
@@ -616,6 +621,7 @@ api_url = "${REDIS_TEST_URL:-https://api.redislabs.com/v1}"
                 insecure: false,
             },
             files_api_key: None,
+            resilience: None,
         };
         config.set_profile("ent1".to_string(), enterprise_profile);
 
@@ -646,6 +652,7 @@ api_url = "${REDIS_TEST_URL:-https://api.redislabs.com/v1}"
                 api_url: "https://api.redislabs.com/v1".to_string(),
             },
             files_api_key: None,
+            resilience: None,
         };
         config.set_profile("cloud1".to_string(), cloud_profile);
 
@@ -676,6 +683,7 @@ api_url = "${REDIS_TEST_URL:-https://api.redislabs.com/v1}"
                 api_url: "https://api.redislabs.com/v1".to_string(),
             },
             files_api_key: None,
+            resilience: None,
         };
         config.set_profile("cloud1".to_string(), cloud_profile.clone());
         config.set_profile("cloud2".to_string(), cloud_profile);
@@ -690,6 +698,7 @@ api_url = "${REDIS_TEST_URL:-https://api.redislabs.com/v1}"
                 insecure: false,
             },
             files_api_key: None,
+            resilience: None,
         };
         config.set_profile("ent1".to_string(), enterprise_profile.clone());
         config.set_profile("ent2".to_string(), enterprise_profile);
@@ -729,6 +738,7 @@ api_url = "${REDIS_TEST_URL:-https://api.redislabs.com/v1}"
                 api_url: "https://api.redislabs.com/v1".to_string(),
             },
             files_api_key: None,
+            resilience: None,
         };
         config.set_profile("cloud1".to_string(), cloud_profile);
 
