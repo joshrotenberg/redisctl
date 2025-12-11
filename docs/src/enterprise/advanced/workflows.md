@@ -144,4 +144,4 @@ Additional workflows are planned for common operations:
 - **migrate-database** - Database migration between clusters
 - **security-hardening** - Apply security best practices
 
-See the [Workflows Feature Guide](../features/workflows.md) for architectural details and information about creating custom workflows.
+See the Workflows Feature Guide for architectural details and information about creating custom workflows.

@@ -372,6 +372,6 @@ redisctl enterprise database update \
 
 ## See Also
 
-- [Database Replication Reference](../../enterprise/core-resources/databases.md#replication)
-- [Shard Management](../../enterprise/operations/shard-management.md)
+- [Database Replication Reference](../../enterprise/core-resources/databases.md)
+- Shard Management
 - [Redis Replication](https://redis.io/docs/latest/operate/oss_and_stack/management/replication/)

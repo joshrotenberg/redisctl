@@ -45,7 +45,7 @@ redisctl profile set enterprise-prod \
 3. Click "Add API Key" and give it a name
 4. Copy both the Account key and Secret (you won't see the secret again!)
 
-### Redis Enterprise
+### Redis Enterprise Credentials
 
 - **URL**: `https://cluster-fqdn:9443`
 - **Username**: Configured during setup (often `admin@cluster.local`)

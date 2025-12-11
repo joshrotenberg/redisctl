@@ -331,8 +331,8 @@ redisctl enterprise cluster get-policy > policies-backup-$(date +%Y%m%d).json
 ## Related Commands
 
 - [Nodes](./nodes.md) - Manage cluster nodes
-- [Databases](./databases.md) - Manage databases in cluster
-- [Users](./users.md) - Manage cluster users
+- Databases - Manage databases in cluster
+- Users - Manage cluster users
 
 ## API Reference
 

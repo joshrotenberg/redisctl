@@ -366,26 +366,26 @@ Warning: Import completed but key count mismatch
 
 ## Migration Checklist
 
-- [ ] Source database backed up
-- [ ] Destination database created and configured
-- [ ] Network connectivity verified
-- [ ] Import method selected
-- [ ] Dry run completed successfully
-- [ ] Monitoring in place
-- [ ] Rollback plan documented
-- [ ] Application updated with new endpoint
-- [ ] Data validation successful
-- [ ] Source database retained for N days
+- \[ \] Source database backed up
+- \[ \] Destination database created and configured
+- \[ \] Network connectivity verified
+- \[ \] Import method selected
+- \[ \] Dry run completed successfully
+- \[ \] Monitoring in place
+- \[ \] Rollback plan documented
+- \[ \] Application updated with new endpoint
+- \[ \] Data validation successful
+- \[ \] Source database retained for N days
 
 ## Next Steps
 
 - [Backup and Restore](backup-restore.md) - Protect migrated data
-- [Configure ACLs](configure-acls.md) - Secure new database
-- [Monitor Performance](../common/monitor-performance.md) - Track after migration
+- Configure ACLs - Secure new database
+- Monitor Performance - Track after migration
 - [Setup High Availability](../cloud/active-active-setup.md) - Add redundancy
 
 ## See Also
 
-- [Database Import Reference](../../cloud/core-resources/databases.md#import-operations)
+- [Database Import Reference](../../cloud/core-resources/databases.md)
 - [Redis Migration Guide](https://redis.io/docs/latest/operate/oss_and_stack/management/migration/)
 - [RIOT Tool](https://github.com/redis-developer/riot) - Advanced migration tool

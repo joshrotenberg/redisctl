@@ -167,5 +167,5 @@ cargo build --release --features enterprise-only --bin redis-enterprise
 
 ## Next Steps
 
-- [Configuration](./configuration.md) - Set up your credentials
-- [Quick Start](./quickstart.md) - Run your first commands
+- Configuration - Set up your credentials
+- Quick Start - Run your first commands

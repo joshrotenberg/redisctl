@@ -29,10 +29,10 @@ New to redisctl? Start here:
 
 ## Redis Enterprise Recipes
 
-### Getting Started
+### Enterprise Getting Started
 - [Create a Database](enterprise/create-database.md) - 5 minutes
 
-### Operations
+### Enterprise Operations
 - [Generate and Upload Support Package](enterprise/support-package.md) - 10 minutes
 - [Configure Database Replication](enterprise/configure-replication.md) - 10-15 minutes
 - [Configure Redis ACLs](enterprise/configure-redis-acls.md) - 10 minutes
@@ -59,5 +59,5 @@ Have a recipe to share? See our [contribution guide](../developer/contributing.m
 ## Need More Detail?
 
 These recipes are designed for quick wins. For comprehensive command documentation, see:
-- [Cloud Command Reference](../cloud/README.md)
-- [Enterprise Command Reference](../enterprise/README.md)
+- Cloud Command Reference
+- Enterprise Command Reference

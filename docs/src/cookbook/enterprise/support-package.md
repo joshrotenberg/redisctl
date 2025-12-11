@@ -259,12 +259,12 @@ support-package/
 
 ## Next Steps
 
-- 📊 [Monitor Cluster Health](../../enterprise/monitoring/cluster-health.md) - Proactive monitoring
-- 🔍 [Troubleshooting Guide](../../guides/troubleshooting.md) - Common issues and solutions
-- 🛠️ [Node Management](../../enterprise/operations/node-management.md) - Manage cluster nodes
+- 📊 Monitor Cluster Health - Proactive monitoring
+- 🔍 Troubleshooting Guide - Common issues and solutions
+- 🛠️ Node Management - Manage cluster nodes
 
 ## See Also
 
 - [Support Package Command Reference](../../enterprise/operations/support-package.md) - Complete command documentation
-- [Files.com Integration Guide](../../common-features/secure-storage.md#filescom-integration) - API key management
+- [Files.com Integration Guide](../../common-features/secure-storage.md) - API key management
 - [Redis Enterprise Support](https://redis.io/support/) - Contact Redis support

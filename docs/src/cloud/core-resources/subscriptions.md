@@ -208,9 +208,9 @@ redisctl cloud fixed-subscription create --data @fixed-subscription.json --wait
 
 ## Related Commands
 
-- [Databases](./databases.md) - Manage databases within subscriptions
-- [Network Connectivity](./connectivity.md) - Configure VPC peering and private endpoints
-- [Provider Accounts](./provider-accounts.md) - Manage cloud provider integrations
+- Databases - Manage databases within subscriptions
+- Network Connectivity - Configure VPC peering and private endpoints
+- Provider Accounts - Manage cloud provider integrations
 
 ## Common Patterns
 

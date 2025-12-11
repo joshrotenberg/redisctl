@@ -106,4 +106,4 @@ redisctl profile list
 
 ## Next Steps
 
-- [Quick Start](./quickstart.md) - Start using redisctl
+- Quick Start - Start using redisctl

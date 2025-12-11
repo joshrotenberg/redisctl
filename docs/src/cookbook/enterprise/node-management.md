@@ -243,5 +243,5 @@ redisctl enterprise database list -o json -q '
 
 ## See Also
 
-- [Node Command Reference](../../enterprise/cluster-management.md#node-operations)
-- [Shard Management](../../enterprise/operations/shard-management.md)
+- Node Command Reference
+- Shard Management

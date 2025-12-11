@@ -38,7 +38,7 @@ redisctl cloud subscription list -o table
 
 **Troubleshooting:**
 - ❌ "401 Unauthorized" → Check your API credentials with `redisctl profile get`
-- ❌ Empty table → Create a subscription first (see [subscription guide](../cloud/subscriptions.md))
+- ❌ Empty table → Create a subscription first (see subscription guide)
 
 ### 2. Choose Your Database Configuration
 
@@ -217,13 +217,13 @@ redisctl cloud subscription get --subscription 42 -q 'pricing'
 
 Now that you have a database:
 
-- 🔒 [Configure ACL Security](configure-acls.md) - Secure your database with access controls
+- 🔒 Configure ACL Security - Secure your database with access controls
 - 🌐 [Set Up VPC Peering](setup-vpc-peering.md) - Connect to your private network
 - 💾 [Configure Backups](backup-restore.md) - Protect your data
-- 📊 [Monitor Performance](../../guides/monitoring.md) - Track your database metrics
+- 📊 Monitor Performance - Track your database metrics
 
 ## See Also
 
 - [Cloud Database Command Reference](../../cloud/core-resources/databases.md) - Complete command documentation
-- [Database Configuration Guide](../../cloud/database-configuration.md) - All configuration options
+- Database Configuration Guide - All configuration options
 - [Redis Cloud Pricing](https://redis.io/pricing/) - Understand costs

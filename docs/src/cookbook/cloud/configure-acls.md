@@ -481,12 +481,12 @@ redisctl cloud acl list-roles --subscription 42 -q '[?name==`readonly-role`]'
 ## Next Steps
 
 - [Setup VPC Peering](setup-vpc-peering.md) - Private network connectivity
-- [Configure TLS/SSL](configure-tls.md) - Encryption in transit
+- Configure TLS/SSL - Encryption in transit
 - [Backup and Restore](backup-restore.md) - Protect your data
-- [Monitor Performance](../common/monitor-performance.md) - Track database metrics
+- Monitor Performance - Track database metrics
 
 ## See Also
 
-- [ACL Command Reference](../../cloud/acl-management.md) - Complete command documentation
+- ACL Command Reference - Complete command documentation
 - [Redis ACL Documentation](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/) - Redis ACL syntax
 - [Redis Cloud Security](https://redis.io/docs/latest/operate/rc/security/) - Security best practices

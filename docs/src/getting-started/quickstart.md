@@ -45,5 +45,5 @@ Choose your path:
 - **New to redisctl?** - Start with the [Walkthrough](../walkthrough/overview.md) to understand the 3-tier model
 - **Redis Cloud Users** - Jump to [Cloud Overview](../cloud/overview.md) for Cloud-specific commands
 - **Redis Enterprise Users** - Jump to [Enterprise Overview](../enterprise/overview.md) for Enterprise-specific commands
-- **Ready to install?** - See [Installation](./installation.md) for Homebrew, binaries, and more
+- **Ready to install?** - See Installation for Homebrew, binaries, and more
 - **Developers** - Check out [Libraries](../developer/libraries.md) for using redisctl as a Rust library

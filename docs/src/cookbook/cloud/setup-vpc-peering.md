@@ -327,13 +327,13 @@ This also removes the peering from your cloud provider.
 
 ## Next Steps
 
-- [Configure ACL Security](configure-acls.md) - Secure your private database
-- [Setup Private Service Connect](setup-psc.md) - Alternative private connectivity for GCP
-- [Configure Transit Gateway](setup-tgw.md) - Multi-VPC connectivity for AWS
-- [Monitor Performance](../common/monitor-performance.md) - Track latency improvements
+- Configure ACL Security - Secure your private database
+- Setup Private Service Connect - Alternative private connectivity for GCP
+- Configure Transit Gateway - Multi-VPC connectivity for AWS
+- Monitor Performance - Track latency improvements
 
 ## See Also
 
-- [VPC Peering Command Reference](../../cloud/connectivity/vpc-peering.md) - Complete command documentation
+- VPC Peering Command Reference - Complete command documentation
 - [Redis Cloud Networking Guide](https://redis.io/docs/latest/operate/rc/security/vpc-peering/) - Official docs
 - [AWS VPC Peering](https://docs.aws.amazon.com/vpc/latest/peering/) - AWS documentation

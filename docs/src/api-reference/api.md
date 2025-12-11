@@ -154,14 +154,14 @@ redisctl api cloud post /subscriptions/123456/databases/789/acl/users --data @us
 
 ## Redis Enterprise API
 
-### Base URL
+### Enterprise Base URL
 `https://<cluster-address>:9443`
 
-### Authentication
+### Enterprise Authentication
 - Basic Auth: `username:password`
 - Header: `Authorization: Basic <base64>`
 
-### Common Endpoints
+### Enterprise Endpoints
 
 #### Cluster
 ```bash

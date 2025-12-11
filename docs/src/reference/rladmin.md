@@ -104,5 +104,5 @@ See [RLADMIN_COMPARISON.md](https://github.com/joshrotenberg/redisctl/blob/main/
 
 ---
 
-**Back:** [9. Next Steps](./09-next-steps.md)  
-**[Return to Start](./README.md)**
+**Back:** 9. Next Steps  
+**Return to Start**

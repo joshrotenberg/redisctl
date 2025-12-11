@@ -264,6 +264,6 @@ redisctl enterprise ocsp update --data '{
 
 ## Related Commands
 
-- [Cluster Commands](cluster.md) - Cluster security settings
-- [Auth Commands](auth.md) - Authentication configuration
-- [Certificate Commands](cluster.md#certificates) - Certificate management
+- Cluster Commands - Cluster security settings
+- Auth Commands - Authentication configuration
+- Certificate Commands - Certificate management

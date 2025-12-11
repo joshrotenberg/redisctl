@@ -10,4 +10,4 @@ Secure your Redis deployments with proper network configuration.
 - SSL/TLS configuration
 - Access control
 
-*Full tutorial coming soon - see [Network Connectivity](../cloud/connectivity.md) for basic setup.*
+*Full tutorial coming soon - see Network Connectivity for basic setup.*
