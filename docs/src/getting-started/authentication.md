@@ -78,9 +78,9 @@ Redis Enterprise uses basic authentication with username/password.
 - **Username**: `admin@cluster.local` (default)
 - **Password**: Set during cluster setup
 
-### Setting Up Authentication
+### Setting Up Enterprise Authentication
 
-#### Option 1: Secure OS Keyring (Recommended)
+#### Enterprise Option 1: Secure OS Keyring (Recommended)
 
 Store credentials securely in your OS keyring:
 
@@ -110,7 +110,7 @@ password = "keyring:enterprise-password"  # Actual value in OS keyring
 insecure = false
 ```
 
-#### Option 2: Environment Variables
+#### Enterprise Option 2: Environment Variables
 
 Use environment variables:
 
@@ -126,7 +126,7 @@ export REDIS_ENTERPRISE_INSECURE="true"
 redisctl api enterprise get /v1/cluster
 ```
 
-#### Option 3: Configuration File (Development Only)
+#### Enterprise Option 3: Configuration File (Development Only)
 
 For development only, add to `~/.config/redisctl/config.toml`:
 
@@ -174,5 +174,5 @@ export REDIS_ENTERPRISE_INSECURE=true
 
 ## See Also
 
-- [Configuration](./configuration.md) - Profile management
+- Configuration - Profile management
 - [Environment Variables](../reference/environment-variables.md) - All supported variables

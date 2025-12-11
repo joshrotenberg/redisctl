@@ -810,6 +810,6 @@ fi
 ## Related Commands
 
 - [Debug Info Commands](debuginfo.md) - Lower-level diagnostic collection
-- [Logs Commands](logs.md) - View logs without full package
-- [Cluster Commands](cluster.md) - Check cluster health
-- [Database Commands](databases.md) - Database management
+- Logs Commands - View logs without full package
+- Cluster Commands - Check cluster health
+- Database Commands - Database management

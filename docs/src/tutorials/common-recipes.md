@@ -127,4 +127,4 @@ redisctl --profile prod database list
 - [Managing Production Databases](production-databases.md)
 - [CI/CD Integration](cicd.md)
 - [Best Practices](../reference/best-practices.md)
-- [Async Operations](../features/async-operations.md)
+- Async Operations

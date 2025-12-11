@@ -267,16 +267,16 @@ If credentials are compromised:
 
 ### Security Checklist
 
-- [ ] Using OS keyring for production credentials
-- [ ] Config files have restricted permissions (600)
-- [ ] Credentials not committed to version control
-- [ ] Environment variables used in CI/CD
-- [ ] Regular credential rotation scheduled
-- [ ] Audit logging enabled
-- [ ] SSL verification enabled
-- [ ] IP whitelisting configured
-- [ ] Incident response plan documented
-- [ ] Team trained on security procedures
+- \[ \] Using OS keyring for production credentials
+- \[ \] Config files have restricted permissions (600)
+- \[ \] Credentials not committed to version control
+- \[ \] Environment variables used in CI/CD
+- \[ \] Regular credential rotation scheduled
+- \[ \] Audit logging enabled
+- \[ \] SSL verification enabled
+- \[ \] IP whitelisting configured
+- \[ \] Incident response plan documented
+- \[ \] Team trained on security procedures
 
 ## Additional Resources
 

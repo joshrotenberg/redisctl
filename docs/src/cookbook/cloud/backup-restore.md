@@ -488,12 +488,12 @@ Error: Insufficient storage space
 ## Next Steps
 
 - [Database Migration](database-migration.md) - Migrate data between databases
-- [Monitor Performance](../common/monitor-performance.md) - Track database health
-- [Configure ACLs](configure-acls.md) - Secure your restored database
-- [Setup High Availability](setup-replication.md) - Add redundancy
+- Monitor Performance - Track database health
+- Configure ACLs - Secure your restored database
+- Setup High Availability - Add redundancy
 
 ## See Also
 
-- [Database Backup Reference](../../cloud/core-resources/databases.md#backup-operations) - Complete command documentation
+- [Database Backup Reference](../../cloud/core-resources/databases.md) - Complete command documentation
 - [Redis Cloud Backup Guide](https://redis.io/docs/latest/operate/rc/databases/back-up-data/) - Official backup documentation
 - [Data Persistence Options](https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/) - Understanding AOF vs. RDB

@@ -167,6 +167,6 @@ The action commands support both v1 and v2 API endpoints:
 
 ## Related Commands
 
-- [`enterprise database`](./databases.md) - Database operations that create actions
-- [`enterprise cluster`](./cluster.md) - Cluster operations that create actions
-- [`enterprise crdb`](./crdb.md) - Active-Active operations that create actions
+- `enterprise database` - Database operations that create actions
+- `enterprise cluster` - Cluster operations that create actions
+- `enterprise crdb` - Active-Active operations that create actions

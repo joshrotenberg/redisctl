@@ -381,7 +381,7 @@ redisctl enterprise crdb-task get <task_id> -q "supports_progress"
 
 ## Related Commands
 
-- [`enterprise crdb`](./crdb.md) - CRDB management operations
-- [`enterprise action`](./actions.md) - General action/task monitoring
-- [`enterprise database`](./databases.md) - Regular database operations
-- [`api enterprise`](./api-access.md) - Direct API access for advanced operations
+- `enterprise crdb` - CRDB management operations
+- `enterprise action` - General action/task monitoring
+- `enterprise database` - Regular database operations
+- `api enterprise` - Direct API access for advanced operations

@@ -95,7 +95,7 @@ ca_cert = "/path/to/ca.crt"
 
 ## Environment Variable Expansion
 
-The configuration file supports environment variable expansion using `${VAR}` syntax:
+The configuration file supports environment variable expansion using shell-style variable syntax:
 
 ### Basic Expansion
 

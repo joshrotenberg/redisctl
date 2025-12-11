@@ -311,7 +311,7 @@ redis_proxy_memory_mb{proxy=\"\(.proxy)\"} \(.metric.memory_usage)
 "'
 ```
 
-## Troubleshooting
+## Proxy Troubleshooting
 
 ### High CPU Usage
 

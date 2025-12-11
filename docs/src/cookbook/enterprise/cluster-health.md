@@ -124,10 +124,10 @@ fi
 ## Next Steps
 
 - [Node Management](node-management.md) - Manage cluster nodes
-- [Database Monitoring](../common/monitor-performance.md) - Track database metrics
+- Database Monitoring - Track database metrics
 - [Generate Support Package](support-package.md) - Troubleshooting tools
 
 ## See Also
 
-- [Cluster Command Reference](../../enterprise/cluster-management.md)
-- [Node Command Reference](../../enterprise/cluster-management.md#node-operations)
+- Cluster Command Reference
+- Node Command Reference

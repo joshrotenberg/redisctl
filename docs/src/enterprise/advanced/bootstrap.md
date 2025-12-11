@@ -119,6 +119,6 @@ redisctl enterprise bootstrap join-cluster --data '{
 
 ## Related Commands
 
-- [Cluster Commands](cluster.md) - Manage cluster after bootstrap
-- [Node Commands](node.md) - Manage individual nodes
-- [Auth Commands](auth.md) - Configure authentication after bootstrap
+- Cluster Commands - Manage cluster after bootstrap
+- Node Commands - Manage individual nodes
+- Auth Commands - Configure authentication after bootstrap

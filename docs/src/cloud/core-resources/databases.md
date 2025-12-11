@@ -343,8 +343,8 @@ done
 ## Related Commands
 
 - [Subscriptions](./subscriptions.md) - Manage parent subscriptions
-- [ACL](./acl.md) - Configure access control
-- [Connectivity](./connectivity.md) - Set up VPC peering
+- ACL - Configure access control
+- Connectivity - Set up VPC peering
 
 ## API Reference
 

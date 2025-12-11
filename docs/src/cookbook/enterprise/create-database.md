@@ -2,7 +2,7 @@
 
 ⏱️ **Time:** 5 minutes  
 📋 **Prerequisites:**
-- Redis Enterprise cluster running ([see cluster setup](../../enterprise/cluster-management.md))
+- Redis Enterprise cluster running (see cluster setup)
 - redisctl installed ([installation guide](../../getting-started/installation.md))
 - Profile configured with Enterprise credentials ([authentication guide](../../getting-started/authentication.md))
 
@@ -243,19 +243,19 @@ Quick conversion table:
 | 50 GB | 53687091200 | 50 GB |
 | 100 GB | 107374182400 | 100 GB |
 
-Or use: `echo "$((1 * 1024 * 1024 * 1024))"` for 1GB
+Or use shell arithmetic expansion for 1GB in bash/zsh
 
 ## Next Steps
 
 Now that you have a database:
 
-- 🔒 [Configure Redis ACLs](configure-acls.md) - Secure your database with access controls
+- 🔒 Configure Redis ACLs - Secure your database with access controls
 - 💾 [Generate Support Package](support-package.md) - Troubleshooting and diagnostics
 - 🔄 [Configure Replication](configure-replication.md) - Set up replica databases
-- 📊 [Monitor Database Health](../../guides/monitoring.md) - Track performance metrics
+- 📊 Monitor Database Health - Track performance metrics
 
 ## See Also
 
 - [Enterprise Database Command Reference](../../enterprise/core-resources/databases.md) - Complete command documentation
-- [Database Configuration Options](../../enterprise/database-configuration.md) - All configuration parameters
+- Database Configuration Options - All configuration parameters
 - [Redis Enterprise Documentation](https://redis.io/docs/latest/operate/rs/) - Official Redis Enterprise docs

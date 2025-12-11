@@ -377,7 +377,7 @@ redisctl enterprise user get <user_id> -q "role"
 
 ## Related Commands
 
-- [`enterprise cluster`](./cluster.md) - Cluster configuration and management
+- `enterprise cluster` - Cluster configuration and management
 - [`enterprise job-scheduler`](./job-scheduler.md) - Job scheduling configuration
-- [`enterprise diagnostics`](./diagnostics.md) - Cluster diagnostics
-- [`api enterprise`](./api-access.md) - Direct API access for advanced operations
+- `enterprise diagnostics` - Cluster diagnostics
+- `api enterprise` - Direct API access for advanced operations

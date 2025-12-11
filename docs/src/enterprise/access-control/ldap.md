@@ -223,6 +223,6 @@ ldapsearch -H ldaps://ldap.company.com:636 \
 
 ## Related Commands
 
-- [User Commands](user.md) - Manage local users
-- [Role Commands](role.md) - Configure roles and permissions
-- [Auth Commands](auth.md) - Authentication settings
+- User Commands - Manage local users
+- Role Commands - Configure roles and permissions
+- Auth Commands - Authentication settings

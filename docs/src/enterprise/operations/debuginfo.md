@@ -242,6 +242,6 @@ gzip -l support-package-cluster-*.tar.gz
 ## Related Commands
 
 - [Support Package Commands](support-package.md) - Enhanced support package workflow (Phase 2)
-- [Logs Commands](logs.md) - View cluster logs directly
-- [Stats Commands](stats.md) - Monitor performance metrics
-- [Cluster Commands](cluster.md) - Check cluster health
+- Logs Commands - View cluster logs directly
+- Stats Commands - Monitor performance metrics
+- Cluster Commands - Check cluster health

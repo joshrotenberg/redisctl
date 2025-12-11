@@ -315,6 +315,6 @@ redisctl enterprise services update $SERVICE --data '{
 
 ## Related Commands
 
-- [Cluster Commands](cluster.md) - Cluster-wide operations
-- [Node Commands](node.md) - Node-specific management
-- [Logs Commands](logs.md) - Service log viewing
+- Cluster Commands - Cluster-wide operations
+- Node Commands - Node-specific management
+- Logs Commands - Service log viewing

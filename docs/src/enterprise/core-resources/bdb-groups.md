@@ -304,6 +304,6 @@ redisctl enterprise bdb-group get <group_uid> -q "bdbs | length"
 
 ## Related Commands
 
-- [`enterprise database`](./databases.md) - Individual database management
-- [`enterprise cluster`](./cluster.md) - Cluster-wide operations
-- [`enterprise stats`](./stats.md) - Statistics for grouped databases
+- `enterprise database` - Individual database management
+- `enterprise cluster` - Cluster-wide operations
+- `enterprise stats` - Statistics for grouped databases

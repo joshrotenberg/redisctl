@@ -423,7 +423,7 @@ redisctl cloud subscription update \
 - Expect 1-2 hours for initial sync
 - Monitor with `--wait-timeout 7200`
 
-## Best Practices
+## Production Best Practices
 
 1. **Design for Conflicts** - Use conflict-free data types
 2. **Local Writes** - Always write to nearest region
@@ -435,8 +435,8 @@ redisctl cloud subscription update \
 ## Next Steps
 
 - [Setup VPC Peering](setup-vpc-peering.md) - Private connectivity per region
-- [Configure ACLs](configure-acls.md) - Secure all regional endpoints
-- [Monitor Performance](../common/monitor-performance.md) - Track per-region metrics
+- Configure ACLs - Secure all regional endpoints
+- Monitor Performance - Track per-region metrics
 - [Backup and Restore](backup-restore.md) - Multi-region backup strategy
 
 ## See Also

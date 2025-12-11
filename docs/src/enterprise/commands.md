@@ -20,7 +20,7 @@ Direct access to any REST endpoint when you need full control.
 redisctl api enterprise <method> <path> [options]
 ```
 
-See [Raw API Access](./api-access.md) for details.
+See Raw API Access for details.
 
 ## 3. Workflows (Coming Soon)
 

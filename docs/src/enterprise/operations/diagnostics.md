@@ -324,7 +324,7 @@ redisctl enterprise diagnostics update --data '{"disabled_checks": []}'
 
 ## Related Commands
 
-- [`enterprise cluster`](./cluster.md) - Cluster management and health
-- [`enterprise stats`](./stats.md) - Performance statistics
-- [`enterprise logs`](./logs.md) - System logs and events
-- [`enterprise action`](./actions.md) - Monitor diagnostic task progress
+- `enterprise cluster` - Cluster management and health
+- `enterprise stats` - Performance statistics
+- `enterprise logs` - System logs and events
+- `enterprise action` - Monitor diagnostic task progress

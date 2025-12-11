@@ -192,7 +192,7 @@ done
 
 ## Alert Types
 
-### Cluster Alerts
+### Cluster Alert Types
 - `cluster_ca_cert_about_to_expire` - CA certificate expiration warning
 - `cluster_certs_about_to_expire` - SSL certificate expiration warning
 - `cluster_license_about_to_expire` - License expiration warning
@@ -200,14 +200,14 @@ done
 - `cluster_ocsp_query_failed` - OCSP query failure
 - `cluster_ocsp_status_revoked` - Certificate revoked via OCSP
 
-### Node Alerts
+### Node Alert Types
 - `node_checks_error` - Node health check errors
 - `node_ephemeral_storage` - Ephemeral storage threshold exceeded
 - `node_free_flash` - Flash storage threshold exceeded
 - `node_internal_certs_about_to_expire` - Internal certificate expiration
 - `node_persistent_storage` - Persistent storage threshold exceeded
 
-### Database Alerts
+### Database Alert Types
 - `bdb_backup_failed` - Database backup failure
 - `bdb_crdt_sync_error` - Active-Active synchronization error
 - `bdb_high_latency` - High latency detected

@@ -394,7 +394,7 @@ redisctl enterprise action list --type shard_migration
 
 ## Related Commands
 
-- [`enterprise database`](./databases.md) - Database configuration affects shards
+- `enterprise database` - Database configuration affects shards
 - [`enterprise node`](./nodes.md) - Node capacity and shard placement
-- [`enterprise action`](./actions.md) - Monitor shard operations
-- [`enterprise stats`](./stats.md) - Detailed performance metrics
+- `enterprise action` - Monitor shard operations
+- `enterprise stats` - Detailed performance metrics
