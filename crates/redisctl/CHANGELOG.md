@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.2](https://github.com/joshrotenberg/redisctl/compare/redisctl-v0.7.1...redisctl-v0.7.2) - 2025-12-11
+
+### Other
+
+- updated the following local packages: redis-cloud
+
 ## [0.7.1](https://github.com/joshrotenberg/redisctl/compare/redisctl-v0.7.0...redisctl-v0.7.1) - 2025-12-09
 
 ### Added
