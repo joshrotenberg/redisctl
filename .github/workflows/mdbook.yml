@@ -5,12 +5,12 @@ on:
     branches:
       - main
     paths:
-      - 'docs/**'
-      - '.github/workflows/mdbook.yml'
+      - "docs/**"
+      - ".github/workflows/mdbook.yml"
   pull_request:
     paths:
-      - 'docs/**'
-      - '.github/workflows/mdbook.yml'
+      - "docs/**"
+      - ".github/workflows/mdbook.yml"
   workflow_dispatch:
 
 permissions:
@@ -33,8 +33,15 @@ jobs:
       - name: Setup mdBook
         uses: peaceiris/actions-mdbook@v2
         with:
-          mdbook-version: 'latest'
+          mdbook-version: "latest"
 
+      - name: Install mdbook-lint
+        run: cargo install mdbook-lint --version 0.13.2 --locked
+
+      - name: Lint documentation
+        run: |
+          cd docs
+          mdbook-lint lint . --config .mdbook-lint.toml
 
       - name: Build book
         run: |
