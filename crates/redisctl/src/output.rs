@@ -52,7 +52,7 @@ pub fn print_output<T: Serialize>(
 ) -> Result<()> {
     let mut json_value = serde_json::to_value(data)?;
 
-    // Apply JMESPath query if provided (using extended runtime with 150+ functions)
+    // Apply JMESPath query if provided (using extended runtime with 300+ functions)
     if let Some(query_str) = query {
         let runtime = get_jmespath_runtime();
         let expr = runtime
