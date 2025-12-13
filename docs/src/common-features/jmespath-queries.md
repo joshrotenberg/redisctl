@@ -15,6 +15,123 @@ redisctl cloud database get 123:456 -q 'security.ssl_client_authentication'
 redisctl enterprise database get 1 -q '{name: name, memory: memory_size, port: port}'
 ```
 
+## Real-World Examples
+
+These examples work with actual Redis Cloud API responses:
+
+### Counting and Aggregation
+
+```bash
+# Count all subscriptions
+redisctl cloud subscription list -o json -q 'length(@)'
+# Output: 192
+
+# Aggregate statistics across all subscriptions
+redisctl cloud subscription list -o json \
+  -q '{total_subscriptions: length(@), total_size_gb: sum([*].cloudDetails[0].totalSizeInGb), avg_size_gb: avg([*].cloudDetails[0].totalSizeInGb)}'
+# Output:
+# {
+#   "avg_size_gb": 1.96,
+#   "total_size_gb": 23.56,
+#   "total_subscriptions": 192
+# }
+```
+
+### Projections - Reshaping Data
+
+```bash
+# Extract specific fields from each subscription
+redisctl cloud subscription list -o json \
+  -q '[*].{id: id, name: name, provider: cloudDetails[0].provider, region: cloudDetails[0].regions[0].region} | [:5]'
+# Output:
+# [
+#   {"id": 2983053, "name": "time-series-demo", "provider": "AWS", "region": "ap-southeast-1"},
+#   {"id": 2988697, "name": "workshop-sub", "provider": "AWS", "region": "us-east-1"},
+#   ...
+# ]
+```
+
+### Unique Values and Sorting
+
+```bash
+# Get unique cloud providers
+redisctl cloud subscription list -o json -q '[*].cloudDetails[0].provider | unique(@)'
+# Output: ["AWS", "GCP"]
+
+# Get unique regions, sorted
+redisctl cloud subscription list -o json \
+  -q '[*].cloudDetails[0].regions[0].region | unique(@) | sort(@)'
+# Output: ["ap-northeast-1", "ap-south-1", "ap-southeast-1", "europe-west1", ...]
+
+# Sort subscription names alphabetically
+redisctl cloud subscription list -o json -q '[*].name | sort(@) | [:10]'
+```
+
+### Filtering with Patterns
+
+```bash
+# Find subscriptions containing 'demo'
+redisctl cloud subscription list -o json \
+  -q "[*].name | [?contains(@, 'demo')] | [:5]"
+# Output: ["xw-time-series-demo", "gabs-redis-streams-demo", "anton-live-demo", ...]
+
+# Filter by prefix
+redisctl cloud subscription list -o json \
+  -q "[*].name | [?starts_with(@, 'gabs')] | [:5]"
+# Output: ["gabs-aws-workshop-sub", "gabs-santander-rdi", "gabs-redis-streams-demo", ...]
+
+# Filter by suffix
+redisctl cloud subscription list -o json \
+  -q "[*].name | [?ends_with(@, 'demo')] | [:5]"
+```
+
+### String Transformations
+
+```bash
+# Convert names to uppercase
+redisctl cloud subscription list -o json -q 'map(&upper(name), [*]) | [:3]'
+# Output: ["XW-TIME-SERIES-DEMO", "GABS-AWS-WORKSHOP-SUB", "BAMOS-TEST"]
+
+# Replace substrings
+redisctl cloud subscription list -o json \
+  -q "[*].{name: name, replaced: replace(name, 'demo', 'DEMO')} | [?contains(name, 'demo')] | [:3]"
+# Output:
+# [
+#   {"name": "xw-time-series-demo", "replaced": "xw-time-series-DEMO"},
+#   {"name": "gabs-redis-streams-demo", "replaced": "gabs-redis-streams-DEMO"},
+#   ...
+# ]
+```
+
+### Fuzzy Matching with Levenshtein Distance
+
+```bash
+# Find subscriptions with names similar to "production"
+redisctl cloud subscription list -o json \
+  -q "[*].{name: name, distance: levenshtein(name, 'production')} | sort_by(@, &distance) | [:5]"
+# Output:
+# [
+#   {"distance": 8.0, "name": "piyush-db"},
+#   {"distance": 8.0, "name": "erni-rdi-1"},
+#   ...
+# ]
+```
+
+### Sorting by Computed Values
+
+```bash
+# Sort by name length (shortest first)
+redisctl cloud subscription list -o json \
+  -q "[*].{name: name, len: length(name)} | sort_by(@, &len) | [:5]"
+# Output:
+# [
+#   {"len": 5, "name": "bgiri"},
+#   {"len": 6, "name": "abhidb"},
+#   {"len": 6, "name": "CM-rag"},
+#   ...
+# ]
+```
+
 ## Array Operations
 
 ```bash
@@ -41,24 +158,16 @@ redisctl cloud database list -q "[?memoryLimitInGb > `1`].{name: name, memory: m
 redisctl enterprise database list -q "[?status=='active' && memory_size > `1073741824`]"
 ```
 
-## Sorting and Slicing
-
-```bash
-# Sort by field
-redisctl enterprise database list -q "sort_by(@, &name)"
-
-# Reverse sort
-redisctl cloud subscription list -q "reverse(sort_by(@, &id))"
-
-# Get first 5
-redisctl enterprise database list -q '[:5]'
-```
-
 ## Pipelines
 
 Chain operations together with `|` for complex transformations:
 
 ```bash
+# Get unique regions -> sort -> count
+redisctl cloud subscription list -o json \
+  -q '[*].cloudDetails[0].regions[0].region | unique(@) | sort(@) | length(@)'
+# Output: 7
+
 # Filter -> Sort -> Take top 3 -> Reshape
 redisctl enterprise database list -q '
   [?status==`active`]
@@ -66,38 +175,6 @@ redisctl enterprise database list -q '
   | reverse(@)
   | [:3]
   | [*].{name: name, memory_gb: to_string(memory_size / `1073741824`)}'
-```
-
-## Common Patterns
-
-### Extract Single Value
-
-```bash
-# Get cluster name as plain text
-redisctl enterprise cluster get -q 'name'
-# Output: my-cluster
-```
-
-### Build Custom Objects
-
-```bash
-redisctl enterprise database list -q '[].{
-  database: name,
-  size_gb: to_string(memory_size / `1073741824`),
-  endpoints: endpoints[0].addr
-}'
-```
-
-### Count Items
-
-```bash
-redisctl enterprise database list -q 'length(@)'
-```
-
-### Check if Empty
-
-```bash
-redisctl cloud subscription list -q 'length(@) == `0`'
 ```
 
 ## Extended Functions
@@ -108,14 +185,14 @@ redisctl includes 300+ extended JMESPath functions. Here are the most useful cat
 
 ```bash
 # Case conversion
-redisctl enterprise database list -q '[].{name: upper(name)}'
+redisctl cloud subscription list -o json -q '[*].{name: name, upper_name: upper(name)} | [:3]'
 
-# String manipulation
-redisctl enterprise cluster get -q 'split(name, `-`)'
+# Trim whitespace
 redisctl enterprise database list -q '[].{name: trim(name)}'
 
-# Case transformations
-redisctl api cloud get /subscriptions -q '[].{id: id, name: snake_case(name)}'
+# Replace substrings
+redisctl cloud subscription list -o json \
+  -q "[*].{original: name, modified: replace(name, '-', '_')} | [:3]"
 ```
 
 ### Formatting Functions
@@ -128,40 +205,18 @@ redisctl enterprise database list -q '[].{name: name, memory: format_bytes(memor
 # Format duration
 redisctl enterprise database list -q '[].{name: name, uptime: format_duration(uptime_seconds)}'
 # Output: [{"name": "cache", "uptime": "2d 5h 30m"}]
-
-# Parse bytes
-redisctl api cloud get /subscriptions -q '[].{name: name, bytes: parse_bytes(memory_limit)}'
 ```
 
 ### Date/Time Functions
 
 ```bash
+# Current timestamp
+redisctl cloud subscription list -o json -q '{count: length(@), timestamp: now()}'
+# Output: {"count": 192, "timestamp": 1765661197.0}
+
 # Human-readable relative time
 redisctl cloud task list -q '[].{id: id, created: time_ago(created_time)}'
 # Output: [{"id": "task-123", "created": "2 hours ago"}]
-
-# Format timestamps
-redisctl cloud subscription list -q '[].{name: name, created: format_date(createdAt, `"%Y-%m-%d"`)}'
-
-# Current timestamp
-redisctl enterprise cluster get -q '{name: name, checked_at: now()}'
-
-# Check if weekend/weekday
-redisctl cloud task list -q '[?is_weekday(created_timestamp)]'
-
-# Time calculations
-redisctl enterprise database list -q '[].{name: name, age_days: date_diff(now(), created_at, `"days"`)}'
-```
-
-### Duration Functions
-
-```bash
-# Convert seconds to human format
-redisctl enterprise database list -q '[].{name: name, uptime: format_duration(uptime_seconds)}'
-
-# Parse duration strings
-redisctl api enterprise get /v1/cluster -q '{timeout: parse_duration(`"1h30m"`)}'
-# Output: {"timeout": 5400}
 ```
 
 ### Network Functions
@@ -172,22 +227,14 @@ redisctl enterprise node list -q '[?is_private_ip(addr)].addr'
 
 # Check CIDR containment
 redisctl enterprise node list -q '[?cidr_contains(`"10.0.0.0/8"`, addr)]'
-
-# Get network info
-redisctl api enterprise get /v1/cluster -q '{
-  network: cidr_network(deployment_cidr),
-  broadcast: cidr_broadcast(deployment_cidr)
-}'
 ```
 
 ### Math Functions
 
 ```bash
-# Rounding
-redisctl enterprise database list -q '[].{name: name, memory_gb: round(memory_size / `1073741824`, `2`)}'
-
-# Min/max
-redisctl enterprise database list -q 'max_by(@, &memory_size).name'
+# Get max value
+redisctl cloud subscription list -o json -q '[*].cloudDetails[0].totalSizeInGb | max(@)'
+# Output: 23.2027
 
 # Statistics
 redisctl enterprise database list -q '{
@@ -214,7 +261,12 @@ redisctl enterprise node list -q '[?semver_satisfies(redis_version, `">=7.0.0"`)
 
 ```bash
 # Type checking
-redisctl enterprise database get 1 -q '{name: name, type: type_of(memory_size)}'
+redisctl cloud subscription list -o json -q '[*].{name: name, type: type_of(id)} | [:3]'
+# Output:
+# [
+#   {"name": "xw-time-series-demo", "type": "number"},
+#   ...
+# ]
 
 # Default values for missing fields
 redisctl cloud database get 123:456 -q '{name: name, region: default(region, `"unknown"`)}'
@@ -226,28 +278,23 @@ redisctl enterprise database get 1 -q '{name: name, has_endpoints: not(is_empty(
 ### Utility Functions
 
 ```bash
-# Conditional output
-redisctl enterprise database list -q '[].{name: name, healthy: if(status == `"active"`, `"YES"`, `"NO"`)}'
+# Unique values
+redisctl cloud subscription list -o json -q 'unique([*].status)'
+# Output: ["active"]
 
 # Coalesce (first non-null)
 redisctl cloud database get 123:456 -q '{region: coalesce(region, cloud_region, `"default"`)}'
-
-# Unique values
-redisctl enterprise database list -q 'unique([].status)'
 ```
 
-### Validation Functions
+### Fuzzy Matching
 
 ```bash
-# Validate formats
-redisctl enterprise database list -q '[].{
-  name: name,
-  valid_endpoint: is_ipv4(endpoints[0].addr),
-  valid_uuid: is_uuid(database_id)
-}'
+# Levenshtein distance for fuzzy search
+redisctl cloud subscription list -o json \
+  -q "[*].{name: name, distance: levenshtein(name, 'cache')} | sort_by(@, &distance) | [:5]"
 
-# Email validation
-redisctl api cloud get /users -q '[?is_email(email)].email'
+# Find similar names (distance < 3)
+redisctl enterprise database list -q '[?levenshtein(name, `"cache"`) < `3`]'
 ```
 
 ### Encoding Functions
@@ -255,7 +302,6 @@ redisctl api cloud get /users -q '[?is_email(email)].email'
 ```bash
 # Base64 encode/decode
 redisctl enterprise cluster get -q '{encoded: base64_encode(name)}'
-redisctl api enterprise get /v1/cluster -q '{decoded: base64_decode(encoded_field)}'
 
 # URL encode/decode
 redisctl api cloud get /subscriptions -q '[].{safe_name: url_encode(name)}'
@@ -266,7 +312,6 @@ redisctl api cloud get /subscriptions -q '[].{safe_name: url_encode(name)}'
 ```bash
 # Generate hashes
 redisctl enterprise database list -q '[].{name: name, hash: sha256(name)}'
-redisctl api cloud get /subscriptions -q '[].{id: id, checksum: md5(to_string(@))}'
 ```
 
 ### JSON Patch Functions
@@ -274,29 +319,16 @@ redisctl api cloud get /subscriptions -q '[].{id: id, checksum: md5(to_string(@)
 ```bash
 # Compare two configs
 redisctl enterprise database get 1 -q 'json_diff(current_config, desired_config)'
-
-# Apply patches
-redisctl api enterprise get /v1/bdbs/1 -q 'json_patch(@, `[{"op": "add", "path": "/tags", "value": ["prod"]}]`)'
-```
-
-### Fuzzy Matching
-
-```bash
-# Levenshtein distance
-redisctl enterprise database list -q '[?levenshtein(name, `"cache"`) < `3`]'
-
-# Phonetic matching
-redisctl api cloud get /users -q '[?sounds_like(name, `"Smith"`)]'
 ```
 
 ## Function Categories Reference
 
 | Category | Example Functions |
 |----------|-------------------|
-| String | `upper`, `lower`, `trim`, `split`, `snake_case`, `camel_case` |
+| String | `upper`, `lower`, `trim`, `replace`, `split`, `snake_case`, `camel_case` |
 | Array | `unique`, `flatten`, `chunk`, `zip`, `intersection` |
 | Object | `keys`, `values`, `pick`, `omit`, `deep_merge` |
-| Math | `round`, `floor`, `ceil`, `sum`, `avg`, `stddev` |
+| Math | `round`, `floor`, `ceil`, `sum`, `avg`, `max`, `min`, `stddev` |
 | Type | `type_of`, `is_array`, `is_string`, `to_boolean` |
 | Utility | `if`, `coalesce`, `default`, `now` |
 | DateTime | `format_date`, `time_ago`, `relative_time`, `is_weekend` |
