@@ -333,18 +333,48 @@ redisctl enterprise database update 1 --memory-size 2147483648</code></pre>
 
                 <!-- Layer 3: Human Commands - JMESPath -->
                 <section>
-                    <h2>
-                        <span class="green">Human Commands:</span> JMESPath
-                        Queries
-                    </h2>
-                    <pre><code class="language-bash">$ redisctl cloud subscription list -q '[*].{name: name, cost: price}'</code></pre>
+                    <h2><span class="green">Human Commands:</span> JMESPath Queries</h2>
+                    <p>Filter, reshape, and transform any JSON output</p>
+                    <pre><code class="language-bash">$ redisctl enterprise database list -o json</code></pre>
+                    <pre><code class="language-json">[{"uid":1,"name":"session-cache","memory_size":1073741824,"status":"active"},
+ {"uid":2,"name":"user-data","memory_size":2147483648,"status":"active"},
+ {"uid":3,"name":"analytics","memory_size":4294967296,"status":"pending"}]</code></pre>
+                    <pre><code class="language-bash">$ redisctl enterprise database list -q '[?status==`active`].name'</code></pre>
+                    <pre><code class="language-json">["session-cache", "user-data"]</code></pre>
+                </section>
+
+                <!-- JMESPath Pipelines -->
+                <section>
+                    <h2><span class="green">JMESPath:</span> Pipelines</h2>
+                    <p>Chain operations with <code>|</code></p>
+                    <pre><code class="language-bash"># Filter -> Sort -> Take first 3 -> Reshape
+$ redisctl enterprise database list -q '
+  [?status==`active`]
+  | sort_by(@, &memory_size)
+  | reverse(@)
+  | [:3]
+  | [*].{name: name, gb: to_string(memory_size / `1073741824`)}'</code></pre>
                     <pre><code class="language-json">[
-  {"name": "production", "cost": 250.00},
-  {"name": "staging", "cost": 50.00},
-  {"name": "dev", "cost": 25.00}
+  {"name": "analytics", "gb": "4"},
+  {"name": "user-data", "gb": "2"},
+  {"name": "session-cache", "gb": "1"}
 ]</code></pre>
-                    <pre><code class="language-bash">$ redisctl enterprise node list -q '[?status==`active`].addr'</code></pre>
-                    <pre><code class="language-json">["10.0.0.1", "10.0.0.2", "10.0.0.3"]</code></pre>
+                </section>
+
+                <!-- JMESPath Extended Functions -->
+                <section>
+                    <h2><span class="green">JMESPath:</span> 300+ Functions</h2>
+                    <p>Beyond standard JMESPath</p>
+                    <pre><code class="language-bash"># Format bytes, dates, durations
+$ redisctl enterprise database list -q '[*].{
+  name: name,
+  memory: format_bytes(memory_size),
+  uptime: format_duration(uptime_seconds)
+}'</code></pre>
+                    <pre><code class="language-json">[{"name": "session-cache", "memory": "1.00 GB", "uptime": "45d 12h 30m"}]</code></pre>
+                    <pre><code class="language-bash"># Network validation
+$ redisctl enterprise node list -q '[?is_private_ip(addr)].addr'</code></pre>
+                    <pre><code class="language-json">["10.0.0.1", "10.0.0.2", "192.168.1.10"]</code></pre>
                 </section>
 
                 <!-- Layer 4: Workflows - Cloud -->
