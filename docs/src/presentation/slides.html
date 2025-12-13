@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>redisctl - Redis Cloud and Enterprise CLI</title>
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/reveal.js@4/dist/reset.css"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/reveal.js@4/dist/reveal.css"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/reveal.js@4/dist/theme/black.css"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/highlight.js@11/styles/monokai.min.css"
+        />
+        <style>
+            .reveal h1,
+            .reveal h2,
+            .reveal h3 {
+                text-transform: none;
+            }
+            .reveal pre {
+                width: 100%;
+                font-size: 0.48em;
+                box-shadow: none;
+            }
+            .reveal code {
+                background: #1e1e1e;
+                padding: 0.1em 0.3em;
+                border-radius: 4px;
+            }
+            .reveal pre code {
+                padding: 0.8em 1em;
+                max-height: 500px;
+            }
+            .redis-red {
+                color: #dc382d;
+            }
+            .cloud-blue {
+                color: #61afef;
+            }
+            .green {
+                color: #98c379;
+            }
+            .orange {
+                color: #e5c07b;
+            }
+            .reveal section {
+                text-align: left;
+            }
+            .reveal section.center {
+                text-align: center;
+            }
+            .reveal ul {
+                margin-left: 0.5em;
+                font-size: 0.85em;
+            }
+            .reveal li {
+                margin-bottom: 0.3em;
+            }
+            .reveal .small {
+                font-size: 0.65em;
+            }
+            .reveal .tiny {
+                font-size: 0.55em;
+            }
+            .reveal .columns {
+                display: flex;
+                gap: 1em;
+            }
+            .reveal .column {
+                flex: 1;
+            }
+            .reveal h2 {
+                font-size: 1.4em;
+                margin-bottom: 0.5em;
+            }
+            .reveal p {
+                font-size: 0.8em;
+                margin: 0.3em 0;
+            }
+            .hljs {
+                background: #1e1e1e;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="reveal">
+            <div class="slides">
+                <!-- Title -->
+                <section class="center">
+                    <h1>
+                        <span class="redis-red">redisctl</span>
+                    </h1>
+                    <h3>The CLI for Redis Cloud and Enterprise</h3>
+                    <p class="small" style="margin-top: 2em">
+                        github.com/joshrotenberg/redisctl
+                    </p>
+                </section>
+
+                <!-- The Problem -->
+                <section>
+                    <h2>The Problem</h2>
+                    <p>
+                        No unified CLI for Redis Cloud and Enterprise REST APIs
+                    </p>
+                    <ul>
+                        <li>
+                            <strong>Redis Cloud:</strong> No CLI - only web UI
+                            or raw API calls
+                        </li>
+                        <li>
+                            <strong>Redis Enterprise:</strong> rladmin requires
+                            cluster-local access
+                        </li>
+                        <li>
+                            <strong>DevOps teams:</strong> Can't easily automate
+                            across both platforms
+                        </li>
+                        <li>
+                            <strong>Everyone:</strong> Writing fragile bash
+                            scripts with curl and jq
+                        </li>
+                    </ul>
+                </section>
+
+                <!-- The Bash Script Reality -->
+                <section>
+                    <h2>The Reality Today</h2>
+                    <pre><code class="language-bash"># Typical "automation" script
+API_KEY="..."
+SECRET="..."
+
+# Create database... hope the JSON is right
+curl -s -X POST "https://api.redislabs.com/v1/subscriptions/123/databases" \
+  -H "x-api-key: $API_KEY" \
+  -H "x-api-secret-key: $SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "mydb", "memoryLimitInGb": 1, ...}'
+
+# Poll for completion... forever
+while true; do
+  STATUS=$(curl -s ... | jq -r '.status')
+  if [ "$STATUS" = "active" ]; then break; fi
+  sleep 10  # Hope this is enough
+done
+
+# Parse response... pray it doesn't change
+ENDPOINT=$(curl -s ... | jq -r '.publicEndpoint')
+# What if the field is null? What if the API changes?</code></pre>
+                </section>
+
+                <!-- The Solution -->
+                <section class="center">
+                    <h2>The Solution</h2>
+                    <h1><span class="redis-red">redisctl</span></h1>
+                    <p style="margin-top: 1em">
+                        First-class CLI for the entire Redis platform
+                    </p>
+                </section>
+
+                <!-- What redisctl Provides -->
+                <section>
+                    <h2>What redisctl Provides</h2>
+                    <ul>
+                        <li>
+                            <span class="green">Type-safe API clients</span> -
+                            no more parsing curl output
+                        </li>
+                        <li>
+                            <span class="green">Async operation handling</span>
+                            - no more polling loops
+                        </li>
+                        <li>
+                            <span class="green">Structured output</span> -
+                            JSON/YAML for automation
+                        </li>
+                        <li>
+                            <span class="green">Profile management</span> -
+                            secure, multi-deployment
+                        </li>
+                    </ul>
+                    <p style="margin-top: 1em">
+                        Built around
+                        <span class="redis-red">four layers</span> of
+                        functionality...
+                    </p>
+                </section>
+
+                <!-- Architecture Overview -->
+                <section>
+                    <h2>Four Layers</h2>
+                    <ul>
+                        <li>
+                            <span class="redis-red">Profiles</span> - Manage
+                            credentials for multiple deployments
+                        </li>
+                        <li>
+                            <span class="orange">Raw API</span> - Direct REST
+                            access to any endpoint
+                        </li>
+                        <li>
+                            <span class="green">Human Commands</span> -
+                            Type-safe, friendly interface
+                        </li>
+                        <li>
+                            <span class="cloud-blue">Workflows</span> -
+                            Multi-step orchestration
+                        </li>
+                    </ul>
+                </section>
+
+                <!-- Layer 1: Profiles -->
+                <section>
+                    <h2><span class="redis-red">Layer 1:</span> Profiles</h2>
+                    <p>Manage credentials across environments</p>
+                    <pre><code class="language-bash"># Set up profiles for each environment
+redisctl profile set dev --cloud-api-key $DEV_KEY --cloud-secret-key $DEV_SECRET
+redisctl profile set staging --cloud-api-key $STG_KEY --cloud-secret-key $STG_SECRET
+redisctl profile set prod --cloud-api-key $PROD_KEY --cloud-secret-key $PROD_SECRET
+
+# Set a default
+redisctl profile set-default prod
+
+# Switch easily
+redisctl --profile dev cloud database list
+redisctl --profile prod cloud database list</code></pre>
+                </section>
+
+                <!-- Layer 1: Profiles (continued) -->
+                <section>
+                    <h2>
+                        <span class="redis-red">Profiles:</span> Secure Storage
+                    </h2>
+                    <p>Keep credentials out of scripts and env vars</p>
+                    <pre><code class="language-bash"># Store credentials in OS keychain (macOS Keychain, Windows Credential Manager)
+redisctl profile set prod \
+  --cloud-api-key $KEY \
+  --cloud-secret-key $SECRET \
+  --use-keyring
+
+# Or reference environment variables
+redisctl profile set prod \
+  --cloud-api-key '${REDIS_CLOUD_API_KEY}' \
+  --cloud-secret-key '${REDIS_CLOUD_SECRET_KEY}'
+
+# Credentials never appear in config file
+cat ~/.config/redisctl/config.toml
+# cloud_api_key = "keyring:prod-api-key"</code></pre>
+                </section>
+
+                <!-- Layer 2: Raw API -->
+                <section>
+                    <h2><span class="orange">Layer 2:</span> Raw API</h2>
+                    <p>Direct REST access - better than curl</p>
+                    <div class="columns">
+                        <div class="column">
+                            <h3 class="small">curl</h3>
+                            <pre><code class="language-bash">curl -s -X GET \
+  "https://api.redislabs.com/v1/subscriptions" \
+  -H "x-api-key: $KEY" \
+  -H "x-api-secret-key: $SECRET" \
+  | jq '.[].name'</code></pre>
+                        </div>
+                        <div class="column">
+                            <h3 class="small">redisctl</h3>
+                            <pre><code class="language-bash">redisctl api cloud get /subscriptions \
+  -q '[].name'</code></pre>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Layer 2: Raw API (continued) -->
+                <section>
+                    <h2>
+                        <span class="orange">Raw API:</span> Full REST Support
+                    </h2>
+                    <pre><code class="language-bash"># Any HTTP method
+redisctl api cloud get /subscriptions
+redisctl api cloud post /subscriptions/123/databases --body '{"name": "test"}'
+redisctl api cloud put /subscriptions/123/databases/456 --body '{...}'
+redisctl api cloud delete /subscriptions/123/databases/456
+
+# Works for Enterprise too
+redisctl api enterprise get /v1/cluster
+redisctl api enterprise get /v1/bdbs
+redisctl api enterprise post /v1/bdbs --body '{...}'
+
+# JMESPath queries on any response
+redisctl api enterprise get /v1/nodes -q '[*].{addr: addr, status: status}'</code></pre>
+                </section>
+
+                <!-- Layer 3: Human Commands -->
+                <section>
+                    <h2><span class="green">Layer 3:</span> Human Commands</h2>
+                    <p>Day-to-day cluster management and monitoring</p>
+                    <pre><code class="language-bash"># Check cluster health
+redisctl enterprise cluster get
+redisctl enterprise node list
+redisctl enterprise database list
+
+# Monitor performance
+redisctl enterprise database stats 1 -o json
+redisctl enterprise cluster stats
+
+# Manage databases
+redisctl cloud database list --subscription-id 123456
+redisctl enterprise database update 1 --memory-size 2147483648</code></pre>
+                </section>
+
+                <!-- Layer 3: Human Commands - Output Examples -->
+                <section>
+                    <h2>
+                        <span class="green">Human Commands:</span> Output
+                        Formats
+                    </h2>
+                    <pre><code class="language-bash">$ redisctl enterprise database list</code></pre>
+                    <pre><code class="language-text">ID  Name           Memory     Status  Endpoints
+1   session-cache  1.0 GB     active  redis-12345.cluster.local:12000
+2   user-data      2.0 GB     active  redis-12346.cluster.local:12001
+3   analytics      4.0 GB     active  redis-12347.cluster.local:12002</code></pre>
+                    <pre><code class="language-bash">$ redisctl enterprise database list -o json</code></pre>
+                    <pre><code class="language-json">[{"uid":1,"name":"session-cache","memory_size":1073741824,"status":"active"},
+ {"uid":2,"name":"user-data","memory_size":2147483648,"status":"active"}]</code></pre>
+                </section>
+
+                <!-- Layer 3: Human Commands - JMESPath -->
+                <section>
+                    <h2>
+                        <span class="green">Human Commands:</span> JMESPath
+                        Queries
+                    </h2>
+                    <pre><code class="language-bash">$ redisctl cloud subscription list -q '[*].{name: name, cost: price}'</code></pre>
+                    <pre><code class="language-json">[
+  {"name": "production", "cost": 250.00},
+  {"name": "staging", "cost": 50.00},
+  {"name": "dev", "cost": 25.00}
+]</code></pre>
+                    <pre><code class="language-bash">$ redisctl enterprise node list -q '[?status==`active`].addr'</code></pre>
+                    <pre><code class="language-json">["10.0.0.1", "10.0.0.2", "10.0.0.3"]</code></pre>
+                </section>
+
+                <!-- Layer 4: Workflows - Cloud -->
+                <section>
+                    <h2><span class="cloud-blue">Layer 4:</span> Workflows</h2>
+                    <p>End-to-end provisioning for Redis Cloud</p>
+                    <pre><code class="language-bash"># Complete subscription setup with database
+redisctl cloud workflow subscription-setup \
+  --name "production" \
+  --provider AWS \
+  --region us-east-1 \
+  --database-name "cache" \
+  --database-memory-gb 2 \
+  --high-availability \
+  --wait</code></pre>
+                    <pre><code class="language-text">Looking up payment method...
+Creating subscription 'production'...
+Waiting for subscription to become active...
+Subscription created successfully (ID: 123456)
+Database created successfully (ID: 789)
+
+Connection string: redis://redis-12345.c1.us-east-1.ec2.cloud.redislabs.com:12345</code></pre>
+                </section>
+
+                <!-- Layer 4: Workflows - Enterprise -->
+                <section>
+                    <h2>
+                        <span class="cloud-blue">Workflows:</span> Enterprise
+                        Setup
+                    </h2>
+                    <p>Initialize and configure clusters</p>
+                    <pre><code class="language-bash"># Initialize a new Enterprise cluster
+redisctl enterprise workflow init-cluster \
+  --license-file ./license.txt \
+  --cluster-name "production"</code></pre>
+                    <pre><code class="language-text">Uploading license...
+Creating cluster 'production'...
+Waiting for cluster initialization...
+Cluster initialized successfully
+
+Cluster: production
+Nodes: 3
+Status: active</code></pre>
+                </section>
+
+                <!-- Layer 4: Workflows - Support -->
+                <section>
+                    <h2>
+                        <span class="cloud-blue">Workflows:</span> Support
+                        Packages
+                    </h2>
+                    <p>Generate and upload diagnostics in seconds</p>
+                    <pre><code class="language-bash"># Generate, optimize, and upload in one command
+redisctl enterprise support-package cluster --optimize --upload</code></pre>
+                    <pre><code class="language-text">Generating support package...
+Optimizing package (removed 847 MB of logs)...
+Uploading to Redis Support...
+
+Package: support-package-2024-01-15-cluster.tar.gz
+Size: 23 MB (optimized from 870 MB)
+Upload: Complete
+Case: https://files.redis.com/f/abc123</code></pre>
+                    <p class="small">
+                        What used to take 30+ minutes now takes 30 seconds
+                    </p>
+                </section>
+
+                <!-- Docker -->
+                <section>
+                    <h2>Using with Docker</h2>
+                    <p>No installation required</p>
+                    <pre><code class="language-bash"># Run any command
+docker run --rm joshrotenberg/redisctl \
+  cloud subscription list
+
+# With environment variables
+docker run --rm \
+  -e REDIS_CLOUD_API_KEY=$KEY \
+  -e REDIS_CLOUD_SECRET_KEY=$SECRET \
+  joshrotenberg/redisctl cloud database list
+
+# Or mount your config
+docker run --rm \
+  -v ~/.config/redisctl:/root/.config/redisctl \
+  joshrotenberg/redisctl --profile prod cloud database list</code></pre>
+                </section>
+
+                <!-- CI/CD -->
+                <section>
+                    <h2>CI/CD Integration</h2>
+                    <p>GitHub Actions example</p>
+                    <pre><code class="language-yaml">- name: Deploy Redis database
+  env:
+    REDIS_CLOUD_API_KEY: ${{ secrets.REDIS_CLOUD_API_KEY }}
+    REDIS_CLOUD_SECRET_KEY: ${{ secrets.REDIS_CLOUD_SECRET_KEY }}
+  run: |
+    # Create database and wait for it
+    redisctl cloud database create \
+      --subscription-id ${{ vars.SUBSCRIPTION_ID }} \
+      --name "pr-${{ github.event.number }}" \
+      --memory-limit-in-gb 1 \
+      --wait -o json > db.json
+
+    # Extract connection info
+    echo "REDIS_URL=$(jq -r '.publicEndpoint' db.json)" >> $GITHUB_ENV</code></pre>
+                </section>
+
+                <!-- CI/CD Cleanup -->
+                <section>
+                    <h2>CI/CD: Cleanup</h2>
+                    <pre><code class="language-yaml">- name: Cleanup PR database
+  if: github.event.action == 'closed'
+  env:
+    REDIS_CLOUD_API_KEY: ${{ secrets.REDIS_CLOUD_API_KEY }}
+    REDIS_CLOUD_SECRET_KEY: ${{ secrets.REDIS_CLOUD_SECRET_KEY }}
+  run: |
+    # Find and delete the PR database
+    DB_ID=$(redisctl cloud database list \
+      --subscription-id ${{ vars.SUBSCRIPTION_ID }} \
+      -q "[?name=='pr-${{ github.event.number }}'].databaseId | [0]" -o json)
+
+    redisctl cloud database delete \
+      ${{ vars.SUBSCRIPTION_ID }} $DB_ID --wait</code></pre>
+                </section>
+
+                <!-- Use Cases by Persona - Internal -->
+                <section>
+                    <h2>Who Uses redisctl?</h2>
+                    <p class="small">Internal Redis teams</p>
+                    <div class="columns">
+                        <div class="column">
+                            <h3 class="cloud-blue">Support Engineers</h3>
+                            <ul>
+                                <li>Generate support packages instantly</li>
+                                <li>Quick cluster diagnostics</li>
+                            </ul>
+                            <h3 class="green">Customer Success</h3>
+                            <ul>
+                                <li>Health checks during reviews</li>
+                                <li>Usage and cost reporting</li>
+                            </ul>
+                        </div>
+                        <div class="column">
+                            <h3 class="orange">Solutions Architects</h3>
+                            <ul>
+                                <li>Demo environment setup</li>
+                                <li>PoC provisioning</li>
+                            </ul>
+                            <h3 class="redis-red">Professional Services</h3>
+                            <ul>
+                                <li>Migration automation</li>
+                                <li>Deployment scripting</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Use Cases by Persona - External -->
+                <section>
+                    <h2>Who Uses redisctl?</h2>
+                    <p class="small">Customer teams</p>
+                    <div class="columns">
+                        <div class="column">
+                            <h3 class="cloud-blue">DevOps / SRE</h3>
+                            <ul>
+                                <li>CI/CD database provisioning</li>
+                                <li>Infrastructure as Code</li>
+                                <li>Disaster recovery automation</li>
+                            </ul>
+                        </div>
+                        <div class="column">
+                            <h3 class="orange">Platform Engineers</h3>
+                            <ul>
+                                <li>Self-service database portals</li>
+                                <li>Cost tracking and chargebacks</li>
+                                <li>Multi-environment management</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <p class="small" style="margin-top: 1em">
+                        Even CLI-savvy executives:
+                        <code
+                            >redisctl cloud subscription list -q '[*].{name:
+                            name, monthly: price}'</code
+                        >
+                    </p>
+                </section>
+
+                <!-- Installation -->
+                <section>
+                    <h2>Installation</h2>
+                    <pre><code class="language-bash"># Homebrew (macOS/Linux)
+brew install joshrotenberg/brew/redisctl
+
+# Cargo (from source)
+cargo install redisctl
+
+# With secure credential storage
+cargo install redisctl --features secure-storage
+
+# Docker
+docker run -it joshrotenberg/redisctl --help
+
+# From releases (Linux x86_64)
+curl -L https://github.com/joshrotenberg/redisctl/releases/latest/download/redisctl-x86_64-unknown-linux-gnu.tar.gz | tar xz
+./redisctl --help</code></pre>
+                </section>
+
+                <!-- Get Started -->
+                <section class="center">
+                    <h2>Get Started</h2>
+                    <pre><code class="language-bash"># Install
+brew install joshrotenberg/brew/redisctl
+
+# Setup profile
+redisctl profile set mycloud --cloud-api-key $KEY --cloud-secret-key $SECRET
+
+# Start using
+redisctl cloud subscription list
+redisctl cloud database list --subscription-id 123456</code></pre>
+                    <p style="margin-top: 1.5em"><br /></p>
+                    <h3>github.com/joshrotenberg/redisctl</h3>
+                    <p class="small">Docs: joshrotenberg.github.io/redisctl</p>
+                </section>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/reveal.js@4/dist/reveal.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/reveal.js@4/plugin/highlight/highlight.js"></script>
+        <script>
+            Reveal.initialize({
+                hash: true,
+                transition: "slide",
+                backgroundTransition: "fade",
+                width: 1200,
+                height: 700,
+                margin: 0.1,
+                plugins: [RevealHighlight],
+            });
+        </script>
+    </body>
+</html>
