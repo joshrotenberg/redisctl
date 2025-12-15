@@ -333,48 +333,101 @@ redisctl enterprise database update 1 --memory-size 2147483648</code></pre>
 
                 <!-- Layer 3: Human Commands - JMESPath -->
                 <section>
-                    <h2><span class="green">Human Commands:</span> JMESPath Queries</h2>
+                    <h2>
+                        <span class="green">Human Commands:</span> JMESPath
+                        Queries
+                    </h2>
                     <p>Filter, reshape, and transform any JSON output</p>
-                    <pre><code class="language-bash">$ redisctl enterprise database list -o json</code></pre>
-                    <pre><code class="language-json">[{"uid":1,"name":"session-cache","memory_size":1073741824,"status":"active"},
- {"uid":2,"name":"user-data","memory_size":2147483648,"status":"active"},
- {"uid":3,"name":"analytics","memory_size":4294967296,"status":"pending"}]</code></pre>
-                    <pre><code class="language-bash">$ redisctl enterprise database list -q '[?status==`active`].name'</code></pre>
-                    <pre><code class="language-json">["session-cache", "user-data"]</code></pre>
+                    <pre><code class="language-bash"># Count all subscriptions
+$ redisctl cloud subscription list -o json -q 'length(@)'
+192
+
+# Get unique cloud providers
+$ redisctl cloud subscription list -o json -q '[*].cloudDetails[0].provider | unique(@)'
+["AWS", "GCP"]
+
+# Aggregate statistics
+$ redisctl cloud subscription list -o json \
+  -q '{total: length(@), size_gb: sum([*].cloudDetails[0].totalSizeInGb)}'
+{"total": 192, "size_gb": 23.56}</code></pre>
+                </section>
+
+                <!-- JMESPath Projections -->
+                <section>
+                    <h2><span class="green">JMESPath:</span> Projections</h2>
+                    <p>Reshape data with custom fields</p>
+                    <pre><code class="language-bash"># Extract and reshape subscription details
+$ redisctl cloud subscription list -o json \
+  -q '[*].{id: id, name: name, provider: cloudDetails[0].provider} | [:3]'</code></pre>
+                    <pre><code class="language-json">[
+  {"id": 2983053, "name": "time-series-demo", "provider": "AWS"},
+  {"id": 2988697, "name": "workshop-sub", "provider": "AWS"},
+  {"id": 3034552, "name": "test-db", "provider": "GCP"}
+]</code></pre>
                 </section>
 
                 <!-- JMESPath Pipelines -->
                 <section>
                     <h2><span class="green">JMESPath:</span> Pipelines</h2>
                     <p>Chain operations with <code>|</code></p>
-                    <pre><code class="language-bash"># Filter -> Sort -> Take first 3 -> Reshape
-$ redisctl enterprise database list -q '
-  [?status==`active`]
-  | sort_by(@, &memory_size)
-  | reverse(@)
-  | [:3]
-  | [*].{name: name, gb: to_string(memory_size / `1073741824`)}'</code></pre>
-                    <pre><code class="language-json">[
-  {"name": "analytics", "gb": "4"},
-  {"name": "user-data", "gb": "2"},
-  {"name": "session-cache", "gb": "1"}
-]</code></pre>
+                    <pre><code class="language-bash"># Get unique regions -> sort -> count
+$ redisctl cloud subscription list -o json \
+  -q '[*].cloudDetails[0].regions[0].region | unique(@) | sort(@) | length(@)'
+7
+
+# Sort by name length (find shortest names)
+$ redisctl cloud subscription list -o json \
+  -q "[*].{name: name, len: length(name)} | sort_by(@, &len) | [:3]"</code></pre>
+                    <pre><code class="language-json">[{"len": 5, "name": "bgiri"}, {"len": 6, "name": "abhidb"}, {"len": 6, "name": "CM-rag"}]</code></pre>
+                </section>
+
+                <!-- JMESPath String Functions -->
+                <section>
+                    <h2>
+                        <span class="green">JMESPath:</span> String Functions
+                    </h2>
+                    <p>Transform and filter text</p>
+                    <pre><code class="language-bash"># Convert to uppercase
+$ redisctl cloud subscription list -o json -q 'map(&upper(name), [*]) | [:3]'
+["XW-TIME-SERIES-DEMO", "GABS-AWS-WORKSHOP-SUB", "BAMOS-TEST"]
+
+# Filter by pattern
+$ redisctl cloud subscription list -o json -q "[*].name | [?contains(@, 'demo')] | [:5]"
+["xw-time-series-demo", "gabs-redis-streams-demo", "anton-live-demo", ...]
+
+# Replace substrings
+$ redisctl cloud subscription list -o json \
+  -q "[*].{name: name, modified: replace(name, 'demo', 'DEMO')} | [:2]"
+[{"name": "xw-time-series-demo", "modified": "xw-time-series-DEMO"}, ...]</code></pre>
                 </section>
 
                 <!-- JMESPath Extended Functions -->
                 <section>
                     <h2><span class="green">JMESPath:</span> 300+ Functions</h2>
-                    <p>Beyond standard JMESPath</p>
-                    <pre><code class="language-bash"># Format bytes, dates, durations
-$ redisctl enterprise database list -q '[*].{
-  name: name,
-  memory: format_bytes(memory_size),
-  uptime: format_duration(uptime_seconds)
-}'</code></pre>
-                    <pre><code class="language-json">[{"name": "session-cache", "memory": "1.00 GB", "uptime": "45d 12h 30m"}]</code></pre>
-                    <pre><code class="language-bash"># Network validation
-$ redisctl enterprise node list -q '[?is_private_ip(addr)].addr'</code></pre>
-                    <pre><code class="language-json">["10.0.0.1", "10.0.0.2", "192.168.1.10"]</code></pre>
+                    <div class="columns">
+                        <div class="column">
+                            <p class="tiny"><strong>Fuzzy Matching</strong></p>
+                            <pre><code class="language-bash"># Find similar names
+-q "[*].{name: name, dist: levenshtein(name, 'prod')}"</code></pre>
+                            <p class="tiny"><strong>Math & Stats</strong></p>
+                            <pre><code class="language-bash"># Aggregate stats
+-q '{max: max([*].size), avg: avg([*].size)}'</code></pre>
+                            <p class="tiny"><strong>Formatting</strong></p>
+                            <pre><code class="language-bash"># Human-readable bytes
+-q '[*].{mem: format_bytes(memory_size)}'</code></pre>
+                        </div>
+                        <div class="column">
+                            <p class="tiny"><strong>DateTime</strong></p>
+                            <pre><code class="language-bash"># Current timestamp
+-q '{checked: now()}'</code></pre>
+                            <p class="tiny"><strong>Type Checking</strong></p>
+                            <pre><code class="language-bash"># Inspect types
+-q '[*].{name: name, type: type_of(id)}'</code></pre>
+                            <p class="tiny"><strong>Semver</strong></p>
+                            <pre><code class="language-bash"># Version comparison
+-q 'semver_compare(version, `"7.4.0"`)'</code></pre>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- Layer 4: Workflows - Cloud -->
