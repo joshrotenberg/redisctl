@@ -100,7 +100,7 @@ redisctl enterprise support-package cluster --optimize --upload
 
 ## Full Comparison
 
-See [RLADMIN_COMPARISON.md](https://github.com/joshrotenberg/redisctl/blob/main/examples/presentation/RLADMIN_COMPARISON.md) for detailed feature matrix with 30+ comparisons.
+See [RLADMIN_COMPARISON.md](https://github.com/redis-developer/redisctl/blob/main/examples/presentation/RLADMIN_COMPARISON.md) for detailed feature matrix with 30+ comparisons.
 
 ---
 

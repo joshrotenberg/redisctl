@@ -7,8 +7,8 @@ title = "redisctl Documentation"
 [output.html]
 default-theme = "light"
 preferred-dark-theme = "ayu"
-git-repository-url = "https://github.com/joshrotenberg/redisctl"
-edit-url-template = "https://github.com/joshrotenberg/redisctl/edit/main/docs/{path}"
+git-repository-url = "https://github.com/redis-developer/redisctl"
+edit-url-template = "https://github.com/redis-developer/redisctl/edit/main/docs/{path}"
 
 [output.html.fold]
 enable = true

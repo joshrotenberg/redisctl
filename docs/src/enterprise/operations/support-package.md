@@ -583,7 +583,7 @@ jobs:
       
       - name: Install redisctl
         run: |
-          curl -L https://github.com/joshrotenberg/redisctl/releases/latest/download/redisctl-linux-amd64.tar.gz | tar xz
+          curl -L https://github.com/redis-developer/redisctl/releases/latest/download/redisctl-linux-amd64.tar.gz | tar xz
           sudo mv redisctl /usr/local/bin/
       
       - name: Configure Redis Enterprise credentials

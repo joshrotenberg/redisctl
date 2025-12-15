@@ -34,7 +34,7 @@ redisctl cloud database create --subscription $SUB --name mydb --wait
 
 ```bash
 # Docker (quick start)
-docker run ghcr.io/joshrotenberg/redisctl:latest --help
+docker run ghcr.io/redis-developer/redisctl:latest --help
 
 # macOS/Linux
 brew install joshrotenberg/brew/redisctl
@@ -64,6 +64,6 @@ This enables Terraform providers, backup tools, monitoring dashboards, and more.
 
 ## Need Help?
 
-- [GitHub Issues](https://github.com/joshrotenberg/redisctl/issues)
+- [GitHub Issues](https://github.com/redis-developer/redisctl/issues)
 - [API Documentation](https://docs.rs/redisctl)
 - [Cookbook](./cookbook/README.md)

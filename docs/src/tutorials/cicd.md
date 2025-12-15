@@ -45,7 +45,7 @@ jobs:
       
       - name: Install redisctl
         run: |
-          curl -L https://github.com/joshrotenberg/redisctl/releases/latest/download/redisctl-linux-amd64.tar.gz | tar xz
+          curl -L https://github.com/redis-developer/redisctl/releases/latest/download/redisctl-linux-amd64.tar.gz | tar xz
           sudo mv redisctl /usr/local/bin/
           redisctl --version
       
@@ -192,7 +192,7 @@ variables:
   REDISCTL_VERSION: "latest"
 
 before_script:
-  - curl -L https://github.com/joshrotenberg/redisctl/releases/${REDISCTL_VERSION}/download/redisctl-linux-amd64.tar.gz | tar xz
+  - curl -L https://github.com/redis-developer/redisctl/releases/${REDISCTL_VERSION}/download/redisctl-linux-amd64.tar.gz | tar xz
   - mv redisctl /usr/local/bin/
   - redisctl profile set gitlab --deployment cloud --api-key "$REDIS_API_KEY" --api-secret "$REDIS_API_SECRET"
 
@@ -286,7 +286,7 @@ pipeline {
         stage('Setup') {
             steps {
                 sh '''
-                    curl -L https://github.com/joshrotenberg/redisctl/releases/latest/download/redisctl-linux-amd64.tar.gz | tar xz
+                    curl -L https://github.com/redis-developer/redisctl/releases/latest/download/redisctl-linux-amd64.tar.gz | tar xz
                     chmod +x redisctl
                     ./redisctl profile set jenkins \
                         --deployment cloud \

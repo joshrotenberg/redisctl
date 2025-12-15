@@ -13,7 +13,7 @@ export REDIS_CLOUD_SECRET_KEY="your-secret-key"
 alias redisctl='docker run --rm \
   -e REDIS_CLOUD_API_KEY \
   -e REDIS_CLOUD_SECRET_KEY \
-  joshrotenberg/redisctl'
+  redis-developer/redisctl'
 ```
 
 ## API Layer Examples

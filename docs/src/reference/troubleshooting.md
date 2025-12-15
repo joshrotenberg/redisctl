@@ -600,7 +600,7 @@ curl -k -u "admin:password" \
    ```
 
 3. **Report issues**
-   - GitHub Issues: https://github.com/joshrotenberg/redisctl/issues
+   - GitHub Issues: https://github.com/redis-developer/redisctl/issues
    - Include: version, command, error message, debug output
 
 4. **Community support**

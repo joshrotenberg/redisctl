@@ -78,7 +78,7 @@
 //!
 //! ## Documentation
 //!
-//! For complete documentation and examples, see the [GitHub repository](https://github.com/joshrotenberg/redisctl).
+//! For complete documentation and examples, see the [GitHub repository](https://github.com/redis-developer/redisctl).
 
 // Internal modules for CLI functionality
 pub(crate) mod cli;
