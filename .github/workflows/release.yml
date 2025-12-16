@@ -285,26 +285,18 @@ jobs:
     needs:
       - plan
       - host
-    if: ${{ always() && needs.host.result == 'success' }}
+    # Only run for redisctl releases (not redis-cloud, redis-enterprise, or redisctl-config)
+    if: ${{ always() && needs.host.result == 'success' && startsWith(needs.plan.outputs.tag, 'redisctl-v') }}
     runs-on: "ubuntu-22.04"
     steps:
-      - name: Extract version from tag
-        id: extract_version
-        run: |
-          TAG="${{ needs.plan.outputs.tag }}"
-          # Remove 'redisctl-v' prefix to get version (e.g., redisctl-v0.7.1 -> 0.7.1)
-          VERSION="${TAG#redisctl-v}"
-          # Add 'v' prefix for Homebrew (e.g., 0.7.1 -> v0.7.1)
-          echo "version=v${VERSION}" >> $GITHUB_OUTPUT
-          echo "Extracted version: v${VERSION}"
-
       - uses: mislav/bump-homebrew-formula-action@v3.2
         with:
           formula-name: redisctl
           formula-path: Formula/redisctl.rb
           base-branch: main
-          tag-name: ${{ steps.extract_version.outputs.version }}
+          tag-name: ${{ needs.plan.outputs.tag }}
           homebrew-tap: redis-developer/homebrew-tap
+          download-url: "https://github.com/redis-developer/redisctl/releases/download/${{ needs.plan.outputs.tag }}/redisctl-x86_64-apple-darwin.tar.xz"
         env:
           COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
 
