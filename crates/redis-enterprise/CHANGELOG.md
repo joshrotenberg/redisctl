@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1](https://github.com/redis-developer/redisctl/compare/redis-enterprise-v0.7.0...redis-enterprise-v0.7.1) - 2025-12-16
+
+### Other
+
+- switch to GHCR for Docker images ([#500](https://github.com/redis-developer/redisctl/pull/500))
+- update repository URLs for redis-developer org ([#499](https://github.com/redis-developer/redisctl/pull/499))
+
 ## [0.7.0](https://github.com/joshrotenberg/redisctl/compare/redis-enterprise-v0.6.4...redis-enterprise-v0.7.0) - 2025-12-09
 
 ### Added
