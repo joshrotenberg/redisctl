@@ -6,13 +6,13 @@ The quickest way to try redisctl with no installation:
 
 ```bash
 # Run commands directly
-docker run --rm redis-developer/redisctl --help
+docker run --rm ghcr.io/redis-developer/redisctl --help
 
 # With environment variables
 docker run --rm \
   -e REDIS_CLOUD_API_KEY="your-key" \
   -e REDIS_CLOUD_SECRET_KEY="your-secret" \
-  redis-developer/redisctl cloud database list
+  ghcr.io/redis-developer/redisctl cloud database list
 ```
 
 ## Homebrew (macOS/Linux)
@@ -40,12 +40,12 @@ brew upgrade redisctl
 
 ## Binary Releases
 
-Download the latest release for your platform from the [GitHub releases page](https://github.com/redis-developer/redisctl/releases).
+Download the latest release for your platform from the [GitHub releases page](https://github.com/ghcr.io/redis-developer/redisctl/releases).
 
 ### Linux/macOS
 ```bash
 # Download the binary (replace VERSION and PLATFORM)
-curl -L https://github.com/redis-developer/redisctl/releases/download/vVERSION/redisctl-PLATFORM.tar.gz | tar xz
+curl -L https://github.com/ghcr.io/redis-developer/redisctl/releases/download/vVERSION/redisctl-PLATFORM.tar.gz | tar xz
 
 # Move to PATH
 sudo mv redisctl /usr/local/bin/
@@ -80,7 +80,7 @@ cargo install redisctl --features secure-storage
 ## From Source
 
 ```bash
-git clone https://github.com/redis-developer/redisctl.git
+git clone https://github.com/ghcr.io/redis-developer/redisctl.git
 cd redisctl
 
 # Basic installation

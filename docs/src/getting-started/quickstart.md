@@ -15,7 +15,7 @@ export REDIS_CLOUD_SECRET_KEY="your-secret-key"
 docker run --rm \
   -e REDIS_CLOUD_API_KEY \
   -e REDIS_CLOUD_SECRET_KEY \
-  redis-developer/redisctl cloud subscription list
+  ghcr.io/redis-developer/redisctl cloud subscription list
 ```
 
 ### Redis Enterprise
@@ -33,7 +33,7 @@ docker run --rm \
   -e REDIS_ENTERPRISE_USER \
   -e REDIS_ENTERPRISE_PASSWORD \
   -e REDIS_ENTERPRISE_INSECURE \
-  redis-developer/redisctl enterprise cluster get
+  ghcr.io/redis-developer/redisctl enterprise cluster get
 ```
 
 That's it! You just ran your first redisctl command.

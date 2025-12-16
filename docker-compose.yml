@@ -78,7 +78,7 @@ services:
   # This is a high-level workflow that replaces multiple manual API calls.
   # ==============================================================================
   redis-enterprise-init:
-    image: redis-developer/redisctl:latest
+    image: ghcr.io/redis-developer/redisctl:latest
     container_name: redis-enterprise-init
     depends_on:
       redis-enterprise:
@@ -116,7 +116,7 @@ services:
   # Create first test database - basic ephemeral cache
   # Configuration: 100MB, no persistence, LRU eviction policy
   redis-enterprise-create-db1:
-    image: redis-developer/redisctl:latest
+    image: ghcr.io/redis-developer/redisctl:latest
     container_name: redis-enterprise-create-db1
     depends_on:
       redis-enterprise-init:
@@ -137,7 +137,7 @@ services:
   # Create second test database - persistent with AOF
   # Configuration: 200MB, AOF persistence, appendfsync-every-sec
   redis-enterprise-create-db2:
-    image: redis-developer/redisctl:latest
+    image: ghcr.io/redis-developer/redisctl:latest
     container_name: redis-enterprise-create-db2
     depends_on:
       redis-enterprise-init:
@@ -167,7 +167,7 @@ services:
   # List all databases to verify creation
   # 👤 HUMAN-FRIENDLY COMMAND
   redis-enterprise-list-dbs:
-    image: redis-developer/redisctl:latest
+    image: ghcr.io/redis-developer/redisctl:latest
     container_name: redis-enterprise-list-dbs
     depends_on:
       redis-enterprise-create-db1:
@@ -188,7 +188,7 @@ services:
   # Get cache database details with JMESPath filtering
   # 👤 HUMAN-FRIENDLY COMMAND (with filtering)
   redis-enterprise-get-cache-db:
-    image: redis-developer/redisctl:latest
+    image: ghcr.io/redis-developer/redisctl:latest
     container_name: redis-enterprise-get-cache-db
     depends_on:
       redis-enterprise-create-db1:
@@ -211,7 +211,7 @@ services:
   # Get persistent database details
   # 👤 HUMAN-FRIENDLY COMMAND (with filtering)
   redis-enterprise-get-persistent-db:
-    image: redis-developer/redisctl:latest
+    image: ghcr.io/redis-developer/redisctl:latest
     container_name: redis-enterprise-get-persistent-db
     depends_on:
       redis-enterprise-create-db2:
@@ -243,7 +243,7 @@ services:
   # Output: Basic cluster details (filtered for key fields)
   # 👤 HUMAN-FRIENDLY COMMAND
   redis-enterprise-cluster-info:
-    image: redis-developer/redisctl:latest
+    image: ghcr.io/redis-developer/redisctl:latest
     container_name: redis-enterprise-cluster-info
     depends_on:
       redis-enterprise-list-dbs:
@@ -262,7 +262,7 @@ services:
   # List nodes in the cluster
   # 👤 HUMAN-FRIENDLY COMMAND
   redis-enterprise-list-nodes:
-    image: redis-developer/redisctl:latest
+    image: ghcr.io/redis-developer/redisctl:latest
     container_name: redis-enterprise-list-nodes
     depends_on:
       redis-enterprise-cluster-info:
@@ -281,7 +281,7 @@ services:
   # Check cluster stats
   # 👤 HUMAN-FRIENDLY COMMAND
   redis-enterprise-stats:
-    image: redis-developer/redisctl:latest
+    image: ghcr.io/redis-developer/redisctl:latest
     container_name: redis-enterprise-stats
     depends_on:
       redis-enterprise-list-nodes:
@@ -308,7 +308,7 @@ services:
   # Get license information
   # 👤 HUMAN-FRIENDLY COMMAND
   redis-enterprise-license:
-    image: redis-developer/redisctl:latest
+    image: ghcr.io/redis-developer/redisctl:latest
     container_name: redis-enterprise-license
     depends_on:
       redis-enterprise-stats:
@@ -330,7 +330,7 @@ services:
   # Get detailed node information
   # 👤 HUMAN-FRIENDLY COMMAND
   redis-enterprise-node-details:
-    image: redis-developer/redisctl:latest
+    image: ghcr.io/redis-developer/redisctl:latest
     container_name: redis-enterprise-node-details
     depends_on:
       redis-enterprise-license:
@@ -349,7 +349,7 @@ services:
   # List all users
   # 👤 HUMAN-FRIENDLY COMMAND
   redis-enterprise-users:
-    image: redis-developer/redisctl:latest
+    image: ghcr.io/redis-developer/redisctl:latest
     container_name: redis-enterprise-users
     depends_on:
       redis-enterprise-node-details:
@@ -368,7 +368,7 @@ services:
   # Get cluster policy
   # 🔧 RAW API COMMAND
   redis-enterprise-policy:
-    image: redis-developer/redisctl:latest
+    image: ghcr.io/redis-developer/redisctl:latest
     container_name: redis-enterprise-policy
     depends_on:
       redis-enterprise-users:
@@ -387,7 +387,7 @@ services:
   # Check for any cluster alerts
   # 🔧 RAW API COMMAND
   redis-enterprise-alerts:
-    image: redis-developer/redisctl:latest
+    image: ghcr.io/redis-developer/redisctl:latest
     container_name: redis-enterprise-alerts
     depends_on:
       redis-enterprise-policy:
@@ -406,7 +406,7 @@ services:
   # Get comprehensive cluster information
   # 👤 HUMAN-FRIENDLY COMMAND
   redis-enterprise-cluster-full:
-    image: redis-developer/redisctl:latest
+    image: ghcr.io/redis-developer/redisctl:latest
     container_name: redis-enterprise-cluster-full
     depends_on:
       redis-enterprise-alerts:
