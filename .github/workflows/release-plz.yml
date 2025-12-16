@@ -18,6 +18,7 @@ jobs:
   release-plz:
     name: Release-plz
     runs-on: ubuntu-latest
+    environment: crates-io
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
