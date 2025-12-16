@@ -21,10 +21,10 @@ The easiest way to install on macOS or Linux:
 
 ```bash
 # Install directly (automatically taps the repository)
-brew install joshrotenberg/brew/redisctl
+brew install redis-developer/homebrew-tap/redisctl
 
 # Or tap first, then install
-brew tap joshrotenberg/brew
+brew tap redis-developer/homebrew-tap
 brew install redisctl
 ```
 
@@ -40,12 +40,12 @@ brew upgrade redisctl
 
 ## Binary Releases
 
-Download the latest release for your platform from the [GitHub releases page](https://github.com/ghcr.io/redis-developer/redisctl/releases).
+Download the latest release for your platform from the [GitHub releases page](https://github.com/redis-developer/redisctl/releases).
 
 ### Linux/macOS
 ```bash
 # Download the binary (replace VERSION and PLATFORM)
-curl -L https://github.com/ghcr.io/redis-developer/redisctl/releases/download/vVERSION/redisctl-PLATFORM.tar.gz | tar xz
+curl -L https://github.com/redis-developer/redisctl/releases/download/vVERSION/redisctl-PLATFORM.tar.gz | tar xz
 
 # Move to PATH
 sudo mv redisctl /usr/local/bin/
@@ -80,7 +80,7 @@ cargo install redisctl --features secure-storage
 ## From Source
 
 ```bash
-git clone https://github.com/ghcr.io/redis-developer/redisctl.git
+git clone https://github.com/redis-developer/redisctl.git
 cd redisctl
 
 # Basic installation

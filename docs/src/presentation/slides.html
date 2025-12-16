@@ -101,7 +101,7 @@
                     </h1>
                     <h3>The CLI for Redis Cloud and Enterprise</h3>
                     <p class="small" style="margin-top: 2em">
-                        github.com/ghcr.io/redis-developer/redisctl
+                        github.com/redis-developer/redisctl
                     </p>
                 </section>
 
@@ -620,7 +620,7 @@ docker run --rm \
                 <section>
                     <h2>Installation</h2>
                     <pre><code class="language-bash"># Homebrew (macOS/Linux)
-brew install joshrotenberg/brew/redisctl
+brew install redis-developer/homebrew-tap/redisctl
 
 # Cargo (from source)
 cargo install redisctl
@@ -632,7 +632,7 @@ cargo install redisctl --features secure-storage
 docker run -it ghcr.io/redis-developer/redisctl --help
 
 # From releases (Linux x86_64)
-curl -L https://github.com/ghcr.io/redis-developer/redisctl/releases/latest/download/redisctl-x86_64-unknown-linux-gnu.tar.gz | tar xz
+curl -L https://github.com/redis-developer/redisctl/releases/latest/download/redisctl-x86_64-unknown-linux-gnu.tar.gz | tar xz
 ./redisctl --help</code></pre>
                 </section>
 
@@ -640,7 +640,7 @@ curl -L https://github.com/ghcr.io/redis-developer/redisctl/releases/latest/down
                 <section class="center">
                     <h2>Get Started</h2>
                     <pre><code class="language-bash"># Install
-brew install joshrotenberg/brew/redisctl
+brew install redis-developer/homebrew-tap/redisctl
 
 # Setup profile
 redisctl profile set mycloud --cloud-api-key $KEY --cloud-secret-key $SECRET
@@ -649,8 +649,8 @@ redisctl profile set mycloud --cloud-api-key $KEY --cloud-secret-key $SECRET
 redisctl cloud subscription list
 redisctl cloud database list --subscription-id 123456</code></pre>
                     <p style="margin-top: 1.5em"><br /></p>
-                    <h3>github.com/ghcr.io/redis-developer/redisctl</h3>
-                    <p class="small">Docs: joshrotenberg.github.io/redisctl</p>
+                    <h3>github.com/redis-developer/redisctl</h3>
+                    <p class="small">Docs: redis-developer.github.io/redisctl</p>
                 </section>
             </div>
         </div>

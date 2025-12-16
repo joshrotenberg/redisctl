@@ -4,8 +4,8 @@
 
 [![Crates.io](https://img.shields.io/crates/v/redisctl.svg)](https://crates.io/crates/redisctl)
 [![Documentation](https://docs.rs/redisctl/badge.svg)](https://docs.rs/redisctl)
-[![CI](https://github.com/ghcr.io/redis-developer/redisctl/actions/workflows/ci.yml/badge.svg)](https://github.com/ghcr.io/redis-developer/redisctl/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](https://github.com/ghcr.io/redis-developer/redisctl#license)
+[![CI](https://github.com/redis-developer/redisctl/actions/workflows/ci.yml/badge.svg)](https://github.com/redis-developer/redisctl/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](https://github.com/redis-developer/redisctl#license)
 
 ```bash
 # Create a Redis Cloud subscription with one command
@@ -41,13 +41,13 @@ Managing Redis Cloud and Redis Enterprise through REST APIs means juggling curl 
 
 ```bash
 # Homebrew (macOS/Linux)
-brew install joshrotenberg/brew/redisctl
+brew install redis-developer/homebrew-tap/redisctl
 
 # Cargo
 cargo install redisctl
 
 # Or download from releases
-# https://github.com/ghcr.io/redis-developer/redisctl/releases
+# https://github.com/redis-developer/redisctl/releases
 ```
 
 ### 2. Configure
@@ -85,7 +85,7 @@ redisctl enterprise logs list --follow
 
 **That's it!** You're ready to manage your Redis deployments.
 
-[**Full Documentation →**](https://joshrotenberg.github.io/redisctl/)
+[**Full Documentation →**](https://redis-developer.github.io/redisctl/)
 
 ---
 
@@ -264,7 +264,7 @@ redisctl cloud database get 67890 \
 
 ### Homebrew (macOS/Linux)
 ```bash
-brew install joshrotenberg/brew/redisctl
+brew install redis-developer/homebrew-tap/redisctl
 ```
 
 ### Cargo (Rust)
@@ -277,7 +277,7 @@ cargo install redisctl --features secure-storage
 ```
 
 ### Binary Releases
-Download the latest release for your platform from [GitHub Releases](https://github.com/ghcr.io/redis-developer/redisctl/releases).
+Download the latest release for your platform from [GitHub Releases](https://github.com/redis-developer/redisctl/releases).
 
 Binaries are available for:
 - macOS (Intel and Apple Silicon)
@@ -411,13 +411,13 @@ redisctl enterprise cluster get -o yaml
 
 ## Documentation
 
-**[Complete Documentation](https://joshrotenberg.github.io/redisctl/)**
+**[Complete Documentation](https://redis-developer.github.io/redisctl/)**
 
-- [Getting Started Guide](https://joshrotenberg.github.io/redisctl/getting-started/)
-- [Command Reference](https://joshrotenberg.github.io/redisctl/reference/)
-- [Configuration Guide](https://joshrotenberg.github.io/redisctl/configuration/)
-- [Workflow Examples](https://joshrotenberg.github.io/redisctl/workflows/)
-- [Troubleshooting](https://joshrotenberg.github.io/redisctl/troubleshooting/)
+- [Getting Started Guide](https://redis-developer.github.io/redisctl/getting-started/)
+- [Command Reference](https://redis-developer.github.io/redisctl/reference/)
+- [Configuration Guide](https://redis-developer.github.io/redisctl/configuration/)
+- [Workflow Examples](https://redis-developer.github.io/redisctl/workflows/)
+- [Troubleshooting](https://redis-developer.github.io/redisctl/troubleshooting/)
 
 ---
 
@@ -433,11 +433,11 @@ Individual crate changelogs:
 
 ## Contributing
 
-Contributions welcome! See our [Contributing Guide](https://joshrotenberg.github.io/redisctl/developer/contributing.html).
+Contributions welcome! See our [Contributing Guide](https://redis-developer.github.io/redisctl/developer/contributing.html).
 
 ```bash
 # Clone and build
-git clone https://github.com/ghcr.io/redis-developer/redisctl.git
+git clone https://github.com/redis-developer/redisctl.git
 cd redisctl
 cargo build --release
 
@@ -463,6 +463,6 @@ at your option.
 
 ## Support
 
-- [Documentation](https://joshrotenberg.github.io/redisctl/)
-- [Issue Tracker](https://github.com/ghcr.io/redis-developer/redisctl/issues)
-- [Discussions](https://github.com/ghcr.io/redis-developer/redisctl/discussions)
+- [Documentation](https://redis-developer.github.io/redisctl/)
+- [Issue Tracker](https://github.com/redis-developer/redisctl/issues)
+- [Discussions](https://github.com/redis-developer/redisctl/discussions)
