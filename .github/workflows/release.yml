@@ -42,7 +42,7 @@ on:
   pull_request:
   push:
     tags:
-      - '**[0-9]+.[0-9]+.[0-9]+*'
+      - "**[0-9]+.[0-9]+.[0-9]+*"
 
 jobs:
   # Run 'dist plan' (or host) to determine what tasks we need to do
@@ -277,6 +277,36 @@ jobs:
           echo "$ANNOUNCEMENT_BODY" > $RUNNER_TEMP/notes.txt
 
           gh release create "${{ needs.plan.outputs.tag }}" --target "$RELEASE_COMMIT" $PRERELEASE_FLAG --title "$ANNOUNCEMENT_TITLE" --notes-file "$RUNNER_TEMP/notes.txt" artifacts/*
+
+  # Update Homebrew formula after successful release
+  # NOTE: This job is manually maintained - cargo-dist regenerates release.yml
+  # and will remove this job. Re-add it after running `dist generate` or `dist init`.
+  update-homebrew:
+    needs:
+      - plan
+      - host
+    if: ${{ always() && needs.host.result == 'success' }}
+    runs-on: "ubuntu-22.04"
+    steps:
+      - name: Extract version from tag
+        id: extract_version
+        run: |
+          TAG="${{ needs.plan.outputs.tag }}"
+          # Remove 'redisctl-v' prefix to get version (e.g., redisctl-v0.7.1 -> 0.7.1)
+          VERSION="${TAG#redisctl-v}"
+          # Add 'v' prefix for Homebrew (e.g., 0.7.1 -> v0.7.1)
+          echo "version=v${VERSION}" >> $GITHUB_OUTPUT
+          echo "Extracted version: v${VERSION}"
+
+      - uses: mislav/bump-homebrew-formula-action@v3.2
+        with:
+          formula-name: redisctl
+          formula-path: Formula/redisctl.rb
+          base-branch: main
+          tag-name: ${{ steps.extract_version.outputs.version }}
+          homebrew-tap: redis-developer/homebrew-tap
+        env:
+          COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
 
   announce:
     needs:
