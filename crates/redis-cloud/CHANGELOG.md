@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.4](https://github.com/joshrotenberg/redisctl/compare/redis-cloud-v0.7.3...redis-cloud-v0.7.4) - 2025-12-13
+
+### Other
+
+- remove outdated implementation tracking file ([#492](https://github.com/joshrotenberg/redisctl/pull/492))
+
 ## [0.7.3](https://github.com/joshrotenberg/redisctl/compare/redis-cloud-v0.7.2...redis-cloud-v0.7.3) - 2025-12-09
 
 ### Added

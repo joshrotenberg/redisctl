@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.2](https://github.com/joshrotenberg/redisctl/compare/redisctl-v0.7.1...redisctl-v0.7.2) - 2025-12-13
+
+### Added
+
+- upgrade jmespath_extensions to 0.6 with full feature set ([#496](https://github.com/joshrotenberg/redisctl/pull/496))
+
 ## [0.7.1](https://github.com/joshrotenberg/redisctl/compare/redisctl-v0.7.0...redisctl-v0.7.1) - 2025-12-09
 
 ### Added
