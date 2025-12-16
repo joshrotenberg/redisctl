@@ -4,8 +4,8 @@
 
 [![Crates.io](https://img.shields.io/crates/v/redisctl.svg)](https://crates.io/crates/redisctl)
 [![Documentation](https://docs.rs/redisctl/badge.svg)](https://docs.rs/redisctl)
-[![CI](https://github.com/redis-developer/redisctl/actions/workflows/ci.yml/badge.svg)](https://github.com/redis-developer/redisctl/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](https://github.com/redis-developer/redisctl#license)
+[![CI](https://github.com/ghcr.io/redis-developer/redisctl/actions/workflows/ci.yml/badge.svg)](https://github.com/ghcr.io/redis-developer/redisctl/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](https://github.com/ghcr.io/redis-developer/redisctl#license)
 
 ```bash
 # Create a Redis Cloud subscription with one command
@@ -47,7 +47,7 @@ brew install joshrotenberg/brew/redisctl
 cargo install redisctl
 
 # Or download from releases
-# https://github.com/redis-developer/redisctl/releases
+# https://github.com/ghcr.io/redis-developer/redisctl/releases
 ```
 
 ### 2. Configure
@@ -277,7 +277,7 @@ cargo install redisctl --features secure-storage
 ```
 
 ### Binary Releases
-Download the latest release for your platform from [GitHub Releases](https://github.com/redis-developer/redisctl/releases).
+Download the latest release for your platform from [GitHub Releases](https://github.com/ghcr.io/redis-developer/redisctl/releases).
 
 Binaries are available for:
 - macOS (Intel and Apple Silicon)
@@ -290,13 +290,13 @@ Binaries are available for:
 docker run --rm \
   -e REDIS_CLOUD_API_KEY \
   -e REDIS_CLOUD_SECRET_KEY \
-  redis-developer/redisctl:latest \
+  ghcr.io/redis-developer/redisctl:latest \
   cloud subscription list
 
 # Mount config for persistent profiles
 docker run --rm \
   -v ~/.config/redisctl:/root/.config/redisctl:ro \
-  redis-developer/redisctl:latest \
+  ghcr.io/redis-developer/redisctl:latest \
   cloud database list
 
 # Development environment
@@ -437,7 +437,7 @@ Contributions welcome! See our [Contributing Guide](https://joshrotenberg.github
 
 ```bash
 # Clone and build
-git clone https://github.com/redis-developer/redisctl.git
+git clone https://github.com/ghcr.io/redis-developer/redisctl.git
 cd redisctl
 cargo build --release
 
@@ -464,5 +464,5 @@ at your option.
 ## Support
 
 - [Documentation](https://joshrotenberg.github.io/redisctl/)
-- [Issue Tracker](https://github.com/redis-developer/redisctl/issues)
-- [Discussions](https://github.com/redis-developer/redisctl/discussions)
+- [Issue Tracker](https://github.com/ghcr.io/redis-developer/redisctl/issues)
+- [Discussions](https://github.com/ghcr.io/redis-developer/redisctl/discussions)

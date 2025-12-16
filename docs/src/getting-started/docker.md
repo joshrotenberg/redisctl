@@ -92,7 +92,7 @@ docker run --rm -it \
   -e REDIS_ENTERPRISE_INSECURE="true" \
   -e REDIS_ENTERPRISE_USER="admin@redis.local" \
   -e REDIS_ENTERPRISE_PASSWORD="Redis123!" \
-  redis-developer/redisctl:latest \
+  ghcr.io/redis-developer/redisctl:latest \
   /bin/sh
 
 # Inside the container, run commands

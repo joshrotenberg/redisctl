@@ -17,7 +17,7 @@ alias redisctl='docker run --rm \
   -e REDIS_ENTERPRISE_USER \
   -e REDIS_ENTERPRISE_PASSWORD \
   -e REDIS_ENTERPRISE_INSECURE \
-  redis-developer/redisctl'
+  ghcr.io/redis-developer/redisctl'
 ```
 
 ## API Layer Examples
