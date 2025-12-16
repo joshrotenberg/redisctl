@@ -73,7 +73,7 @@ After workflows complete, verify:
 
 - [ ] GitHub Release: https://github.com/redis-developer/redisctl/releases
   - Should have binaries for all platforms
-- [ ] Docker Hub: https://ghcr.io/redis-developer/redisctl/tags
+- [ ] GHCR: https://github.com/redis-developer/redisctl/pkgs/container/redisctl
   - Should have new version tag
 - [ ] crates.io: https://crates.io/crates/redisctl
   - Should show new version

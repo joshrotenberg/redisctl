@@ -37,7 +37,7 @@ redisctl cloud database create --subscription $SUB --name mydb --wait
 docker run ghcr.io/redis-developer/redisctl:latest --help
 
 # macOS/Linux
-brew install joshrotenberg/brew/redisctl
+brew install redis-developer/homebrew-tap/redisctl
 
 # Or download from GitHub releases
 ```
