@@ -104,8 +104,8 @@ jobs:
             --exclude-path target
             --exclude-path node_modules
             --exclude-path .git
-            --exclude "https://github.com/joshrotenberg/redisctl/pull/.*"
-            --exclude "https://github.com/joshrotenberg/redisctl/issues/.*"
+            --exclude "https://github.com/redis-developer/redisctl/pull/.*"
+            --exclude "https://github.com/redis-developer/redisctl/issues/.*"
             .
         continue-on-error: true # Don't fail CI for broken external links
 

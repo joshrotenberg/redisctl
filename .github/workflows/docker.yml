@@ -9,7 +9,7 @@ on:
 
 env:
   REGISTRY: docker.io
-  IMAGE_NAME: joshrotenberg/redisctl
+  IMAGE_NAME: redis-developer/redisctl
 
 jobs:
   docker:
@@ -102,6 +102,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: joshrotenberg/redisctl
+          repository: redis-developer/redisctl
           readme-filepath: ./README.md
           short-description: "Unified CLI for Redis Cloud and Redis Enterprise management"

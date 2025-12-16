@@ -10,7 +10,7 @@ Please be respectful and constructive in all interactions.
 
 ### Finding Good First Issues
 
-New to the project? Look for issues labeled [`good first issue`](https://github.com/joshrotenberg/redisctl/labels/good%20first%20issue).
+New to the project? Look for issues labeled [`good first issue`](https://github.com/redis-developer/redisctl/labels/good%20first%20issue).
 
 These issues are:
 - Well-defined with clear acceptance criteria
@@ -180,8 +180,8 @@ We use a manual release workflow with semantic versioning:
 
 ## Getting Help
 
-- Open a [Discussion](https://github.com/joshrotenberg/redisctl/discussions) for questions
-- Check existing [Issues](https://github.com/joshrotenberg/redisctl/issues)
+- Open a [Discussion](https://github.com/redis-developer/redisctl/discussions) for questions
+- Check existing [Issues](https://github.com/redis-developer/redisctl/issues)
 - Review [Documentation](https://docs.rs/redisctl)
 
 ## Recognition

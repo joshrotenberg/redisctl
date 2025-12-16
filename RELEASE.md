@@ -55,15 +55,15 @@ git push origin vX.Y.Z
 
 The tag push should automatically trigger:
 
-1. **Release workflow** (cargo-dist): https://github.com/joshrotenberg/redisctl/actions/workflows/release.yml
+1. **Release workflow** (cargo-dist): https://github.com/redis-developer/redisctl/actions/workflows/release.yml
    - Creates GitHub release with binaries
    - Takes ~10-15 minutes
 
-2. **Docker Build**: https://github.com/joshrotenberg/redisctl/actions/workflows/docker.yml
+2. **Docker Build**: https://github.com/redis-developer/redisctl/actions/workflows/docker.yml
    - Publishes to Docker Hub
    - Takes ~5-10 minutes
 
-3. **Publish to crates.io**: https://github.com/joshrotenberg/redisctl/actions/workflows/publish-crates.yml
+3. **Publish to crates.io**: https://github.com/redis-developer/redisctl/actions/workflows/publish-crates.yml
    - Publishes all three crates
    - Takes ~2-5 minutes
 
@@ -71,9 +71,9 @@ The tag push should automatically trigger:
 
 After workflows complete, verify:
 
-- [ ] GitHub Release: https://github.com/joshrotenberg/redisctl/releases
+- [ ] GitHub Release: https://github.com/redis-developer/redisctl/releases
   - Should have binaries for all platforms
-- [ ] Docker Hub: https://hub.docker.com/r/joshrotenberg/redisctl/tags
+- [ ] Docker Hub: https://hub.docker.com/r/redis-developer/redisctl/tags
   - Should have new version tag
 - [ ] crates.io: https://crates.io/crates/redisctl
   - Should show new version

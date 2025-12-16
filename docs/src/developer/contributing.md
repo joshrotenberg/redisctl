@@ -6,7 +6,7 @@ Guidelines for contributing to redisctl.
 
 ```bash
 # Clone repository
-git clone https://github.com/joshrotenberg/redisctl.git
+git clone https://github.com/redis-developer/redisctl.git
 cd redisctl
 
 # Build
@@ -84,4 +84,4 @@ cargo test --package redis-enterprise
 
 ## Questions?
 
-Open an issue at [github.com/joshrotenberg/redisctl/issues](https://github.com/joshrotenberg/redisctl/issues)
+Open an issue at [github.com/redis-developer/redisctl/issues](https://github.com/redis-developer/redisctl/issues)
