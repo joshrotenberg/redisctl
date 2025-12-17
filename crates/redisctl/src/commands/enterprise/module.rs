@@ -1,4 +1,5 @@
 use clap::{ArgGroup, Subcommand};
+use std::path::PathBuf;
 
 #[derive(Debug, Subcommand)]
 pub enum ModuleCommands {
@@ -45,5 +46,69 @@ pub enum ModuleCommands {
         /// Configuration data (JSON file or inline)
         #[arg(long, value_name = "FILE|JSON")]
         data: String,
+    },
+
+    /// Validate module.json against Redis Enterprise schema
+    #[command(after_help = "EXAMPLES:
+    # Validate a module.json file
+    redisctl enterprise module validate ./module.json
+
+    # Validate with strict mode (all recommended fields required)
+    redisctl enterprise module validate ./module.json --strict")]
+    Validate {
+        /// Path to module.json file
+        file: PathBuf,
+
+        /// Strict validation (require all recommended fields)
+        #[arg(long)]
+        strict: bool,
+    },
+
+    /// Inspect a packaged module zip file
+    #[command(after_help = "EXAMPLES:
+    # Inspect a module package
+    redisctl enterprise module inspect ./redis-jmespath.Linux-x86_64.0.3.0.zip
+
+    # Show full metadata including all commands
+    redisctl enterprise module inspect ./module.zip --full")]
+    Inspect {
+        /// Path to module zip file
+        file: PathBuf,
+
+        /// Show full metadata including all commands
+        #[arg(long)]
+        full: bool,
+    },
+
+    /// Package a module and metadata into an RE8-compatible zip
+    #[command(after_help = "EXAMPLES:
+    # Package a module
+    redisctl enterprise module package \\
+      --module ./libredis_jmespath.so \\
+      --metadata ./module.json \\
+      --out ./dist/redis-jmespath.Linux-x86_64.0.3.0.zip
+
+    # Package with validation
+    redisctl enterprise module package \\
+      --module ./module.so \\
+      --metadata ./module.json \\
+      --out ./package.zip \\
+      --validate")]
+    Package {
+        /// Path to compiled module binary (.so file)
+        #[arg(long)]
+        module: PathBuf,
+
+        /// Path to module.json metadata file
+        #[arg(long)]
+        metadata: PathBuf,
+
+        /// Output zip file path
+        #[arg(long = "out")]
+        output_path: PathBuf,
+
+        /// Validate module.json before packaging
+        #[arg(long)]
+        validate: bool,
     },
 }

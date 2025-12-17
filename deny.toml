@@ -32,6 +32,7 @@ allow = [
     "Unlicense",
     "Zlib",
     "CDLA-Permissive-2.0",
+    "bzip2-1.0.6",  # Permissive license for bzip2 (used by zip crate)
 ]
 
 confidence-threshold = 0.8
