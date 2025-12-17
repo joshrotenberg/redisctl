@@ -136,7 +136,7 @@ watch -n 5 "redisctl enterprise stats cluster \
 
 ```bash
 # Update eviction policy on all databases
-for db in $(redisctl enterprise database list -q '[].uid' | jq -r '.[]'); do
+for db in $(redisctl enterprise database list -q '[].uid' --raw); do
   echo "Updating database $db"
   redisctl enterprise database update $db \
     --data '{"eviction_policy": "volatile-lru"}'
@@ -158,7 +158,7 @@ redisctl enterprise user list > users-$DATE.json
 
 ```bash
 #!/bin/bash
-for node in $(redisctl enterprise node list -q '[].uid' | jq -r '.[]'); do
+for node in $(redisctl enterprise node list -q '[].uid' --raw); do
   echo "Maintaining node $node..."
   
   # Enter maintenance mode

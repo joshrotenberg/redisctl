@@ -128,9 +128,8 @@ redisctl cloud workflow subscription-setup \
 
 **Manual equivalent:**
 ```bash
-# 1. Create subscription
-SUB=$(redisctl cloud subscription create --data '{...}' --wait)
-SUB_ID=$(echo $SUB | jq -r '.id')
+# 1. Create subscription and get ID
+SUB_ID=$(redisctl cloud subscription create --data '{...}' --wait -q 'id')
 
 # 2. Wait for active status
 while [ "$(redisctl cloud subscription get $SUB_ID -q 'status')" != "active" ]; do

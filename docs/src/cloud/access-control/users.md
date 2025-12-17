@@ -44,16 +44,19 @@ redisctl cloud user update <user_id> --data '{"name": "New Name"}'
 redisctl cloud user delete <user_id>
 ```
 
-## JSON Output
+## JMESPath Queries
 
-All commands support structured output for scripting:
+All commands support JMESPath queries for filtering and formatting:
 
 ```bash
 # List all user emails
-redisctl cloud user list -o json | jq '.[].email'
+redisctl cloud user list -q '[].email'
 
-# Find admin users
-redisctl cloud user list -o json | jq '.[] | select(.role == "owner")'
+# Find owner users
+redisctl cloud user list -q "[?role=='owner']"
+
+# Get specific fields
+redisctl cloud user list -q '[].{email: email, role: role}' -o table
 ```
 
 ## User Roles

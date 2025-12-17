@@ -153,8 +153,7 @@ done
 #!/bin/bash
 # Check cluster health via API
 
-CLUSTER=$(redisctl api enterprise get /v1/cluster)
-STATUS=$(echo $CLUSTER | jq -r '.status')
+STATUS=$(redisctl api enterprise get /v1/cluster -q 'status')
 
 if [ "$STATUS" != "active" ]; then
   echo "Cluster unhealthy: $STATUS"
@@ -162,8 +161,7 @@ if [ "$STATUS" != "active" ]; then
 fi
 
 # Check nodes
-NODES=$(redisctl api enterprise get /v1/nodes -q '[].{id:uid,status:status}')
-echo "Nodes: $NODES"
+redisctl api enterprise get /v1/nodes -q '[].{id: uid, status: status}' -o table
 ```
 
 ### Watch Stats

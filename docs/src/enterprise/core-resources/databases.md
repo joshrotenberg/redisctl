@@ -169,15 +169,15 @@ redisctl enterprise database slowlog <db_id>
 redisctl enterprise database client-list <db_id>
 ```
 
-## JSON Output Examples
+## JMESPath Query Examples
 
 ```bash
 # Get all database names and memory sizes
-redisctl enterprise database list -o json | jq '.[] | {name, memory_size}'
+redisctl enterprise database list -q '[].{name: name, memory_size: memory_size}'
 
 # Find databases using more than 1GB
-redisctl enterprise database list -o json | jq '.[] | select(.memory_size > 1073741824)'
+redisctl enterprise database list -q "[?memory_size > \`1073741824\`]"
 
 # Export database config for backup
-redisctl enterprise database get <db_id> -o json > db-config-backup.json
+redisctl enterprise database get <db_id> > db-config-backup.json
 ```

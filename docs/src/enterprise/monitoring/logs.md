@@ -27,13 +27,13 @@ Use JMESPath queries to filter log output:
 
 ```bash
 # Get only error-level events
-redisctl enterprise logs list -o json | jq '.[] | select(.severity == "ERROR")'
+redisctl enterprise logs list -q "[?severity=='ERROR']"
 
 # Get events from the last hour
-redisctl enterprise logs list -o json | jq '.[] | select(.time > "2024-01-01T00:00:00")'
+redisctl enterprise logs list -q "[?time > '2024-01-01T00:00:00']"
 
 # Get events for a specific node
-redisctl enterprise logs list -o json | jq '.[] | select(.node_uid == "1")'
+redisctl enterprise logs list -q "[?node_uid=='1']"
 ```
 
 ## Log Entry Fields
@@ -48,17 +48,17 @@ Each log entry typically includes:
 | `node_uid` | Node where the event occurred |
 | `message` | Human-readable description |
 
-## JSON Output Examples
+## JMESPath Query Examples
 
 ```bash
-# Get recent errors
-redisctl enterprise logs list -o json | jq '[.[] | select(.severity == "ERROR")] | .[0:10]'
+# Get recent errors (first 10)
+redisctl enterprise logs list -q "[?severity=='ERROR'] | [0:10]"
 
-# Count events by severity
-redisctl enterprise logs list -o json | jq 'group_by(.severity) | map({severity: .[0].severity, count: length})'
+# Get errors with specific fields
+redisctl enterprise logs list -q "[?severity=='ERROR'].{time: time, message: message}" -o table
 
 # Export logs for analysis
-redisctl enterprise logs list -o json > cluster-logs.json
+redisctl enterprise logs list > cluster-logs.json
 ```
 
 ## Integration with External Systems
@@ -66,11 +66,11 @@ redisctl enterprise logs list -o json > cluster-logs.json
 Export logs for integration with log aggregation systems:
 
 ```bash
-# Export as newline-delimited JSON for ingestion
-redisctl enterprise logs list -o json | jq -c '.[]'
+# Export as JSON for ingestion
+redisctl enterprise logs list > logs.json
 
-# Pipe to a log shipper
-redisctl enterprise logs list -o json | jq -c '.[]' | your-log-shipper
+# Get logs and pipe to a log shipper
+redisctl enterprise logs list | your-log-shipper
 ```
 
 ## Related Commands

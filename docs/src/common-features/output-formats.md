@@ -65,19 +65,29 @@ redisctl cloud subscription list -o table -q "[].{id:id,name:name,status:status}
 
 | Format | Best For |
 |--------|----------|
-| JSON | Scripting, piping to `jq`, CI/CD |
+| JSON | Scripting, CI/CD pipelines |
 | Table | Interactive use, quick overview |
 | YAML | Config files, readable structured data |
 
-## Piping to Other Tools
+## Using JMESPath Queries
+
+Use the built-in `-q/--query` flag for filtering and transforming output without external tools:
 
 ```bash
-# Parse with jq
-redisctl cloud database list | jq '.[0].name'
+# Get first database name
+redisctl cloud database list -q '[0].name'
 
 # Count items
-redisctl enterprise database list | jq 'length'
+redisctl enterprise database list -q 'length(@)'
 
-# Convert to CSV
-redisctl cloud subscription list -o json | jq -r '.[] | [.id, .name] | @csv'
+# Get specific fields from all items
+redisctl cloud subscription list -q '[].{id: id, name: name}'
+
+# Filter by condition
+redisctl enterprise database list -q "[?status=='active'].name"
+
+# Get raw values for shell scripts (no JSON quotes)
+redisctl cloud database list -q '[0].name' --raw
 ```
+
+> **Note**: JMESPath is built into redisctl, so you don't need external tools like `jq` for most operations.

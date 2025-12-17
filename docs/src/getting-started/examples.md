@@ -24,14 +24,12 @@ redisctl profile set enterprise --url https://localhost:9443 \
 redisctl cloud subscription list -o table
 
 # Get detailed info about databases
-redisctl cloud database list -o json | jq '.[] | {name, port, status}'
+redisctl cloud database list -q '[].{name: name, port: port, status: status}'
 
 # Output (example):
-# {
-#   "name": "cache-prod",
-#   "port": 12000,
-#   "status": "active"
-# }
+# [
+#   {"name": "cache-prod", "port": 12000, "status": "active"}
+# ]
 ```
 
 ### Create and Manage Databases
@@ -67,12 +65,10 @@ redisctl cloud acl rule create --subscription-id 123456 \
 
 ```bash
 # Get cluster health overview
-redisctl enterprise cluster get -o json | jq '.name, .license_expired, .nodes | length'
+redisctl enterprise cluster get -q '{name: name, license_expired: license_expired}'
 
 # Output:
-# "prod-cluster"
-# false
-# 3
+# {"name": "prod-cluster", "license_expired": false}
 
 # View all nodes status
 redisctl enterprise node list -o table
@@ -87,8 +83,8 @@ redisctl enterprise database create \
   --wait
 
 # Get database metrics
-redisctl enterprise database stats 1 -o json | \
-  jq '.intervals[0] | {ops_sec, used_memory, connected_clients}'
+redisctl enterprise database stats 1 \
+  -q 'intervals[0].{ops_sec: ops_sec, used_memory: used_memory, connected_clients: connected_clients}'
 
 # Trigger backup
 redisctl enterprise database backup 1
@@ -101,7 +97,7 @@ redisctl enterprise database backup 1
 redisctl enterprise support-package create
 
 # Check license status
-redisctl enterprise license get -o json | jq '.license_expired, .expired_date'
+redisctl enterprise license get -q '{license_expired: license_expired, expired_date: expired_date}'
 
 # View recent cluster logs
 redisctl enterprise logs list --limit 50
@@ -171,29 +167,28 @@ redisctl profile set cloud-prod \
 # Exit on error
 set -e
 
-# Create database
-DB_RESULT=$(redisctl cloud database create \
+# Create database and extract ID using JMESPath
+DB_ID=$(redisctl cloud database create \
   --subscription-id $SUBSCRIPTION_ID \
   --data @config.json \
   --wait \
-  -o json)
+  -q 'databaseId')
 
-# Extract database ID and endpoint
-DB_ID=$(echo $DB_RESULT | jq -r '.databaseId')
-ENDPOINT=$(echo $DB_RESULT | jq -r '.endpoint')
+# Get endpoint
+ENDPOINT=$(redisctl cloud database get $DB_ID -q 'endpoint')
 
 # Update application configuration
 echo "REDIS_URL=redis://$ENDPOINT" >> .env
 
 # Verify connectivity
-redisctl cloud database get $DB_ID -o json | jq '.status'
+redisctl cloud database get $DB_ID -q 'status'
 ```
 
 ### Batch Operations
 
 ```bash
 # Update multiple databases
-for db_id in $(redisctl enterprise database list -o json | jq -r '.[].uid'); do
+for db_id in $(redisctl enterprise database list -q '[].uid' --raw); do
   echo "Updating database $db_id"
   redisctl enterprise database update $db_id \
     --data '{"backup_interval": 3600}' \

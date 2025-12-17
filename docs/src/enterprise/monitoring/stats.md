@@ -98,19 +98,19 @@ Press `Ctrl+C` to stop streaming.
 | `network_out` | Outgoing network traffic |
 | `disk_usage` | Disk utilization |
 
-## JSON Output Examples
+## JMESPath Query Examples
 
 ```bash
 # Get database ops/sec
-redisctl enterprise stats database <db_id> -o json | jq '.instantaneous_ops_per_sec'
+redisctl enterprise stats database <db_id> -q 'instantaneous_ops_per_sec'
 
 # Monitor memory usage
-redisctl enterprise stats database <db_id> -o json | jq '{used_memory, peak_memory}'
+redisctl enterprise stats database <db_id> -q '{used_memory: used_memory, peak_memory: peak_memory}'
 
 # Get all node CPU usage
-for node in $(redisctl enterprise node list -o json | jq -r '.[].uid'); do
+for node in $(redisctl enterprise node list -q '[].uid' --raw); do
   echo "Node $node:"
-  redisctl enterprise stats node $node -o json | jq '.cpu_usage'
+  redisctl enterprise stats node $node -q 'cpu_usage'
 done
 ```
 
@@ -121,7 +121,7 @@ Use stats output for custom alerting:
 ```bash
 #!/bin/bash
 # Alert if ops/sec exceeds threshold
-OPS=$(redisctl enterprise stats database 1 -o json | jq '.instantaneous_ops_per_sec')
+OPS=$(redisctl enterprise stats database 1 -q 'instantaneous_ops_per_sec')
 if (( $(echo "$OPS > 10000" | bc -l) )); then
   echo "High traffic alert: $OPS ops/sec"
 fi

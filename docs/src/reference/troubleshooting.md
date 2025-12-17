@@ -391,7 +391,7 @@ export REDIS_SUBSCRIPTION_ID=123456
 **Solutions:**
 ```bash
 # Test query separately
-redisctl cloud subscription list -o json | jq .
+redisctl cloud subscription list
 redisctl cloud subscription list -q "[].name"
 
 # Escape special characters
@@ -534,8 +534,8 @@ done
 redisctl cloud database list --subscription 123 > databases.json
 
 # Process with streaming tools
-redisctl cloud database list --subscription 123 | jq -c '.[]' | while read db; do
-  echo "Processing: $(echo $db | jq -r .name)"
+for db_name in $(redisctl cloud database list --subscription 123 -q '[].name' --raw); do
+  echo "Processing: $db_name"
 done
 ```
 

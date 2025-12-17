@@ -78,8 +78,8 @@ redisctl cloud database delete --subscription-id 123 --database-id 456  # Danger
 # Human reading: table
 redisctl cloud subscription list -o table
 
-# Scripting: json with jq
-redisctl cloud subscription list -o json | jq -r '.[].id'
+# Scripting: use JMESPath queries
+redisctl cloud subscription list -q '[].id' --raw
 
 # Quick checks: query
 redisctl cloud database get --subscription-id 123 --database-id 456 -q "status"
@@ -92,7 +92,7 @@ redisctl cloud database get --subscription-id 123 --database-id 456 -q "status"
 check_database_exists() {
   local name=$1
   redisctl cloud database list --subscription-id 123 \
-    -q "[?name=='$name'].databaseId" | jq -r '.[]'
+    -q "[?name=='$name'].databaseId | [0]"
 }
 
 # Only create if doesn't exist
@@ -219,7 +219,7 @@ create_database_with_retry() {
     
     # Check if partially created
     DB_ID=$(redisctl cloud database list --subscription-id 123 \
-      -q "[?name=='my-database'].databaseId" | jq -r '.[]')
+      -q "[?name=='my-database'].databaseId | [0]")
     
     if [ -n "$DB_ID" ]; then
       echo "Database partially created with ID: $DB_ID"
@@ -340,7 +340,7 @@ redisctl cloud database update --subscription-id 123 --database-id 456 \
 redisctl api cloud get /subscriptions --query-params "status=active"
 
 # Less efficient: Filter after fetching
-redisctl cloud subscription list -o json | jq '.[] | select(.status == "active")'
+redisctl cloud subscription list -q "[?status=='active']"
 ```
 
 ## Automation

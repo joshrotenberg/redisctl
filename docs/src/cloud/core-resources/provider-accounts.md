@@ -80,9 +80,9 @@ redisctl cloud connectivity vpc-peering create <subscription_id> --data '{...}'
 
 Bring Your Own Key (BYOK) encryption requires a linked cloud provider account to access your KMS keys.
 
-## JSON Output
+## JMESPath Queries
 
 ```bash
 # List all provider accounts with their providers
-redisctl cloud provider-account list -o json | jq '.[] | {name, provider, id}'
+redisctl cloud provider-account list -q '[].{name: name, provider: provider, id: id}'
 ```

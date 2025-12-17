@@ -155,11 +155,12 @@ redisctl enterprise alerts cluster --alert cluster_license_about_to_expire
 #!/bin/bash
 # Monitor for critical alerts
 
-CRITICAL_ALERTS=$(redisctl enterprise alerts list --severity critical -o json)
+ALERT_COUNT=$(redisctl enterprise alerts list --severity critical -q 'length(@)')
 
-if [ $(echo "$CRITICAL_ALERTS" | jq 'length') -gt 0 ]; then
+if [ "$ALERT_COUNT" -gt 0 ]; then
     echo "Critical alerts found:"
-    echo "$CRITICAL_ALERTS" | jq -r '.[] | "\(.type): \(.name) - \(.description)"'
+    redisctl enterprise alerts list --severity critical \
+      -q "[].{type: type, name: name, description: description}" -o table
     exit 1
 fi
 ```

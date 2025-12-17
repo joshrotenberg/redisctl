@@ -364,8 +364,9 @@ redisctl api cloud put /subscriptions/123/databases/456 --data '{
 
 ### Success Response
 ```bash
-# Pretty print JSON
+# Pretty print JSON (jq for formatting, or use -o json which is already formatted)
 redisctl api cloud get /subscriptions -o json | jq .
+redisctl api cloud get /subscriptions -o json  # Already pretty-printed
 
 # Extract specific fields
 redisctl api cloud get /subscriptions -q "[].{id: id, name: name}"

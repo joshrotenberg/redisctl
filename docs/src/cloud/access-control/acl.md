@@ -65,12 +65,12 @@ redisctl cloud acl update-acl-user <subscription_id> <user_id> --data '{"passwor
 redisctl cloud acl delete-acl-user <subscription_id> <user_id>
 ```
 
-## JSON Output
+## JMESPath Queries
 
-All commands support `-o json` for structured output:
+All commands support `-q` for filtering output:
 
 ```bash
-redisctl cloud acl list-roles 12345 -o json | jq '.[] | {name, id}'
+redisctl cloud acl list-roles 12345 -q '[].{name: name, id: id}'
 ```
 
 ## Common Patterns

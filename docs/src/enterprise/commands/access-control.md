@@ -235,7 +235,7 @@ redisctl enterprise user list \
 ### Rotate All Passwords
 
 ```bash
-for user in $(redisctl enterprise user list -q '[].uid' | jq -r '.[]'); do
+for user in $(redisctl enterprise user list -q '[].uid' --raw); do
   NEW_PASS=$(openssl rand -base64 16)
   redisctl enterprise user update $user --data "{\"password\": \"$NEW_PASS\"}"
   echo "User $user: $NEW_PASS"

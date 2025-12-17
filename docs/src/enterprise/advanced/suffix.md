@@ -161,9 +161,9 @@ Monitor DNS suffix utilization:
 
 ```bash
 # Check suffix usage
-for suffix in $(redisctl enterprise suffix list -q "[].name" -o json | jq -r '.[]'); do
+for suffix in $(redisctl enterprise suffix list -q "[].name" --raw); do
   echo "Suffix: $suffix"
-  redisctl enterprise suffix get "$suffix" -q 'databases' | jq length
+  redisctl enterprise suffix get "$suffix" -q 'length(databases)'
 done
 
 # Find unused suffixes
@@ -178,14 +178,14 @@ redisctl enterprise suffix list -q "max_by(@, &databases).{name: name, count: da
 Manage DNS server configurations:
 
 ```bash
-# List all unique DNS servers
-redisctl enterprise suffix list -q "[].dns_servers[]" | jq -s 'unique'
+# List all DNS servers per suffix
+redisctl enterprise suffix list -q "[].{name: name, dns_servers: dns_servers}" -o table
 
 # Find suffixes by DNS server count
 redisctl enterprise suffix list -q "[?length(dns_servers) > \`1\`]"
 
-# Check DNS server availability
-for server in $(redisctl enterprise suffix list -q "[].dns_servers[]" | jq -r 'unique[]'); do
+# Check DNS server availability (get first suffix's servers as example)
+for server in $(redisctl enterprise suffix list -q "[0].dns_servers[]" --raw); do
   echo "Checking DNS server: $server"
   dig @$server test.redis.local +short
 done

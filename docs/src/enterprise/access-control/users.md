@@ -25,7 +25,7 @@ redisctl enterprise user list -o json
 redisctl enterprise user get <user_id>
 
 # Get specific fields
-redisctl enterprise user get <user_id> -o json | jq '{name, email, role}'
+redisctl enterprise user get <user_id> -q '{name: name, email: email, role: role}'
 ```
 
 ## Create User
@@ -95,14 +95,14 @@ Redis Enterprise includes these built-in roles:
 | `db_viewer` | Read-only database access |
 | `none` | No default permissions |
 
-## JSON Output
+## JMESPath Queries
 
 ```bash
 # List all users with their roles
-redisctl enterprise user list -o json | jq '.[] | {name, email, role}'
+redisctl enterprise user list -q '[].{name: name, email: email, role: role}'
 
 # Find admin users
-redisctl enterprise user list -o json | jq '.[] | select(.role == "admin")'
+redisctl enterprise user list -q "[?role=='admin']"
 ```
 
 ## Scripting Examples
@@ -111,14 +111,14 @@ redisctl enterprise user list -o json | jq '.[] | select(.role == "admin")'
 
 ```bash
 # Export user list for audit
-redisctl enterprise user list -o json | jq -r '.[] | [.name, .email, .role] | @csv' > users.csv
+redisctl enterprise user list -q '[].{name: name, email: email, role: role}' -o table
 ```
 
 ### Bulk User Creation
 
 ```bash
-# Create users from a file
-cat users.json | jq -c '.[]' | while read user; do
+# Create users from a JSON file (one user per line in JSONL format)
+while read user; do
   redisctl enterprise user create --data "$user"
-done
+done < users.jsonl
 ```
