@@ -60,6 +60,7 @@ keyring = { version = "3.6", optional = true, features = ["apple-native", "windo
 # Tower and resilience patterns
 tower = { version = "0.5", features = ["util", "timeout", "buffer", "ready-cache"] }
 tower-resilience = { version = "0.1", features = ["circuitbreaker", "retry", "ratelimiter"] }
+regex = "1.12.2"
 
 [target.'cfg(unix)'.dependencies]
 pager = "0.16"

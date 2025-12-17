@@ -86,6 +86,10 @@ impl ModuleHandler {
     }
 
     /// Upload new module (tries v2 first, falls back to v1)
+    ///
+    /// Note: Some Redis Enterprise versions (particularly RE 8.x) do not support
+    /// module upload via the REST API. In those cases, use the Admin UI or
+    /// node-level CLI tools (rladmin) to upload modules.
     pub async fn upload(&self, module_data: Vec<u8>, file_name: &str) -> Result<Value> {
         // Try v2 first (returns action_uid for async tracking)
         match self
@@ -96,9 +100,26 @@ impl ModuleHandler {
             Ok(response) => Ok(response),
             Err(crate::error::RestError::NotFound) => {
                 // v2 endpoint doesn't exist, try v1
-                self.client
+                match self
+                    .client
                     .post_multipart("/v1/modules", module_data, "module", file_name)
                     .await
+                {
+                    Ok(response) => Ok(response),
+                    Err(crate::error::RestError::ApiError { code: 405, .. }) => {
+                        Err(crate::error::RestError::ValidationError(
+                            "Module upload via REST API is not supported in this Redis Enterprise version. \
+                             Use the Admin UI or rladmin CLI to upload modules.".to_string()
+                        ))
+                    }
+                    Err(e) => Err(e),
+                }
+            }
+            Err(crate::error::RestError::ApiError { code: 405, .. }) => {
+                Err(crate::error::RestError::ValidationError(
+                    "Module upload via REST API is not supported in this Redis Enterprise version. \
+                     Use the Admin UI or rladmin CLI to upload modules.".to_string()
+                ))
             }
             Err(e) => Err(e),
         }
