@@ -62,6 +62,7 @@ pub async fn create_database(
     proxy_policy: Option<&str>,
     crdb: bool,
     redis_password: Option<&str>,
+    modules: &[String],
     data: Option<&str>,
     dry_run: bool,
     output_format: OutputFormat,
@@ -143,6 +144,107 @@ pub async fn create_database(
             "authentication_redis_pass".to_string(),
             serde_json::json!(password),
         );
+    }
+
+    // Handle module resolution if --module flags were provided
+    if !modules.is_empty() {
+        let module_handler = redis_enterprise::ModuleHandler::new(
+            conn_mgr.create_enterprise_client(profile_name).await?,
+        );
+        let available_modules = module_handler.list().await.map_err(RedisCtlError::from)?;
+
+        let mut module_list: Vec<Value> = Vec::new();
+
+        for module_spec in modules {
+            // Parse module_name:args format
+            let (module_name, module_args) = if let Some(idx) = module_spec.find(':') {
+                let (name, args) = module_spec.split_at(idx);
+                (name.trim(), Some(args[1..].trim())) // Skip the ':' character
+            } else {
+                (module_spec.as_str(), None)
+            };
+
+            // Find matching module (case-insensitive)
+            let matching: Vec<_> = available_modules
+                .iter()
+                .filter(|m| {
+                    m.module_name
+                        .as_ref()
+                        .map(|n| n.eq_ignore_ascii_case(module_name))
+                        .unwrap_or(false)
+                })
+                .collect();
+
+            match matching.len() {
+                0 => {
+                    // No exact match - try partial match and suggest
+                    let partial_matches: Vec<_> = available_modules
+                        .iter()
+                        .filter(|m| {
+                            m.module_name
+                                .as_ref()
+                                .map(|n| n.to_lowercase().contains(&module_name.to_lowercase()))
+                                .unwrap_or(false)
+                        })
+                        .collect();
+
+                    if partial_matches.is_empty() {
+                        return Err(RedisCtlError::InvalidInput {
+                            message: format!(
+                                "Module '{}' not found. Use 'enterprise module list' to see available modules.",
+                                module_name
+                            ),
+                        });
+                    } else {
+                        let suggestions: Vec<_> = partial_matches
+                            .iter()
+                            .filter_map(|m| m.module_name.as_deref())
+                            .collect();
+                        return Err(RedisCtlError::InvalidInput {
+                            message: format!(
+                                "Module '{}' not found. Did you mean one of: {}?",
+                                module_name,
+                                suggestions.join(", ")
+                            ),
+                        });
+                    }
+                }
+                1 => {
+                    // Build module config using the actual module name from the API
+                    let actual_name = matching[0].module_name.as_deref().unwrap_or(module_name);
+                    let mut module_config = serde_json::json!({
+                        "module_name": actual_name
+                    });
+                    if let Some(args) = module_args {
+                        module_config["module_args"] = serde_json::json!(args);
+                    }
+                    module_list.push(module_config);
+                }
+                _ => {
+                    // Multiple matches - show versions and ask user to be specific
+                    let versions: Vec<_> = matching
+                        .iter()
+                        .map(|m| {
+                            format!(
+                                "{} (version: {})",
+                                m.module_name.as_deref().unwrap_or("unknown"),
+                                m.semantic_version.as_deref().unwrap_or("unknown")
+                            )
+                        })
+                        .collect();
+                    return Err(RedisCtlError::InvalidInput {
+                        message: format!(
+                            "Multiple modules found matching '{}'. Available versions:\n  {}",
+                            module_name,
+                            versions.join("\n  ")
+                        ),
+                    });
+                }
+            }
+        }
+
+        // Add module_list to request (CLI modules override --data modules)
+        request_obj.insert("module_list".to_string(), serde_json::json!(module_list));
     }
 
     let path = if dry_run {

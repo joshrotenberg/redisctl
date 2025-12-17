@@ -21,8 +21,16 @@ pub async fn handle_module_commands(
 ) -> CliResult<()> {
     match cmd {
         ModuleCommands::List => handle_list(conn_mgr, profile_name, output_format, query).await,
-        ModuleCommands::Get { uid } => {
-            handle_get(conn_mgr, profile_name, uid, output_format, query).await
+        ModuleCommands::Get { uid, name } => {
+            handle_get(
+                conn_mgr,
+                profile_name,
+                uid.as_deref(),
+                name.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
         ModuleCommands::Upload { file } => {
             handle_upload(conn_mgr, profile_name, file, output_format, query).await
@@ -61,14 +69,90 @@ async fn handle_list(
 async fn handle_get(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
-    uid: &str,
+    uid: Option<&str>,
+    name: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
     let handler = ModuleHandler::new(client);
 
-    let module = handler.get(uid).await.map_err(RedisCtlError::from)?;
+    // Resolve module UID from name if provided
+    let resolved_uid = if let Some(module_name) = name {
+        let modules = handler.list().await.map_err(RedisCtlError::from)?;
+        let matching: Vec<_> = modules
+            .iter()
+            .filter(|m| {
+                m.module_name
+                    .as_ref()
+                    .map(|n| n.eq_ignore_ascii_case(module_name))
+                    .unwrap_or(false)
+            })
+            .collect();
+
+        match matching.len() {
+            0 => {
+                // No exact match - try partial match and suggest
+                let partial_matches: Vec<_> = modules
+                    .iter()
+                    .filter(|m| {
+                        m.module_name
+                            .as_ref()
+                            .map(|n| n.to_lowercase().contains(&module_name.to_lowercase()))
+                            .unwrap_or(false)
+                    })
+                    .collect();
+
+                if partial_matches.is_empty() {
+                    return Err(anyhow::anyhow!(
+                        "No module found with name '{}'. Use 'module list' to see available modules.",
+                        module_name
+                    )
+                    .into());
+                } else {
+                    let suggestions: Vec<_> = partial_matches
+                        .iter()
+                        .filter_map(|m| m.module_name.as_deref())
+                        .collect();
+                    return Err(anyhow::anyhow!(
+                        "No module found with name '{}'. Did you mean one of: {}?",
+                        module_name,
+                        suggestions.join(", ")
+                    )
+                    .into());
+                }
+            }
+            1 => matching[0].uid.clone(),
+            _ => {
+                // Multiple matches - show versions and ask user to be specific
+                let versions: Vec<_> = matching
+                    .iter()
+                    .map(|m| {
+                        format!(
+                            "{} (uid: {}, version: {})",
+                            m.module_name.as_deref().unwrap_or("unknown"),
+                            m.uid,
+                            m.semantic_version.as_deref().unwrap_or("unknown")
+                        )
+                    })
+                    .collect();
+                return Err(anyhow::anyhow!(
+                    "Multiple modules found with name '{}'. Please use --uid to specify:\n  {}",
+                    module_name,
+                    versions.join("\n  ")
+                )
+                .into());
+            }
+        }
+    } else {
+        uid.expect("Either uid or name must be provided")
+            .to_string()
+    };
+
+    let module = handler
+        .get(&resolved_uid)
+        .await
+        .map_err(RedisCtlError::from)?;
 
     let module_json = serde_json::to_value(&module)?;
     let output_data = if let Some(q) = query {
