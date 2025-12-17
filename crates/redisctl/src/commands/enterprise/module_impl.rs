@@ -592,7 +592,7 @@ async fn handle_validate(file: &Path, strict: bool, output_format: OutputFormat)
         .with_context(|| format!("Failed to read file: {}", file.display()))?;
 
     let metadata: ModuleMetadata = serde_json::from_str(&content)
-        .with_context(|| format!("Failed to parse module.json: invalid JSON format"))?;
+        .with_context(|| "Failed to parse module.json: invalid JSON format")?;
 
     // Validate
     let results = validate_module_metadata(&metadata, strict);
@@ -868,11 +868,11 @@ async fn handle_package(
     }
 
     // Create output directory if needed
-    if let Some(parent) = output_path.parent() {
-        if !parent.exists() {
-            fs::create_dir_all(parent)
-                .with_context(|| format!("Failed to create directory: {}", parent.display()))?;
-        }
+    if let Some(parent) = output_path.parent()
+        && !parent.exists()
+    {
+        fs::create_dir_all(parent)
+            .with_context(|| format!("Failed to create directory: {}", parent.display()))?;
     }
 
     // Read input files
