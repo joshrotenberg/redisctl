@@ -204,15 +204,16 @@ for team in team-a team-b team-c; do
     -o table
 done
 
-# Calculate team memory usage
-redisctl enterprise usage-report get -q 'databases[].{
-  team: split(name, `-`)[0],
-  memory_mb: memory_mb
-}' | jq -s 'group_by(.team) | map({
-  team: .[0].team,
-  total_memory_mb: map(.memory_mb) | add,
-  database_count: length
-})'
+# Calculate team memory usage using JMESPath extensions
+# group_by and sum are available as extended functions
+redisctl enterprise usage-report get -q '
+  group_by(databases[].{team: split(name, `-`)[0], memory_mb: memory_mb}, `"team"`)
+  | items(@)
+  | [*].{
+      team: [0],
+      total_memory_mb: sum([1][].memory_mb),
+      database_count: length([1])
+    }'
 ```
 
 ## Export Formats
@@ -256,15 +257,16 @@ gdrive upload /tmp/usage.csv
 Send usage metrics to monitoring systems:
 
 ```bash
-# Prometheus metrics format
-redisctl enterprise usage-report get -o json | jq -r '
-  "redis_cluster_databases \(.usage.total_databases)",
-  "redis_cluster_shards \(.usage.total_shards)",
-  "redis_cluster_memory_gb \(.usage.total_memory_gb)",
-  "redis_cluster_nodes \(.usage.total_nodes)",
-  "redis_license_shards_limit \(.license.shards_limit)",
-  "redis_license_memory_limit_gb \(.license.memory_limit_gb)"
-' | curl -X POST http://pushgateway:9091/metrics/job/redis-usage --data-binary @-
+# Prometheus metrics format using JMESPath sprintf()
+redisctl enterprise usage-report get -q '
+  join(`"\n"`, [
+    sprintf(`"redis_cluster_databases %d"`, usage.total_databases),
+    sprintf(`"redis_cluster_shards %d"`, usage.total_shards),
+    sprintf(`"redis_cluster_memory_gb %.2f"`, usage.total_memory_gb),
+    sprintf(`"redis_cluster_nodes %d"`, usage.total_nodes),
+    sprintf(`"redis_license_shards_limit %d"`, license.shards_limit),
+    sprintf(`"redis_license_memory_limit_gb %.2f"`, license.memory_limit_gb)
+  ])' --raw | curl -X POST http://pushgateway:9091/metrics/job/redis-usage --data-binary @-
 
 # Datadog metrics
 redisctl enterprise usage-report get -o json | \
@@ -288,9 +290,11 @@ Create tickets for capacity warnings:
 #!/bin/bash
 # Check usage and create tickets
 
-USAGE=$(redisctl enterprise usage-report get -o json)
-SHARD_PCT=$(echo $USAGE | jq '.usage.total_shards / .license.shards_limit * 100')
-MEMORY_PCT=$(echo $USAGE | jq '.usage.total_memory_gb / .license.memory_limit_gb * 100')
+# Use JMESPath divide() and multiply() for percentage calculations
+SHARD_PCT=$(redisctl enterprise usage-report get \
+  -q 'multiply(divide(usage.total_shards, license.shards_limit), `100`)' --raw)
+MEMORY_PCT=$(redisctl enterprise usage-report get \
+  -q 'multiply(divide(usage.total_memory_gb, license.memory_limit_gb), `100`)' --raw)
 
 if (( $(echo "$SHARD_PCT > 80" | bc -l) )); then
   echo "High shard usage: ${SHARD_PCT}%" | \

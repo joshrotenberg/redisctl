@@ -182,17 +182,17 @@ echo "$PAYLOAD" | jq --argjson schema "$SCHEMA" '
 Convert to OpenAPI specification:
 
 ```bash
-# Extract and format for OpenAPI
-redisctl enterprise jsonschema get -o json | jq '{
-  openapi: "3.0.0",
+# Extract and format for OpenAPI using JMESPath
+redisctl enterprise jsonschema get -q '{
+  openapi: `"3.0.0"`,
   info: {
-    title: "Redis Enterprise API",
-    version: .version
+    title: `"Redis Enterprise API"`,
+    version: version
   },
   components: {
-    schemas: .definitions
+    schemas: definitions
   },
-  paths: .paths
+  paths: paths
 }' > openapi.json
 ```
 
@@ -244,14 +244,14 @@ curl -k -u "$REDIS_ENTERPRISE_USER:$REDIS_ENTERPRISE_PASSWORD" \
 Validate that the schema is well-formed:
 
 ```bash
-# Check if valid JSON (using jq for JSON validation)
-redisctl enterprise jsonschema get | jq empty && echo "Valid JSON"
+# Check if valid JSON - redisctl will error if invalid
+redisctl enterprise jsonschema get -q 'length(@)' > /dev/null && echo "Valid JSON"
 
-# Validate schema structure (jq for boolean expressions)
-redisctl enterprise jsonschema get | jq 'has("definitions") and has("$schema")'
+# Validate schema structure using JMESPath has() function
+redisctl enterprise jsonschema get -q 'has(@, `"definitions"`) && has(@, `"$schema"`)'
 
-# Check for required sections
-redisctl enterprise jsonschema get -q '[has("definitions"), has("properties"), has("paths")] | all'
+# Check for required sections using has() function
+redisctl enterprise jsonschema get -q '[has(@, `"definitions"`), has(@, `"properties"`), has(@, `"paths"`)] | all_expr(@, &@)'
 ```
 
 ## Related Commands
