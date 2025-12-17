@@ -80,7 +80,7 @@ echo "Node joined, waiting for sync..."
 sleep 30
 
 # Verify node is active
-STATUS=$(redisctl enterprise node list -q "[?addr[0]=='$NEW_NODE'].status" | jq -r '.[0]')
+STATUS=$(redisctl enterprise node list -q "[?addr[0]=='$NEW_NODE'].status | [0]")
 if [ "$STATUS" != "active" ]; then
   echo "Node not active: $STATUS"
   exit 1
@@ -128,9 +128,7 @@ echo "Migration complete: $SOURCE_DB -> $NEW_DB"
 set -e
 
 # Get all nodes
-NODES=$(redisctl enterprise node list -q '[].uid' | jq -r '.[]')
-
-for node in $NODES; do
+for node in $(redisctl enterprise node list -q '[].uid' --raw); do
   echo "Restarting node $node..."
   
   # Put in maintenance

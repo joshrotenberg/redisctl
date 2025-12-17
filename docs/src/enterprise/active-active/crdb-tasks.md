@@ -288,9 +288,7 @@ done
 # Automatically retry failed tasks
 
 # Get all failed tasks
-FAILED_TASKS=$(redisctl enterprise crdb-task list --status failed -q "tasks[].task_id" -o json | jq -r '.[]')
-
-for task_id in $FAILED_TASKS; do
+for task_id in $(redisctl enterprise crdb-task list --status failed -q "tasks[].task_id" --raw); do
   echo "Retrying task $task_id..."
   
   # Get task type for logging

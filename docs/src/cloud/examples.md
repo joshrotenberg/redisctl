@@ -115,9 +115,8 @@ while read sub_id; do
 done > all-databases.json
 
 # Create summary report
-redisctl cloud subscription list | \
-jq -r '.[] | 
-  "\(.name): \(.numberOfDatabases) databases, \(.status)"'
+redisctl cloud subscription list \
+  -q "[].{name: name, databases: numberOfDatabases, status: status}" -o table
 ```
 
 ### Bulk Operations
@@ -193,9 +192,9 @@ redisctl api cloud patch /subscriptions/12345/databases/67890 \
 redisctl cloud subscription list -q "[].id" | while read sub_id; do
   echo "Checking subscription $sub_id..."
   
+  # Check for non-active databases
   redisctl cloud database list --subscription-id $sub_id \
-    -q "[?status!='active'].{name:name,status:status}" | \
-  jq -r '.[] | "  WARNING: \(.name) is \(.status)"'
+    -q "[?status!='active'].{name:name,status:status}" -o table
 done
 ```
 

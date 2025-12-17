@@ -147,8 +147,8 @@ Export endpoint metrics for monitoring systems:
 # Export to monitoring format
 redisctl enterprise endpoint stats -o json > endpoint_metrics.json
 
-# Create CSV for analysis
-redisctl enterprise endpoint stats -q "[].{endpoint: endpoint_name, connections: current_connections, latency: avg_latency_ms, errors: errors_per_sec}" | jq -r '["endpoint","connections","latency","errors"], (.[] | [.endpoint, .connections, .latency, .errors]) | @csv'
+# View stats in table format
+redisctl enterprise endpoint stats -q "[].{endpoint: endpoint_name, connections: current_connections, latency: avg_latency_ms, errors: errors_per_sec}" -o table
 
 # Stream to monitoring pipeline
 while true; do

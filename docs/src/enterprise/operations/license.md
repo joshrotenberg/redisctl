@@ -180,15 +180,14 @@ fi
 #!/bin/bash
 # Email alert for expiring licenses
 
-AUDIT=$(redisctl enterprise workflow license audit --expiring -o json)
-COUNT=$(echo "$AUDIT" | jq 'length')
+COUNT=$(redisctl enterprise workflow license audit --expiring -q 'length(@)')
 
 if [ "$COUNT" -gt 0 ]; then
     echo "Warning: $COUNT licenses expiring soon!" | \
         mail -s "Redis Enterprise License Alert" admin@company.com
     
-    echo "$AUDIT" | jq -r '.[] | 
-        "Profile: \(.profile) - Expires: \(.expiration_date) (\(.days_remaining) days)"'
+    redisctl enterprise workflow license audit --expiring \
+      -q "[].{profile: profile, expires: expiration_date, days: days_remaining}" -o table
 fi
 ```
 

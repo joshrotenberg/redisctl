@@ -138,11 +138,8 @@ redisctl api cloud get /tasks/$TASK_ID -q 'response.resourceId'
 ### Bulk Operations
 
 ```bash
-# Get all database IDs
-DBS=$(redisctl api cloud get /subscriptions/123/databases -q '[].databaseId')
-
-# Process each
-for db in $(echo $DBS | jq -r '.[]'); do
+# Get all database IDs and process each
+for db in $(redisctl api cloud get /subscriptions/123/databases -q '[].databaseId' --raw); do
   redisctl api cloud get /subscriptions/123/databases/$db
 done
 ```

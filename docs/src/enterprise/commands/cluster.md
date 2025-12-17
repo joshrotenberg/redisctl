@@ -294,7 +294,7 @@ redisctl enterprise cluster stats -q "{
   cpu: cpu_usage_percent,
   memory: memory_usage_percent,
   disk: persistent_storage_usage_percent
-}" | jq
+}"
 ```
 
 ### Backup Cluster Configuration

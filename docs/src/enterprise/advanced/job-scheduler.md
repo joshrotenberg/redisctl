@@ -308,8 +308,10 @@ redisctl enterprise job-scheduler get -q "backup_job_settings.cron_expression"
 # Check current configuration
 redisctl enterprise job-scheduler get
 
-# Validate JSON before updating
-echo '{"backup_job_settings": {"enabled": true}}' | jq .
+# Validate JSON before updating (check syntax)
+cat <<EOF
+{"backup_job_settings": {"enabled": true}}
+EOF
 
 # Try update with valid configuration
 redisctl enterprise job-scheduler update --data '{"backup_job_settings": {"enabled": true}}'

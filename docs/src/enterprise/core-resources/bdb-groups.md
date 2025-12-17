@@ -198,14 +198,12 @@ done
 Monitor all databases in a group:
 
 ```bash
-# Get group databases
+# Get group databases and check each
 GROUP_UID=1
-redisctl enterprise bdb-group list-databases $GROUP_UID | \
-  jq -r '.[]' | \
-  while read db_uid; do
-    echo "Checking database $db_uid..."
-    redisctl enterprise database get $db_uid -q "{uid: uid, status: status}"
-  done
+for db_uid in $(redisctl enterprise bdb-group list-databases $GROUP_UID -q '[].uid' --raw); do
+  echo "Checking database $db_uid..."
+  redisctl enterprise database get $db_uid -q "{uid: uid, status: status}"
+done
 ```
 
 ### Migration Helper
@@ -238,20 +236,17 @@ Generate a report of all groups and their databases:
 
 ```bash
 # Generate group report
-redisctl enterprise bdb-group list -q '[]' | jq -r '.[] | .uid' | \
-  while read group_uid; do
-    group_info=$(redisctl enterprise bdb-group get $group_uid)
-    name=$(echo "$group_info" | jq -r '.name // "unnamed"')
-    db_count=$(echo "$group_info" | jq '.bdbs | length')
-    
-    echo "Group $group_uid: $name ($db_count databases)"
-    echo "$group_info" | jq -r '.bdbs[]' | \
-      while read db_uid; do
-        db_name=$(redisctl enterprise database get $db_uid -q "name")
-        echo "  - Database $db_uid: $db_name"
-      done
-    echo
+for group_uid in $(redisctl enterprise bdb-group list -q '[].uid' --raw); do
+  name=$(redisctl enterprise bdb-group get $group_uid -q 'name')
+  db_count=$(redisctl enterprise bdb-group get $group_uid -q 'length(bdbs)')
+  
+  echo "Group $group_uid: $name ($db_count databases)"
+  for db_uid in $(redisctl enterprise bdb-group get $group_uid -q 'bdbs[]' --raw); do
+    db_name=$(redisctl enterprise database get $db_uid -q 'name')
+    echo "  - Database $db_uid: $db_name"
   done
+  echo
+done
 ```
 
 ## Best Practices
@@ -277,10 +272,10 @@ redisctl enterprise bdb-group list -q '[]' | jq -r '.[] | .uid' | \
 
 ```bash
 # Check cluster status
-redisctl enterprise cluster get -q "cluster_state"
+redisctl enterprise cluster get -q 'cluster_state'
 
 # Verify required fields
-redisctl enterprise api get /v1/jsonschema | jq '.bdb_group'
+redisctl enterprise api get /v1/jsonschema -q 'bdb_group'
 ```
 
 ### Database Not Added to Group

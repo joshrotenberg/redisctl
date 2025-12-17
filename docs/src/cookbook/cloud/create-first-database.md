@@ -175,7 +175,7 @@ DB_INFO=$(redisctl cloud database create \
   --wait \
   -o json)
 
-DB_ID=$(echo "$DB_INFO" | jq -r '.database_id')
+DB_ID=$(redisctl cloud database list --subscription $SUB_ID -q '[0].databaseId')
 echo "Created database: $DB_ID"
 ```
 

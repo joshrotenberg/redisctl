@@ -309,8 +309,8 @@ cat > acl-setup.json << 'EOF'
 }
 EOF
 
-# Create rules
-jq -r '.rules[] | @json' acl-setup.json | while read rule; do
+# Create rules - using jq to extract JSON objects from array
+for rule in $(jq -c '.rules[]' acl-setup.json); do
   redisctl cloud acl create-redis-rule \
     --subscription 42 \
     --data "$rule" \
@@ -318,7 +318,7 @@ jq -r '.rules[] | @json' acl-setup.json | while read rule; do
 done
 
 # Create roles
-jq -r '.roles[] | @json' acl-setup.json | while read role; do
+for role in $(jq -c '.roles[]' acl-setup.json); do
   redisctl cloud acl create-role \
     --subscription 42 \
     --data "$role" \
@@ -326,7 +326,7 @@ jq -r '.roles[] | @json' acl-setup.json | while read role; do
 done
 
 # Create users
-jq -r '.users[] | @json' acl-setup.json | while read user; do
+for user in $(jq -c '.users[]' acl-setup.json); do
   redisctl cloud acl create-acl-user \
     --subscription 42 \
     --data "$user" \

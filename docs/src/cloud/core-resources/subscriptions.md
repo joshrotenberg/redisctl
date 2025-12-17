@@ -217,11 +217,8 @@ redisctl cloud fixed-subscription create --data @fixed-subscription.json --wait
 ### List All Databases Across Subscriptions
 
 ```bash
-# Get all subscription IDs
-SUBS=$(redisctl cloud subscription list -q "[].id" | jq -r '.[]')
-
 # List databases for each subscription
-for sub in $SUBS; do
+for sub in $(redisctl cloud subscription list -q '[].id' --raw); do
   echo "Subscription $sub:"
   redisctl cloud database list --subscription-id $sub
 done
@@ -231,8 +228,8 @@ done
 
 ```bash
 # Get memory usage across all databases
-redisctl cloud subscription get 123456 -q "databases[].{name: name, memory: memoryLimitInGb}" | \
-  jq -r '.[] | "\(.name): \(.memory)GB"'
+redisctl cloud subscription get 123456 \
+  -q "databases[].{name: name, memory: memoryLimitInGb}" -o table
 ```
 
 ## Troubleshooting

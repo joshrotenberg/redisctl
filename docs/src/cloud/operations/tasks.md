@@ -74,13 +74,13 @@ Tasks progress through these states:
 
 ```bash
 # Create a database and capture the task ID
-TASK_ID=$(redisctl cloud database create 12345 --data '{...}' -o json | jq -r '.taskId')
+TASK_ID=$(redisctl cloud database create 12345 --data '{...}' -q 'taskId')
 
 # Wait for it
 redisctl cloud task wait $TASK_ID
 
 # Check the result
-redisctl cloud task get $TASK_ID -o json | jq '.response'
+redisctl cloud task get $TASK_ID -q 'response'
 ```
 
 ## Error Handling
@@ -89,5 +89,5 @@ When a task fails, you can inspect the error:
 
 ```bash
 # Get task details including error info
-redisctl cloud task get <task_id> -o json | jq '{status, description, response}'
+redisctl cloud task get <task_id> -q '{status: status, description: description, response: response}'
 ```

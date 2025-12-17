@@ -531,7 +531,7 @@ docker run --rm \
       --memory-limit-in-gb 1 \
       --wait -o json > db.json
 
-    # Extract connection info
+    # Extract connection info (jq parses the saved JSON file)
     echo "REDIS_URL=$(jq -r '.publicEndpoint' db.json)" >> $GITHUB_ENV</code></pre>
                 </section>
 
@@ -650,7 +650,9 @@ redisctl cloud subscription list
 redisctl cloud database list --subscription-id 123456</code></pre>
                     <p style="margin-top: 1.5em"><br /></p>
                     <h3>github.com/redis-developer/redisctl</h3>
-                    <p class="small">Docs: redis-field-engineering.github.io/redisctl-docs</p>
+                    <p class="small">
+                        Docs: redis-field-engineering.github.io/redisctl-docs
+                    </p>
                 </section>
             </div>
         </div>

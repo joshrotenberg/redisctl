@@ -81,14 +81,14 @@ Redis Enterprise supports these modules:
 | `graph` | RedisGraph - Graph database (deprecated) |
 | `ai` | RedisAI - Machine learning model serving |
 
-## JSON Output Examples
+## JMESPath Query Examples
 
 ```bash
 # List all module names and versions
-redisctl enterprise module list -o json | jq '.[] | {name: .module_name, version}'
+redisctl enterprise module list -q '[].{name: module_name, version: version}'
 
 # Find a specific module
-redisctl enterprise module list -o json | jq '.[] | select(.module_name == "search")'
+redisctl enterprise module list -q "[?module_name=='search']"
 ```
 
 ## Enabling Modules on Databases

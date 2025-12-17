@@ -109,16 +109,15 @@ This single command:
 ### Get Database Connection String
 
 ```bash
-DB=$(redisctl cloud database get 123456:789)
-ENDPOINT=$(echo $DB | jq -r '.publicEndpoint')
-PASSWORD=$(echo $DB | jq -r '.password')
+ENDPOINT=$(redisctl cloud database get 123456:789 -q 'publicEndpoint')
+PASSWORD=$(redisctl cloud database get 123456:789 -q 'password')
 echo "redis://:$PASSWORD@$ENDPOINT"
 ```
 
 ### List All Databases Across Subscriptions
 
 ```bash
-for sub in $(redisctl cloud subscription list -q '[].id' | jq -r '.[]'); do
+for sub in $(redisctl cloud subscription list -q '[].id' --raw); do
   echo "=== Subscription $sub ==="
   redisctl cloud database list --subscription $sub -o table
 done

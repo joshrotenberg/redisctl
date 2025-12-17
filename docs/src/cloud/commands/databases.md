@@ -204,9 +204,8 @@ redisctl cloud database import 123456:789 --data '{
 ### Get Connection String
 
 ```bash
-DB=$(redisctl cloud database get 123456:789)
-ENDPOINT=$(echo $DB | jq -r '.publicEndpoint')
-PASSWORD=$(echo $DB | jq -r '.password')
+ENDPOINT=$(redisctl cloud database get 123456:789 -q 'publicEndpoint')
+PASSWORD=$(redisctl cloud database get 123456:789 -q 'password')
 echo "redis://:$PASSWORD@$ENDPOINT"
 ```
 
@@ -222,8 +221,8 @@ redisctl cloud database list \
 ### Bulk Operations
 
 ```bash
-# List all database IDs
-for db in $(redisctl cloud database list -q "[].databaseId" | jq -r '.[]'); do
+# Process all database IDs
+for db in $(redisctl cloud database list -q '[].databaseId' --raw); do
   echo "Processing $db"
 done
 ```

@@ -83,10 +83,11 @@ check_databases() {
         return 1
     fi
     
-    echo "$databases" | jq -c '.[]' | while read db; do
-        local id=$(echo $db | jq -r .id)
-        local name=$(echo $db | jq -r .name)
-        local status=$(echo $db | jq -r .status)
+    # Process each database - extract fields directly with JMESPath
+    for db_entry in $(echo "$databases" | jq -c '.[]'); do
+        local id=$(echo $db_entry | jq -r .id)
+        local name=$(echo $db_entry | jq -r .name)
+        local status=$(echo $db_entry | jq -r .status)
         
         if [ "$status" != "active" ]; then
             send_alert "ERROR" "Database $name ($id) is not active: $status"
@@ -102,7 +103,7 @@ while true; do
     
     # Get all subscriptions
     SUBSCRIPTIONS=$(redisctl --profile $PROFILE cloud subscription list \
-        -q "[].id" 2>/dev/null | jq -r '.[]')
+        -q "[].id" --raw 2>/dev/null)
     
     for sub_id in $SUBSCRIPTIONS; do
         check_databases $sub_id
@@ -359,7 +360,7 @@ Ship Redis logs to Elasticsearch:
 #!/bin/bash
 # ship-logs.sh
 
-# For Redis Enterprise
+# For Redis Enterprise - using jq for JSON transformation to ELK format
 redisctl enterprise logs list \
   --profile prod-enterprise \
   --output json | \
@@ -551,12 +552,13 @@ END=$(($(date +%s) + DURATION))
 while [ $(date +%s) -lt $END ]; do
     TIMESTAMP=$(date +%s)
     
-    redisctl cloud database get \
+    # Use JMESPath for field extraction, then format as CSV
+    METRICS=$(redisctl cloud database get \
         --subscription-id 123456 \
         --database-id 789 \
-        -o json | \
-    jq -r "\"$TIMESTAMP,prod-db,\(.throughputMeasurement.value),\(.latency),\(.memoryUsageInMB),\(.cpuUsagePercentage)\"" \
-        >> $OUTPUT
+        -q "[throughputMeasurement.value, latency, memoryUsageInMB, cpuUsagePercentage]" --raw)
+    
+    echo "$TIMESTAMP,prod-db,$METRICS" | tr -d '[]' >> $OUTPUT
     
     sleep $INTERVAL
 done

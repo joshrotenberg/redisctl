@@ -184,12 +184,11 @@ redisctl cloud database create \
 Use backups to create staging environments:
 
 ```bash
-# Get latest production backup
+# Get latest production backup using JMESPath
 BACKUP_ID=$(redisctl cloud database backup-status \
   --database-id 42:12345 \
-  -o json \
   -q 'last_backup.backup_id' \
-  | jq -r '.')
+  --raw)
 
 # Create staging database from production backup
 redisctl cloud database create \
@@ -307,6 +306,7 @@ BACKUP_RESULT=$(redisctl cloud database backup \
   --wait \
   -o json)
 
+# Extract backup_id using jq (result is JSON from redisctl)
 BACKUP_ID=$(echo "$BACKUP_RESULT" | jq -r '.backup_id')
 
 echo "Backup created: $BACKUP_ID"
@@ -374,17 +374,18 @@ BACKUP_STATUS=$(redisctl cloud database backup-status \
   --database-id ${SUBSCRIPTION_ID}:${DATABASE_ID} \
   -o json)
 
+# Parse JSON output with jq
 LAST_BACKUP_TIME=$(echo "$BACKUP_STATUS" | jq -r '.last_backup.timestamp')
-BACKUP_STATUS=$(echo "$BACKUP_STATUS" | jq -r '.last_backup.status')
+LAST_BACKUP_STATUS=$(echo "$BACKUP_STATUS" | jq -r '.last_backup.status')
 
 # Calculate age in hours
 CURRENT_TIME=$(date +%s)
 BACKUP_TIME=$(date -d "$LAST_BACKUP_TIME" +%s)
 AGE_HOURS=$(( ($CURRENT_TIME - $BACKUP_TIME) / 3600 ))
 
-if [ "$BACKUP_STATUS" != "completed" ] || [ $AGE_HOURS -gt $MAX_AGE_HOURS ]; then
+if [ "$LAST_BACKUP_STATUS" != "completed" ] || [ $AGE_HOURS -gt $MAX_AGE_HOURS ]; then
     echo "ALERT: Backup health check failed!"
-    echo "Status: $BACKUP_STATUS"
+    echo "Status: $LAST_BACKUP_STATUS"
     echo "Age: $AGE_HOURS hours"
     # Send alert (email, Slack, PagerDuty, etc.)
     exit 1

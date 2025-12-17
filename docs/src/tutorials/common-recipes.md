@@ -101,7 +101,7 @@ redisctl cloud database create --data @database.json --wait
 ```bash
 #!/bin/bash
 # Create database and wait for completion
-DB_ID=$(redisctl cloud database create --data @config.json --wait -o json | jq -r '.resourceId')
+DB_ID=$(redisctl cloud database create --data @config.json --wait -q 'resourceId')
 
 # Configure ACL
 redisctl cloud acl create --database $DB_ID --data @acl.json

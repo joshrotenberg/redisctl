@@ -295,9 +295,10 @@ redisctl cloud database create-active-active --subscription-id <ID> --data @crdb
 ### Get Database Connection String
 
 ```bash
-# Get Redis URI
-DB=$(redisctl cloud database get --subscription-id 123456 --database-id 789)
-echo "redis://:$(echo $DB | jq -r .password)@$(echo $DB | jq -r .publicEndpoint)"
+# Get Redis URI components
+ENDPOINT=$(redisctl cloud database get --subscription-id 123456 --database-id 789 -q 'publicEndpoint')
+PASSWORD=$(redisctl cloud database get --subscription-id 123456 --database-id 789 -q 'password')
+echo "redis://:$PASSWORD@$ENDPOINT"
 ```
 
 ### Monitor Database Metrics
@@ -305,15 +306,14 @@ echo "redis://:$(echo $DB | jq -r .password)@$(echo $DB | jq -r .publicEndpoint)
 ```bash
 # Check memory usage
 redisctl cloud database get --subscription-id 123456 --database-id 789 \
-  -q "{used: usedMemoryInMB, limit: memoryLimitInGB}" | \
-  jq -r '"Memory: \(.used)MB / \(.limit)GB"'
+  -q "{used: usedMemoryInMB, limit: memoryLimitInGB}" -o table
 ```
 
 ### Bulk Operations
 
 ```bash
 # Update all databases in subscription
-for db in $(redisctl cloud database list --subscription-id 123456 -q "[].databaseId" | jq -r '.[]'); do
+for db in $(redisctl cloud database list --subscription-id 123456 -q '[].databaseId' --raw); do
   echo "Updating database $db"
   redisctl cloud database update \
     --subscription-id 123456 \

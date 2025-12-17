@@ -28,7 +28,7 @@ redisctl enterprise node list -q '[].{id: uid, addr: addr, status: status}'
 redisctl enterprise node get <node_id>
 
 # Get specific fields
-redisctl enterprise node get <node_id> -o json | jq '{addr, status, total_memory, available_memory}'
+redisctl enterprise node get <node_id> -q '{addr: addr, status: status, total_memory: total_memory, available_memory: available_memory}'
 ```
 
 ## Add Node
@@ -150,17 +150,17 @@ redisctl enterprise node set-rack <node_id> --data '{
 redisctl enterprise node get-role <node_id>
 ```
 
-## JSON Output Examples
+## JMESPath Query Examples
 
 ```bash
 # List all nodes with their addresses and status
-redisctl enterprise node list -o json | jq '.[] | {uid, addr, status}'
+redisctl enterprise node list -q '[].{uid: uid, addr: addr, status: status}'
 
 # Find nodes with low memory
-redisctl enterprise node list -o json | jq '.[] | select(.available_memory < 1073741824)'
+redisctl enterprise node list -q "[?available_memory < \`1073741824\`]"
 
 # Get cluster node count
-redisctl enterprise node list -o json | jq 'length'
+redisctl enterprise node list -q 'length(@)'
 ```
 
 ## Common Operations
@@ -192,7 +192,7 @@ redisctl enterprise node maintenance-enable <node_id>
 redisctl enterprise node drain <node_id>
 
 # 3. Verify shards moved
-redisctl enterprise node get <node_id> -o json | jq '.shards'
+redisctl enterprise node get <node_id> -q 'shards'
 
 # 4. Remove the node
 redisctl enterprise node remove <node_id>

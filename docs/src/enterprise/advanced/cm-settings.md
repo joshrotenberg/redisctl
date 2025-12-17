@@ -304,7 +304,7 @@ echo "Settings updated successfully"
 redisctl enterprise cm-settings export --output source-settings.json
 
 # Review exported settings
-jq '.' source-settings.json
+cat source-settings.json
 ```
 
 ### Import to Target Cluster
@@ -345,7 +345,7 @@ redisctl enterprise logs list --type error
 
 ```bash
 # Validate JSON syntax
-jq '.' settings.json
+python3 -c "import json; json.load(open('settings.json'))" && echo "Valid JSON"
 
 # Validate against schema
 redisctl enterprise cm-settings validate --file @settings.json

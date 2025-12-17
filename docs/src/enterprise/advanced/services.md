@@ -91,8 +91,8 @@ redisctl enterprise services list -o table
 # Check specific critical service
 redisctl enterprise services status cm_server
 
-# Get services in JSON for monitoring
-redisctl enterprise services list -o json | jq '.[] | select(.status != "running")'
+# Get services not running
+redisctl enterprise services list -q "[?status != 'running']"
 ```
 
 ### Troubleshooting Service Issues
@@ -196,8 +196,7 @@ done
 
 ```bash
 # Track service resource usage
-redisctl enterprise services list -o json | jq -r '.[] | 
-  "\(.name): CPU=\(.cpu_usage)% MEM=\(.memory_mb)MB"'
+redisctl enterprise services list -q "[].{name: name, cpu: cpu_usage, memory: memory_mb}" -o table
 ```
 
 ## Safety Considerations

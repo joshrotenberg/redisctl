@@ -107,11 +107,11 @@ redisctl api cloud post /subscriptions/12345/databases \
 ### Save Response to File
 
 ```bash
-# Save response
+# Save response (already pretty-printed by default)
 redisctl api cloud get /subscriptions > subscriptions.json
 
-# Pretty print and save
-redisctl api cloud get /subscriptions | jq '.' > subscriptions.json
+# Filter before saving
+redisctl api cloud get /subscriptions -q '[].{id: id, name: name}' > subscriptions.json
 ```
 
 ## Common Endpoints

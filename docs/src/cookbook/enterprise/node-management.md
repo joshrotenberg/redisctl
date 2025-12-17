@@ -149,12 +149,16 @@ redisctl enterprise node get --node-id 1 -o json -q '{
 echo "Node Health Report"
 echo "==================" 
 
+# Using jq for complex string formatting
 redisctl enterprise node list -o json | jq -r '
   .[] | 
   "Node \(.uid): \(.status) - CPU: \(.cpu_idle)% idle, " +
   "Memory: \((.used_memory / .total_memory * 100 | floor))% used, " +
   "Shards: \(.shard_count)"
 '
+
+# Alternative: Use JMESPath for structured output
+redisctl enterprise node list -q '[].{node: uid, status: status, cpu_idle: cpu_idle, shards: shard_count}' -o table
 ```
 
 ### Resource Alerts

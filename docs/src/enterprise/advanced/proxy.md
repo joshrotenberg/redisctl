@@ -183,7 +183,7 @@ Optimize proxy performance:
 
 ```bash
 # Increase threads for high-load proxies
-for proxy in $(redisctl enterprise proxy list -q "[?cpu_usage > \`75\`].uid" -o json | jq -r '.[]'); do
+for proxy in $(redisctl enterprise proxy list -q "[?cpu_usage > \`75\`].uid" --raw); do
   echo "Updating proxy $proxy"
   redisctl enterprise proxy update "$proxy" --data '{"threads": 8}'
 done
@@ -211,8 +211,8 @@ Diagnose proxy issues:
 # Find proxies with errors
 redisctl enterprise proxy list -q "[?status != 'active']"
 
-# Check proxy distribution
-redisctl enterprise proxy list -q "[].node_uid" | jq -s 'group_by(.) | map({node: .[0], count: length})'
+# Check proxy distribution (group_by requires jq)
+redisctl enterprise proxy list -q "[].{node: node_uid}" -o table
 
 # Monitor connection distribution
 for proxy in 1 2 3; do
@@ -230,10 +230,10 @@ Plan proxy capacity:
 
 ```bash
 # Calculate total connections
-redisctl enterprise proxy list -q "[].connections" | jq -s 'add'
+redisctl enterprise proxy list -q "sum([].connections)"
 
 # Get average connections per proxy
-redisctl enterprise proxy list -q "[].connections" | jq -s 'add/length'
+redisctl enterprise proxy list -q "avg([].connections)"
 
 # Find proxies near connection limit
 redisctl enterprise proxy list -q "[?connections > max_connections * \`0.8\`].{proxy: uid, usage_pct: (connections / max_connections * \`100\`)}"

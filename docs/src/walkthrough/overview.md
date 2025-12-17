@@ -9,7 +9,7 @@ redisctl is a command-line tool for managing Redis Cloud and Redis Enterprise de
 Before redisctl, managing Redis deployments meant:
 
 - **Manual UI clicking** - No way to script operations
-- **Fragile bash scripts** - curl + jq with hardcoded endpoints
+- **Fragile bash scripts** - curl with hardcoded endpoints and manual JSON parsing
 - **Polling loops** - Writing custom logic to wait for async operations
 - **Credential exposure** - Passwords on command lines or in plaintext
 - **Reinventing the wheel** - Every team writing the same scripts

@@ -244,10 +244,10 @@ curl -k -u "$REDIS_ENTERPRISE_USER:$REDIS_ENTERPRISE_PASSWORD" \
 Validate that the schema is well-formed:
 
 ```bash
-# Check if valid JSON
+# Check if valid JSON (using jq for JSON validation)
 redisctl enterprise jsonschema get | jq empty && echo "Valid JSON"
 
-# Validate schema structure
+# Validate schema structure (jq for boolean expressions)
 redisctl enterprise jsonschema get | jq 'has("definitions") and has("$schema")'
 
 # Check for required sections

@@ -191,15 +191,15 @@ echo "=== Cluster Health ==="
 
 # Cluster stats
 echo "Cluster:"
-redisctl enterprise stats cluster -q "{cpu:cpu_user,memory:free_memory}" | jq
+redisctl enterprise stats cluster -q "{cpu: cpu_user, memory: free_memory}"
 
 # Node status
 echo "Nodes:"
-redisctl enterprise node list -q "[].{id:uid,status:status}" -o table
+redisctl enterprise node list -q "[].{id: uid, status: status}" -o table
 
 # Active alerts
 echo "Alerts:"
-redisctl enterprise alerts list -q "[?state=='active'].{type:type,severity:severity}" -o table
+redisctl enterprise alerts list -q "[?state=='active'].{type: type, severity: severity}" -o table
 ```
 
 ### Monitor Database Performance

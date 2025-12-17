@@ -181,7 +181,7 @@ redisctl enterprise diagnostics run
 REPORT=$(redisctl enterprise diagnostics last-report)
 
 # Check for critical issues
-CRITICAL=$(echo "$REPORT" | jq '.issues | map(select(.severity == "critical")) | length')
+CRITICAL=$(redisctl enterprise diagnostics last-report -q "issues[?severity=='critical'] | length(@)")
 
 if [ "$CRITICAL" -gt 0 ]; then
   # Send alert for critical issues
@@ -204,8 +204,10 @@ redisctl enterprise diagnostics list-reports \
   --data '{"start_date": "2024-01-01", "end_date": "2024-01-31"}' \
   -o json > monthly-diagnostics.json
 
-# Extract key metrics
-jq '.[] | {date: .timestamp, health_score: .summary.health_score}' monthly-diagnostics.json
+# Extract key metrics using JMESPath
+redisctl enterprise diagnostics list-reports \
+  --data '{"start_date": "2024-01-01", "end_date": "2024-01-31"}' \
+  -q "[].{date: timestamp, health_score: summary.health_score}"
 ```
 
 ### Pre-Maintenance Check

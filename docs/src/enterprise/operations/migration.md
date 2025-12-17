@@ -175,7 +175,7 @@ Automate regular database exports:
 #!/bin/bash
 # backup.sh - Daily backup script
 
-DBS=$(redisctl enterprise database list -q '[].uid' -o json | jq -r '.[]')
+DBS=$(redisctl enterprise database list -q '[].uid' --raw)
 
 for DB in $DBS; do
   echo "Backing up database $DB"

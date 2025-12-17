@@ -136,7 +136,7 @@ redisctl enterprise cluster join --data '{
 
 ```bash
 #!/bin/bash
-for node in $(redisctl enterprise node list -q '[].uid' | jq -r '.[]'); do
+for node in $(redisctl enterprise node list -q '[].uid' --raw); do
   STATUS=$(redisctl enterprise node get $node -q 'status')
   echo "Node $node: $STATUS"
 done

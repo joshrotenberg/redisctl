@@ -159,7 +159,7 @@ RESULT=$(redisctl enterprise support-package cluster \
   --no-save \
   -o json)
 
-URL=$(echo "$RESULT" | jq -r '.upload_url')
+URL=$(redisctl enterprise support-package cluster -q 'upload_url')
 echo "Share this URL with Redis Support:"
 echo "$URL"
 ```

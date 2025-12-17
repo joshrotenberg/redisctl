@@ -183,9 +183,8 @@ redisctl enterprise database shard-stats <ID>
 ### Get Connection String
 
 ```bash
-DB=$(redisctl enterprise database get 1)
-ENDPOINT=$(echo $DB | jq -r '.endpoints[0].addr[0]')
-PORT=$(echo $DB | jq -r '.port')
+ENDPOINT=$(redisctl enterprise database get 1 -q 'endpoints[0].addr[0]')
+PORT=$(redisctl enterprise database get 1 -q 'port')
 echo "redis://$ENDPOINT:$PORT"
 ```
 
@@ -201,7 +200,7 @@ redisctl enterprise database list \
 
 ```bash
 # Update all databases
-for id in $(redisctl enterprise database list -q '[].uid' | jq -r '.[]'); do
+for id in $(redisctl enterprise database list -q '[].uid' --raw); do
   echo "Updating database $id"
   redisctl enterprise database update $id --data '{"eviction_policy": "volatile-lru"}'
 done

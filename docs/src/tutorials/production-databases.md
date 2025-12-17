@@ -138,25 +138,39 @@ DATABASES=$(redisctl --profile $PROFILE cloud database list \
   --subscription-id $SUBSCRIPTION_ID \
   -q "[].{id: databaseId, name: name, status: status}")
 
-echo "$DATABASES" | jq -c '.[]' | while read db; do
-  ID=$(echo $db | jq -r .id)
-  NAME=$(echo $db | jq -r .name)
-  STATUS=$(echo $db | jq -r .status)
+# Iterate over databases using JMESPath to extract fields
+for db_id in $(redisctl --profile $PROFILE cloud database list \
+  --subscription-id $SUBSCRIPTION_ID \
+  -q "[?status!='active'].databaseId" --raw); do
   
-  if [ "$STATUS" != "active" ]; then
-    echo "ALERT: Database $NAME ($ID) is not active: $STATUS"
-    # Send alert (PagerDuty, Slack, etc.)
-  fi
-done
-
-# Check memory usage
-for db_id in $(echo "$DATABASES" | jq -r '.[].id'); do
   DB_INFO=$(redisctl --profile $PROFILE cloud database get \
     --subscription-id $SUBSCRIPTION_ID \
-    --database-id $db_id)
+    --database-id $db_id \
+    -q "{name: name, status: status}")
   
-  MEMORY_USED=$(echo $DB_INFO | jq -r .memoryUsageInMB)
-  MEMORY_LIMIT=$(echo $DB_INFO | jq -r .memoryLimitInGB)
+  NAME=$(echo $DB_INFO | jq -r .name)
+  STATUS=$(echo $DB_INFO | jq -r .status)
+  
+  echo "ALERT: Database $NAME ($db_id) is not active: $STATUS"
+  # Send alert (PagerDuty, Slack, etc.)
+done
+
+# Check memory usage - get all database IDs with JMESPath
+for db_id in $(redisctl --profile $PROFILE cloud database list \
+  --subscription-id $SUBSCRIPTION_ID \
+  -q "[].databaseId" --raw); do
+  
+  # Get memory stats using JMESPath
+  MEMORY_USED=$(redisctl --profile $PROFILE cloud database get \
+    --subscription-id $SUBSCRIPTION_ID \
+    --database-id $db_id \
+    -q "memoryUsageInMB" --raw)
+  
+  MEMORY_LIMIT=$(redisctl --profile $PROFILE cloud database get \
+    --subscription-id $SUBSCRIPTION_ID \
+    --database-id $db_id \
+    -q "memoryLimitInGB" --raw)
+  
   MEMORY_LIMIT_MB=$((MEMORY_LIMIT * 1024))
   USAGE_PERCENT=$((MEMORY_USED * 100 / MEMORY_LIMIT_MB))
   
@@ -430,13 +444,16 @@ redisctl cloud database update \
 ### Connection Issues
 
 ```bash
-# Check connection limit
-DB_INFO=$(redisctl cloud database get \
+# Check connection limit using JMESPath
+CONNECTIONS_USED=$(redisctl cloud database get \
   --subscription-id 123456 \
-  --database-id 789)
+  --database-id 789 \
+  -q "connectionsUsed" --raw)
 
-CONNECTIONS_USED=$(echo $DB_INFO | jq -r .connectionsUsed)
-CONNECTIONS_LIMIT=$(echo $DB_INFO | jq -r .connectionsLimit)
+CONNECTIONS_LIMIT=$(redisctl cloud database get \
+  --subscription-id 123456 \
+  --database-id 789 \
+  -q "connectionsLimit" --raw)
 
 if [ $CONNECTIONS_USED -gt $((CONNECTIONS_LIMIT * 80 / 100)) ]; then
   echo "Warning: Using $CONNECTIONS_USED of $CONNECTIONS_LIMIT connections"
