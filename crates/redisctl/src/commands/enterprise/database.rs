@@ -35,6 +35,7 @@ pub async fn handle_database_command(
             proxy_policy,
             crdb,
             redis_password,
+            modules,
             data,
             dry_run,
         } => {
@@ -52,6 +53,7 @@ pub async fn handle_database_command(
                 proxy_policy.as_deref(),
                 *crdb,
                 redis_password.as_deref(),
+                modules,
                 data.as_deref(),
                 *dry_run,
                 output_format,

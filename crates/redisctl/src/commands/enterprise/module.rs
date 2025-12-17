@@ -1,4 +1,4 @@
-use clap::Subcommand;
+use clap::{ArgGroup, Subcommand};
 
 #[derive(Debug, Subcommand)]
 pub enum ModuleCommands {
@@ -6,10 +6,16 @@ pub enum ModuleCommands {
     #[command(visible_alias = "ls")]
     List,
 
-    /// Get module details
+    /// Get module details by UID or name
+    #[command(group(ArgGroup::new("identifier").required(true).args(["uid", "name"])))]
     Get {
         /// Module UID
-        uid: String,
+        #[arg(conflicts_with = "name")]
+        uid: Option<String>,
+
+        /// Module name (e.g., "ReJSON", "search")
+        #[arg(long, conflicts_with = "uid")]
+        name: Option<String>,
     },
 
     /// Upload new module

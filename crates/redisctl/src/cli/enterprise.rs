@@ -368,6 +368,10 @@ pub enum EnterpriseDatabaseCommands {
     # With specific port
     redisctl enterprise database create --name service-db --memory 1073741824 --port 12000
 
+    # With modules (auto-resolves name to module)
+    redisctl enterprise database create --name search-db --memory 1073741824 \\
+      --module search --module ReJSON
+
     # Complete configuration from file
     redisctl enterprise database create --data @database.json
 
@@ -423,6 +427,11 @@ NOTE: Memory size is in bytes. Common values:
         /// Redis password for authentication
         #[arg(long)]
         redis_password: Option<String>,
+
+        /// Module to enable (by name, can be repeated). Use 'module list' to see available modules.
+        /// Format: module_name or module_name:args (e.g., --module search --module ReJSON)
+        #[arg(long = "module", value_name = "NAME[:ARGS]")]
+        modules: Vec<String>,
 
         /// Advanced: Full database configuration as JSON string or @file.json
         #[arg(long)]
