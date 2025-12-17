@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.3](https://github.com/redis-developer/redisctl/compare/redisctl-v0.7.2...redisctl-v0.7.3) - 2025-12-17
+
+### Added
+
+- add module workflow tools (validate, inspect, package) ([#513](https://github.com/redis-developer/redisctl/pull/513))
+- add module name lookup for module get and database create ([#512](https://github.com/redis-developer/redisctl/pull/512))
+
+### Fixed
+
+- support JMESPath backtick string literals and improve module upload error ([#511](https://github.com/redis-developer/redisctl/pull/511))
+- correct repository URLs broken by PR #500 ([#506](https://github.com/redis-developer/redisctl/pull/506))
+
+### Other
+
+- update documentation URLs to new hosting location ([#509](https://github.com/redis-developer/redisctl/pull/509))
+- release ([#503](https://github.com/redis-developer/redisctl/pull/503))
+
 ## [0.7.2](https://github.com/joshrotenberg/redisctl/compare/redisctl-v0.7.1...redisctl-v0.7.2) - 2025-12-13
 
 ### Added
