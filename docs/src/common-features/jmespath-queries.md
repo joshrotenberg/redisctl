@@ -330,7 +330,7 @@ redisctl enterprise database get 1 -q 'json_diff(current_config, desired_config)
 | Object | `keys`, `values`, `pick`, `omit`, `deep_merge` |
 | Math | `round`, `floor`, `ceil`, `sum`, `avg`, `max`, `min`, `stddev` |
 | Type | `type_of`, `is_array`, `is_string`, `to_boolean` |
-| Utility | `if`, `coalesce`, `default`, `now` |
+| Utility | `if`, `coalesce`, `default`, `now`, `env` |
 | DateTime | `format_date`, `time_ago`, `relative_time`, `is_weekend` |
 | Duration | `format_duration`, `parse_duration` |
 | Network | `is_private_ip`, `cidr_contains`, `ip_to_int` |
@@ -342,6 +342,7 @@ redisctl enterprise database get 1 -q 'json_diff(current_config, desired_config)
 | Semver | `semver_compare`, `semver_satisfies`, `semver_parse` |
 | Fuzzy | `levenshtein`, `soundex`, `jaro_winkler` |
 | JSON Patch | `json_diff`, `json_patch`, `json_merge_patch` |
+| Format | `to_csv`, `to_tsv`, `to_csv_table`, `pretty`, `html_escape` |
 
 For the complete list, see the [jmespath-extensions documentation](https://docs.rs/jmespath_extensions).
 

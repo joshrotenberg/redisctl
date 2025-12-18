@@ -51,7 +51,7 @@ thiserror = { workspace = true }
 serde_yaml = { workspace = true }
 comfy-table = { workspace = true }
 jmespath = { workspace = true }
-jmespath_extensions = { version = "0.6", features = ["full"] }
+jmespath_extensions = { version = "0.7", features = ["full"] }
 config = { workspace = true }
 
 # Keyring for Files.com API key storage (separate from profile credentials)
