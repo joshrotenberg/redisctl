@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.2](https://github.com/redis-developer/redisctl/compare/redis-enterprise-v0.7.1...redis-enterprise-v0.7.2) - 2025-12-17
+
+### Fixed
+
+- support JMESPath backtick string literals and improve module upload error ([#511](https://github.com/redis-developer/redisctl/pull/511))
+
+### Other
+
+- update documentation URLs to new hosting location ([#509](https://github.com/redis-developer/redisctl/pull/509))
+
 ## [0.7.1](https://github.com/redis-developer/redisctl/compare/redis-enterprise-v0.7.0...redis-enterprise-v0.7.1) - 2025-12-16
 
 ### Other

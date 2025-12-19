@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.5](https://github.com/redis-developer/redisctl/compare/redis-cloud-v0.7.4...redis-cloud-v0.7.5) - 2025-12-17
+
+### Fixed
+
+- correct repository URLs broken by PR #500 ([#506](https://github.com/redis-developer/redisctl/pull/506))
+
+### Other
+
+- update documentation URLs to new hosting location ([#509](https://github.com/redis-developer/redisctl/pull/509))
+
 ## [0.7.4](https://github.com/joshrotenberg/redisctl/compare/redis-cloud-v0.7.3...redis-cloud-v0.7.4) - 2025-12-13
 
 ### Other
