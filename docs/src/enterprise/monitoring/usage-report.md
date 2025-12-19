@@ -172,14 +172,10 @@ mkdir -p "$REPORT_DIR"
 # Export full report
 redisctl enterprise usage-report export -o "$REPORT_DIR/usage-$DATE.json"
 
-# Create summary CSV
-redisctl enterprise usage-report get -q '{
-  date: report_date,
-  databases: usage.total_databases,
-  shards: usage.total_shards,
-  memory_gb: usage.total_memory_gb,
-  nodes: usage.total_nodes
-}' | jq -r '[.date, .databases, .shards, .memory_gb, .nodes] | @csv' >> "$REPORT_DIR/usage-summary.csv"
+# Create summary CSV using JMESPath to_csv()
+redisctl enterprise usage-report get -q '
+  to_csv([report_date, usage.total_databases, usage.total_shards, usage.total_memory_gb, usage.total_nodes])
+' --raw >> "$REPORT_DIR/usage-summary.csv"
 
 # Email report
 echo "Redis Enterprise Usage Report for $MONTH" | \
@@ -240,9 +236,10 @@ Tabular format for spreadsheet analysis:
 # Export to CSV
 redisctl enterprise usage-report export -o report.csv -f csv
 
-# Export specific data as CSV
-redisctl enterprise usage-report get -q 'databases' | \
-  jq -r '["name","memory_mb","shards"], (.[] | [.name, .memory_mb, .shard_count]) | @csv' > databases.csv
+# Export specific data as CSV using JMESPath to_csv_table()
+redisctl enterprise usage-report get -q '
+  to_csv_table(databases, [`"name"`, `"memory_mb"`, `"shard_count"`])
+' --raw > databases.csv
 
 # Import to Google Sheets
 redisctl enterprise usage-report export -o /tmp/usage.csv -f csv
