@@ -1,6 +1,6 @@
 [package]
 name = "redisctl"
-version = "0.7.2"
+version = "0.7.3"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -19,8 +19,8 @@ path = "src/main.rs"
 
 [dependencies]
 redisctl-config = { version = "0.2.1", path = "../redisctl-config" }
-redis-cloud = { version = "0.7.4", path = "../redis-cloud", features = ["tower-integration"] }
-redis-enterprise = { version = "0.7.1", path = "../redis-enterprise", features = ["tower-integration"] }
+redis-cloud = { version = "0.7.5", path = "../redis-cloud", features = ["tower-integration"] }
+redis-enterprise = { version = "0.7.2", path = "../redis-enterprise", features = ["tower-integration"] }
 files-sdk = { workspace = true, optional = true }
 
 # CLI dependencies
