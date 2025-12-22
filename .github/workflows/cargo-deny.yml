@@ -47,7 +47,7 @@ jobs:
       - name: Install cargo-deny
         uses: taiki-e/install-action@v2
         with:
-          tool: cargo-deny@0.16.2
+          tool: cargo-deny@0.18.9
 
       - name: Run cargo-deny
         run: cargo deny --all-features check ${{ matrix.checks }}
