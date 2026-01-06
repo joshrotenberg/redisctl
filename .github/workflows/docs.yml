@@ -5,9 +5,8 @@ on:
     branches: [main]
     paths:
       - "**.md"
-      - "docs/**"
+      - "mkdocs-site/**"
       - ".github/workflows/docs.yml"
-      - "book.toml"
       - "CHANGELOG.md"
       - "CONTRIBUTING.md"
       - "CLAUDE.md"
@@ -15,9 +14,8 @@ on:
     branches: [main]
     paths:
       - "**.md"
-      - "docs/**"
+      - "mkdocs-site/**"
       - ".github/workflows/docs.yml"
-      - "book.toml"
       - "CHANGELOG.md"
       - "CONTRIBUTING.md"
       - "CLAUDE.md"
@@ -48,42 +46,43 @@ jobs:
           markdownlint '**/*.md' \
             --ignore node_modules \
             --ignore target \
-            --ignore docs/book \
+            --ignore mkdocs-site/site \
             --disable MD013 MD033 MD041
         continue-on-error: true # Don't fail CI for markdown issues
 
-  # Build and test mdBook documentation
-  mdbook:
+  # Build MkDocs documentation
+  mkdocs:
     name: Build Documentation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Cache mdBook
-        uses: actions/cache@v4
-        id: mdbook-cache
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          path: ~/.cargo/bin/mdbook
-          key: ${{ runner.os }}-mdbook-0.4.40
+          python-version: "3.12"
 
-      - name: Install mdBook
-        if: steps.mdbook-cache.outputs.cache-hit != 'true'
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-mkdocs-material
+
+      - name: Install MkDocs and dependencies
         run: |
-          curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.40/mdbook-v0.4.40-x86_64-unknown-linux-gnu.tar.gz | tar -xz
-          mv mdbook ~/.cargo/bin/mdbook
-          chmod +x ~/.cargo/bin/mdbook
-          mkdir -p ~/.cargo/bin
+          pip install mkdocs mkdocs-material
 
       - name: Build documentation
         run: |
-          cd docs
-          mdbook build
+          cd mkdocs-site
+          mkdocs build --strict
 
-      - name: Test documentation examples
-        run: |
-          cd docs
-          mdbook test
-        continue-on-error: true # Don't fail CI if examples are outdated
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-site
+          path: mkdocs-site/site
+          retention-days: 1
 
   # Check for broken links in documentation
   link-check:
@@ -104,14 +103,15 @@ jobs:
             --exclude-path target
             --exclude-path node_modules
             --exclude-path .git
+            --exclude-path mkdocs-site/site
             --exclude "https://github.com/redis-developer/redisctl/pull/.*"
             --exclude "https://github.com/redis-developer/redisctl/issues/.*"
             .
         continue-on-error: true # Don't fail CI for broken external links
 
-  # Validate that documentation is in sync with code
+  # Validate that Rust documentation builds
   doc-validation:
-    name: Validate Documentation
+    name: Validate Rust Docs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -131,29 +131,24 @@ jobs:
       - name: Check that API docs build
         run: cargo doc --workspace --no-deps --all-features
 
-      - name: Check for TODO/FIXME in docs
-        run: |
-          echo "Checking for TODO/FIXME comments in documentation..."
-          ! grep -r "TODO\|FIXME" docs/src --include="*.md" || echo "Found TODOs in docs"
-
   # Status check for documentation
   docs-status:
     name: Documentation Status
     runs-on: ubuntu-latest
-    needs: [markdown-lint, mdbook, link-check, doc-validation]
+    needs: [markdown-lint, mkdocs, link-check, doc-validation]
     if: always()
     steps:
       - name: Documentation checks complete
         run: |
           echo "Documentation checks completed"
           echo "Markdown lint: ${{ needs.markdown-lint.result }}"
-          echo "mdBook build: ${{ needs.mdbook.result }}"
+          echo "MkDocs build: ${{ needs.mkdocs.result }}"
           echo "Link check: ${{ needs.link-check.result }}"
           echo "Doc validation: ${{ needs.doc-validation.result }}"
 
-          # Only fail if mdBook build failed (critical)
-          if [[ "${{ needs.mdbook.result }}" != "success" ]]; then
-            echo "mdBook build failed - this is critical"
+          # Only fail if MkDocs build failed (critical)
+          if [[ "${{ needs.mkdocs.result }}" != "success" ]]; then
+            echo "MkDocs build failed - this is critical"
             exit 1
           fi
 
@@ -163,29 +158,25 @@ jobs:
   deploy:
     name: Deploy Documentation
     runs-on: ubuntu-latest
-    needs: [mdbook]
+    needs: [mkdocs]
     # Only deploy on push to main, not on PRs
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Cache mdBook
-        uses: actions/cache@v4
-        id: mdbook-cache
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          path: ~/.cargo/bin/mdbook
-          key: ${{ runner.os }}-mdbook-0.4.40
+          python-version: "3.12"
 
-      - name: Install mdBook
-        if: steps.mdbook-cache.outputs.cache-hit != 'true'
+      - name: Install MkDocs and dependencies
         run: |
-          curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.40/mdbook-v0.4.40-x86_64-unknown-linux-gnu.tar.gz | tar -xz
-          mkdir -p ~/.cargo/bin
-          mv mdbook ~/.cargo/bin/mdbook
-          chmod +x ~/.cargo/bin/mdbook
+          pip install mkdocs mkdocs-material
 
       - name: Build documentation
-        run: cd docs && mdbook build
+        run: |
+          cd mkdocs-site
+          mkdocs build
 
       - name: Deploy to redisctl-docs
         uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4.0.0
@@ -193,5 +184,5 @@ jobs:
           personal_token: ${{ secrets.DOCS_DEPLOY_TOKEN }}
           external_repository: redis-field-engineering/redisctl-docs
           publish_branch: gh-pages
-          publish_dir: ./docs/book
+          publish_dir: ./mkdocs-site/site
           commit_message: "docs: update from redis-developer/redisctl@${{ github.sha }}"

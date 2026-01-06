@@ -1,0 +1,75 @@
+/* Redis brand colors */
+:root {
+  --md-primary-fg-color: #dc382d;
+  --md-primary-fg-color--light: #e85a51;
+  --md-primary-fg-color--dark: #b32d24;
+  --md-accent-fg-color: #ff6b5b;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #dc382d;
+  --md-accent-fg-color: #ff6b5b;
+}
+
+/* Hero section styling for home page */
+.md-typeset h1 {
+  font-weight: 700;
+}
+
+/* Code block improvements */
+.md-typeset pre > code {
+  font-size: 0.8rem;
+}
+
+/* Grid cards styling */
+.md-typeset .grid.cards > ul > li {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.md-typeset .grid.cards > ul > li:hover {
+  border-color: var(--md-accent-fg-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Admonition customization */
+.md-typeset .admonition.example,
+.md-typeset details.example {
+  border-color: #61afef;
+}
+
+.md-typeset .example > .admonition-title,
+.md-typeset .example > summary {
+  background-color: rgba(97, 175, 239, 0.1);
+}
+
+.md-typeset .example > .admonition-title::before,
+.md-typeset .example > summary::before {
+  background-color: #61afef;
+}
+
+/* Table improvements */
+.md-typeset table:not([class]) {
+  font-size: 0.8rem;
+}
+
+.md-typeset table:not([class]) th {
+  background-color: var(--md-default-fg-color--lightest);
+}
+
+/* Navigation tabs */
+.md-tabs {
+  background-color: var(--md-primary-fg-color);
+}
+
+/* Footer */
+.md-footer {
+  margin-top: 2rem;
+}
+
+/* Mermaid diagram styling */
+.mermaid {
+  text-align: center;
+  margin: 1rem 0;
+}
