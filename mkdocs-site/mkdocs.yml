@@ -1,0 +1,167 @@
+site_name: redisctl
+site_description: CLI for Redis Cloud and Redis Enterprise
+site_url: https://redis-field-engineering.github.io/redisctl-docs
+repo_url: https://github.com/redis-developer/redisctl
+repo_name: redis-developer/redisctl
+edit_uri: edit/main/mkdocs-site/docs/
+
+theme:
+  name: material
+  logo: assets/redis-logo.svg
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: red
+      accent: deep orange
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: red
+      accent: deep orange
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - toc.follow
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  # - social  # Requires: pip install "mkdocs-material[imaging]"
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: redis-developer
+      repo: redisctl
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/redis-developer/redisctl
+    - icon: fontawesome/brands/docker
+      link: https://github.com/redis-developer/redisctl/pkgs/container/redisctl
+  generator: false
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - getting-started/index.md
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quickstart.md
+      - Authentication: getting-started/authentication.md
+      - Docker: getting-started/docker.md
+  - Common Features:
+      - common/index.md
+      - Profiles: common/profiles.md
+      - Output Formats: common/output-formats.md
+      - JMESPath Queries: common/jmespath.md
+      - Async Operations: common/async-operations.md
+      - Raw API Access: common/raw-api.md
+  - Redis Cloud:
+      - cloud/index.md
+      - Commands:
+          - cloud/commands/index.md
+          - Subscriptions: cloud/commands/subscriptions.md
+          - Databases: cloud/commands/databases.md
+          - Access Control: cloud/commands/access-control.md
+          - Networking: cloud/commands/networking.md
+          - Tasks: cloud/commands/tasks.md
+      - Workflows: cloud/workflows.md
+  - Redis Enterprise:
+      - enterprise/index.md
+      - Commands:
+          - enterprise/commands/index.md
+          - Cluster: enterprise/commands/cluster.md
+          - Databases: enterprise/commands/databases.md
+          - Nodes: enterprise/commands/nodes.md
+          - Access Control: enterprise/commands/access-control.md
+          - Monitoring: enterprise/commands/monitoring.md
+          - Active-Active: enterprise/commands/active-active.md
+      - Operations:
+          - enterprise/operations/index.md
+          - Support Package: enterprise/operations/support-package.md
+          - Debug Info: enterprise/operations/debuginfo.md
+      - Workflows: enterprise/workflows.md
+  - Cookbook:
+      - cookbook/index.md
+      - Redis Cloud:
+          - cookbook/cloud/first-database.md
+          - cookbook/cloud/vpc-peering.md
+          - cookbook/cloud/acls.md
+          - cookbook/cloud/backup-restore.md
+      - Redis Enterprise:
+          - cookbook/enterprise/create-database.md
+          - cookbook/enterprise/support-package.md
+          - cookbook/enterprise/cluster-health.md
+          - cookbook/enterprise/node-management.md
+  - Reference:
+      - reference/index.md
+      - Environment Variables: reference/environment-variables.md
+      - Configuration File: reference/config-file.md
+      - Shell Completions: reference/shell-completions.md
+      - Security: reference/security.md
+      - rladmin Comparison: reference/rladmin.md
+  - Developer:
+      - developer/index.md
+      - Architecture: developer/architecture.md
+      - Libraries: developer/libraries.md
+      - Contributing: developer/contributing.md
+  - Presentation: presentation/index.md
