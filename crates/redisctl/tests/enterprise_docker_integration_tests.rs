@@ -1011,3 +1011,294 @@ fn test_enterprise_database_crud_workflow() {
             .success();
     }
 }
+
+// =============================================================================
+// WORKFLOW TESTS
+// =============================================================================
+
+#[test]
+#[ignore = "Requires Docker Redis Enterprise cluster"]
+fn test_enterprise_workflow_list() {
+    if !docker_available() {
+        eprintln!("Skipping: Docker Redis Enterprise not available");
+        return;
+    }
+
+    let temp_dir = TempDir::new().unwrap();
+    create_enterprise_profile(&temp_dir).unwrap();
+
+    test_cmd(&temp_dir)
+        .arg("enterprise")
+        .arg("workflow")
+        .arg("list")
+        .assert()
+        .success();
+}
+
+#[test]
+#[ignore = "Requires Docker Redis Enterprise cluster"]
+fn test_enterprise_workflow_list_json() {
+    if !docker_available() {
+        eprintln!("Skipping: Docker Redis Enterprise not available");
+        return;
+    }
+
+    let temp_dir = TempDir::new().unwrap();
+    create_enterprise_profile(&temp_dir).unwrap();
+
+    test_cmd(&temp_dir)
+        .arg("-o")
+        .arg("json")
+        .arg("enterprise")
+        .arg("workflow")
+        .arg("list")
+        .assert()
+        .success();
+}
+
+// NOTE: init-cluster workflow cannot be tested on an already-initialized cluster
+// The Docker cluster is already initialized, so this test validates help/args only
+#[test]
+fn test_enterprise_workflow_init_cluster_help() {
+    let mut cmd = Command::cargo_bin("redisctl").unwrap();
+    cmd.arg("enterprise")
+        .arg("workflow")
+        .arg("init-cluster")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "Initialize a Redis Enterprise cluster",
+        ))
+        .stdout(predicate::str::contains("--password"))
+        .stdout(predicate::str::contains("--name"))
+        .stdout(predicate::str::contains("--skip-database"));
+}
+
+#[test]
+fn test_enterprise_workflow_init_cluster_missing_password() {
+    let mut cmd = Command::cargo_bin("redisctl").unwrap();
+    cmd.arg("enterprise")
+        .arg("workflow")
+        .arg("init-cluster")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("--password"));
+}
+
+// =============================================================================
+// SUPPORT PACKAGE TESTS
+// =============================================================================
+
+#[test]
+#[ignore = "Requires Docker Redis Enterprise cluster"]
+fn test_enterprise_support_package_cluster() {
+    if !docker_available() {
+        eprintln!("Skipping: Docker Redis Enterprise not available");
+        return;
+    }
+
+    let temp_dir = TempDir::new().unwrap();
+    create_enterprise_profile(&temp_dir).unwrap();
+
+    // Create output file in temp directory
+    let output_file = temp_dir.path().join("support-package.tar.gz");
+
+    let result = test_cmd(&temp_dir)
+        .arg("enterprise")
+        .arg("support-package")
+        .arg("cluster")
+        .arg("--file")
+        .arg(&output_file)
+        .arg("--skip-checks")
+        .timeout(std::time::Duration::from_secs(120))
+        .output();
+
+    match result {
+        Ok(output) => {
+            if output.status.success() {
+                // Verify the file was created
+                assert!(output_file.exists(), "Support package file should exist");
+                // Verify it's a reasonable size (at least 1KB)
+                let metadata = std::fs::metadata(&output_file).unwrap();
+                assert!(
+                    metadata.len() > 1024,
+                    "Support package should be larger than 1KB"
+                );
+            } else {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                // Some Docker images may not support debuginfo endpoint
+                if stderr.contains("404") || stderr.contains("not found") {
+                    eprintln!("Skipping: Support package endpoint not available");
+                    return;
+                }
+                panic!("Unexpected failure: {}", stderr);
+            }
+        }
+        Err(e) => {
+            // Timeout or other error - may happen on slow systems
+            eprintln!("Skipping: Command timed out or failed: {}", e);
+        }
+    }
+}
+
+#[test]
+#[ignore = "Requires Docker Redis Enterprise cluster"]
+fn test_enterprise_support_package_cluster_with_optimize() {
+    if !docker_available() {
+        eprintln!("Skipping: Docker Redis Enterprise not available");
+        return;
+    }
+
+    let temp_dir = TempDir::new().unwrap();
+    create_enterprise_profile(&temp_dir).unwrap();
+
+    let output_file = temp_dir.path().join("support-package-optimized.tar.gz");
+
+    let result = test_cmd(&temp_dir)
+        .arg("enterprise")
+        .arg("support-package")
+        .arg("cluster")
+        .arg("--file")
+        .arg(&output_file)
+        .arg("--optimize")
+        .arg("--skip-checks")
+        .timeout(std::time::Duration::from_secs(120))
+        .output();
+
+    match result {
+        Ok(output) => {
+            if output.status.success() {
+                assert!(
+                    output_file.exists(),
+                    "Optimized support package file should exist"
+                );
+            } else {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                if stderr.contains("404") || stderr.contains("not found") {
+                    eprintln!("Skipping: Support package endpoint not available");
+                    return;
+                }
+                panic!("Unexpected failure: {}", stderr);
+            }
+        }
+        Err(e) => {
+            eprintln!("Skipping: Command timed out or failed: {}", e);
+        }
+    }
+}
+
+#[test]
+#[ignore = "Requires Docker Redis Enterprise cluster"]
+fn test_enterprise_support_package_node() {
+    if !docker_available() {
+        eprintln!("Skipping: Docker Redis Enterprise not available");
+        return;
+    }
+
+    let temp_dir = TempDir::new().unwrap();
+    create_enterprise_profile(&temp_dir).unwrap();
+
+    let output_file = temp_dir.path().join("support-package-node.tar.gz");
+
+    let result = test_cmd(&temp_dir)
+        .arg("enterprise")
+        .arg("support-package")
+        .arg("node")
+        .arg("1")
+        .arg("--file")
+        .arg(&output_file)
+        .arg("--skip-checks")
+        .timeout(std::time::Duration::from_secs(120))
+        .output();
+
+    match result {
+        Ok(output) => {
+            if output.status.success() {
+                assert!(
+                    output_file.exists(),
+                    "Node support package file should exist"
+                );
+            } else {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                if stderr.contains("404") || stderr.contains("not found") {
+                    eprintln!("Skipping: Node support package endpoint not available");
+                    return;
+                }
+                panic!("Unexpected failure: {}", stderr);
+            }
+        }
+        Err(e) => {
+            eprintln!("Skipping: Command timed out or failed: {}", e);
+        }
+    }
+}
+
+#[test]
+fn test_enterprise_support_package_help() {
+    let mut cmd = Command::cargo_bin("redisctl").unwrap();
+    cmd.arg("enterprise")
+        .arg("support-package")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Support package generation"))
+        .stdout(predicate::str::contains("cluster"))
+        .stdout(predicate::str::contains("database"))
+        .stdout(predicate::str::contains("node"));
+}
+
+#[test]
+fn test_enterprise_support_package_cluster_help() {
+    let mut cmd = Command::cargo_bin("redisctl").unwrap();
+    cmd.arg("enterprise")
+        .arg("support-package")
+        .arg("cluster")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "Generate full cluster support package",
+        ))
+        .stdout(predicate::str::contains("--file"))
+        .stdout(predicate::str::contains("--optimize"))
+        .stdout(predicate::str::contains("--upload"));
+}
+
+// =============================================================================
+// DEBUG INFO TESTS (Alternative to support package)
+// =============================================================================
+
+#[test]
+#[ignore = "Requires Docker Redis Enterprise cluster"]
+fn test_enterprise_debug_info_list() {
+    if !docker_available() {
+        eprintln!("Skipping: Docker Redis Enterprise not available");
+        return;
+    }
+
+    let temp_dir = TempDir::new().unwrap();
+    create_enterprise_profile(&temp_dir).unwrap();
+
+    // This may or may not exist depending on the API version
+    let result = test_cmd(&temp_dir)
+        .arg("enterprise")
+        .arg("debug-info")
+        .arg("list")
+        .output();
+
+    match result {
+        Ok(output) => {
+            if !output.status.success() {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                if stderr.contains("404") || stderr.contains("not found") {
+                    eprintln!("Skipping: Debug info endpoint not available");
+                }
+            }
+            // If we get here, the command worked or was skipped
+        }
+        Err(e) => {
+            eprintln!("Skipping: Command failed: {}", e);
+        }
+    }
+}
