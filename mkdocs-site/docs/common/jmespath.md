@@ -6,7 +6,7 @@ Filter, transform, and reshape command output.
 
 [JMESPath](https://jmespath.org/) is a query language for JSON. redisctl includes an extended implementation with 300+ functions.
 
-``` bash
+```bash
 # Basic: get all subscription names
 redisctl cloud subscription list -o json -q '[].name'
 
@@ -21,7 +21,7 @@ redisctl cloud subscription list -o json -q '{
 
 ### Select Fields
 
-``` bash
+```bash
 # Single field from each item
 redisctl cloud subscription list -o json -q '[].name'
 ["prod-sub", "dev-sub", "staging-sub"]
@@ -33,7 +33,7 @@ redisctl cloud subscription list -o json -q '[].{name: name, id: id}'
 
 ### Filter Results
 
-``` bash
+```bash
 # Databases over 1GB
 redisctl enterprise database list -o json -q '[?memory_size > `1073741824`]'
 
@@ -46,7 +46,7 @@ redisctl cloud subscription list -o json -q "[?contains(name, 'prod')]"
 
 ### Slice Arrays
 
-``` bash
+```bash
 # First 3 results
 redisctl cloud subscription list -o json -q '[:3]'
 
@@ -61,7 +61,7 @@ redisctl cloud subscription list -o json -q '[5:15]'
 
 ### Count
 
-``` bash
+```bash
 # Total subscriptions
 redisctl cloud subscription list -o json -q 'length(@)'
 42
@@ -75,7 +75,7 @@ redisctl enterprise database list -o json -q '{
 
 ### Sum, Min, Max, Avg
 
-``` bash
+```bash
 # Total memory across all databases
 redisctl enterprise database list -o json -q 'sum([].memory_size)'
 
@@ -89,7 +89,7 @@ redisctl enterprise database list -o json -q '{
 
 ### Unique Values
 
-``` bash
+```bash
 # Unique cloud providers
 redisctl cloud subscription list -o json -q '[].cloudDetails[0].provider | unique(@)'
 ["AWS", "GCP", "Azure"]
@@ -102,7 +102,7 @@ redisctl cloud subscription list -o json -q '[].cloudDetails[0].regions[0].regio
 
 Chain operations with `|`:
 
-``` bash
+```bash
 # Filter -> Project -> Sort -> Limit
 redisctl cloud subscription list -o json -q "
   [?status == 'active']
@@ -114,7 +114,7 @@ redisctl cloud subscription list -o json -q "
 
 ## String Functions
 
-``` bash
+```bash
 # Uppercase names
 redisctl cloud subscription list -o json -q '[].name | map(&upper(@), @)'
 
@@ -134,7 +134,7 @@ redisctl uses [jmespath-community](https://jmespath.site/) with 300+ functions:
 
 ### Formatting
 
-``` bash
+```bash
 # Human-readable bytes
 redisctl enterprise database list -o json -q '[].{
   name: name,
@@ -145,7 +145,7 @@ redisctl enterprise database list -o json -q '[].{
 
 ### Date/Time
 
-``` bash
+```bash
 # Add timestamp to output
 redisctl enterprise cluster get -o json -q '{
   cluster: name,
@@ -155,7 +155,7 @@ redisctl enterprise cluster get -o json -q '{
 
 ### Fuzzy Matching
 
-``` bash
+```bash
 # Find similar names (Levenshtein distance)
 redisctl cloud subscription list -o json -q "[].{
   name: name,
@@ -165,7 +165,7 @@ redisctl cloud subscription list -o json -q "[].{
 
 ### Type Checking
 
-``` bash
+```bash
 # Inspect field types
 redisctl enterprise database list -o json -q '[0] | {
   uid_type: type_of(uid),
@@ -178,7 +178,7 @@ redisctl enterprise database list -o json -q '[0] | {
 
 ### Cost Analysis
 
-``` bash
+```bash
 # Subscriptions with total size
 redisctl cloud subscription list -o json -q '[].{
   name: name,
@@ -189,7 +189,7 @@ redisctl cloud subscription list -o json -q '[].{
 
 ### Health Check
 
-``` bash
+```bash
 # Nodes with issues
 redisctl enterprise node list -o json -q "[?status != 'active'].{
   id: uid,
@@ -200,7 +200,7 @@ redisctl enterprise node list -o json -q "[?status != 'active'].{
 
 ### Inventory Report
 
-``` bash
+```bash
 # Database summary by type
 redisctl enterprise database list -o json -q '{
   total: length(@),

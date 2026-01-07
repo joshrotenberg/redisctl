@@ -12,7 +12,7 @@ Many Redis API operations are asynchronous:
 
 Without redisctl, you'd write polling loops:
 
-``` bash
+```bash
 # The old way - don't do this
 TASK_ID=$(curl ... | jq -r '.taskId')
 while true; do
@@ -26,7 +26,7 @@ done
 
 Add `--wait` to any create/update/delete command:
 
-``` bash
+```bash
 # Create and wait for completion
 redisctl cloud subscription create \
   --name prod \
@@ -39,21 +39,21 @@ redisctl cloud subscription create \
 
 ## How It Works
 
-``` mermaid
+```mermaid
 sequenceDiagram
     participant User
     participant redisctl
     participant API
-    
+
     User->>redisctl: create --wait
     redisctl->>API: POST /subscriptions
     API-->>redisctl: taskId: abc123
-    
+
     loop Poll until complete
         redisctl->>API: GET /tasks/abc123
         API-->>redisctl: status: processing
     end
-    
+
     API-->>redisctl: status: completed
     redisctl-->>User: Subscription created (ID: 12345)
 ```
@@ -64,7 +64,7 @@ sequenceDiagram
 
 Set maximum wait time:
 
-``` bash
+```bash
 # Wait up to 10 minutes
 redisctl cloud subscription create \
   --name prod \
@@ -78,7 +78,7 @@ Default timeout varies by operation type.
 
 Control how often to check status:
 
-``` bash
+```bash
 # Check every 5 seconds instead of default
 redisctl cloud database create \
   --subscription-id 123 \
@@ -91,7 +91,7 @@ redisctl cloud database create \
 
 Without `--wait`, commands return immediately with a task ID:
 
-``` bash
+```bash
 redisctl cloud subscription create --name prod --cloud-provider AWS --region us-east-1
 ```
 
@@ -104,19 +104,19 @@ Use 'redisctl cloud task get abc123-def456' to check status
 
 ### Get Task Details
 
-``` bash
+```bash
 redisctl cloud task get abc123-def456
 ```
 
 ### List Recent Tasks
 
-``` bash
+```bash
 redisctl cloud task list
 ```
 
 ### Wait for Existing Task
 
-``` bash
+```bash
 # Start waiting for a task that's already running
 redisctl cloud task wait abc123-def456
 ```
@@ -125,7 +125,7 @@ redisctl cloud task wait abc123-def456
 
 ### Sequential Operations
 
-``` bash
+```bash
 # Create subscription, then database
 SUB_ID=$(redisctl cloud subscription create \
   --name prod \
@@ -143,7 +143,7 @@ redisctl cloud database create \
 
 ### Parallel Operations
 
-``` bash
+```bash
 # Start multiple operations
 redisctl cloud database create --subscription-id 123 --name db1 &
 redisctl cloud database create --subscription-id 123 --name db2 &
@@ -155,7 +155,7 @@ wait
 
 ## CI/CD Example
 
-``` yaml
+```yaml
 - name: Create database
   run: |
     redisctl cloud database create \
@@ -165,7 +165,7 @@ wait
       --wait \
       --wait-timeout 300 \
       -o json > database.json
-    
+
     echo "REDIS_HOST=$(jq -r '.publicEndpoint' database.json)" >> $GITHUB_ENV
 ```
 
@@ -173,7 +173,7 @@ wait
 
 If an async operation fails, `--wait` returns a non-zero exit code:
 
-``` bash
+```bash
 if ! redisctl cloud subscription create --name prod --wait; then
   echo "Subscription creation failed"
   exit 1

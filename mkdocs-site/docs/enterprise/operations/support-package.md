@@ -199,7 +199,7 @@ redisctl enterprise support-package cluster -o json
   if: failure()
   run: |
     result=$(redisctl enterprise support-package cluster --optimize -o json)
-    
+
     if [ $(echo "$result" | jq -r '.success') = "true" ]; then
       file=$(echo "$result" | jq -r '.file_path')
       echo "Package created: $file"

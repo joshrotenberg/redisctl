@@ -29,7 +29,7 @@ redisctl profile set prod \
 
 Credentials are stored in:
 - **macOS:** Keychain
-- **Windows:** Credential Manager  
+- **Windows:** Credential Manager
 - **Linux:** Secret Service (GNOME Keyring, KWallet)
 
 **Pros:** Encrypted, OS-managed, survives reboots

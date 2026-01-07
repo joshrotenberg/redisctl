@@ -6,7 +6,7 @@ Get running in 60 seconds with Docker.
 
 ### Redis Cloud
 
-``` bash
+```bash
 # Set your credentials
 export REDIS_CLOUD_API_KEY="your-api-key"
 export REDIS_CLOUD_SECRET_KEY="your-secret-key"
@@ -23,7 +23,7 @@ docker run --rm \
 
 ### Redis Enterprise
 
-``` bash
+```bash
 # Set your credentials
 export REDIS_ENTERPRISE_URL="https://cluster.example.com:9443"
 export REDIS_ENTERPRISE_USER="admin@cluster.local"
@@ -51,7 +51,7 @@ That's it! You just ran your first redisctl command.
 
 ### List Resources
 
-``` bash
+```bash
 # Cloud: List all subscriptions
 redisctl cloud subscription list
 
@@ -69,7 +69,7 @@ redisctl enterprise database list
 
 Add `-o json` to any command for structured output:
 
-``` bash
+```bash
 redisctl cloud subscription list -o json
 ```
 
@@ -77,7 +77,7 @@ redisctl cloud subscription list -o json
 
 Use `-q` to query and filter results:
 
-``` bash
+```bash
 # Get just subscription names
 redisctl cloud subscription list -o json -q '[].name'
 

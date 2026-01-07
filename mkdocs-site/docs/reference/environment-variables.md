@@ -43,7 +43,7 @@ Complete reference of environment variables supported by redisctl.
     ```bash
     export REDIS_CLOUD_API_KEY="your-key"
     export REDIS_CLOUD_SECRET_KEY="your-secret"
-    
+
     redisctl cloud subscription list
     ```
 
@@ -54,7 +54,7 @@ Complete reference of environment variables supported by redisctl.
     export REDIS_ENTERPRISE_USER="admin@cluster.local"
     export REDIS_ENTERPRISE_PASSWORD="password"
     export REDIS_ENTERPRISE_INSECURE="true"
-    
+
     redisctl enterprise cluster get
     ```
 

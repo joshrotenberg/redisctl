@@ -6,13 +6,13 @@ Multiple ways to install redisctl depending on your platform and preferences.
 
 The easiest way to install on macOS or Linux:
 
-``` bash
+```bash
 brew install redis-developer/homebrew-tap/redisctl
 ```
 
 To upgrade:
 
-``` bash
+```bash
 brew upgrade redisctl
 ```
 
@@ -20,13 +20,13 @@ brew upgrade redisctl
 
 Run without installing anything:
 
-``` bash
+```bash
 docker run ghcr.io/redis-developer/redisctl --help
 ```
 
 For frequent use, create an alias:
 
-``` bash
+```bash
 alias redisctl='docker run --rm -e REDIS_CLOUD_API_KEY -e REDIS_CLOUD_SECRET_KEY ghcr.io/redis-developer/redisctl'
 ```
 
@@ -36,13 +36,13 @@ See the [Docker guide](docker.md) for more details.
 
 If you have Rust installed:
 
-``` bash
+```bash
 cargo install redisctl
 ```
 
 With secure credential storage (OS keyring support):
 
-``` bash
+```bash
 cargo install redisctl --features secure-storage
 ```
 
@@ -84,7 +84,7 @@ Download pre-built binaries from [GitHub Releases](https://github.com/redis-deve
 
 ## Verify Installation
 
-``` bash
+```bash
 redisctl --version
 ```
 

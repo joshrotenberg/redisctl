@@ -131,7 +131,7 @@ fn test_parse_database_id() {
 #[tokio::test]
 async fn test_database_list() {
     let mock_server = MockServer::start().await;
-    
+
     Mock::given(method("GET"))
         .and(path("/v1/subscriptions/123/databases"))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!([
@@ -139,7 +139,7 @@ async fn test_database_list() {
         ])))
         .mount(&mock_server)
         .await;
-    
+
     // Test against mock
 }
 ```
