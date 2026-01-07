@@ -17,10 +17,10 @@ Supported shells: `bash`, `zsh`, `fish`, `powershell`
     ```bash
     # Create completions directory if needed
     mkdir -p ~/.local/share/bash-completion/completions
-    
+
     # Generate and install
     redisctl completions bash > ~/.local/share/bash-completion/completions/redisctl
-    
+
     # Reload shell or source the file
     source ~/.local/share/bash-completion/completions/redisctl
     ```
@@ -30,13 +30,13 @@ Supported shells: `bash`, `zsh`, `fish`, `powershell`
     ```bash
     # Create completions directory if needed
     mkdir -p ~/.zfunc
-    
+
     # Add to fpath (add this to ~/.zshrc)
     fpath=(~/.zfunc $fpath)
-    
+
     # Generate completions
     redisctl completions zsh > ~/.zfunc/_redisctl
-    
+
     # Rebuild completion cache
     rm -f ~/.zcompdump; compinit
     ```
@@ -46,7 +46,7 @@ Supported shells: `bash`, `zsh`, `fish`, `powershell`
     ```bash
     # Generate and install
     redisctl completions fish > ~/.config/fish/completions/redisctl.fish
-    
+
     # Reload shell
     source ~/.config/fish/completions/redisctl.fish
     ```
@@ -56,7 +56,7 @@ Supported shells: `bash`, `zsh`, `fish`, `powershell`
     ```powershell
     # Add to profile
     redisctl completions powershell >> $PROFILE
-    
+
     # Reload profile
     . $PROFILE
     ```

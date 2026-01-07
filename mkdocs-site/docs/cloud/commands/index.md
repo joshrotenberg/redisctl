@@ -15,7 +15,7 @@ All Redis Cloud CLI commands.
 
 ## Getting Help
 
-``` bash
+```bash
 # List all cloud commands
 redisctl cloud --help
 
@@ -36,7 +36,7 @@ All commands support:
 
 ## Examples
 
-``` bash
+```bash
 # List subscriptions as table
 redisctl cloud subscription list
 

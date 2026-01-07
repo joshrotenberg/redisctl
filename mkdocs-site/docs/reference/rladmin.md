@@ -52,7 +52,7 @@ They're **complementary tools** - use both!
     ```bash
     # 1. SSH to node
     ssh admin@cluster-node
-    
+
     # 2. Get info (text output, need to parse)
     rladmin info bdb 1 | grep memory | awk '{print $2}'
     ```
@@ -77,7 +77,7 @@ They're **complementary tools** - use both!
 
     ```bash
     redisctl enterprise database list
-    
+
     # Or with filtering
     redisctl enterprise database list -o json -q '[?status==`active`].name'
     ```
@@ -89,13 +89,13 @@ They're **complementary tools** - use both!
     ```bash
     # 1. SSH to node
     ssh admin@cluster-node
-    
+
     # 2. Generate package
     rladmin cluster debug_info
-    
+
     # 3. Copy to local machine
     scp admin@node:/tmp/debug*.tar.gz ./
-    
+
     # 4. Manually upload via web browser
     # Total time: 10+ minutes
     ```
@@ -105,7 +105,7 @@ They're **complementary tools** - use both!
     ```bash
     # One command from your laptop
     redisctl enterprise support-package cluster --optimize --upload
-    
+
     # Total time: 30 seconds
     ```
 

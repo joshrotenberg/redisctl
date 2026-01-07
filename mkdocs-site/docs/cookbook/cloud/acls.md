@@ -94,7 +94,7 @@ redisctl cloud acl create --subscription-id "$SUB_ID" --data '{
 
 echo "Creating write ACL..."
 redisctl cloud acl create --subscription-id "$SUB_ID" --data '{
-  "name": "app-writer", 
+  "name": "app-writer",
   "redisRules": ["+@all", "-@admin", "-@dangerous"]
 }'
 

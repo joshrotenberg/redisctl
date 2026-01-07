@@ -20,7 +20,7 @@ redisctl enterprise node list -o json -q '[].{
   status: status
 }'
 
-# Database status  
+# Database status
 redisctl enterprise database list -o json -q '[].{
   uid: uid,
   name: name,

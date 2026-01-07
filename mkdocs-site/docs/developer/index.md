@@ -23,12 +23,12 @@ async fn main() -> anyhow::Result<()> {
         "your-api-key",
         "your-secret-key",
     );
-    
+
     let subscriptions = client.subscriptions().list().await?;
     for sub in subscriptions {
         println!("{}: {}", sub.id, sub.name);
     }
-    
+
     Ok(())
 }
 ```

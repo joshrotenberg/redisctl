@@ -14,7 +14,7 @@ Control how redisctl displays results.
 
 Human-readable tables with aligned columns:
 
-``` bash
+```bash
 redisctl enterprise database list
 ```
 
@@ -29,11 +29,11 @@ ID  Name           Memory     Status  Endpoints
 
 Structured data for scripting and automation:
 
-``` bash
+```bash
 redisctl enterprise database list -o json
 ```
 
-``` json
+```json
 [
   {
     "uid": 1,
@@ -53,17 +53,17 @@ redisctl enterprise database list -o json
 
 JSON is pretty-printed by default. For compact output, pipe through `jq -c`:
 
-``` bash
+```bash
 redisctl cloud subscription list -o json | jq -c '.[]'
 ```
 
 ## YAML Output
 
-``` bash
+```bash
 redisctl enterprise cluster get -o yaml
 ```
 
-``` yaml
+```yaml
 name: production-cluster
 uid: abc123
 nodes:
@@ -79,12 +79,12 @@ nodes:
 
 Use `-q` to filter before output formatting:
 
-``` bash
+```bash
 # Get just names as JSON array
 redisctl cloud subscription list -o json -q '[].name'
 ```
 
-``` json
+```json
 ["prod-sub", "dev-sub", "staging-sub"]
 ```
 
@@ -94,7 +94,7 @@ See [JMESPath Queries](jmespath.md) for more examples.
 
 ### Extract Single Value
 
-``` bash
+```bash
 # Get cluster name
 CLUSTER=$(redisctl enterprise cluster get -o json -q 'name')
 echo "Connected to: $CLUSTER"
@@ -102,7 +102,7 @@ echo "Connected to: $CLUSTER"
 
 ### Loop Over Results
 
-``` bash
+```bash
 # Process each database
 redisctl enterprise database list -o json -q '[].uid' | jq -r '.[]' | while read uid; do
   echo "Processing database $uid"
@@ -112,7 +112,7 @@ done
 
 ### Conditional Logic
 
-``` bash
+```bash
 # Check if any database is inactive
 INACTIVE=$(redisctl enterprise database list -o json -q "[?status!='active'] | length(@)")
 if [ "$INACTIVE" -gt 0 ]; then
@@ -124,7 +124,7 @@ fi
 
 JSON output is essential for CI/CD pipelines:
 
-``` yaml
+```yaml
 # GitHub Actions example
 - name: Get database endpoint
   id: db

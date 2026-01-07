@@ -6,7 +6,7 @@ Operational tools for Redis Enterprise clusters.
 
 Generate diagnostic packages for Redis Support:
 
-``` bash
+```bash
 # Basic support package
 redisctl enterprise support-package cluster
 
@@ -23,7 +23,7 @@ redisctl enterprise support-package cluster --optimize --upload
 
 Collect debugging information:
 
-``` bash
+```bash
 # All debug info
 redisctl enterprise debuginfo all
 
@@ -37,7 +37,7 @@ redisctl enterprise debuginfo node 1
 
 ### Health Check Script
 
-``` bash
+```bash
 #!/bin/bash
 # Quick cluster health check
 
@@ -56,7 +56,7 @@ redisctl enterprise alert list -o json -q 'length(@)'
 
 ### Backup Configuration
 
-``` bash
+```bash
 # Export cluster config
 redisctl enterprise cluster get -o json > cluster-config.json
 

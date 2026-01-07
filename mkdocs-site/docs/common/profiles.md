@@ -15,7 +15,7 @@ Instead of juggling environment variables or passing credentials on every comman
 
 ### Redis Cloud
 
-``` bash
+```bash
 redisctl profile set my-cloud \
   --cloud-api-key "your-api-key" \
   --cloud-secret-key "your-secret-key"
@@ -23,7 +23,7 @@ redisctl profile set my-cloud \
 
 ### Redis Enterprise
 
-``` bash
+```bash
 redisctl profile set my-enterprise \
   --enterprise-url "https://cluster.example.com:9443" \
   --enterprise-user "admin@cluster.local" \
@@ -34,7 +34,7 @@ redisctl profile set my-enterprise \
 
 A profile can have both Cloud and Enterprise credentials:
 
-``` bash
+```bash
 redisctl profile set prod \
   --cloud-api-key "$CLOUD_KEY" \
   --cloud-secret-key "$CLOUD_SECRET" \
@@ -47,14 +47,14 @@ redisctl profile set prod \
 
 ### Per-Command
 
-``` bash
+```bash
 redisctl --profile prod cloud subscription list
 redisctl --profile dev enterprise cluster get
 ```
 
 ### Default Profile
 
-``` bash
+```bash
 # Set the default
 redisctl profile set-default prod
 
@@ -66,7 +66,7 @@ redisctl cloud subscription list
 
 Environment variables override profile settings:
 
-``` bash
+```bash
 # Profile says one thing, env var wins
 export REDIS_CLOUD_API_KEY="override-key"
 redisctl --profile prod cloud subscription list  # Uses override-key
@@ -76,7 +76,7 @@ redisctl --profile prod cloud subscription list  # Uses override-key
 
 ### List All Profiles
 
-``` bash
+```bash
 redisctl profile list
 ```
 
@@ -89,13 +89,13 @@ Profiles:
 
 ### Show Profile Details
 
-``` bash
+```bash
 redisctl profile show prod
 ```
 
 ### Delete a Profile
 
-``` bash
+```bash
 redisctl profile delete dev
 ```
 
@@ -108,7 +108,7 @@ redisctl profile delete dev
 
 Store credentials in macOS Keychain, Windows Credential Manager, or Linux Secret Service:
 
-``` bash
+```bash
 # Requires the secure-storage feature
 cargo install redisctl --features secure-storage
 
@@ -121,7 +121,7 @@ redisctl profile set prod \
 
 The config file only stores a reference:
 
-``` toml
+```toml
 [profiles.prod]
 cloud_api_key = "keyring:prod-cloud-api-key"
 cloud_secret_key = "keyring:prod-cloud-secret-key"
@@ -131,7 +131,7 @@ cloud_secret_key = "keyring:prod-cloud-secret-key"
 
 Store references to environment variables:
 
-``` bash
+```bash
 redisctl profile set prod \
   --cloud-api-key '${REDIS_CLOUD_API_KEY}' \
   --cloud-secret-key '${REDIS_CLOUD_SECRET_KEY}'
@@ -149,7 +149,7 @@ Variables are resolved at runtime. Great for CI/CD where secrets are injected.
 
 ## Example Configuration
 
-``` toml
+```toml
 default_profile = "prod"
 
 [profiles.prod]

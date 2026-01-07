@@ -16,7 +16,7 @@ All Redis Enterprise CLI commands.
 
 ## Getting Help
 
-``` bash
+```bash
 # List all enterprise commands
 redisctl enterprise --help
 
@@ -37,7 +37,7 @@ All commands support:
 
 ## Examples
 
-``` bash
+```bash
 # Get cluster info
 redisctl enterprise cluster get
 

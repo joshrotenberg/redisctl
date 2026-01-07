@@ -4,11 +4,11 @@ Redis Enterprise is Redis's self-managed database platform for on-premises or cl
 
 ## Three-Tier Access
 
-``` mermaid
+```mermaid
 graph LR
     A[API Layer] --> B[Commands]
     B --> C[Workflows]
-    
+
     style A fill:#e5c07b,color:#000
     style B fill:#98c379,color:#000
     style C fill:#61afef,color:#000

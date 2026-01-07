@@ -4,7 +4,7 @@ Run redisctl without installing anything.
 
 ## Quick Start
 
-``` bash
+```bash
 docker run ghcr.io/redis-developer/redisctl --help
 ```
 
@@ -12,7 +12,7 @@ docker run ghcr.io/redis-developer/redisctl --help
 
 ### Environment Variables
 
-``` bash
+```bash
 docker run --rm \
   -e REDIS_CLOUD_API_KEY \
   -e REDIS_CLOUD_SECRET_KEY \
@@ -23,7 +23,7 @@ docker run --rm \
 
 If you have a local configuration:
 
-``` bash
+```bash
 docker run --rm \
   -v ~/.config/redisctl:/root/.config/redisctl:ro \
   ghcr.io/redis-developer/redisctl --profile prod cloud subscription list
@@ -40,7 +40,7 @@ Add to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.):
       -e REDIS_CLOUD_API_KEY \
       -e REDIS_CLOUD_SECRET_KEY \
       ghcr.io/redis-developer/redisctl'
-    
+
     # Usage
     redisctl-cloud cloud subscription list
     ```
@@ -54,7 +54,7 @@ Add to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.):
       -e REDIS_ENTERPRISE_PASSWORD \
       -e REDIS_ENTERPRISE_INSECURE \
       ghcr.io/redis-developer/redisctl'
-    
+
     # Usage
     redisctl-enterprise enterprise cluster get
     ```
@@ -65,7 +65,7 @@ Add to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.):
     alias redisctl='docker run --rm \
       -v ~/.config/redisctl:/root/.config/redisctl:ro \
       ghcr.io/redis-developer/redisctl'
-    
+
     # Usage
     redisctl --profile prod cloud database list
     ```
@@ -74,7 +74,7 @@ Add to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.):
 
 Mount a volume to save command output:
 
-``` bash
+```bash
 docker run --rm \
   -e REDIS_ENTERPRISE_URL \
   -e REDIS_ENTERPRISE_USER \
@@ -92,14 +92,14 @@ docker run --rm \
 | `0.7.3` | Specific version |
 | `0.7` | Latest patch in minor version |
 
-``` bash
+```bash
 # Pin to specific version
 docker run ghcr.io/redis-developer/redisctl:0.7.3 --version
 ```
 
 ## CI/CD Example
 
-``` yaml
+```yaml
 # GitHub Actions
 - name: List databases
   run: |

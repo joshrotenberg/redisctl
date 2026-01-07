@@ -122,7 +122,7 @@ pub async fn handle_async_response(
     if !wait {
         return Ok(response);
     }
-    
+
     let task_id = response["taskId"].as_str()?;
     poll_until_complete(client, task_id, timeout).await
 }

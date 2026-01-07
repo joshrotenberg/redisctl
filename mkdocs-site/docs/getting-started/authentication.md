@@ -19,7 +19,7 @@ redisctl supports three credential sources, in order of precedence:
 | `REDIS_CLOUD_API_KEY` | API account key |
 | `REDIS_CLOUD_SECRET_KEY` | API secret key |
 
-``` bash
+```bash
 export REDIS_CLOUD_API_KEY="your-api-key"
 export REDIS_CLOUD_SECRET_KEY="your-secret-key"
 redisctl cloud subscription list
@@ -34,7 +34,7 @@ redisctl cloud subscription list
 | `REDIS_ENTERPRISE_PASSWORD` | Admin password |
 | `REDIS_ENTERPRISE_INSECURE` | Skip TLS verification (`true`/`false`) |
 
-``` bash
+```bash
 export REDIS_ENTERPRISE_URL="https://cluster.example.com:9443"
 export REDIS_ENTERPRISE_USER="admin@cluster.local"
 export REDIS_ENTERPRISE_PASSWORD="your-password"
@@ -47,7 +47,7 @@ Profiles store credentials for multiple environments. Much better than juggling 
 
 ### Create a Profile
 
-``` bash
+```bash
 # Redis Cloud profile
 redisctl profile set prod-cloud \
   --cloud-api-key "$API_KEY" \
@@ -62,7 +62,7 @@ redisctl profile set prod-enterprise \
 
 ### Use a Profile
 
-``` bash
+```bash
 # Specify profile per command
 redisctl --profile prod-cloud cloud subscription list
 
@@ -73,7 +73,7 @@ redisctl cloud subscription list  # Uses prod-cloud
 
 ### List Profiles
 
-``` bash
+```bash
 redisctl profile list
 ```
 
@@ -86,7 +86,7 @@ redisctl profile list
 
 Store credentials in your operating system's keychain:
 
-``` bash
+```bash
 # Requires secure-storage feature
 cargo install redisctl --features secure-storage
 
@@ -101,7 +101,7 @@ redisctl profile set prod \
 
 Reference environment variables instead of storing values:
 
-``` bash
+```bash
 redisctl profile set prod \
   --cloud-api-key '${REDIS_CLOUD_API_KEY}' \
   --cloud-secret-key '${REDIS_CLOUD_SECRET_KEY}'
@@ -120,7 +120,7 @@ Profiles are stored in:
 
 Example:
 
-``` toml
+```toml
 default_profile = "prod"
 
 [profiles.prod]

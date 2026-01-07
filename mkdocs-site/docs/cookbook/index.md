@@ -25,22 +25,22 @@ Step-by-step guides for common tasks.
 ### Common Patterns
 
 **List and filter:**
-``` bash
+```bash
 redisctl cloud subscription list -o json -q '[?status == `active`].name'
 ```
 
 **Create and wait:**
-``` bash
+```bash
 redisctl cloud database create --subscription-id 123 --name mydb --wait
 ```
 
 **Export to file:**
-``` bash
+```bash
 redisctl enterprise cluster get -o json > cluster-backup.json
 ```
 
 **Loop over results:**
-``` bash
+```bash
 for id in $(redisctl enterprise database list -o json -q '[].uid' | jq -r '.[]'); do
   echo "Database $id:"
   redisctl enterprise database get "$id"

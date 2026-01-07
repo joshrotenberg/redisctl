@@ -6,7 +6,7 @@ Features shared across Redis Cloud and Redis Enterprise commands.
 
 redisctl is built around four layers of functionality:
 
-``` mermaid
+```mermaid
 graph TB
     subgraph "Layer 4: Workflows"
         W[Multi-step orchestration]
@@ -20,9 +20,9 @@ graph TB
     subgraph "Layer 1: Profiles"
         P[Credential management]
     end
-    
+
     P --> R --> H --> W
-    
+
     style W fill:#61afef,color:#000
     style H fill:#98c379,color:#000
     style R fill:#e5c07b,color:#000

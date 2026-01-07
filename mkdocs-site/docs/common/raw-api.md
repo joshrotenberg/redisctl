@@ -15,7 +15,7 @@ The `api` command gives you direct access to Redis REST APIs:
 
 ### Redis Cloud
 
-``` bash
+```bash
 # GET request
 redisctl api cloud get /subscriptions
 
@@ -29,7 +29,7 @@ redisctl api cloud post /subscriptions/123/databases \
 
 ### Redis Enterprise
 
-``` bash
+```bash
 # GET cluster info
 redisctl api enterprise get /v1/cluster
 
@@ -51,7 +51,7 @@ redisctl api enterprise post /v1/bdbs \
 | `patch` | Update resources (partial) |
 | `delete` | Remove resources |
 
-``` bash
+```bash
 redisctl api cloud get /subscriptions
 redisctl api cloud post /subscriptions --body '{...}'
 redisctl api cloud put /subscriptions/123 --body '{...}'
@@ -62,7 +62,7 @@ redisctl api cloud delete /subscriptions/123
 
 Some endpoints accept query parameters:
 
-``` bash
+```bash
 # Cloud API with query params (append to path)
 redisctl api cloud get "/subscriptions?limit=10&offset=0"
 ```
@@ -71,14 +71,14 @@ redisctl api cloud get "/subscriptions?limit=10&offset=0"
 
 ### Inline JSON
 
-``` bash
+```bash
 redisctl api cloud post /subscriptions/123/databases \
   --body '{"name": "mydb", "memoryLimitInGb": 1}'
 ```
 
 ### From File
 
-``` bash
+```bash
 # Create a JSON file
 cat > database.json << 'EOF'
 {
@@ -97,13 +97,13 @@ redisctl api cloud post /subscriptions/123/databases \
 
 ### Raw JSON
 
-``` bash
+```bash
 redisctl api cloud get /subscriptions -o json
 ```
 
 ### With JMESPath
 
-``` bash
+```bash
 # Get specific fields
 redisctl api cloud get /subscriptions -q '[].{id: id, name: name}'
 
@@ -119,13 +119,13 @@ redisctl api cloud get /subscriptions -q 'length(@)'
 <div class="grid" markdown>
 
 **Raw API**
-``` bash
+```bash
 redisctl api cloud get /subscriptions/123456/databases \
   -q '[].{id: databaseId, name: name}'
 ```
 
 **Human Command**
-``` bash
+```bash
 redisctl cloud database list \
   --subscription-id 123456 \
   -o json -q '[].{id: databaseId, name: name}'
@@ -157,7 +157,7 @@ Check the official API documentation:
 
 ### Explore Interactively
 
-``` bash
+```bash
 # Start broad
 redisctl api cloud get /subscriptions -o json | head -50
 
@@ -172,13 +172,13 @@ redisctl api cloud get /subscriptions/123456/databases -o json
 
 ### Cloud: Get Account Info
 
-``` bash
+```bash
 redisctl api cloud get /accounts -o json -q '[0]'
 ```
 
 ### Cloud: List All Database Endpoints
 
-``` bash
+```bash
 redisctl api cloud get /subscriptions -o json -q '[].{
   sub: name,
   databases: databases[].{name: name, endpoint: publicEndpoint}
@@ -187,7 +187,7 @@ redisctl api cloud get /subscriptions -o json -q '[].{
 
 ### Enterprise: Node Status
 
-``` bash
+```bash
 redisctl api enterprise get /v1/nodes -o json -q '[].{
   id: uid,
   addr: addr,
@@ -198,6 +198,6 @@ redisctl api enterprise get /v1/nodes -o json -q '[].{
 
 ### Enterprise: Cluster Alerts
 
-``` bash
+```bash
 redisctl api enterprise get /v1/cluster/alerts -o json
 ```

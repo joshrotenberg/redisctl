@@ -51,7 +51,7 @@ hide:
 
 redisctl is the **first** command-line tool for managing Redis Cloud and Redis Enterprise deployments. Before redisctl, operators had to use web UIs or write fragile bash scripts with curl and polling loops.
 
-``` bash
+```bash
 # Before redisctl
 curl -s -X POST "https://api.redislabs.com/v1/subscriptions/123/databases" \
   -H "x-api-key: $KEY" -H "x-api-secret-key: $SECRET" \
@@ -90,12 +90,12 @@ redisctl cloud database create --subscription 123 --name mydb --wait
 
 redisctl provides four layers of functionality:
 
-``` mermaid
+```mermaid
 graph LR
     A[Profiles] --> B[Raw API]
     B --> C[Human Commands]
     C --> D[Workflows]
-    
+
     style A fill:#dc382d,color:#fff
     style B fill:#e5c07b,color:#000
     style C fill:#98c379,color:#000
