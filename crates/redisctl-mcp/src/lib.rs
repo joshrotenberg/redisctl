@@ -21,6 +21,7 @@
 pub mod cloud_tools;
 pub mod enterprise_tools;
 pub mod error;
+pub mod jmespath;
 pub mod server;
 
 pub use error::McpError;

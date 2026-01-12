@@ -247,6 +247,34 @@ pub struct DebugInfoTaskIdParam {
     pub task_id: String,
 }
 
+// JMESPath tool parameters
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct JpxFunctionsParam {
+    /// Optional category filter (e.g., "String", "Math", "Array", "Datetime")
+    #[serde(default)]
+    pub category: Option<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct JpxDescribeParam {
+    /// Function name or alias to describe
+    pub name: String,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct JpxEvaluateParam {
+    /// JSON input to evaluate the expression against
+    pub input: String,
+    /// JMESPath expression to evaluate
+    pub expression: String,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct JpxValidateParam {
+    /// JMESPath expression to validate
+    pub expression: String,
+}
+
 impl RedisCtlMcp {
     /// Create a new MCP server instance
     pub fn new(profile: Option<&str>, read_only: bool) -> anyhow::Result<Self> {
@@ -1222,6 +1250,101 @@ impl RedisCtlMcp {
         info!(task_id = %params.task_id, "Tool called: enterprise_debuginfo_status");
         let tools = self.get_enterprise_tools().await?;
         tools.get_debuginfo_status(&params.task_id).await
+    }
+
+    // =========================================================================
+    // JMESPath Tools - Query and Introspection
+    // =========================================================================
+
+    #[tool(
+        description = "List available JMESPath function categories (String, Math, Array, Datetime, etc.)"
+    )]
+    async fn jpx_categories(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: jpx_categories");
+        let categories = crate::jmespath::list_categories();
+        let content = Content::text(serde_json::to_string_pretty(&categories).unwrap());
+        Ok(CallToolResult::success(vec![content]))
+    }
+
+    #[tool(
+        description = "List available JMESPath functions. Optionally filter by category (e.g., 'String', 'Math', 'Array', 'Datetime'). Returns function names with descriptions and signatures."
+    )]
+    async fn jpx_functions(
+        &self,
+        Parameters(params): Parameters<JpxFunctionsParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(category = ?params.category, "Tool called: jpx_functions");
+        let functions = crate::jmespath::list_functions(params.category.as_deref());
+        let content = Content::text(serde_json::to_string_pretty(&functions).unwrap());
+        Ok(CallToolResult::success(vec![content]))
+    }
+
+    #[tool(
+        description = "Get detailed information about a specific JMESPath function including signature, description, and example usage. Supports function names and aliases."
+    )]
+    async fn jpx_describe(
+        &self,
+        Parameters(params): Parameters<JpxDescribeParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(name = %params.name, "Tool called: jpx_describe");
+        match crate::jmespath::get_function(&params.name) {
+            Some(func) => {
+                let content = Content::text(serde_json::to_string_pretty(&func).unwrap());
+                Ok(CallToolResult::success(vec![content]))
+            }
+            None => Err(RmcpError::invalid_request(
+                format!("Function '{}' not found", params.name),
+                None,
+            )),
+        }
+    }
+
+    #[tool(
+        description = "Evaluate a JMESPath expression against JSON input. Use this to transform, filter, or extract data from JSON. Supports 335+ functions including string manipulation, math, dates, arrays, and more."
+    )]
+    async fn jpx_evaluate(
+        &self,
+        Parameters(params): Parameters<JpxEvaluateParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(expression = %params.expression, "Tool called: jpx_evaluate");
+        match crate::jmespath::evaluate(&params.input, &params.expression) {
+            Ok(result) => {
+                let content = Content::text(serde_json::to_string_pretty(&result).unwrap());
+                Ok(CallToolResult::success(vec![content]))
+            }
+            Err(e) => Err(RmcpError::invalid_request(e, None)),
+        }
+    }
+
+    #[tool(
+        description = "Validate a JMESPath expression without executing it. Returns whether the expression is syntactically valid."
+    )]
+    async fn jpx_validate(
+        &self,
+        Parameters(params): Parameters<JpxValidateParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(expression = %params.expression, "Tool called: jpx_validate");
+        // Try to compile the expression to validate it
+        let runtime = jmespath::Runtime::new();
+        match runtime.compile(&params.expression) {
+            Ok(_) => {
+                let result = serde_json::json!({
+                    "valid": true,
+                    "expression": params.expression
+                });
+                let content = Content::text(serde_json::to_string_pretty(&result).unwrap());
+                Ok(CallToolResult::success(vec![content]))
+            }
+            Err(e) => {
+                let result = serde_json::json!({
+                    "valid": false,
+                    "expression": params.expression,
+                    "error": e.to_string()
+                });
+                let content = Content::text(serde_json::to_string_pretty(&result).unwrap());
+                Ok(CallToolResult::success(vec![content]))
+            }
+        }
     }
 }
 
