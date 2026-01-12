@@ -12,6 +12,66 @@ The MCP server exposes redisctl functionality as tools that AI systems can disco
 
 All operations use your existing redisctl profiles for authentication.
 
+## Installation
+
+### macOS (Homebrew)
+
+```bash
+brew install redis-developer/homebrew-tap/redisctl
+```
+
+### Linux/Windows
+
+Download from [GitHub Releases](https://github.com/redis-developer/redisctl/releases) or use Docker:
+
+```bash
+docker pull ghcr.io/redis-developer/redisctl
+```
+
+See the [Installation Guide](../getting-started/installation.md) for all options.
+
+## Setting Up Credentials
+
+Before using the MCP server, configure a profile with your Redis credentials:
+
+### Redis Cloud
+
+```bash
+# Interactive setup (prompts for API keys)
+redisctl profile add my-cloud-profile --cloud
+
+# Or provide keys directly
+redisctl profile add my-cloud-profile --cloud \
+  --api-key YOUR_API_KEY \
+  --secret-key YOUR_SECRET_KEY
+```
+
+Get your API keys from the [Redis Cloud Console](https://app.redislabs.com/) under Account > API Keys.
+
+### Redis Enterprise
+
+```bash
+# Interactive setup
+redisctl profile add my-enterprise-profile --enterprise
+
+# Or provide credentials directly
+redisctl profile add my-enterprise-profile --enterprise \
+  --url https://your-cluster:9443 \
+  --username admin@redis.com \
+  --password YOUR_PASSWORD \
+  --insecure  # if using self-signed certs
+```
+
+### Verify Your Profile
+
+```bash
+# Test Cloud connection
+redisctl -p my-cloud-profile cloud account get
+
+# Test Enterprise connection
+redisctl -p my-enterprise-profile enterprise cluster get
+```
+
 ## Quick Start
 
 ```bash
