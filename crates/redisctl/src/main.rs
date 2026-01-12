@@ -246,7 +246,7 @@ async fn execute_mcp_command(cli: &Cli, mcp_cmd: &cli::McpCommands) -> Result<()
         Tools => {
             println!("Available MCP Tools:");
             println!();
-            println!("Cloud Tools:");
+            println!("Cloud Tools (7):");
             println!("  cloud_account_get        - Get Redis Cloud account information");
             println!("  cloud_subscriptions_list - List all Redis Cloud subscriptions");
             println!("  cloud_subscription_get   - Get details of a specific subscription");
@@ -255,23 +255,69 @@ async fn execute_mcp_command(cli: &Cli, mcp_cmd: &cli::McpCommands) -> Result<()
             println!("  cloud_tasks_list         - List recent async tasks");
             println!("  cloud_task_get           - Get status of a specific task");
             println!();
-            println!("Enterprise Tools:");
+            println!("Enterprise Tools - Cluster (5):");
             println!("  enterprise_cluster_get      - Get cluster information");
-            println!("  enterprise_nodes_list       - List all cluster nodes");
-            println!("  enterprise_node_get         - Get details of a specific node");
+            println!("  enterprise_cluster_stats    - Get cluster statistics");
+            println!("  enterprise_cluster_settings - Get cluster settings");
+            println!("  enterprise_cluster_topology - Get cluster topology");
+            println!("  enterprise_cluster_update   - Update cluster configuration (write)");
+            println!();
+            println!("Enterprise Tools - Database (12):");
             println!("  enterprise_databases_list   - List all databases (BDBs)");
             println!("  enterprise_database_get     - Get details of a specific database");
             println!("  enterprise_database_stats   - Get database statistics");
+            println!("  enterprise_database_metrics - Get database performance metrics");
+            println!("  enterprise_database_create  - Create a new database (write)");
+            println!("  enterprise_database_update  - Update database configuration (write)");
+            println!("  enterprise_database_delete  - Delete a database (write)");
+            println!("  enterprise_database_flush   - Flush all data from a database (write)");
+            println!(
+                "  enterprise_database_export  - Export database to external location (write)"
+            );
+            println!("  enterprise_database_import  - Import data into database (write)");
+            println!("  enterprise_database_backup  - Trigger database backup (write)");
+            println!("  enterprise_database_restore - Restore database from backup (write)");
+            println!();
+            println!("Enterprise Tools - Node (5):");
+            println!("  enterprise_nodes_list       - List all cluster nodes");
+            println!("  enterprise_node_get         - Get details of a specific node");
+            println!("  enterprise_node_stats       - Get node statistics");
+            println!("  enterprise_node_update      - Update node configuration (write)");
+            println!("  enterprise_node_remove      - Remove node from cluster (write)");
+            println!();
+            println!("Enterprise Tools - Shard & Alert (4):");
             println!("  enterprise_shards_list      - List all shards");
+            println!("  enterprise_shard_get        - Get shard details");
             println!("  enterprise_alerts_list      - List active alerts");
+            println!("  enterprise_alert_get        - Get alert details");
+            println!();
+            println!("Enterprise Tools - User & Access (12):");
+            println!("  enterprise_users_list       - List all users");
+            println!("  enterprise_user_get         - Get user details");
+            println!("  enterprise_user_create      - Create a new user (write)");
+            println!("  enterprise_user_delete      - Delete a user (write)");
+            println!("  enterprise_roles_list       - List all roles");
+            println!("  enterprise_role_get         - Get role details");
+            println!("  enterprise_role_create      - Create a new role (write)");
+            println!("  enterprise_role_delete      - Delete a role (write)");
+            println!("  enterprise_acls_list        - List all Redis ACLs");
+            println!("  enterprise_acl_get          - Get ACL details");
+            println!("  enterprise_acl_create       - Create a new Redis ACL (write)");
+            println!("  enterprise_acl_delete       - Delete a Redis ACL (write)");
+            println!();
+            println!("Enterprise Tools - Other (10):");
             println!("  enterprise_logs_get         - Get cluster event logs");
             println!("  enterprise_license_get      - Get license information");
+            println!("  enterprise_modules_list     - List available modules");
+            println!("  enterprise_module_get       - Get module details");
+            println!("  enterprise_crdbs_list       - List Active-Active databases");
+            println!("  enterprise_crdb_get         - Get Active-Active database details");
+            println!("  enterprise_crdb_update      - Update Active-Active database (write)");
+            println!("  enterprise_crdb_delete      - Delete Active-Active database (write)");
+            println!("  enterprise_debuginfo_list   - List debug info tasks");
+            println!("  enterprise_debuginfo_status - Get debug info task status");
             println!();
-            println!("Enterprise Tools (Write - requires --allow-writes):");
-            println!("  enterprise_database_create  - Create a new database");
-            println!("  enterprise_database_delete  - Delete a database");
-            println!("  enterprise_database_update  - Update database configuration");
-            println!("  enterprise_database_flush   - Flush all data from a database");
+            println!("Total: 55 tools (7 Cloud + 48 Enterprise)");
             Ok(())
         }
     }

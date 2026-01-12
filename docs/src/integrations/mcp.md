@@ -163,7 +163,7 @@ Add to your Zed settings (`~/.config/zed/settings.json` on Linux/macOS):
 | `cloud_tasks_list` | List recent async tasks |
 | `cloud_task_get` | Get task status |
 
-### Redis Enterprise Tools (32 tools)
+### Redis Enterprise Tools (48 tools)
 
 #### Cluster Operations
 
