@@ -7,6 +7,7 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "MCP (Model Context Protocol) server for Redis Cloud and Enterprise"
+readme = "../../README.md"
 keywords = ["redis", "mcp", "ai", "cloud", "enterprise"]
 categories = ["api-bindings", "development-tools"]
 
