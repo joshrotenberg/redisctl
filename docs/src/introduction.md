@@ -12,6 +12,7 @@ redisctl provides:
 - **Profile Management** - Secure credential storage
 - **Structured Output** - JSON, YAML, or Table with JMESPath
 - **Library-First Architecture** - Reusable components
+- **AI Integration** - Built-in [MCP server](./integrations/mcp.md) for Claude and other AI assistants
 
 ## Quick Example
 

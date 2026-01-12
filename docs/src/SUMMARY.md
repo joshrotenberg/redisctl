@@ -69,6 +69,10 @@
   - [Configure Replication](./cookbook/enterprise/configure-replication.md)
   - [Configure Redis ACLs](./cookbook/enterprise/configure-redis-acls.md)
 
+# Integrations
+
+- [MCP Server (AI Integration)](./integrations/mcp.md)
+
 # Reference
 
 - [Environment Variables](./reference/environment-variables.md)
