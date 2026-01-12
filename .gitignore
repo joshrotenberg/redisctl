@@ -33,6 +33,7 @@ dump.rdb
 # Claude
 .claude/
 CLAUDE.md
+.mcp.json
 
 # Temporary stuff
 tmp/

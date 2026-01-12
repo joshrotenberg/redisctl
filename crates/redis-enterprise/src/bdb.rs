@@ -341,8 +341,12 @@ pub struct DatabaseInfo {
 
     // Modules and features
     pub module_list: Option<Vec<Value>>,
-    pub search: Option<bool>,
-    pub timeseries: Option<bool>,
+    /// Search configuration - can be bool or object depending on API version
+    #[serde(default)]
+    pub search: Option<Value>,
+    /// Timeseries configuration - can be bool or object depending on API version
+    #[serde(default)]
+    pub timeseries: Option<Value>,
 
     // BigStore/Flash storage settings
     pub bigstore: Option<bool>,

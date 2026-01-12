@@ -5,12 +5,14 @@ members = [
     "crates/redis-cloud",
     "crates/redis-enterprise",
     "crates/redisctl",
+    "crates/redisctl-mcp",
 ]
 default-members = [
     "crates/redisctl-config",
     "crates/redis-cloud",
     "crates/redis-enterprise",
     "crates/redisctl",
+    "crates/redisctl-mcp",
 ]
 
 # External dependencies (not part of workspace)
