@@ -14,6 +14,17 @@ use anyhow::Context;
 use redis_cloud::CloudClient;
 use redis_cloud::connectivity::psc::{PscEndpointUpdateRequest, PscHandler};
 
+/// Parameters for PSC endpoint create/update operations
+#[derive(Debug, Default)]
+pub struct PscEndpointParams {
+    pub gcp_project_id: Option<String>,
+    pub gcp_vpc_name: Option<String>,
+    pub gcp_vpc_subnet_name: Option<String>,
+    pub endpoint_connection_name: Option<String>,
+    pub psc_service_id: Option<i32>,
+    pub data: Option<String>,
+}
+
 /// Handle PSC commands
 pub async fn handle_psc_command(
     conn_mgr: &ConnectionManager,
@@ -70,7 +81,11 @@ pub async fn handle_psc_command(
         }
         PscCommands::EndpointCreate {
             subscription_id,
-            file,
+            gcp_project_id,
+            gcp_vpc_name,
+            gcp_vpc_subnet_name,
+            endpoint_connection_name,
+            data,
             async_ops,
         } => {
             let params = ConnectivityOperationParams {
@@ -82,12 +97,25 @@ pub async fn handle_psc_command(
                 output_format,
                 query,
             };
-            create_endpoint(&params, file).await
+            let endpoint_params = PscEndpointParams {
+                gcp_project_id: gcp_project_id.clone(),
+                gcp_vpc_name: gcp_vpc_name.clone(),
+                gcp_vpc_subnet_name: gcp_vpc_subnet_name.clone(),
+                endpoint_connection_name: endpoint_connection_name.clone(),
+                psc_service_id: None,
+                data: data.clone(),
+            };
+            create_endpoint(&params, &endpoint_params).await
         }
         PscCommands::EndpointUpdate {
             subscription_id,
             endpoint_id,
-            file,
+            psc_service_id,
+            gcp_project_id,
+            gcp_vpc_name,
+            gcp_vpc_subnet_name,
+            endpoint_connection_name,
+            data,
             async_ops,
         } => {
             let params = ConnectivityOperationParams {
@@ -99,7 +127,15 @@ pub async fn handle_psc_command(
                 output_format,
                 query,
             };
-            update_endpoint(&params, *endpoint_id, file).await
+            let endpoint_params = PscEndpointParams {
+                gcp_project_id: gcp_project_id.clone(),
+                gcp_vpc_name: gcp_vpc_name.clone(),
+                gcp_vpc_subnet_name: gcp_vpc_subnet_name.clone(),
+                endpoint_connection_name: endpoint_connection_name.clone(),
+                psc_service_id: *psc_service_id,
+                data: data.clone(),
+            };
+            update_endpoint(&params, *endpoint_id, &endpoint_params).await
         }
         PscCommands::EndpointDelete {
             subscription_id,
@@ -169,7 +205,11 @@ pub async fn handle_psc_command(
         }
         PscCommands::AaEndpointCreate {
             subscription_id,
-            file,
+            gcp_project_id,
+            gcp_vpc_name,
+            gcp_vpc_subnet_name,
+            endpoint_connection_name,
+            data,
             async_ops,
         } => {
             let params = ConnectivityOperationParams {
@@ -181,7 +221,15 @@ pub async fn handle_psc_command(
                 output_format,
                 query,
             };
-            create_endpoint_aa(&params, file).await
+            let endpoint_params = PscEndpointParams {
+                gcp_project_id: gcp_project_id.clone(),
+                gcp_vpc_name: gcp_vpc_name.clone(),
+                gcp_vpc_subnet_name: gcp_vpc_subnet_name.clone(),
+                endpoint_connection_name: endpoint_connection_name.clone(),
+                psc_service_id: None,
+                data: data.clone(),
+            };
+            create_endpoint_aa(&params, &endpoint_params).await
         }
         PscCommands::AaEndpointDelete {
             subscription_id,
@@ -301,13 +349,39 @@ async fn get_endpoints(
     Ok(())
 }
 
-async fn create_endpoint(params: &ConnectivityOperationParams<'_>, file: &str) -> CliResult<()> {
-    let json_string = read_file_input(file)?;
-    let mut request: PscEndpointUpdateRequest =
-        serde_json::from_str(&json_string).context("Invalid PSC endpoint configuration")?;
+/// Build PSC endpoint request from parameters
+fn build_psc_endpoint_request(
+    subscription_id: i32,
+    endpoint_id: i32,
+    endpoint_params: &PscEndpointParams,
+) -> CliResult<PscEndpointUpdateRequest> {
+    // If --data is provided, use it as the base (escape hatch)
+    if let Some(data) = &endpoint_params.data {
+        let json_string = read_file_input(data)?;
+        let mut request: PscEndpointUpdateRequest =
+            serde_json::from_str(&json_string).context("Invalid PSC endpoint configuration")?;
+        request.subscription_id = subscription_id;
+        request.endpoint_id = endpoint_id;
+        return Ok(request);
+    }
 
-    // Ensure subscription_id is set
-    request.subscription_id = params.subscription_id;
+    // Build from first-class parameters
+    Ok(PscEndpointUpdateRequest {
+        subscription_id,
+        psc_service_id: endpoint_params.psc_service_id.unwrap_or(0),
+        endpoint_id,
+        gcp_project_id: endpoint_params.gcp_project_id.clone(),
+        gcp_vpc_name: endpoint_params.gcp_vpc_name.clone(),
+        gcp_vpc_subnet_name: endpoint_params.gcp_vpc_subnet_name.clone(),
+        endpoint_connection_name: endpoint_params.endpoint_connection_name.clone(),
+    })
+}
+
+async fn create_endpoint(
+    params: &ConnectivityOperationParams<'_>,
+    endpoint_params: &PscEndpointParams,
+) -> CliResult<()> {
+    let request = build_psc_endpoint_request(params.subscription_id, 0, endpoint_params)?;
 
     let handler = PscHandler::new(params.client.clone());
     let response = handler
@@ -332,15 +406,9 @@ async fn create_endpoint(params: &ConnectivityOperationParams<'_>, file: &str) -
 async fn update_endpoint(
     params: &ConnectivityOperationParams<'_>,
     endpoint_id: i32,
-    file: &str,
+    endpoint_params: &PscEndpointParams,
 ) -> CliResult<()> {
-    let json_string = read_file_input(file)?;
-    let mut request: PscEndpointUpdateRequest =
-        serde_json::from_str(&json_string).context("Invalid PSC endpoint configuration")?;
-
-    // Ensure IDs are set
-    request.subscription_id = params.subscription_id;
-    request.endpoint_id = endpoint_id;
+    let request = build_psc_endpoint_request(params.subscription_id, endpoint_id, endpoint_params)?;
 
     let handler = PscHandler::new(params.client.clone());
     let response = handler
@@ -527,13 +595,11 @@ async fn get_endpoints_aa(
     Ok(())
 }
 
-async fn create_endpoint_aa(params: &ConnectivityOperationParams<'_>, file: &str) -> CliResult<()> {
-    let json_string = read_file_input(file)?;
-    let mut request: PscEndpointUpdateRequest = serde_json::from_str(&json_string)
-        .context("Invalid Active-Active PSC endpoint configuration")?;
-
-    // Ensure subscription_id is set
-    request.subscription_id = params.subscription_id;
+async fn create_endpoint_aa(
+    params: &ConnectivityOperationParams<'_>,
+    endpoint_params: &PscEndpointParams,
+) -> CliResult<()> {
+    let request = build_psc_endpoint_request(params.subscription_id, 0, endpoint_params)?;
 
     let handler = PscHandler::new(params.client.clone());
     let response = handler
