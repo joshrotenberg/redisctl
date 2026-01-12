@@ -154,6 +154,9 @@ async fn execute_command(cli: &Cli, conn_mgr: &ConnectionManager) -> Result<(), 
             )
             .await
         }
+
+        #[cfg(feature = "mcp")]
+        Commands::Mcp(mcp_cmd) => execute_mcp_command(cli, mcp_cmd).await,
     };
 
     let duration = start.elapsed();
@@ -216,6 +219,60 @@ fn format_command(command: &Commands) -> String {
                 Get { profile } => format!("files-key get {:?}", profile),
                 Remove { .. } => "files-key remove".to_string(),
             }
+        }
+        #[cfg(feature = "mcp")]
+        Commands::Mcp(cmd) => {
+            use cli::McpCommands::*;
+            match cmd {
+                Serve { allow_writes } => format!("mcp serve (allow_writes={})", allow_writes),
+                Tools => "mcp tools".to_string(),
+            }
+        }
+    }
+}
+
+#[cfg(feature = "mcp")]
+async fn execute_mcp_command(cli: &Cli, mcp_cmd: &cli::McpCommands) -> Result<(), RedisCtlError> {
+    use cli::McpCommands::*;
+
+    match mcp_cmd {
+        Serve { allow_writes } => {
+            let read_only = !allow_writes;
+            debug!("Starting MCP server (read_only={})", read_only);
+            redisctl_mcp::serve_stdio(cli.profile.as_deref(), read_only)
+                .await
+                .map_err(|e| RedisCtlError::Configuration(e.to_string()))
+        }
+        Tools => {
+            println!("Available MCP Tools:");
+            println!();
+            println!("Cloud Tools:");
+            println!("  cloud_account_get        - Get Redis Cloud account information");
+            println!("  cloud_subscriptions_list - List all Redis Cloud subscriptions");
+            println!("  cloud_subscription_get   - Get details of a specific subscription");
+            println!("  cloud_databases_list     - List databases in a subscription");
+            println!("  cloud_database_get       - Get details of a specific database");
+            println!("  cloud_tasks_list         - List recent async tasks");
+            println!("  cloud_task_get           - Get status of a specific task");
+            println!();
+            println!("Enterprise Tools:");
+            println!("  enterprise_cluster_get      - Get cluster information");
+            println!("  enterprise_nodes_list       - List all cluster nodes");
+            println!("  enterprise_node_get         - Get details of a specific node");
+            println!("  enterprise_databases_list   - List all databases (BDBs)");
+            println!("  enterprise_database_get     - Get details of a specific database");
+            println!("  enterprise_database_stats   - Get database statistics");
+            println!("  enterprise_shards_list      - List all shards");
+            println!("  enterprise_alerts_list      - List active alerts");
+            println!("  enterprise_logs_get         - Get cluster event logs");
+            println!("  enterprise_license_get      - Get license information");
+            println!();
+            println!("Enterprise Tools (Write - requires --allow-writes):");
+            println!("  enterprise_database_create  - Create a new database");
+            println!("  enterprise_database_delete  - Delete a database");
+            println!("  enterprise_database_update  - Update database configuration");
+            println!("  enterprise_database_flush   - Flush all data from a database");
+            Ok(())
         }
     }
 }
