@@ -18,7 +18,7 @@ schemars = "0.8"
 # Internal crates
 redisctl-config = { version = "0.2.1", path = "../redisctl-config" }
 redis-cloud = { version = "0.7.5", path = "../redis-cloud" }
-redis-enterprise = { version = "0.7.2", path = "../redis-enterprise" }
+redis-enterprise = { version = "0.7.3", path = "../redis-enterprise" }
 
 # Core dependencies
 anyhow = { workspace = true }
