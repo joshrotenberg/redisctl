@@ -2717,8 +2717,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-trait",
- "jmespath",
- "jmespath_extensions",
  "redis-cloud",
  "redis-enterprise",
  "redisctl-config",

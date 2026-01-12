@@ -56,21 +56,8 @@ impl EnterpriseTools {
     }
 
     fn to_result(&self, value: serde_json::Value) -> Result<CallToolResult, RmcpError> {
-        self.to_result_with_query(value, None)
-    }
-
-    fn to_result_with_query(
-        &self,
-        value: serde_json::Value,
-        query: Option<&str>,
-    ) -> Result<CallToolResult, RmcpError> {
-        let result = match query {
-            Some(q) => crate::jmespath::apply_query(&value, q)
-                .map_err(|e| RmcpError::invalid_request(e, None))?,
-            None => value,
-        };
         Ok(CallToolResult::success(vec![Content::text(
-            serde_json::to_string_pretty(&result).unwrap_or_else(|_| result.to_string()),
+            serde_json::to_string_pretty(&value).unwrap_or_else(|_| value.to_string()),
         )]))
     }
 
@@ -79,124 +66,82 @@ impl EnterpriseTools {
     }
 
     /// Get cluster information
-    pub async fn get_cluster(&self, query: Option<&str>) -> Result<CallToolResult, RmcpError> {
+    pub async fn get_cluster(&self) -> Result<CallToolResult, RmcpError> {
         let handler = ClusterHandler::new(self.client.clone());
         let cluster = handler.info().await.map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(
-            serde_json::to_value(cluster).map_err(|e| self.to_error(e))?,
-            query,
-        )
+        self.to_result(serde_json::to_value(cluster).map_err(|e| self.to_error(e))?)
     }
 
     /// List all nodes
-    pub async fn list_nodes(&self, query: Option<&str>) -> Result<CallToolResult, RmcpError> {
+    pub async fn list_nodes(&self) -> Result<CallToolResult, RmcpError> {
         let handler = NodeHandler::new(self.client.clone());
         let nodes = handler.list().await.map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(
-            serde_json::to_value(nodes).map_err(|e| self.to_error(e))?,
-            query,
-        )
+        self.to_result(serde_json::to_value(nodes).map_err(|e| self.to_error(e))?)
     }
 
     /// Get a specific node
-    pub async fn get_node(
-        &self,
-        node_id: i64,
-        query: Option<&str>,
-    ) -> Result<CallToolResult, RmcpError> {
+    pub async fn get_node(&self, node_id: i64) -> Result<CallToolResult, RmcpError> {
         let handler = NodeHandler::new(self.client.clone());
         let node = handler
             .get(node_id as u32)
             .await
             .map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(
-            serde_json::to_value(node).map_err(|e| self.to_error(e))?,
-            query,
-        )
+        self.to_result(serde_json::to_value(node).map_err(|e| self.to_error(e))?)
     }
 
     /// List all databases
-    pub async fn list_databases(&self, query: Option<&str>) -> Result<CallToolResult, RmcpError> {
+    pub async fn list_databases(&self) -> Result<CallToolResult, RmcpError> {
         let handler = BdbHandler::new(self.client.clone());
         let dbs = handler.list().await.map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(
-            serde_json::to_value(dbs).map_err(|e| self.to_error(e))?,
-            query,
-        )
+        self.to_result(serde_json::to_value(dbs).map_err(|e| self.to_error(e))?)
     }
 
     /// Get a specific database
-    pub async fn get_database(
-        &self,
-        database_id: i64,
-        query: Option<&str>,
-    ) -> Result<CallToolResult, RmcpError> {
+    pub async fn get_database(&self, database_id: i64) -> Result<CallToolResult, RmcpError> {
         let handler = BdbHandler::new(self.client.clone());
         let db = handler
             .get(database_id as u32)
             .await
             .map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(
-            serde_json::to_value(db).map_err(|e| self.to_error(e))?,
-            query,
-        )
+        self.to_result(serde_json::to_value(db).map_err(|e| self.to_error(e))?)
     }
 
     /// Get database statistics
-    pub async fn get_database_stats(
-        &self,
-        database_id: i64,
-        query: Option<&str>,
-    ) -> Result<CallToolResult, RmcpError> {
+    pub async fn get_database_stats(&self, database_id: i64) -> Result<CallToolResult, RmcpError> {
         let handler = StatsHandler::new(self.client.clone());
         let stats = handler
             .database(database_id as u32, None)
             .await
             .map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(
-            serde_json::to_value(stats).map_err(|e| self.to_error(e))?,
-            query,
-        )
+        self.to_result(serde_json::to_value(stats).map_err(|e| self.to_error(e))?)
     }
 
     /// List all shards
-    pub async fn list_shards(&self, query: Option<&str>) -> Result<CallToolResult, RmcpError> {
+    pub async fn list_shards(&self) -> Result<CallToolResult, RmcpError> {
         let handler = ShardHandler::new(self.client.clone());
         let shards = handler.list().await.map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(
-            serde_json::to_value(shards).map_err(|e| self.to_error(e))?,
-            query,
-        )
+        self.to_result(serde_json::to_value(shards).map_err(|e| self.to_error(e))?)
     }
 
     /// List active alerts
-    pub async fn list_alerts(&self, query: Option<&str>) -> Result<CallToolResult, RmcpError> {
+    pub async fn list_alerts(&self) -> Result<CallToolResult, RmcpError> {
         let handler = AlertHandler::new(self.client.clone());
         let alerts = handler.list().await.map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(
-            serde_json::to_value(alerts).map_err(|e| self.to_error(e))?,
-            query,
-        )
+        self.to_result(serde_json::to_value(alerts).map_err(|e| self.to_error(e))?)
     }
 
     /// Get cluster logs
-    pub async fn get_logs(&self, query: Option<&str>) -> Result<CallToolResult, RmcpError> {
+    pub async fn get_logs(&self) -> Result<CallToolResult, RmcpError> {
         let handler = LogsHandler::new(self.client.clone());
         let logs = handler.list(None).await.map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(
-            serde_json::to_value(logs).map_err(|e| self.to_error(e))?,
-            query,
-        )
+        self.to_result(serde_json::to_value(logs).map_err(|e| self.to_error(e))?)
     }
 
     /// Get license information
-    pub async fn get_license(&self, query: Option<&str>) -> Result<CallToolResult, RmcpError> {
+    pub async fn get_license(&self) -> Result<CallToolResult, RmcpError> {
         let handler = LicenseHandler::new(self.client.clone());
         let license = handler.get().await.map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(
-            serde_json::to_value(license).map_err(|e| self.to_error(e))?,
-            query,
-        )
+        self.to_result(serde_json::to_value(license).map_err(|e| self.to_error(e))?)
     }
 
     /// Create a new database
@@ -262,14 +207,13 @@ impl EnterpriseTools {
     pub async fn get_database_metrics(
         &self,
         database_id: i64,
-        query: Option<&str>,
     ) -> Result<CallToolResult, RmcpError> {
         let handler = BdbHandler::new(self.client.clone());
         let metrics = handler
             .metrics(database_id as u32)
             .await
             .map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(metrics, query)
+        self.to_result(metrics)
     }
 
     /// Export database to a location
@@ -326,33 +270,24 @@ impl EnterpriseTools {
     }
 
     /// Get cluster statistics
-    pub async fn get_cluster_stats(
-        &self,
-        query: Option<&str>,
-    ) -> Result<CallToolResult, RmcpError> {
+    pub async fn get_cluster_stats(&self) -> Result<CallToolResult, RmcpError> {
         let handler = ClusterHandler::new(self.client.clone());
         let stats = handler.stats().await.map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(stats, query)
+        self.to_result(stats)
     }
 
     /// Get cluster settings
-    pub async fn get_cluster_settings(
-        &self,
-        query: Option<&str>,
-    ) -> Result<CallToolResult, RmcpError> {
+    pub async fn get_cluster_settings(&self) -> Result<CallToolResult, RmcpError> {
         let handler = ClusterHandler::new(self.client.clone());
         let settings = handler.settings().await.map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(settings, query)
+        self.to_result(settings)
     }
 
     /// Get cluster topology
-    pub async fn get_cluster_topology(
-        &self,
-        query: Option<&str>,
-    ) -> Result<CallToolResult, RmcpError> {
+    pub async fn get_cluster_topology(&self) -> Result<CallToolResult, RmcpError> {
         let handler = ClusterHandler::new(self.client.clone());
         let topology = handler.topology().await.map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(topology, query)
+        self.to_result(topology)
     }
 
     /// Update cluster configuration
@@ -369,20 +304,13 @@ impl EnterpriseTools {
     }
 
     /// Get node statistics
-    pub async fn get_node_stats(
-        &self,
-        node_id: i64,
-        query: Option<&str>,
-    ) -> Result<CallToolResult, RmcpError> {
+    pub async fn get_node_stats(&self, node_id: i64) -> Result<CallToolResult, RmcpError> {
         let handler = NodeHandler::new(self.client.clone());
         let stats = handler
             .stats(node_id as u32)
             .await
             .map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(
-            serde_json::to_value(stats).map_err(|e| self.to_error(e))?,
-            query,
-        )
+        self.to_result(serde_json::to_value(stats).map_err(|e| self.to_error(e))?)
     }
 
     /// Update node configuration
@@ -413,31 +341,17 @@ impl EnterpriseTools {
     }
 
     /// Get a specific shard
-    pub async fn get_shard(
-        &self,
-        shard_uid: &str,
-        query: Option<&str>,
-    ) -> Result<CallToolResult, RmcpError> {
+    pub async fn get_shard(&self, shard_uid: &str) -> Result<CallToolResult, RmcpError> {
         let handler = ShardHandler::new(self.client.clone());
         let shard = handler.get(shard_uid).await.map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(
-            serde_json::to_value(shard).map_err(|e| self.to_error(e))?,
-            query,
-        )
+        self.to_result(serde_json::to_value(shard).map_err(|e| self.to_error(e))?)
     }
 
     /// Get a specific alert
-    pub async fn get_alert(
-        &self,
-        alert_uid: &str,
-        query: Option<&str>,
-    ) -> Result<CallToolResult, RmcpError> {
+    pub async fn get_alert(&self, alert_uid: &str) -> Result<CallToolResult, RmcpError> {
         let handler = AlertHandler::new(self.client.clone());
         let alert = handler.get(alert_uid).await.map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(
-            serde_json::to_value(alert).map_err(|e| self.to_error(e))?,
-            query,
-        )
+        self.to_result(serde_json::to_value(alert).map_err(|e| self.to_error(e))?)
     }
 
     // =========================================================================
@@ -445,30 +359,20 @@ impl EnterpriseTools {
     // =========================================================================
 
     /// List all users
-    pub async fn list_users(&self, query: Option<&str>) -> Result<CallToolResult, RmcpError> {
+    pub async fn list_users(&self) -> Result<CallToolResult, RmcpError> {
         let handler = UserHandler::new(self.client.clone());
         let users = handler.list().await.map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(
-            serde_json::to_value(users).map_err(|e| self.to_error(e))?,
-            query,
-        )
+        self.to_result(serde_json::to_value(users).map_err(|e| self.to_error(e))?)
     }
 
     /// Get a specific user
-    pub async fn get_user(
-        &self,
-        user_id: i64,
-        query: Option<&str>,
-    ) -> Result<CallToolResult, RmcpError> {
+    pub async fn get_user(&self, user_id: i64) -> Result<CallToolResult, RmcpError> {
         let handler = UserHandler::new(self.client.clone());
         let user = handler
             .get(user_id as u32)
             .await
             .map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(
-            serde_json::to_value(user).map_err(|e| self.to_error(e))?,
-            query,
-        )
+        self.to_result(serde_json::to_value(user).map_err(|e| self.to_error(e))?)
     }
 
     /// Create a new user
@@ -519,30 +423,20 @@ impl EnterpriseTools {
     // =========================================================================
 
     /// List all roles
-    pub async fn list_roles(&self, query: Option<&str>) -> Result<CallToolResult, RmcpError> {
+    pub async fn list_roles(&self) -> Result<CallToolResult, RmcpError> {
         let handler = RolesHandler::new(self.client.clone());
         let roles = handler.list().await.map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(
-            serde_json::to_value(roles).map_err(|e| self.to_error(e))?,
-            query,
-        )
+        self.to_result(serde_json::to_value(roles).map_err(|e| self.to_error(e))?)
     }
 
     /// Get a specific role
-    pub async fn get_role(
-        &self,
-        role_id: i64,
-        query: Option<&str>,
-    ) -> Result<CallToolResult, RmcpError> {
+    pub async fn get_role(&self, role_id: i64) -> Result<CallToolResult, RmcpError> {
         let handler = RolesHandler::new(self.client.clone());
         let role = handler
             .get(role_id as u32)
             .await
             .map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(
-            serde_json::to_value(role).map_err(|e| self.to_error(e))?,
-            query,
-        )
+        self.to_result(serde_json::to_value(role).map_err(|e| self.to_error(e))?)
     }
 
     /// Create a new role
@@ -585,30 +479,20 @@ impl EnterpriseTools {
     // =========================================================================
 
     /// List all Redis ACLs
-    pub async fn list_acls(&self, query: Option<&str>) -> Result<CallToolResult, RmcpError> {
+    pub async fn list_acls(&self) -> Result<CallToolResult, RmcpError> {
         let handler = RedisAclHandler::new(self.client.clone());
         let acls = handler.list().await.map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(
-            serde_json::to_value(acls).map_err(|e| self.to_error(e))?,
-            query,
-        )
+        self.to_result(serde_json::to_value(acls).map_err(|e| self.to_error(e))?)
     }
 
     /// Get a specific Redis ACL
-    pub async fn get_acl(
-        &self,
-        acl_id: i64,
-        query: Option<&str>,
-    ) -> Result<CallToolResult, RmcpError> {
+    pub async fn get_acl(&self, acl_id: i64) -> Result<CallToolResult, RmcpError> {
         let handler = RedisAclHandler::new(self.client.clone());
         let acl = handler
             .get(acl_id as u32)
             .await
             .map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(
-            serde_json::to_value(acl).map_err(|e| self.to_error(e))?,
-            query,
-        )
+        self.to_result(serde_json::to_value(acl).map_err(|e| self.to_error(e))?)
     }
 
     /// Create a new Redis ACL
@@ -653,30 +537,20 @@ impl EnterpriseTools {
     // =========================================================================
 
     /// List all modules
-    pub async fn list_modules(&self, query: Option<&str>) -> Result<CallToolResult, RmcpError> {
+    pub async fn list_modules(&self) -> Result<CallToolResult, RmcpError> {
         let handler = ModuleHandler::new(self.client.clone());
         let modules = handler.list().await.map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(
-            serde_json::to_value(modules).map_err(|e| self.to_error(e))?,
-            query,
-        )
+        self.to_result(serde_json::to_value(modules).map_err(|e| self.to_error(e))?)
     }
 
     /// Get a specific module
-    pub async fn get_module(
-        &self,
-        module_uid: &str,
-        query: Option<&str>,
-    ) -> Result<CallToolResult, RmcpError> {
+    pub async fn get_module(&self, module_uid: &str) -> Result<CallToolResult, RmcpError> {
         let handler = ModuleHandler::new(self.client.clone());
         let module = handler
             .get(module_uid)
             .await
             .map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(
-            serde_json::to_value(module).map_err(|e| self.to_error(e))?,
-            query,
-        )
+        self.to_result(serde_json::to_value(module).map_err(|e| self.to_error(e))?)
     }
 
     // =========================================================================
@@ -684,27 +558,17 @@ impl EnterpriseTools {
     // =========================================================================
 
     /// List all CRDBs
-    pub async fn list_crdbs(&self, query: Option<&str>) -> Result<CallToolResult, RmcpError> {
+    pub async fn list_crdbs(&self) -> Result<CallToolResult, RmcpError> {
         let handler = CrdbHandler::new(self.client.clone());
         let crdbs = handler.list().await.map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(
-            serde_json::to_value(crdbs).map_err(|e| self.to_error(e))?,
-            query,
-        )
+        self.to_result(serde_json::to_value(crdbs).map_err(|e| self.to_error(e))?)
     }
 
     /// Get a specific CRDB
-    pub async fn get_crdb(
-        &self,
-        crdb_guid: &str,
-        query: Option<&str>,
-    ) -> Result<CallToolResult, RmcpError> {
+    pub async fn get_crdb(&self, crdb_guid: &str) -> Result<CallToolResult, RmcpError> {
         let handler = CrdbHandler::new(self.client.clone());
         let crdb = handler.get(crdb_guid).await.map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(
-            serde_json::to_value(crdb).map_err(|e| self.to_error(e))?,
-            query,
-        )
+        self.to_result(serde_json::to_value(crdb).map_err(|e| self.to_error(e))?)
     }
 
     /// Update a CRDB
@@ -739,29 +603,19 @@ impl EnterpriseTools {
     // =========================================================================
 
     /// List debug info collection tasks
-    pub async fn list_debuginfo(&self, query: Option<&str>) -> Result<CallToolResult, RmcpError> {
+    pub async fn list_debuginfo(&self) -> Result<CallToolResult, RmcpError> {
         let handler = DebugInfoHandler::new(self.client.clone());
         let tasks = handler.list().await.map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(
-            serde_json::to_value(tasks).map_err(|e| self.to_error(e))?,
-            query,
-        )
+        self.to_result(serde_json::to_value(tasks).map_err(|e| self.to_error(e))?)
     }
 
     /// Get debug info task status
-    pub async fn get_debuginfo_status(
-        &self,
-        task_id: &str,
-        query: Option<&str>,
-    ) -> Result<CallToolResult, RmcpError> {
+    pub async fn get_debuginfo_status(&self, task_id: &str) -> Result<CallToolResult, RmcpError> {
         let handler = DebugInfoHandler::new(self.client.clone());
         let status = handler
             .status(task_id)
             .await
             .map_err(|e| self.to_error(e))?;
-        self.to_result_with_query(
-            serde_json::to_value(status).map_err(|e| self.to_error(e))?,
-            query,
-        )
+        self.to_result(serde_json::to_value(status).map_err(|e| self.to_error(e))?)
     }
 }
