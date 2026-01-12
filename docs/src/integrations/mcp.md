@@ -149,7 +149,56 @@ Add to your Zed settings (`~/.config/zed/settings.json` on Linux/macOS):
 }
 ```
 
+## JMESPath Query Support
+
+All read operations support an optional `query` parameter for inline JMESPath filtering and transformation. This allows you to extract exactly the data you need without post-processing.
+
+### Basic Filtering
+
+```
+# Get just subscription names and IDs
+cloud_subscriptions_list with query: "[].{name: name, id: id}"
+
+# Filter databases by status
+enterprise_databases_list with query: "[?status == 'active']"
+```
+
+### Complex Aggregations
+
+```
+# Aggregate subscriptions by cloud provider
+cloud_subscriptions_list with query: "
+  [?cloudDetails[0].provider != null]
+    .{provider: cloudDetails[0].provider, storage: cloudDetails[0].totalSizeInGb}
+  | group_by(@, 'provider')
+  | items(@)
+  | map(&{provider: @[0], count: length(@[1]), total_gb: sum(@[1][].storage)}, @)
+"
+```
+
+### Available JMESPath Functions
+
+The MCP server includes 335+ JMESPath functions from the `jmespath_extensions` library, including:
+
+- **String**: `upper`, `lower`, `trim`, `split`, `join`, `replace`, `pad_left`, `pad_right`
+- **Math**: `sum`, `avg`, `min`, `max`, `round`, `floor`, `ceil`, `abs`
+- **Array**: `sort_by`, `group_by`, `unique`, `flatten`, `chunk`, `zip`
+- **DateTime**: `now`, `format_datetime`, `parse_datetime`, `duration`
+- **Object**: `keys`, `values`, `items`, `merge`, `pick`, `omit`
+
+Use the `jpx_functions` tool to discover available functions, or `jpx_describe` to get details on a specific function.
+
 ## Available Tools
+
+### JMESPath Tools (5 tools)
+
+| Tool | Description |
+|------|-------------|
+| `jpx_categories` | List available function categories |
+| `jpx_functions` | List functions (optionally filter by category) |
+| `jpx_describe` | Get detailed info about a specific function |
+| `jpx_evaluate` | Evaluate a JMESPath expression against JSON input |
+| `jpx_validate` | Validate an expression without executing it |
 
 ### Redis Cloud Tools (7 tools)
 
@@ -163,7 +212,11 @@ Add to your Zed settings (`~/.config/zed/settings.json` on Linux/macOS):
 | `cloud_tasks_list` | List recent async tasks |
 | `cloud_task_get` | Get task status |
 
+All Cloud read tools support the optional `query` parameter for JMESPath filtering.
+
 ### Redis Enterprise Tools (48 tools)
+
+All Enterprise read tools support the optional `query` parameter for JMESPath filtering.
 
 #### Cluster Operations
 
@@ -243,6 +296,8 @@ Add to your Zed settings (`~/.config/zed/settings.json` on Linux/macOS):
 | `enterprise_debuginfo_list` | List debug info tasks |
 | `enterprise_debuginfo_status` | Get debug info task status |
 
+**Total: 60 tools** (5 JMESPath + 7 Cloud + 48 Enterprise)
+
 ## Example Conversations
 
 Once configured, you can interact naturally with your Redis infrastructure:
@@ -263,6 +318,18 @@ Once configured, you can interact naturally with your Redis infrastructure:
 >
 > **Claude**: *uses enterprise_alerts_list*
 > No active alerts in your cluster.
+
+> **You**: Summarize my cloud subscriptions by provider
+>
+> **Claude**: *uses cloud_subscriptions_list with query parameter*
+> Here's a breakdown by cloud provider:
+> - **AWS**: 6 subscriptions, 11 databases, 2.85 GB total storage
+> - **GCP**: 2 subscriptions, 3 databases, 0.44 GB total storage
+
+> **You**: What JMESPath functions are available for working with dates?
+>
+> **Claude**: *uses jpx_functions with category: "Datetime"*
+> There are 15 datetime functions available including `now`, `format_datetime`, `parse_datetime`, `duration`, `add_days`, etc.
 
 ## Security Considerations
 
