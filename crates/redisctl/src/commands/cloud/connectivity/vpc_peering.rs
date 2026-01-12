@@ -14,6 +14,38 @@ use anyhow::Context;
 use redis_cloud::CloudClient;
 use serde_json::Value;
 
+/// Parameters for VPC peering create operation
+#[derive(Debug, Default)]
+pub struct VpcPeeringCreateParams {
+    pub region: Option<String>,
+    pub aws_account_id: Option<String>,
+    pub vpc_id: Option<String>,
+    pub gcp_project_id: Option<String>,
+    pub gcp_network_name: Option<String>,
+    pub vpc_cidrs: Vec<String>,
+    pub data: Option<String>,
+}
+
+/// Parameters for Active-Active VPC peering create operation
+#[derive(Debug, Default)]
+pub struct VpcPeeringCreateAaParams {
+    pub source_region: Option<String>,
+    pub destination_region: Option<String>,
+    pub aws_account_id: Option<String>,
+    pub vpc_id: Option<String>,
+    pub gcp_project_id: Option<String>,
+    pub gcp_network_name: Option<String>,
+    pub vpc_cidrs: Vec<String>,
+    pub data: Option<String>,
+}
+
+/// Parameters for VPC peering update operation
+#[derive(Debug, Default)]
+pub struct VpcPeeringUpdateParams {
+    pub vpc_cidrs: Vec<String>,
+    pub data: Option<String>,
+}
+
 /// Handle VPC peering commands
 pub async fn handle_vpc_peering_command(
     conn_mgr: &ConnectionManager,
@@ -30,6 +62,12 @@ pub async fn handle_vpc_peering_command(
         }
         VpcPeeringCommands::Create {
             subscription,
+            region,
+            aws_account_id,
+            vpc_id,
+            gcp_project_id,
+            gcp_network_name,
+            vpc_cidrs,
             data,
             async_ops,
         } => {
@@ -42,11 +80,21 @@ pub async fn handle_vpc_peering_command(
                 output_format,
                 query,
             };
-            handle_create(&params, data).await
+            let create_params = VpcPeeringCreateParams {
+                region: region.clone(),
+                aws_account_id: aws_account_id.clone(),
+                vpc_id: vpc_id.clone(),
+                gcp_project_id: gcp_project_id.clone(),
+                gcp_network_name: gcp_network_name.clone(),
+                vpc_cidrs: vpc_cidrs.clone(),
+                data: data.clone(),
+            };
+            handle_create(&params, &create_params).await
         }
         VpcPeeringCommands::Update {
             subscription,
             peering_id,
+            vpc_cidrs,
             data,
             async_ops,
         } => {
@@ -59,7 +107,11 @@ pub async fn handle_vpc_peering_command(
                 output_format,
                 query,
             };
-            handle_update(&params, *peering_id, data).await
+            let update_params = VpcPeeringUpdateParams {
+                vpc_cidrs: vpc_cidrs.clone(),
+                data: data.clone(),
+            };
+            handle_update(&params, *peering_id, &update_params).await
         }
         VpcPeeringCommands::Delete {
             subscription,
@@ -83,6 +135,13 @@ pub async fn handle_vpc_peering_command(
         }
         VpcPeeringCommands::CreateActiveActive {
             subscription,
+            source_region,
+            destination_region,
+            aws_account_id,
+            vpc_id,
+            gcp_project_id,
+            gcp_network_name,
+            vpc_cidrs,
             data,
             async_ops,
         } => {
@@ -95,11 +154,22 @@ pub async fn handle_vpc_peering_command(
                 output_format,
                 query,
             };
-            handle_create_active_active(&params, data).await
+            let create_params = VpcPeeringCreateAaParams {
+                source_region: source_region.clone(),
+                destination_region: destination_region.clone(),
+                aws_account_id: aws_account_id.clone(),
+                vpc_id: vpc_id.clone(),
+                gcp_project_id: gcp_project_id.clone(),
+                gcp_network_name: gcp_network_name.clone(),
+                vpc_cidrs: vpc_cidrs.clone(),
+                data: data.clone(),
+            };
+            handle_create_active_active(&params, &create_params).await
         }
         VpcPeeringCommands::UpdateActiveActive {
             subscription,
             peering_id,
+            vpc_cidrs,
             data,
             async_ops,
         } => {
@@ -112,7 +182,11 @@ pub async fn handle_vpc_peering_command(
                 output_format,
                 query,
             };
-            handle_update_active_active(&params, *peering_id, data).await
+            let update_params = VpcPeeringUpdateParams {
+                vpc_cidrs: vpc_cidrs.clone(),
+                data: data.clone(),
+            };
+            handle_update_active_active(&params, *peering_id, &update_params).await
         }
         VpcPeeringCommands::DeleteActiveActive {
             subscription,
@@ -157,10 +231,157 @@ async fn handle_get(
     Ok(())
 }
 
+/// Build VPC peering create payload from parameters
+fn build_create_payload(create_params: &VpcPeeringCreateParams) -> CliResult<Value> {
+    // If --data is provided, use it as the base (escape hatch)
+    if let Some(data) = &create_params.data {
+        let content = read_file_input(data)?;
+        return Ok(serde_json::from_str(&content).context("Failed to parse JSON input")?);
+    }
+
+    // Build payload from first-class parameters
+    let mut payload = serde_json::Map::new();
+
+    // Determine if this is AWS or GCP based on provided parameters
+    if create_params.gcp_project_id.is_some() {
+        // GCP VPC peering
+        if let Some(project_id) = &create_params.gcp_project_id {
+            payload.insert(
+                "vpcProjectUid".to_string(),
+                Value::String(project_id.clone()),
+            );
+        }
+        if let Some(network_name) = &create_params.gcp_network_name {
+            payload.insert(
+                "vpcNetworkName".to_string(),
+                Value::String(network_name.clone()),
+            );
+        }
+    } else {
+        // AWS VPC peering
+        if let Some(region) = &create_params.region {
+            payload.insert("region".to_string(), Value::String(region.clone()));
+        }
+        if let Some(account_id) = &create_params.aws_account_id {
+            payload.insert(
+                "awsAccountId".to_string(),
+                Value::String(account_id.clone()),
+            );
+        }
+        if let Some(vpc_id) = &create_params.vpc_id {
+            payload.insert("vpcId".to_string(), Value::String(vpc_id.clone()));
+        }
+    }
+
+    // Add VPC CIDRs if provided (works for both AWS and GCP)
+    if !create_params.vpc_cidrs.is_empty() {
+        let cidrs: Vec<Value> = create_params
+            .vpc_cidrs
+            .iter()
+            .map(|c| Value::String(c.clone()))
+            .collect();
+        payload.insert("vpcCidrs".to_string(), Value::Array(cidrs));
+    }
+
+    Ok(Value::Object(payload))
+}
+
+/// Build VPC peering update payload from parameters
+fn build_update_payload(update_params: &VpcPeeringUpdateParams) -> CliResult<Value> {
+    // If --data is provided, use it as the base (escape hatch)
+    if let Some(data) = &update_params.data {
+        let content = read_file_input(data)?;
+        return Ok(serde_json::from_str(&content).context("Failed to parse JSON input")?);
+    }
+
+    // Build payload from first-class parameters
+    let mut payload = serde_json::Map::new();
+
+    // Add VPC CIDRs if provided
+    if !update_params.vpc_cidrs.is_empty() {
+        let cidrs: Vec<Value> = update_params
+            .vpc_cidrs
+            .iter()
+            .map(|c| Value::String(c.clone()))
+            .collect();
+        payload.insert("vpcCidrs".to_string(), Value::Array(cidrs));
+    }
+
+    Ok(Value::Object(payload))
+}
+
+/// Build Active-Active VPC peering create payload from parameters
+fn build_create_aa_payload(create_params: &VpcPeeringCreateAaParams) -> CliResult<Value> {
+    // If --data is provided, use it as the base (escape hatch)
+    if let Some(data) = &create_params.data {
+        let content = read_file_input(data)?;
+        return Ok(serde_json::from_str(&content).context("Failed to parse JSON input")?);
+    }
+
+    // Build payload from first-class parameters
+    let mut payload = serde_json::Map::new();
+
+    // Source region is common to both AWS and GCP
+    if let Some(source_region) = &create_params.source_region {
+        payload.insert(
+            "sourceRegion".to_string(),
+            Value::String(source_region.clone()),
+        );
+    }
+
+    // Determine if this is AWS or GCP based on provided parameters
+    if create_params.gcp_project_id.is_some() {
+        // GCP VPC peering
+        if let Some(project_id) = &create_params.gcp_project_id {
+            payload.insert(
+                "vpcProjectUid".to_string(),
+                Value::String(project_id.clone()),
+            );
+        }
+        if let Some(network_name) = &create_params.gcp_network_name {
+            payload.insert(
+                "vpcNetworkName".to_string(),
+                Value::String(network_name.clone()),
+            );
+        }
+    } else {
+        // AWS VPC peering
+        if let Some(dest_region) = &create_params.destination_region {
+            payload.insert(
+                "destinationRegion".to_string(),
+                Value::String(dest_region.clone()),
+            );
+        }
+        if let Some(account_id) = &create_params.aws_account_id {
+            payload.insert(
+                "awsAccountId".to_string(),
+                Value::String(account_id.clone()),
+            );
+        }
+        if let Some(vpc_id) = &create_params.vpc_id {
+            payload.insert("vpcId".to_string(), Value::String(vpc_id.clone()));
+        }
+    }
+
+    // Add VPC CIDRs if provided (works for both AWS and GCP)
+    if !create_params.vpc_cidrs.is_empty() {
+        let cidrs: Vec<Value> = create_params
+            .vpc_cidrs
+            .iter()
+            .map(|c| Value::String(c.clone()))
+            .collect();
+        payload.insert("vpcCidrs".to_string(), Value::Array(cidrs));
+    }
+
+    Ok(Value::Object(payload))
+}
+
 /// Create VPC peering
-async fn handle_create(params: &ConnectivityOperationParams<'_>, data: &str) -> CliResult<()> {
-    let content = read_file_input(data)?;
-    let payload: Value = serde_json::from_str(&content).context("Failed to parse JSON input")?;
+async fn handle_create(
+    params: &ConnectivityOperationParams<'_>,
+    create_params: &VpcPeeringCreateParams,
+) -> CliResult<()> {
+    let payload = build_create_payload(create_params)?;
 
     let result = params
         .client
@@ -187,10 +408,9 @@ async fn handle_create(params: &ConnectivityOperationParams<'_>, data: &str) -> 
 async fn handle_update(
     params: &ConnectivityOperationParams<'_>,
     peering_id: i32,
-    data: &str,
+    update_params: &VpcPeeringUpdateParams,
 ) -> CliResult<()> {
-    let content = read_file_input(data)?;
-    let payload: Value = serde_json::from_str(&content).context("Failed to parse JSON input")?;
+    let payload = build_update_payload(update_params)?;
 
     let result = params
         .client
@@ -283,10 +503,9 @@ async fn handle_list_active_active(
 /// Create Active-Active VPC peering
 async fn handle_create_active_active(
     params: &ConnectivityOperationParams<'_>,
-    data: &str,
+    create_params: &VpcPeeringCreateAaParams,
 ) -> CliResult<()> {
-    let content = read_file_input(data)?;
-    let payload: Value = serde_json::from_str(&content).context("Failed to parse JSON input")?;
+    let payload = build_create_aa_payload(create_params)?;
 
     let result = params
         .client
@@ -316,10 +535,10 @@ async fn handle_create_active_active(
 async fn handle_update_active_active(
     params: &ConnectivityOperationParams<'_>,
     peering_id: i32,
-    data: &str,
+    update_params: &VpcPeeringUpdateParams,
 ) -> CliResult<()> {
-    let content = read_file_input(data)?;
-    let payload: Value = serde_json::from_str(&content).context("Failed to parse JSON input")?;
+    // Reuse the same update payload builder since update params are the same
+    let payload = build_update_payload(update_params)?;
 
     let result = params
         .client

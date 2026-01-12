@@ -28,16 +28,73 @@ pub enum VpcPeeringCommands {
         subscription: i32,
     },
     /// Create VPC peering
+    #[command(after_help = "EXAMPLES:
+    # AWS VPC peering
+    redisctl cloud connectivity vpc-peering create --subscription 123 \\
+      --region us-east-1 --aws-account-id 123456789012 --vpc-id vpc-abc123
+
+    # AWS VPC peering with CIDR blocks
+    redisctl cloud connectivity vpc-peering create --subscription 123 \\
+      --region us-east-1 --aws-account-id 123456789012 --vpc-id vpc-abc123 \\
+      --vpc-cidr 10.0.0.0/16 --vpc-cidr 10.1.0.0/16
+
+    # GCP VPC peering
+    redisctl cloud connectivity vpc-peering create --subscription 123 \\
+      --gcp-project-id my-project --gcp-network-name my-network
+
+    # Using JSON data (escape hatch for advanced options)
+    redisctl cloud connectivity vpc-peering create --subscription 123 \\
+      --data '{\"region\": \"us-east-1\", \"awsAccountId\": \"123456789012\", \"vpcId\": \"vpc-abc123\"}'
+")]
     Create {
         /// Subscription ID
         #[arg(long)]
         subscription: i32,
-        /// Configuration JSON file or string (use @filename for file)
-        data: String,
+
+        // AWS-specific parameters
+        /// AWS region (e.g., us-east-1)
+        #[arg(long, required_unless_present_any = ["gcp_project_id", "data"])]
+        region: Option<String>,
+
+        /// AWS account ID (12-digit number)
+        #[arg(long, required_unless_present_any = ["gcp_project_id", "data"])]
+        aws_account_id: Option<String>,
+
+        /// AWS VPC ID (e.g., vpc-abc123)
+        #[arg(long, required_unless_present_any = ["gcp_project_id", "data"])]
+        vpc_id: Option<String>,
+
+        // GCP-specific parameters
+        /// GCP project ID (for GCP VPC peering)
+        #[arg(long, required_unless_present_any = ["region", "data"])]
+        gcp_project_id: Option<String>,
+
+        /// GCP network name (for GCP VPC peering)
+        #[arg(long, required_unless_present_any = ["region", "data"])]
+        gcp_network_name: Option<String>,
+
+        // Common optional parameters
+        /// VPC CIDR block (can be specified multiple times)
+        #[arg(long = "vpc-cidr", value_name = "CIDR")]
+        vpc_cidrs: Vec<String>,
+
+        /// Advanced: Full configuration as JSON string or @file.json (overrides other params)
+        #[arg(long)]
+        data: Option<String>,
+
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Update VPC peering
+    #[command(after_help = "EXAMPLES:
+    # Update VPC CIDR blocks
+    redisctl cloud connectivity vpc-peering update --subscription 123 --peering-id 456 \\
+      --vpc-cidr 10.0.0.0/16 --vpc-cidr 10.1.0.0/16
+
+    # Using JSON data
+    redisctl cloud connectivity vpc-peering update --subscription 123 --peering-id 456 \\
+      --data '{\"vpcCidrs\": [\"10.0.0.0/16\", \"10.1.0.0/16\"]}'
+")]
     Update {
         /// Subscription ID
         #[arg(long)]
@@ -45,8 +102,15 @@ pub enum VpcPeeringCommands {
         /// Peering ID
         #[arg(long)]
         peering_id: i32,
-        /// Configuration JSON file or string (use @filename for file)
-        data: String,
+
+        /// VPC CIDR block (can be specified multiple times)
+        #[arg(long = "vpc-cidr", value_name = "CIDR")]
+        vpc_cidrs: Vec<String>,
+
+        /// Advanced: Full configuration as JSON string or @file.json (overrides other params)
+        #[arg(long)]
+        data: Option<String>,
+
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
@@ -72,18 +136,85 @@ pub enum VpcPeeringCommands {
         subscription: i32,
     },
     /// Create Active-Active VPC peering
-    #[command(name = "create-aa")]
+    #[command(
+        name = "create-aa",
+        after_help = "EXAMPLES:
+    # AWS Active-Active VPC peering
+    redisctl cloud connectivity vpc-peering create-aa --subscription 123 \\
+      --source-region us-east-1 --destination-region us-west-2 \\
+      --aws-account-id 123456789012 --vpc-id vpc-abc123
+
+    # AWS Active-Active with CIDR blocks
+    redisctl cloud connectivity vpc-peering create-aa --subscription 123 \\
+      --source-region us-east-1 --destination-region us-west-2 \\
+      --aws-account-id 123456789012 --vpc-id vpc-abc123 \\
+      --vpc-cidr 10.0.0.0/16
+
+    # GCP Active-Active VPC peering
+    redisctl cloud connectivity vpc-peering create-aa --subscription 123 \\
+      --source-region us-central1 --gcp-project-id my-project --gcp-network-name my-network
+
+    # Using JSON data
+    redisctl cloud connectivity vpc-peering create-aa --subscription 123 \\
+      --data @peering-config.json
+"
+    )]
     CreateActiveActive {
         /// Subscription ID
         #[arg(long)]
         subscription: i32,
-        /// Configuration JSON file or string (use @filename for file)
-        data: String,
+
+        /// Source region (Redis Cloud region)
+        #[arg(long, required_unless_present = "data")]
+        source_region: Option<String>,
+
+        // AWS-specific parameters
+        /// Destination region for AWS (customer VPC region)
+        #[arg(long, required_unless_present_any = ["gcp_project_id", "data"])]
+        destination_region: Option<String>,
+
+        /// AWS account ID (12-digit number)
+        #[arg(long, required_unless_present_any = ["gcp_project_id", "data"])]
+        aws_account_id: Option<String>,
+
+        /// AWS VPC ID (e.g., vpc-abc123)
+        #[arg(long, required_unless_present_any = ["gcp_project_id", "data"])]
+        vpc_id: Option<String>,
+
+        // GCP-specific parameters
+        /// GCP project ID (for GCP VPC peering)
+        #[arg(long, required_unless_present_any = ["destination_region", "data"])]
+        gcp_project_id: Option<String>,
+
+        /// GCP network name (for GCP VPC peering)
+        #[arg(long, required_unless_present_any = ["destination_region", "data"])]
+        gcp_network_name: Option<String>,
+
+        // Common optional parameters
+        /// VPC CIDR block (can be specified multiple times)
+        #[arg(long = "vpc-cidr", value_name = "CIDR")]
+        vpc_cidrs: Vec<String>,
+
+        /// Advanced: Full configuration as JSON string or @file.json (overrides other params)
+        #[arg(long)]
+        data: Option<String>,
+
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Update Active-Active VPC peering
-    #[command(name = "update-aa")]
+    #[command(
+        name = "update-aa",
+        after_help = "EXAMPLES:
+    # Update VPC CIDR blocks
+    redisctl cloud connectivity vpc-peering update-aa --subscription 123 --peering-id 456 \\
+      --vpc-cidr 10.0.0.0/16 --vpc-cidr 10.1.0.0/16
+
+    # Using JSON data
+    redisctl cloud connectivity vpc-peering update-aa --subscription 123 --peering-id 456 \\
+      --data '{\"vpcCidrs\": [\"10.0.0.0/16\"]}'
+"
+    )]
     UpdateActiveActive {
         /// Subscription ID
         #[arg(long)]
@@ -91,8 +222,15 @@ pub enum VpcPeeringCommands {
         /// Peering ID
         #[arg(long)]
         peering_id: i32,
-        /// Configuration JSON file or string (use @filename for file)
-        data: String,
+
+        /// VPC CIDR block (can be specified multiple times)
+        #[arg(long = "vpc-cidr", value_name = "CIDR")]
+        vpc_cidrs: Vec<String>,
+
+        /// Advanced: Full configuration as JSON string or @file.json (overrides other params)
+        #[arg(long)]
+        data: Option<String>,
+
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
