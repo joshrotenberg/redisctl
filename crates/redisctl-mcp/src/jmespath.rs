@@ -194,3 +194,36 @@ mod tests {
         assert_eq!(result.as_f64().unwrap(), 6.0);
     }
 }
+
+#[cfg(test)]
+mod integration_tests {
+    use super::*;
+
+    #[test]
+    fn test_complex_aggregation_query() {
+        let input = r#"[
+            {"name": "sub1", "cloudDetails": [{"provider": "AWS", "totalSizeInGb": 1.5}], "numberOfDatabases": 3},
+            {"name": "sub2", "cloudDetails": [{"provider": "GCP", "totalSizeInGb": 0.5}], "numberOfDatabases": 1},
+            {"name": "sub3", "cloudDetails": [{"provider": "AWS", "totalSizeInGb": 2.0}], "numberOfDatabases": 5},
+            {"name": "sub4", "cloudDetails": [{"provider": "GCP", "totalSizeInGb": 0.3}], "numberOfDatabases": 2},
+            {"name": "sub5", "cloudDetails": [{"provider": "AWS", "totalSizeInGb": 0.8}], "numberOfDatabases": 1}
+        ]"#;
+        
+        let query = "[?cloudDetails[0].provider != null].{name: name, provider: cloudDetails[0].provider, databases: numberOfDatabases, storage_gb: cloudDetails[0].totalSizeInGb} | group_by(@, 'provider') | items(@) | map(&{provider: @[0], count: length(@[1]), total_dbs: sum(@[1][].databases), total_gb: round(sum(@[1][].storage_gb), `2`)}, @) | sort_by(@, &total_gb) | reverse(@)";
+        
+        let result = evaluate(input, query).unwrap();
+        let arr = result.as_array().unwrap();
+        
+        // AWS should be first (more storage)
+        assert_eq!(arr[0]["provider"], "AWS");
+        assert_eq!(arr[0]["count"], 3);
+        assert_eq!(arr[0]["total_dbs"], 9.0);
+        assert_eq!(arr[0]["total_gb"], 4.3);
+        
+        // GCP second
+        assert_eq!(arr[1]["provider"], "GCP");
+        assert_eq!(arr[1]["count"], 2);
+        assert_eq!(arr[1]["total_dbs"], 3.0);
+        assert_eq!(arr[1]["total_gb"], 0.8);
+    }
+}
