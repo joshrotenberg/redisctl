@@ -36,10 +36,21 @@ pub struct RedisCtlMcp {
 }
 
 // Parameter structs for tools that need arguments
+/// Optional JMESPath query for filtering results
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct QueryParam {
+    /// Optional JMESPath query to filter/transform the result
+    #[serde(default)]
+    pub query: Option<String>,
+}
+
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub struct SubscriptionIdParam {
     /// The subscription ID
     pub subscription_id: i64,
+    /// Optional JMESPath query to filter/transform the result
+    #[serde(default)]
+    pub query: Option<String>,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
@@ -48,6 +59,9 @@ pub struct DatabaseIdParam {
     pub subscription_id: i64,
     /// The database ID
     pub database_id: i64,
+    /// Optional JMESPath query to filter/transform the result
+    #[serde(default)]
+    pub query: Option<String>,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
@@ -60,12 +74,18 @@ pub struct TaskIdParam {
 pub struct NodeIdParam {
     /// The node ID
     pub node_id: i64,
+    /// Optional JMESPath query to filter/transform the result
+    #[serde(default)]
+    pub query: Option<String>,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub struct EnterpriseDatabaseIdParam {
     /// The database ID (uid)
     pub database_id: i64,
+    /// Optional JMESPath query to filter/transform the result
+    #[serde(default)]
+    pub query: Option<String>,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
@@ -155,18 +175,27 @@ pub struct UpdateNodeParam {
 pub struct ShardIdParam {
     /// The shard UID (e.g., "1:1" for database 1, shard 1)
     pub shard_uid: String,
+    /// Optional JMESPath query to filter/transform the result
+    #[serde(default)]
+    pub query: Option<String>,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub struct AlertIdParam {
     /// The alert UID
     pub alert_uid: String,
+    /// Optional JMESPath query to filter/transform the result
+    #[serde(default)]
+    pub query: Option<String>,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub struct UserIdParam {
     /// The user ID (uid)
     pub user_id: i64,
+    /// Optional JMESPath query to filter/transform the result
+    #[serde(default)]
+    pub query: Option<String>,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
@@ -186,6 +215,9 @@ pub struct CreateUserParam {
 pub struct RoleIdParam {
     /// The role ID (uid)
     pub role_id: i64,
+    /// Optional JMESPath query to filter/transform the result
+    #[serde(default)]
+    pub query: Option<String>,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
@@ -201,6 +233,9 @@ pub struct CreateRoleParam {
 pub struct AclIdParam {
     /// The Redis ACL ID (uid)
     pub acl_id: i64,
+    /// Optional JMESPath query to filter/transform the result
+    #[serde(default)]
+    pub query: Option<String>,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
@@ -218,12 +253,18 @@ pub struct CreateAclParam {
 pub struct ModuleIdParam {
     /// The module UID (e.g., "bf" for RedisBloom)
     pub module_uid: String,
+    /// Optional JMESPath query to filter/transform the result
+    #[serde(default)]
+    pub query: Option<String>,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub struct CrdbGuidParam {
     /// The CRDB GUID (globally unique identifier)
     pub crdb_guid: String,
+    /// Optional JMESPath query to filter/transform the result
+    #[serde(default)]
+    pub query: Option<String>,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
@@ -245,6 +286,9 @@ pub struct UpdateCrdbParam {
 pub struct DebugInfoTaskIdParam {
     /// The debug info task ID
     pub task_id: String,
+    /// Optional JMESPath query to filter/transform the result
+    #[serde(default)]
+    pub query: Option<String>,
 }
 
 // JMESPath tool parameters
@@ -342,40 +386,57 @@ impl RedisCtlMcp {
         tools.get_account().await
     }
 
-    #[tool(description = "List all Redis Cloud subscriptions in the account")]
-    async fn cloud_subscriptions_list(&self) -> Result<CallToolResult, RmcpError> {
-        info!("Tool called: cloud_subscriptions_list");
+    #[tool(
+        description = "List all Redis Cloud subscriptions in the account. Use 'query' parameter for JMESPath filtering."
+    )]
+    async fn cloud_subscriptions_list(
+        &self,
+        Parameters(params): Parameters<QueryParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(query = ?params.query, "Tool called: cloud_subscriptions_list");
         let tools = self.get_cloud_tools().await?;
-        tools.list_subscriptions().await
+        tools.list_subscriptions(params.query.as_deref()).await
     }
 
-    #[tool(description = "Get detailed information about a specific Redis Cloud subscription")]
+    #[tool(
+        description = "Get detailed information about a specific Redis Cloud subscription. Use 'query' parameter for JMESPath filtering."
+    )]
     async fn cloud_subscription_get(
         &self,
         Parameters(params): Parameters<SubscriptionIdParam>,
     ) -> Result<CallToolResult, RmcpError> {
         info!(
             subscription_id = params.subscription_id,
+            query = ?params.query,
             "Tool called: cloud_subscription_get"
         );
         let tools = self.get_cloud_tools().await?;
-        tools.get_subscription(params.subscription_id).await
+        tools
+            .get_subscription(params.subscription_id, params.query.as_deref())
+            .await
     }
 
-    #[tool(description = "List all databases in a specific Redis Cloud subscription")]
+    #[tool(
+        description = "List all databases in a specific Redis Cloud subscription. Use 'query' parameter for JMESPath filtering."
+    )]
     async fn cloud_databases_list(
         &self,
         Parameters(params): Parameters<SubscriptionIdParam>,
     ) -> Result<CallToolResult, RmcpError> {
         info!(
             subscription_id = params.subscription_id,
+            query = ?params.query,
             "Tool called: cloud_databases_list"
         );
         let tools = self.get_cloud_tools().await?;
-        tools.list_databases(params.subscription_id).await
+        tools
+            .list_databases(params.subscription_id, params.query.as_deref())
+            .await
     }
 
-    #[tool(description = "Get detailed information about a specific Redis Cloud database")]
+    #[tool(
+        description = "Get detailed information about a specific Redis Cloud database. Use 'query' parameter for JMESPath filtering."
+    )]
     async fn cloud_database_get(
         &self,
         Parameters(params): Parameters<DatabaseIdParam>,
@@ -383,11 +444,16 @@ impl RedisCtlMcp {
         info!(
             subscription_id = params.subscription_id,
             database_id = params.database_id,
+            query = ?params.query,
             "Tool called: cloud_database_get"
         );
         let tools = self.get_cloud_tools().await?;
         tools
-            .get_database(params.subscription_id, params.database_id)
+            .get_database(
+                params.subscription_id,
+                params.database_id,
+                params.query.as_deref(),
+            )
             .await
     }
 
@@ -413,40 +479,57 @@ impl RedisCtlMcp {
     // =========================================================================
 
     #[tool(
-        description = "Get Redis Enterprise cluster information including name, version, and node count"
+        description = "Get Redis Enterprise cluster information including name, version, and node count. Use 'query' parameter for JMESPath filtering."
     )]
-    async fn enterprise_cluster_get(&self) -> Result<CallToolResult, RmcpError> {
-        info!("Tool called: enterprise_cluster_get");
+    async fn enterprise_cluster_get(
+        &self,
+        Parameters(params): Parameters<QueryParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(query = ?params.query, "Tool called: enterprise_cluster_get");
         let tools = self.get_enterprise_tools().await?;
-        tools.get_cluster().await
+        tools.get_cluster(params.query.as_deref()).await
     }
 
-    #[tool(description = "List all nodes in the Redis Enterprise cluster with their status")]
-    async fn enterprise_nodes_list(&self) -> Result<CallToolResult, RmcpError> {
-        info!("Tool called: enterprise_nodes_list");
+    #[tool(
+        description = "List all nodes in the Redis Enterprise cluster with their status. Use 'query' parameter for JMESPath filtering."
+    )]
+    async fn enterprise_nodes_list(
+        &self,
+        Parameters(params): Parameters<QueryParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(query = ?params.query, "Tool called: enterprise_nodes_list");
         let tools = self.get_enterprise_tools().await?;
-        tools.list_nodes().await
+        tools.list_nodes(params.query.as_deref()).await
     }
 
-    #[tool(description = "Get detailed information about a specific Redis Enterprise node")]
+    #[tool(
+        description = "Get detailed information about a specific Redis Enterprise node. Use 'query' parameter for JMESPath filtering."
+    )]
     async fn enterprise_node_get(
         &self,
         Parameters(params): Parameters<NodeIdParam>,
     ) -> Result<CallToolResult, RmcpError> {
-        info!(node_id = params.node_id, "Tool called: enterprise_node_get");
+        info!(node_id = params.node_id, query = ?params.query, "Tool called: enterprise_node_get");
         let tools = self.get_enterprise_tools().await?;
-        tools.get_node(params.node_id).await
-    }
-
-    #[tool(description = "List all databases (BDBs) in the Redis Enterprise cluster")]
-    async fn enterprise_databases_list(&self) -> Result<CallToolResult, RmcpError> {
-        info!("Tool called: enterprise_databases_list");
-        let tools = self.get_enterprise_tools().await?;
-        tools.list_databases().await
+        tools
+            .get_node(params.node_id, params.query.as_deref())
+            .await
     }
 
     #[tool(
-        description = "Get detailed information about a specific Redis Enterprise database (BDB)"
+        description = "List all databases (BDBs) in the Redis Enterprise cluster. Use 'query' parameter for JMESPath filtering."
+    )]
+    async fn enterprise_databases_list(
+        &self,
+        Parameters(params): Parameters<QueryParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(query = ?params.query, "Tool called: enterprise_databases_list");
+        let tools = self.get_enterprise_tools().await?;
+        tools.list_databases(params.query.as_deref()).await
+    }
+
+    #[tool(
+        description = "Get detailed information about a specific Redis Enterprise database (BDB). Use 'query' parameter for JMESPath filtering."
     )]
     async fn enterprise_database_get(
         &self,
@@ -454,53 +537,79 @@ impl RedisCtlMcp {
     ) -> Result<CallToolResult, RmcpError> {
         info!(
             database_id = params.database_id,
+            query = ?params.query,
             "Tool called: enterprise_database_get"
         );
         let tools = self.get_enterprise_tools().await?;
-        tools.get_database(params.database_id).await
+        tools
+            .get_database(params.database_id, params.query.as_deref())
+            .await
     }
 
-    #[tool(description = "Get performance statistics for a specific Redis Enterprise database")]
+    #[tool(
+        description = "Get performance statistics for a specific Redis Enterprise database. Use 'query' parameter for JMESPath filtering."
+    )]
     async fn enterprise_database_stats(
         &self,
         Parameters(params): Parameters<EnterpriseDatabaseIdParam>,
     ) -> Result<CallToolResult, RmcpError> {
         info!(
             database_id = params.database_id,
+            query = ?params.query,
             "Tool called: enterprise_database_stats"
         );
         let tools = self.get_enterprise_tools().await?;
-        tools.get_database_stats(params.database_id).await
-    }
-
-    #[tool(description = "List all shards across all databases in the Redis Enterprise cluster")]
-    async fn enterprise_shards_list(&self) -> Result<CallToolResult, RmcpError> {
-        info!("Tool called: enterprise_shards_list");
-        let tools = self.get_enterprise_tools().await?;
-        tools.list_shards().await
-    }
-
-    #[tool(description = "List active alerts in the Redis Enterprise cluster")]
-    async fn enterprise_alerts_list(&self) -> Result<CallToolResult, RmcpError> {
-        info!("Tool called: enterprise_alerts_list");
-        let tools = self.get_enterprise_tools().await?;
-        tools.list_alerts().await
-    }
-
-    #[tool(description = "Get recent event logs from the Redis Enterprise cluster")]
-    async fn enterprise_logs_get(&self) -> Result<CallToolResult, RmcpError> {
-        info!("Tool called: enterprise_logs_get");
-        let tools = self.get_enterprise_tools().await?;
-        tools.get_logs().await
+        tools
+            .get_database_stats(params.database_id, params.query.as_deref())
+            .await
     }
 
     #[tool(
-        description = "Get Redis Enterprise license information including expiration and capacity"
+        description = "List all shards across all databases in the Redis Enterprise cluster. Use 'query' parameter for JMESPath filtering."
     )]
-    async fn enterprise_license_get(&self) -> Result<CallToolResult, RmcpError> {
-        info!("Tool called: enterprise_license_get");
+    async fn enterprise_shards_list(
+        &self,
+        Parameters(params): Parameters<QueryParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(query = ?params.query, "Tool called: enterprise_shards_list");
         let tools = self.get_enterprise_tools().await?;
-        tools.get_license().await
+        tools.list_shards(params.query.as_deref()).await
+    }
+
+    #[tool(
+        description = "List active alerts in the Redis Enterprise cluster. Use 'query' parameter for JMESPath filtering."
+    )]
+    async fn enterprise_alerts_list(
+        &self,
+        Parameters(params): Parameters<QueryParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(query = ?params.query, "Tool called: enterprise_alerts_list");
+        let tools = self.get_enterprise_tools().await?;
+        tools.list_alerts(params.query.as_deref()).await
+    }
+
+    #[tool(
+        description = "Get recent event logs from the Redis Enterprise cluster. Use 'query' parameter for JMESPath filtering."
+    )]
+    async fn enterprise_logs_get(
+        &self,
+        Parameters(params): Parameters<QueryParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(query = ?params.query, "Tool called: enterprise_logs_get");
+        let tools = self.get_enterprise_tools().await?;
+        tools.get_logs(params.query.as_deref()).await
+    }
+
+    #[tool(
+        description = "Get Redis Enterprise license information including expiration and capacity. Use 'query' parameter for JMESPath filtering."
+    )]
+    async fn enterprise_license_get(
+        &self,
+        Parameters(params): Parameters<QueryParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(query = ?params.query, "Tool called: enterprise_license_get");
+        let tools = self.get_enterprise_tools().await?;
+        tools.get_license(params.query.as_deref()).await
     }
 
     // =========================================================================
@@ -636,17 +745,22 @@ impl RedisCtlMcp {
         tools.flush_database(params.database_id).await
     }
 
-    #[tool(description = "Get performance metrics for a Redis Enterprise database")]
+    #[tool(
+        description = "Get performance metrics for a Redis Enterprise database. Use 'query' parameter for JMESPath filtering."
+    )]
     async fn enterprise_database_metrics(
         &self,
         Parameters(params): Parameters<EnterpriseDatabaseIdParam>,
     ) -> Result<CallToolResult, RmcpError> {
         info!(
             database_id = params.database_id,
+            query = ?params.query,
             "Tool called: enterprise_database_metrics"
         );
         let tools = self.get_enterprise_tools().await?;
-        tools.get_database_metrics(params.database_id).await
+        tools
+            .get_database_metrics(params.database_id, params.query.as_deref())
+            .await
     }
 
     #[tool(
@@ -754,28 +868,39 @@ impl RedisCtlMcp {
     // =========================================================================
 
     #[tool(
-        description = "Get Redis Enterprise cluster statistics including memory, CPU, and throughput metrics"
+        description = "Get Redis Enterprise cluster statistics including memory, CPU, and throughput metrics. Use 'query' parameter for JMESPath filtering."
     )]
-    async fn enterprise_cluster_stats(&self) -> Result<CallToolResult, RmcpError> {
-        info!("Tool called: enterprise_cluster_stats");
+    async fn enterprise_cluster_stats(
+        &self,
+        Parameters(params): Parameters<QueryParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(query = ?params.query, "Tool called: enterprise_cluster_stats");
         let tools = self.get_enterprise_tools().await?;
-        tools.get_cluster_stats().await
-    }
-
-    #[tool(description = "Get Redis Enterprise cluster settings and configuration")]
-    async fn enterprise_cluster_settings(&self) -> Result<CallToolResult, RmcpError> {
-        info!("Tool called: enterprise_cluster_settings");
-        let tools = self.get_enterprise_tools().await?;
-        tools.get_cluster_settings().await
+        tools.get_cluster_stats(params.query.as_deref()).await
     }
 
     #[tool(
-        description = "Get Redis Enterprise cluster topology showing nodes, shards, and their relationships"
+        description = "Get Redis Enterprise cluster settings and configuration. Use 'query' parameter for JMESPath filtering."
     )]
-    async fn enterprise_cluster_topology(&self) -> Result<CallToolResult, RmcpError> {
-        info!("Tool called: enterprise_cluster_topology");
+    async fn enterprise_cluster_settings(
+        &self,
+        Parameters(params): Parameters<QueryParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(query = ?params.query, "Tool called: enterprise_cluster_settings");
         let tools = self.get_enterprise_tools().await?;
-        tools.get_cluster_topology().await
+        tools.get_cluster_settings(params.query.as_deref()).await
+    }
+
+    #[tool(
+        description = "Get Redis Enterprise cluster topology showing nodes, shards, and their relationships. Use 'query' parameter for JMESPath filtering."
+    )]
+    async fn enterprise_cluster_topology(
+        &self,
+        Parameters(params): Parameters<QueryParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(query = ?params.query, "Tool called: enterprise_cluster_topology");
+        let tools = self.get_enterprise_tools().await?;
+        tools.get_cluster_topology(params.query.as_deref()).await
     }
 
     #[tool(
@@ -824,7 +949,7 @@ impl RedisCtlMcp {
     // =========================================================================
 
     #[tool(
-        description = "Get statistics for a specific Redis Enterprise node including CPU, memory, and network metrics"
+        description = "Get statistics for a specific Redis Enterprise node including CPU, memory, and network metrics. Use 'query' parameter for JMESPath filtering."
     )]
     async fn enterprise_node_stats(
         &self,
@@ -832,10 +957,13 @@ impl RedisCtlMcp {
     ) -> Result<CallToolResult, RmcpError> {
         info!(
             node_id = params.node_id,
+            query = ?params.query,
             "Tool called: enterprise_node_stats"
         );
         let tools = self.get_enterprise_tools().await?;
-        tools.get_node_stats(params.node_id).await
+        tools
+            .get_node_stats(params.node_id, params.query.as_deref())
+            .await
     }
 
     #[tool(
@@ -915,49 +1043,66 @@ impl RedisCtlMcp {
     // Enterprise Tools - Shard Operations
     // =========================================================================
 
-    #[tool(description = "Get detailed information about a specific Redis Enterprise shard")]
+    #[tool(
+        description = "Get detailed information about a specific Redis Enterprise shard. Use 'query' parameter for JMESPath filtering."
+    )]
     async fn enterprise_shard_get(
         &self,
         Parameters(params): Parameters<ShardIdParam>,
     ) -> Result<CallToolResult, RmcpError> {
-        info!(shard_uid = %params.shard_uid, "Tool called: enterprise_shard_get");
+        info!(shard_uid = %params.shard_uid, query = ?params.query, "Tool called: enterprise_shard_get");
         let tools = self.get_enterprise_tools().await?;
-        tools.get_shard(&params.shard_uid).await
+        tools
+            .get_shard(&params.shard_uid, params.query.as_deref())
+            .await
     }
 
     // =========================================================================
     // Enterprise Tools - Alert Operations
     // =========================================================================
 
-    #[tool(description = "Get detailed information about a specific Redis Enterprise alert")]
+    #[tool(
+        description = "Get detailed information about a specific Redis Enterprise alert. Use 'query' parameter for JMESPath filtering."
+    )]
     async fn enterprise_alert_get(
         &self,
         Parameters(params): Parameters<AlertIdParam>,
     ) -> Result<CallToolResult, RmcpError> {
-        info!(alert_uid = %params.alert_uid, "Tool called: enterprise_alert_get");
+        info!(alert_uid = %params.alert_uid, query = ?params.query, "Tool called: enterprise_alert_get");
         let tools = self.get_enterprise_tools().await?;
-        tools.get_alert(&params.alert_uid).await
+        tools
+            .get_alert(&params.alert_uid, params.query.as_deref())
+            .await
     }
 
     // =========================================================================
     // Enterprise Tools - User Operations
     // =========================================================================
 
-    #[tool(description = "List all users in the Redis Enterprise cluster")]
-    async fn enterprise_users_list(&self) -> Result<CallToolResult, RmcpError> {
-        info!("Tool called: enterprise_users_list");
+    #[tool(
+        description = "List all users in the Redis Enterprise cluster. Use 'query' parameter for JMESPath filtering."
+    )]
+    async fn enterprise_users_list(
+        &self,
+        Parameters(params): Parameters<QueryParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(query = ?params.query, "Tool called: enterprise_users_list");
         let tools = self.get_enterprise_tools().await?;
-        tools.list_users().await
+        tools.list_users(params.query.as_deref()).await
     }
 
-    #[tool(description = "Get detailed information about a specific Redis Enterprise user")]
+    #[tool(
+        description = "Get detailed information about a specific Redis Enterprise user. Use 'query' parameter for JMESPath filtering."
+    )]
     async fn enterprise_user_get(
         &self,
         Parameters(params): Parameters<UserIdParam>,
     ) -> Result<CallToolResult, RmcpError> {
-        info!(user_id = params.user_id, "Tool called: enterprise_user_get");
+        info!(user_id = params.user_id, query = ?params.query, "Tool called: enterprise_user_get");
         let tools = self.get_enterprise_tools().await?;
-        tools.get_user(params.user_id).await
+        tools
+            .get_user(params.user_id, params.query.as_deref())
+            .await
     }
 
     #[tool(description = "Create a new user in the Redis Enterprise cluster")]
@@ -1010,21 +1155,30 @@ impl RedisCtlMcp {
     // Enterprise Tools - Role Operations
     // =========================================================================
 
-    #[tool(description = "List all roles in the Redis Enterprise cluster")]
-    async fn enterprise_roles_list(&self) -> Result<CallToolResult, RmcpError> {
-        info!("Tool called: enterprise_roles_list");
+    #[tool(
+        description = "List all roles in the Redis Enterprise cluster. Use 'query' parameter for JMESPath filtering."
+    )]
+    async fn enterprise_roles_list(
+        &self,
+        Parameters(params): Parameters<QueryParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(query = ?params.query, "Tool called: enterprise_roles_list");
         let tools = self.get_enterprise_tools().await?;
-        tools.list_roles().await
+        tools.list_roles(params.query.as_deref()).await
     }
 
-    #[tool(description = "Get detailed information about a specific Redis Enterprise role")]
+    #[tool(
+        description = "Get detailed information about a specific Redis Enterprise role. Use 'query' parameter for JMESPath filtering."
+    )]
     async fn enterprise_role_get(
         &self,
         Parameters(params): Parameters<RoleIdParam>,
     ) -> Result<CallToolResult, RmcpError> {
-        info!(role_id = params.role_id, "Tool called: enterprise_role_get");
+        info!(role_id = params.role_id, query = ?params.query, "Tool called: enterprise_role_get");
         let tools = self.get_enterprise_tools().await?;
-        tools.get_role(params.role_id).await
+        tools
+            .get_role(params.role_id, params.query.as_deref())
+            .await
     }
 
     #[tool(description = "Create a new role in the Redis Enterprise cluster")]
@@ -1072,21 +1226,28 @@ impl RedisCtlMcp {
     // Enterprise Tools - Redis ACL Operations
     // =========================================================================
 
-    #[tool(description = "List all Redis ACLs in the Redis Enterprise cluster")]
-    async fn enterprise_acls_list(&self) -> Result<CallToolResult, RmcpError> {
-        info!("Tool called: enterprise_acls_list");
+    #[tool(
+        description = "List all Redis ACLs in the Redis Enterprise cluster. Use 'query' parameter for JMESPath filtering."
+    )]
+    async fn enterprise_acls_list(
+        &self,
+        Parameters(params): Parameters<QueryParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(query = ?params.query, "Tool called: enterprise_acls_list");
         let tools = self.get_enterprise_tools().await?;
-        tools.list_acls().await
+        tools.list_acls(params.query.as_deref()).await
     }
 
-    #[tool(description = "Get detailed information about a specific Redis ACL")]
+    #[tool(
+        description = "Get detailed information about a specific Redis ACL. Use 'query' parameter for JMESPath filtering."
+    )]
     async fn enterprise_acl_get(
         &self,
         Parameters(params): Parameters<AclIdParam>,
     ) -> Result<CallToolResult, RmcpError> {
-        info!(acl_id = params.acl_id, "Tool called: enterprise_acl_get");
+        info!(acl_id = params.acl_id, query = ?params.query, "Tool called: enterprise_acl_get");
         let tools = self.get_enterprise_tools().await?;
-        tools.get_acl(params.acl_id).await
+        tools.get_acl(params.acl_id, params.query.as_deref()).await
     }
 
     #[tool(description = "Create a new Redis ACL in the Redis Enterprise cluster")]
@@ -1131,42 +1292,60 @@ impl RedisCtlMcp {
     // Enterprise Tools - Module Operations
     // =========================================================================
 
-    #[tool(description = "List all Redis modules available in the Redis Enterprise cluster")]
-    async fn enterprise_modules_list(&self) -> Result<CallToolResult, RmcpError> {
-        info!("Tool called: enterprise_modules_list");
+    #[tool(
+        description = "List all Redis modules available in the Redis Enterprise cluster. Use 'query' parameter for JMESPath filtering."
+    )]
+    async fn enterprise_modules_list(
+        &self,
+        Parameters(params): Parameters<QueryParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(query = ?params.query, "Tool called: enterprise_modules_list");
         let tools = self.get_enterprise_tools().await?;
-        tools.list_modules().await
+        tools.list_modules(params.query.as_deref()).await
     }
 
-    #[tool(description = "Get detailed information about a specific Redis module")]
+    #[tool(
+        description = "Get detailed information about a specific Redis module. Use 'query' parameter for JMESPath filtering."
+    )]
     async fn enterprise_module_get(
         &self,
         Parameters(params): Parameters<ModuleIdParam>,
     ) -> Result<CallToolResult, RmcpError> {
-        info!(module_uid = %params.module_uid, "Tool called: enterprise_module_get");
+        info!(module_uid = %params.module_uid, query = ?params.query, "Tool called: enterprise_module_get");
         let tools = self.get_enterprise_tools().await?;
-        tools.get_module(&params.module_uid).await
+        tools
+            .get_module(&params.module_uid, params.query.as_deref())
+            .await
     }
 
     // =========================================================================
     // Enterprise Tools - CRDB (Active-Active) Operations
     // =========================================================================
 
-    #[tool(description = "List all Active-Active (CRDB) databases in the Redis Enterprise cluster")]
-    async fn enterprise_crdbs_list(&self) -> Result<CallToolResult, RmcpError> {
-        info!("Tool called: enterprise_crdbs_list");
+    #[tool(
+        description = "List all Active-Active (CRDB) databases in the Redis Enterprise cluster. Use 'query' parameter for JMESPath filtering."
+    )]
+    async fn enterprise_crdbs_list(
+        &self,
+        Parameters(params): Parameters<QueryParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(query = ?params.query, "Tool called: enterprise_crdbs_list");
         let tools = self.get_enterprise_tools().await?;
-        tools.list_crdbs().await
+        tools.list_crdbs(params.query.as_deref()).await
     }
 
-    #[tool(description = "Get detailed information about a specific Active-Active (CRDB) database")]
+    #[tool(
+        description = "Get detailed information about a specific Active-Active (CRDB) database. Use 'query' parameter for JMESPath filtering."
+    )]
     async fn enterprise_crdb_get(
         &self,
         Parameters(params): Parameters<CrdbGuidParam>,
     ) -> Result<CallToolResult, RmcpError> {
-        info!(crdb_guid = %params.crdb_guid, "Tool called: enterprise_crdb_get");
+        info!(crdb_guid = %params.crdb_guid, query = ?params.query, "Tool called: enterprise_crdb_get");
         let tools = self.get_enterprise_tools().await?;
-        tools.get_crdb(&params.crdb_guid).await
+        tools
+            .get_crdb(&params.crdb_guid, params.query.as_deref())
+            .await
     }
 
     #[tool(description = "Update an Active-Active (CRDB) database configuration")]
@@ -1235,21 +1414,30 @@ impl RedisCtlMcp {
     // Enterprise Tools - Debug Info / Support Operations
     // =========================================================================
 
-    #[tool(description = "List debug info collection tasks in the Redis Enterprise cluster")]
-    async fn enterprise_debuginfo_list(&self) -> Result<CallToolResult, RmcpError> {
-        info!("Tool called: enterprise_debuginfo_list");
+    #[tool(
+        description = "List debug info collection tasks in the Redis Enterprise cluster. Use 'query' parameter for JMESPath filtering."
+    )]
+    async fn enterprise_debuginfo_list(
+        &self,
+        Parameters(params): Parameters<QueryParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(query = ?params.query, "Tool called: enterprise_debuginfo_list");
         let tools = self.get_enterprise_tools().await?;
-        tools.list_debuginfo().await
+        tools.list_debuginfo(params.query.as_deref()).await
     }
 
-    #[tool(description = "Get the status of a specific debug info collection task")]
+    #[tool(
+        description = "Get the status of a specific debug info collection task. Use 'query' parameter for JMESPath filtering."
+    )]
     async fn enterprise_debuginfo_status(
         &self,
         Parameters(params): Parameters<DebugInfoTaskIdParam>,
     ) -> Result<CallToolResult, RmcpError> {
-        info!(task_id = %params.task_id, "Tool called: enterprise_debuginfo_status");
+        info!(task_id = %params.task_id, query = ?params.query, "Tool called: enterprise_debuginfo_status");
         let tools = self.get_enterprise_tools().await?;
-        tools.get_debuginfo_status(&params.task_id).await
+        tools
+            .get_debuginfo_status(&params.task_id, params.query.as_deref())
+            .await
     }
 
     // =========================================================================

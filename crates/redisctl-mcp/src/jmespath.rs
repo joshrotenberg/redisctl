@@ -190,6 +190,7 @@ mod tests {
     #[test]
     fn test_evaluate() {
         let result = evaluate(r#"[1, 2, 3]"#, "sum(@)").unwrap();
-        assert_eq!(result, serde_json::json!(6));
+        // jmespath returns floats for numeric operations
+        assert_eq!(result.as_f64().unwrap(), 6.0);
     }
 }

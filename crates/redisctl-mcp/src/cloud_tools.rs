@@ -45,8 +45,21 @@ impl CloudTools {
     }
 
     fn to_result(&self, value: serde_json::Value) -> Result<CallToolResult, RmcpError> {
+        self.to_result_with_query(value, None)
+    }
+
+    fn to_result_with_query(
+        &self,
+        value: serde_json::Value,
+        query: Option<&str>,
+    ) -> Result<CallToolResult, RmcpError> {
+        let result = match query {
+            Some(q) => crate::jmespath::apply_query(&value, q)
+                .map_err(|e| RmcpError::invalid_request(e, None))?,
+            None => value,
+        };
         Ok(CallToolResult::success(vec![Content::text(
-            serde_json::to_string_pretty(&value).unwrap_or_else(|_| value.to_string()),
+            serde_json::to_string_pretty(&result).unwrap_or_else(|_| result.to_string()),
         )]))
     }
 
@@ -65,36 +78,53 @@ impl CloudTools {
     }
 
     /// List all subscriptions
-    pub async fn list_subscriptions(&self) -> Result<CallToolResult, RmcpError> {
+    pub async fn list_subscriptions(
+        &self,
+        query: Option<&str>,
+    ) -> Result<CallToolResult, RmcpError> {
         let handler = SubscriptionHandler::new(self.client.clone());
         let subs = handler
             .get_all_subscriptions()
             .await
             .map_err(|e| self.to_error(e))?;
-        self.to_result(serde_json::to_value(subs).map_err(|e| self.to_error(e))?)
+        self.to_result_with_query(
+            serde_json::to_value(subs).map_err(|e| self.to_error(e))?,
+            query,
+        )
     }
 
     /// Get a specific subscription
     pub async fn get_subscription(
         &self,
         subscription_id: i64,
+        query: Option<&str>,
     ) -> Result<CallToolResult, RmcpError> {
         let handler = SubscriptionHandler::new(self.client.clone());
         let sub = handler
             .get_subscription_by_id(subscription_id as i32)
             .await
             .map_err(|e| self.to_error(e))?;
-        self.to_result(serde_json::to_value(sub).map_err(|e| self.to_error(e))?)
+        self.to_result_with_query(
+            serde_json::to_value(sub).map_err(|e| self.to_error(e))?,
+            query,
+        )
     }
 
     /// List databases in a subscription
-    pub async fn list_databases(&self, subscription_id: i64) -> Result<CallToolResult, RmcpError> {
+    pub async fn list_databases(
+        &self,
+        subscription_id: i64,
+        query: Option<&str>,
+    ) -> Result<CallToolResult, RmcpError> {
         let handler = DatabaseHandler::new(self.client.clone());
         let dbs = handler
             .get_subscription_databases(subscription_id as i32, None, None)
             .await
             .map_err(|e| self.to_error(e))?;
-        self.to_result(serde_json::to_value(dbs).map_err(|e| self.to_error(e))?)
+        self.to_result_with_query(
+            serde_json::to_value(dbs).map_err(|e| self.to_error(e))?,
+            query,
+        )
     }
 
     /// Get a specific database
@@ -102,13 +132,17 @@ impl CloudTools {
         &self,
         subscription_id: i64,
         database_id: i64,
+        query: Option<&str>,
     ) -> Result<CallToolResult, RmcpError> {
         let handler = DatabaseHandler::new(self.client.clone());
         let db = handler
             .get_subscription_database_by_id(subscription_id as i32, database_id as i32)
             .await
             .map_err(|e| self.to_error(e))?;
-        self.to_result(serde_json::to_value(db).map_err(|e| self.to_error(e))?)
+        self.to_result_with_query(
+            serde_json::to_value(db).map_err(|e| self.to_error(e))?,
+            query,
+        )
     }
 
     /// List tasks
