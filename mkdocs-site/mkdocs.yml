@@ -159,9 +159,12 @@ nav:
       - Shell Completions: reference/shell-completions.md
       - Security: reference/security.md
       - rladmin Comparison: reference/rladmin.md
-  - Integrations:
-      - integrations/index.md
-      - MCP Server: integrations/mcp.md
+  - MCP:
+      - mcp/index.md
+      - Getting Started: mcp/getting-started.md
+      - Tools Reference: mcp/tools-reference.md
+      - Advanced Usage: mcp/advanced-usage.md
+      - Workflows: mcp/workflows.md
   - Developer:
       - developer/index.md
       - Architecture: developer/architecture.md
