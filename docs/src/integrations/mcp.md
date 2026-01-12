@@ -70,6 +70,85 @@ Add to your project's `.mcp.json` or global MCP settings:
 }
 ```
 
+## Configuring Cursor
+
+Add to your Cursor MCP configuration file:
+
+**macOS**: `~/.cursor/mcp.json`
+**Windows**: `%USERPROFILE%\.cursor\mcp.json`
+
+```json
+{
+  "mcpServers": {
+    "redisctl": {
+      "command": "/path/to/redisctl",
+      "args": ["-p", "my-profile", "mcp", "serve", "--allow-writes"]
+    }
+  }
+}
+```
+
+After saving, restart Cursor or use the command palette to reload MCP servers.
+
+## Configuring Windsurf
+
+Add to your Windsurf MCP configuration:
+
+**macOS**: `~/.codeium/windsurf/mcp_config.json`
+**Windows**: `%USERPROFILE%\.codeium\windsurf\mcp_config.json`
+
+```json
+{
+  "mcpServers": {
+    "redisctl": {
+      "command": "/path/to/redisctl",
+      "args": ["-p", "my-profile", "mcp", "serve", "--allow-writes"]
+    }
+  }
+}
+```
+
+Restart Windsurf after updating the configuration.
+
+## Configuring VS Code with Continue
+
+If you're using [Continue](https://continue.dev/) in VS Code, add to your Continue configuration:
+
+**Config location**: `~/.continue/config.json`
+
+```json
+{
+  "experimental": {
+    "modelContextProtocolServers": [
+      {
+        "transport": {
+          "type": "stdio",
+          "command": "/path/to/redisctl",
+          "args": ["-p", "my-profile", "mcp", "serve", "--allow-writes"]
+        }
+      }
+    ]
+  }
+}
+```
+
+## Configuring Zed
+
+Add to your Zed settings (`~/.config/zed/settings.json` on Linux/macOS):
+
+```json
+{
+  "context_servers": {
+    "redisctl": {
+      "command": {
+        "path": "/path/to/redisctl",
+        "args": ["-p", "my-profile", "mcp", "serve", "--allow-writes"]
+      }
+    }
+  }
+}
+```
+
 ## Available Tools
 
 ### Redis Cloud Tools (7 tools)
