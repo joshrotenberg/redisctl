@@ -248,6 +248,32 @@ pub struct DebugInfoTaskIdParam {
     pub task_id: String,
 }
 
+// Cloud-specific parameter structs
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct CloudProviderParam {
+    /// Cloud provider filter (AWS, GCP, or Azure). Optional.
+    #[serde(default)]
+    pub provider: Option<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct CreateProSubscriptionParam {
+    /// JSON payload for creating a Pro subscription. See Redis Cloud API docs for schema.
+    pub request: serde_json::Value,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct CreateEssentialsSubscriptionParam {
+    /// Name for the new Essentials subscription
+    pub name: String,
+    /// Plan ID from cloud_essentials_plans_list
+    pub plan_id: i64,
+    /// Payment method ID (optional, use cloud_payment_methods_get to list available methods)
+    #[serde(default)]
+    pub payment_method_id: Option<i64>,
+}
+
 impl RedisCtlMcp {
     /// Create a new MCP server instance
     pub fn new(profile: Option<&str>, read_only: bool) -> anyhow::Result<Self> {
@@ -379,6 +405,176 @@ impl RedisCtlMcp {
         info!(task_id = %params.task_id, "Tool called: cloud_task_get");
         let tools = self.get_cloud_tools().await?;
         tools.get_task(&params.task_id).await
+    }
+
+    // =========================================================================
+    // Cloud Tools - Account & Infrastructure
+    // =========================================================================
+
+    #[tool(description = "List all payment methods configured for your Redis Cloud account")]
+    async fn cloud_payment_methods_get(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: cloud_payment_methods_get");
+        let tools = self.get_cloud_tools().await?;
+        tools.get_payment_methods().await
+    }
+
+    #[tool(
+        description = "List all available database modules (capabilities) supported in your account"
+    )]
+    async fn cloud_database_modules_get(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: cloud_database_modules_get");
+        let tools = self.get_cloud_tools().await?;
+        tools.get_database_modules().await
+    }
+
+    #[tool(
+        description = "Get available regions across cloud providers (AWS, GCP, Azure) for Pro subscriptions"
+    )]
+    async fn cloud_regions_get(
+        &self,
+        Parameters(params): Parameters<CloudProviderParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(provider = ?params.provider, "Tool called: cloud_regions_get");
+        let tools = self.get_cloud_tools().await?;
+        tools.get_regions(params.provider.as_deref()).await
+    }
+
+    // =========================================================================
+    // Cloud Tools - Pro Subscriptions (Write)
+    // =========================================================================
+
+    #[tool(
+        description = "Create a new Pro subscription with advanced configuration options. Requires JSON payload with cloudProviders and databases arrays. Use cloud_regions_get to find available regions."
+    )]
+    async fn cloud_pro_subscription_create(
+        &self,
+        Parameters(params): Parameters<CreateProSubscriptionParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: cloud_pro_subscription_create");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_cloud_tools().await?;
+        tools.create_subscription(params.request).await
+    }
+
+    #[tool(
+        description = "Delete a Pro subscription. All databases must be deleted first. This is a destructive operation."
+    )]
+    async fn cloud_pro_subscription_delete(
+        &self,
+        Parameters(params): Parameters<SubscriptionIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(
+            subscription_id = params.subscription_id,
+            "Tool called: cloud_pro_subscription_delete"
+        );
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_cloud_tools().await?;
+        tools.delete_subscription(params.subscription_id).await
+    }
+
+    // =========================================================================
+    // Cloud Tools - Essentials Subscriptions
+    // =========================================================================
+
+    #[tool(description = "List all Essentials (fixed) subscriptions in the account")]
+    async fn cloud_essentials_subscriptions_list(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: cloud_essentials_subscriptions_list");
+        let tools = self.get_cloud_tools().await?;
+        tools.list_essentials_subscriptions().await
+    }
+
+    #[tool(description = "Get detailed information about a specific Essentials subscription")]
+    async fn cloud_essentials_subscription_get(
+        &self,
+        Parameters(params): Parameters<SubscriptionIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(
+            subscription_id = params.subscription_id,
+            "Tool called: cloud_essentials_subscription_get"
+        );
+        let tools = self.get_cloud_tools().await?;
+        tools
+            .get_essentials_subscription(params.subscription_id)
+            .await
+    }
+
+    #[tool(
+        description = "Create a new Essentials subscription. Use cloud_essentials_plans_list to find available plans."
+    )]
+    async fn cloud_essentials_subscription_create(
+        &self,
+        Parameters(params): Parameters<CreateEssentialsSubscriptionParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(
+            name = %params.name,
+            plan_id = params.plan_id,
+            "Tool called: cloud_essentials_subscription_create"
+        );
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_cloud_tools().await?;
+        tools
+            .create_essentials_subscription(&params.name, params.plan_id, params.payment_method_id)
+            .await
+    }
+
+    #[tool(
+        description = "Delete an Essentials subscription. This is a destructive operation that cannot be undone."
+    )]
+    async fn cloud_essentials_subscription_delete(
+        &self,
+        Parameters(params): Parameters<SubscriptionIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(
+            subscription_id = params.subscription_id,
+            "Tool called: cloud_essentials_subscription_delete"
+        );
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_cloud_tools().await?;
+        tools
+            .delete_essentials_subscription(params.subscription_id)
+            .await
+    }
+
+    #[tool(
+        description = "List available Essentials subscription plans with pricing. Optionally filter by cloud provider (AWS, GCP, Azure)."
+    )]
+    async fn cloud_essentials_plans_list(
+        &self,
+        Parameters(params): Parameters<CloudProviderParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(provider = ?params.provider, "Tool called: cloud_essentials_plans_list");
+        let tools = self.get_cloud_tools().await?;
+        tools
+            .list_essentials_plans(params.provider.as_deref())
+            .await
     }
 
     // =========================================================================

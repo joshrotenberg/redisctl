@@ -211,13 +211,40 @@ Add to your Zed settings (`~/.config/zed/settings.json` on Linux/macOS):
 
 ## Available Tools
 
-### Redis Cloud Tools (7 tools)
+### Redis Cloud Tools (17 tools)
+
+#### Account & Infrastructure
 
 | Tool | Description |
 |------|-------------|
 | `cloud_account_get` | Get account information |
-| `cloud_subscriptions_list` | List all subscriptions |
-| `cloud_subscription_get` | Get subscription details |
+| `cloud_payment_methods_get` | List all payment methods configured for your account |
+| `cloud_database_modules_get` | List all available database modules (capabilities) |
+| `cloud_regions_get` | Get available regions across cloud providers (AWS, GCP, Azure) |
+
+#### Pro Subscriptions
+
+| Tool | Description |
+|------|-------------|
+| `cloud_subscriptions_list` | List all Pro subscriptions |
+| `cloud_subscription_get` | Get Pro subscription details |
+| `cloud_pro_subscription_create` | Create a new Pro subscription *(write)* |
+| `cloud_pro_subscription_delete` | Delete a Pro subscription *(write)* |
+
+#### Essentials Subscriptions
+
+| Tool | Description |
+|------|-------------|
+| `cloud_essentials_subscriptions_list` | List all Essentials subscriptions |
+| `cloud_essentials_subscription_get` | Get Essentials subscription details |
+| `cloud_essentials_subscription_create` | Create a new Essentials subscription *(write)* |
+| `cloud_essentials_subscription_delete` | Delete an Essentials subscription *(write)* |
+| `cloud_essentials_plans_list` | List available Essentials plans with pricing |
+
+#### Database & Task Operations
+
+| Tool | Description |
+|------|-------------|
 | `cloud_databases_list` | List databases in a subscription |
 | `cloud_database_get` | Get database details |
 | `cloud_tasks_list` | List recent async tasks |
@@ -303,7 +330,7 @@ Add to your Zed settings (`~/.config/zed/settings.json` on Linux/macOS):
 | `enterprise_debuginfo_list` | List debug info tasks |
 | `enterprise_debuginfo_status` | Get debug info task status |
 
-**Total: 55 tools** (7 Cloud + 48 Enterprise)
+**Total: 65 tools** (17 Cloud + 48 Enterprise)
 
 ## Example Conversations
 
@@ -325,6 +352,20 @@ Once configured, you can interact naturally with your Redis infrastructure:
 >
 > **Claude**: *uses enterprise_alerts_list*
 > No active alerts in your cluster.
+
+> **You**: What Essentials plans are available on AWS?
+>
+> **Claude**: *uses cloud_essentials_plans_list with provider: AWS*
+> Here are the available Essentials plans on AWS:
+> - 250MB Cache ($5/month) - us-east-1
+> - 1GB Cache ($18/month) - us-east-1
+> - 250MB Persistence ($6/month) - us-east-1
+> ...
+
+> **You**: Create a new Essentials subscription with the 250MB plan
+>
+> **Claude**: *uses cloud_essentials_subscription_create*
+> Created Essentials subscription `my-cache` with plan 250MB. Task ID: abc123. Use cloud_task_get to monitor progress.
 
 ## Security Considerations
 
