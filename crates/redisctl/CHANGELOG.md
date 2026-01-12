@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.4](https://github.com/redis-developer/redisctl/compare/redisctl-v0.7.3...redisctl-v0.7.4) - 2026-01-12
+
+### Added
+
+- add MCP server for AI integration ([#531](https://github.com/redis-developer/redisctl/pull/531))
+
+### Other
+
+- add Enterprise CLI Docker integration tests ([#523](https://github.com/redis-developer/redisctl/pull/523))
+
 ## [0.7.3](https://github.com/redis-developer/redisctl/compare/redisctl-v0.7.2...redisctl-v0.7.3) - 2025-12-17
 
 ### Added

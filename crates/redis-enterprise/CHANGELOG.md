@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.3](https://github.com/redis-developer/redisctl/compare/redis-enterprise-v0.7.2...redis-enterprise-v0.7.3) - 2026-01-12
+
+### Added
+
+- add MCP server for AI integration ([#531](https://github.com/redis-developer/redisctl/pull/531))
+
 ## [0.7.2](https://github.com/redis-developer/redisctl/compare/redis-enterprise-v0.7.1...redis-enterprise-v0.7.2) - 2025-12-17
 
 ### Fixed
