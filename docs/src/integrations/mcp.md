@@ -72,7 +72,7 @@ Add to your project's `.mcp.json` or global MCP settings:
 
 ## Available Tools
 
-### Redis Cloud Tools
+### Redis Cloud Tools (7 tools)
 
 | Tool | Description |
 |------|-------------|
@@ -84,21 +84,85 @@ Add to your project's `.mcp.json` or global MCP settings:
 | `cloud_tasks_list` | List recent async tasks |
 | `cloud_task_get` | Get task status |
 
-### Redis Enterprise Tools
+### Redis Enterprise Tools (32 tools)
+
+#### Cluster Operations
 
 | Tool | Description |
 |------|-------------|
 | `enterprise_cluster_get` | Get cluster information |
-| `enterprise_nodes_list` | List all cluster nodes |
-| `enterprise_node_get` | Get node details |
+| `enterprise_cluster_stats` | Get cluster statistics |
+| `enterprise_cluster_settings` | Get cluster settings |
+| `enterprise_cluster_topology` | Get cluster topology |
+| `enterprise_cluster_update` | Update cluster configuration *(write)* |
+
+#### Database Operations
+
+| Tool | Description |
+|------|-------------|
 | `enterprise_databases_list` | List all databases |
 | `enterprise_database_get` | Get database details |
 | `enterprise_database_stats` | Get database statistics |
+| `enterprise_database_metrics` | Get database performance metrics |
 | `enterprise_database_create` | Create a new database *(write)* |
+| `enterprise_database_update` | Update database configuration *(write)* |
+| `enterprise_database_delete` | Delete a database *(write)* |
+| `enterprise_database_flush` | Flush all data from database *(write)* |
+| `enterprise_database_export` | Export database to external location *(write)* |
+| `enterprise_database_import` | Import data into database *(write)* |
+| `enterprise_database_backup` | Trigger database backup *(write)* |
+| `enterprise_database_restore` | Restore database from backup *(write)* |
+
+#### Node Operations
+
+| Tool | Description |
+|------|-------------|
+| `enterprise_nodes_list` | List all cluster nodes |
+| `enterprise_node_get` | Get node details |
+| `enterprise_node_stats` | Get node statistics |
+| `enterprise_node_update` | Update node configuration *(write)* |
+| `enterprise_node_remove` | Remove node from cluster *(write)* |
+
+#### Shard & Alert Operations
+
+| Tool | Description |
+|------|-------------|
 | `enterprise_shards_list` | List all shards |
+| `enterprise_shard_get` | Get shard details |
 | `enterprise_alerts_list` | List active alerts |
+| `enterprise_alert_get` | Get alert details |
+
+#### User & Access Management
+
+| Tool | Description |
+|------|-------------|
+| `enterprise_users_list` | List all users |
+| `enterprise_user_get` | Get user details |
+| `enterprise_user_create` | Create a new user *(write)* |
+| `enterprise_user_delete` | Delete a user *(write)* |
+| `enterprise_roles_list` | List all roles |
+| `enterprise_role_get` | Get role details |
+| `enterprise_role_create` | Create a new role *(write)* |
+| `enterprise_role_delete` | Delete a role *(write)* |
+| `enterprise_acls_list` | List all Redis ACLs |
+| `enterprise_acl_get` | Get ACL details |
+| `enterprise_acl_create` | Create a new Redis ACL *(write)* |
+| `enterprise_acl_delete` | Delete a Redis ACL *(write)* |
+
+#### Other Operations
+
+| Tool | Description |
+|------|-------------|
 | `enterprise_logs_get` | Get cluster event logs |
 | `enterprise_license_get` | Get license information |
+| `enterprise_modules_list` | List available modules |
+| `enterprise_module_get` | Get module details |
+| `enterprise_crdbs_list` | List Active-Active databases |
+| `enterprise_crdb_get` | Get Active-Active database details |
+| `enterprise_crdb_update` | Update Active-Active database *(write)* |
+| `enterprise_crdb_delete` | Delete Active-Active database *(write)* |
+| `enterprise_debuginfo_list` | List debug info tasks |
+| `enterprise_debuginfo_status` | Get debug info task status |
 
 ## Example Conversations
 
