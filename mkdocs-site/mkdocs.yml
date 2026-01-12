@@ -159,6 +159,9 @@ nav:
       - Shell Completions: reference/shell-completions.md
       - Security: reference/security.md
       - rladmin Comparison: reference/rladmin.md
+  - Integrations:
+      - integrations/index.md
+      - MCP Server: integrations/mcp.md
   - Developer:
       - developer/index.md
       - Architecture: developer/architecture.md
