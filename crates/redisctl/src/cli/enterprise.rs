@@ -1028,19 +1028,61 @@ pub enum EnterpriseRoleCommands {
     },
 
     /// Create custom role
+    #[command(after_help = "EXAMPLES:
+    # Create role with management permission
+    redisctl enterprise role create --name db-admin --management admin
+
+    # Create role with cluster viewer access
+    redisctl enterprise role create --name cluster-viewer --management cluster_viewer
+
+    # Create role with database-specific permissions
+    redisctl enterprise role create --name mydb-admin --management db_viewer --data '{\"bdb_roles\": [{\"bdb_uid\": 1, \"role\": \"admin\"}]}'
+
+    # Advanced: Full configuration via JSON file
+    redisctl enterprise role create --data @role.json
+
+NOTE: First-class parameters override values in --data when both are provided.")]
     Create {
-        /// Role data (JSON file or inline)
-        #[arg(long, value_name = "FILE|JSON")]
-        data: String,
+        /// Role name (required unless using --data)
+        #[arg(long)]
+        name: Option<String>,
+
+        /// Management permission level (admin, db_viewer, db_member, cluster_viewer, cluster_member, none)
+        #[arg(long)]
+        management: Option<String>,
+
+        /// Advanced: Full role configuration as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
     },
 
     /// Update role
+    #[command(after_help = "EXAMPLES:
+    # Update role name
+    redisctl enterprise role update 1 --name new-role-name
+
+    # Update management permission
+    redisctl enterprise role update 1 --management admin
+
+    # Advanced: Full update via JSON file
+    redisctl enterprise role update 1 --data @updates.json
+
+NOTE: First-class parameters override values in --data when both are provided.")]
     Update {
         /// Role ID
         id: u32,
-        /// Update data (JSON file or inline)
-        #[arg(long, value_name = "FILE|JSON")]
-        data: String,
+
+        /// New role name
+        #[arg(long)]
+        name: Option<String>,
+
+        /// Management permission level
+        #[arg(long)]
+        management: Option<String>,
+
+        /// Advanced: Full update configuration as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
     },
 
     /// Delete custom role
