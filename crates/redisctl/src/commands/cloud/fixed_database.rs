@@ -155,8 +155,7 @@ pub async fn handle_fixed_database_command(
             if !request_obj.contains_key("name") {
                 return Err(RedisCtlError::InvalidInput {
                     message: "--name is required (or provide via --data JSON)".to_string(),
-                }
-                .into());
+                });
             }
 
             let request: FixedDatabaseCreateRequest =
@@ -234,8 +233,7 @@ pub async fn handle_fixed_database_command(
             if request_obj.is_empty() {
                 return Err(RedisCtlError::InvalidInput {
                     message: "At least one update field is required (--name, --password, --enable-tls, --eviction-policy, --replication, --data-persistence, or --data)".to_string(),
-                }
-                .into());
+                });
             }
 
             let request: FixedDatabaseUpdateRequest =
@@ -425,16 +423,14 @@ pub async fn handle_fixed_database_command(
             if !request_obj.contains_key("sourceType") {
                 return Err(RedisCtlError::InvalidInput {
                     message: "--source-type is required (or provide via --data JSON)".to_string(),
-                }
-                .into());
+                });
             }
 
             if !request_obj.contains_key("importFromUri") {
                 return Err(RedisCtlError::InvalidInput {
                     message: "--import-from-uri is required (or provide via --data JSON)"
                         .to_string(),
-                }
-                .into());
+                });
             }
 
             let request: FixedDatabaseImportRequest =
@@ -549,8 +545,7 @@ pub async fn handle_fixed_database_command(
                     return Err(RedisCtlError::InvalidInput {
                         message: "At least one --tag is required (or provide via --data JSON)"
                             .to_string(),
-                    }
-                    .into());
+                    });
                 };
 
             // Build the request with the proper structure
