@@ -1302,19 +1302,87 @@ pub enum CloudFixedSubscriptionCommands {
         id: i32,
     },
     /// Create a new fixed subscription
+    #[command(after_help = "EXAMPLES:
+    # Create subscription with name and plan ID
+    redisctl cloud fixed-subscription create --name my-cache --plan-id 12345 --wait
+
+    # Create with specific payment method
+    redisctl cloud fixed-subscription create \\
+      --name prod-cache \\
+      --plan-id 12345 \\
+      --payment-method credit-card \\
+      --payment-method-id 67890
+
+    # Create using JSON for full control
+    redisctl cloud fixed-subscription create \\
+      --data '{\"name\": \"my-cache\", \"planId\": 12345}'
+")]
     Create {
-        /// JSON file with subscription configuration (use @filename or - for stdin)
-        file: String,
+        /// Subscription name
+        #[arg(long)]
+        name: Option<String>,
+
+        /// Plan ID from list-plans
+        #[arg(long)]
+        plan_id: Option<i32>,
+
+        /// Payment method (credit-card or marketplace)
+        #[arg(long)]
+        payment_method: Option<String>,
+
+        /// Payment method ID (required for credit-card)
+        #[arg(long)]
+        payment_method_id: Option<i32>,
+
+        /// JSON data (string or @filename)
+        #[arg(long)]
+        data: Option<String>,
+
         /// Async operation options
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Update fixed subscription
+    #[command(after_help = "EXAMPLES:
+    # Rename subscription
+    redisctl cloud fixed-subscription update 123456 --name new-name
+
+    # Change plan
+    redisctl cloud fixed-subscription update 123456 --plan-id 67890 --wait
+
+    # Change payment method
+    redisctl cloud fixed-subscription update 123456 \\
+      --payment-method credit-card \\
+      --payment-method-id 11111
+
+    # Update using JSON
+    redisctl cloud fixed-subscription update 123456 \\
+      --data '{\"name\": \"new-name\"}'
+")]
     Update {
         /// Subscription ID
         id: i32,
-        /// JSON file with update configuration (use @filename or - for stdin)
-        file: String,
+
+        /// New subscription name
+        #[arg(long)]
+        name: Option<String>,
+
+        /// New plan ID
+        #[arg(long)]
+        plan_id: Option<i32>,
+
+        /// Payment method (credit-card or marketplace)
+        #[arg(long)]
+        payment_method: Option<String>,
+
+        /// Payment method ID (required for credit-card)
+        #[arg(long)]
+        payment_method_id: Option<i32>,
+
+        /// JSON data (string or @filename)
+        #[arg(long)]
+        data: Option<String>,
+
         /// Async operation options
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
