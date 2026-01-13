@@ -1530,6 +1530,50 @@ fn test_enterprise_node_update_requires_at_least_one_field() {
         ));
 }
 
+// Enterprise cluster update first-class params tests
+
+#[test]
+fn test_enterprise_cluster_update_first_class_params_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--name"))
+        .stdout(predicate::str::contains("--email-alerts"))
+        .stdout(predicate::str::contains("--rack-aware"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_enterprise_cluster_update_has_examples() {
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EXAMPLES:"));
+}
+
+#[test]
+fn test_enterprise_cluster_update_requires_at_least_one_field() {
+    // With no fields provided, should fail at runtime requiring at least one update field
+    // Note: In CI without profiles, may fail with profile configuration error instead
+    redisctl()
+        .arg("enterprise")
+        .arg("cluster")
+        .arg("update")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("At least one update field").or(
+            predicate::str::contains("No enterprise profiles configured"),
+        ));
+}
+
 // Error case tests - API commands
 
 #[test]

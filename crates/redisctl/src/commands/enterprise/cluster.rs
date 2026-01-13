@@ -20,8 +20,23 @@ pub async fn handle_cluster_command(
         EnterpriseClusterCommands::Get => {
             cluster_impl::get_cluster(conn_mgr, profile_name, output_format, query).await
         }
-        EnterpriseClusterCommands::Update { data } => {
-            cluster_impl::update_cluster(conn_mgr, profile_name, data, output_format, query).await
+        EnterpriseClusterCommands::Update {
+            name,
+            email_alerts,
+            rack_aware,
+            data,
+        } => {
+            cluster_impl::update_cluster(
+                conn_mgr,
+                profile_name,
+                name.as_deref(),
+                *email_alerts,
+                *rack_aware,
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
         EnterpriseClusterCommands::GetPolicy => {
             cluster_impl::get_cluster_policy(conn_mgr, profile_name, output_format, query).await
