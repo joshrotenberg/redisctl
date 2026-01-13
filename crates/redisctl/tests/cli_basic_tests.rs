@@ -2823,3 +2823,284 @@ fn test_cloud_connectivity_privatelink_delete_help() {
         .stdout(predicate::str::contains("--subscription"))
         .stdout(predicate::str::contains("--force"));
 }
+
+// === CONNECTIVITY FIRST-CLASS PARAMETERS TESTS ===
+
+// VPC Peering first-class params tests
+
+#[test]
+fn test_vpc_peering_create_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("connectivity")
+        .arg("vpc-peering")
+        .arg("create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--region"))
+        .stdout(predicate::str::contains("--aws-account-id"))
+        .stdout(predicate::str::contains("--vpc-id"))
+        .stdout(predicate::str::contains("--gcp-project-id"))
+        .stdout(predicate::str::contains("--gcp-network-name"))
+        .stdout(predicate::str::contains("--vpc-cidr"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_vpc_peering_create_shows_examples() {
+    redisctl()
+        .arg("cloud")
+        .arg("connectivity")
+        .arg("vpc-peering")
+        .arg("create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EXAMPLES:"))
+        .stdout(predicate::str::contains("--region us-east-1"))
+        .stdout(predicate::str::contains("--aws-account-id"));
+}
+
+#[test]
+fn test_vpc_peering_update_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("connectivity")
+        .arg("vpc-peering")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--vpc-cidr"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_vpc_peering_create_aa_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("connectivity")
+        .arg("vpc-peering")
+        .arg("create-aa")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--source-region"))
+        .stdout(predicate::str::contains("--destination-region"))
+        .stdout(predicate::str::contains("--aws-account-id"))
+        .stdout(predicate::str::contains("--vpc-id"))
+        .stdout(predicate::str::contains("--gcp-project-id"))
+        .stdout(predicate::str::contains("--gcp-network-name"))
+        .stdout(predicate::str::contains("--vpc-cidr"));
+}
+
+// PrivateLink first-class params tests
+
+#[test]
+fn test_privatelink_create_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("connectivity")
+        .arg("privatelink")
+        .arg("create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--share-name"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_privatelink_add_principal_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("connectivity")
+        .arg("privatelink")
+        .arg("add-principal")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--principal"))
+        .stdout(predicate::str::contains("--type"))
+        .stdout(predicate::str::contains("--alias"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_privatelink_add_principal_shows_examples() {
+    redisctl()
+        .arg("cloud")
+        .arg("connectivity")
+        .arg("privatelink")
+        .arg("add-principal")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EXAMPLES:"))
+        .stdout(predicate::str::contains("--principal"));
+}
+
+#[test]
+fn test_privatelink_remove_principal_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("connectivity")
+        .arg("privatelink")
+        .arg("remove-principal")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--principal"))
+        .stdout(predicate::str::contains("--type"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+// PSC first-class params tests
+
+#[test]
+fn test_psc_endpoint_create_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("connectivity")
+        .arg("psc")
+        .arg("endpoint-create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--gcp-project-id"))
+        .stdout(predicate::str::contains("--gcp-vpc-name"))
+        .stdout(predicate::str::contains("--gcp-vpc-subnet-name"))
+        .stdout(predicate::str::contains("--endpoint-connection-name"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_psc_endpoint_create_shows_examples() {
+    redisctl()
+        .arg("cloud")
+        .arg("connectivity")
+        .arg("psc")
+        .arg("endpoint-create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EXAMPLES:"))
+        .stdout(predicate::str::contains("--gcp-project-id"));
+}
+
+#[test]
+fn test_psc_endpoint_update_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("connectivity")
+        .arg("psc")
+        .arg("endpoint-update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--psc-service-id"))
+        .stdout(predicate::str::contains("--gcp-project-id"))
+        .stdout(predicate::str::contains("--gcp-vpc-name"))
+        .stdout(predicate::str::contains("--gcp-vpc-subnet-name"))
+        .stdout(predicate::str::contains("--endpoint-connection-name"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_psc_aa_endpoint_create_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("connectivity")
+        .arg("psc")
+        .arg("aa-endpoint-create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--gcp-project-id"))
+        .stdout(predicate::str::contains("--gcp-vpc-name"))
+        .stdout(predicate::str::contains("--gcp-vpc-subnet-name"))
+        .stdout(predicate::str::contains("--endpoint-connection-name"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+// TGW first-class params tests
+
+#[test]
+fn test_tgw_attachment_create_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("connectivity")
+        .arg("tgw")
+        .arg("attachment-create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--aws-account-id"))
+        .stdout(predicate::str::contains("--tgw-id"))
+        .stdout(predicate::str::contains("--cidr"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_tgw_attachment_create_shows_examples() {
+    redisctl()
+        .arg("cloud")
+        .arg("connectivity")
+        .arg("tgw")
+        .arg("attachment-create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EXAMPLES:"))
+        .stdout(predicate::str::contains("--aws-account-id"))
+        .stdout(predicate::str::contains("--tgw-id"));
+}
+
+#[test]
+fn test_tgw_attachment_update_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("connectivity")
+        .arg("tgw")
+        .arg("attachment-update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--attachment-id"))
+        .stdout(predicate::str::contains("--cidr"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_tgw_aa_attachment_create_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("connectivity")
+        .arg("tgw")
+        .arg("aa-attachment-create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--region-id"))
+        .stdout(predicate::str::contains("--aws-account-id"))
+        .stdout(predicate::str::contains("--tgw-id"))
+        .stdout(predicate::str::contains("--cidr"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_tgw_aa_attachment_update_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("connectivity")
+        .arg("tgw")
+        .arg("aa-attachment-update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--region-id"))
+        .stdout(predicate::str::contains("--attachment-id"))
+        .stdout(predicate::str::contains("--cidr"))
+        .stdout(predicate::str::contains("--data"));
+}

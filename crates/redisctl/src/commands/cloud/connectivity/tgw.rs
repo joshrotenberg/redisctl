@@ -13,6 +13,16 @@ use crate::error::Result as CliResult;
 use anyhow::Context;
 use redis_cloud::CloudClient;
 use redis_cloud::connectivity::transit_gateway::{TgwAttachmentRequest, TransitGatewayHandler};
+use serde_json::Value;
+
+/// Parameters for TGW attachment create/update operations
+#[derive(Debug, Default)]
+pub struct TgwAttachmentParams {
+    pub aws_account_id: Option<String>,
+    pub tgw_id: Option<String>,
+    pub cidrs: Vec<String>,
+    pub data: Option<String>,
+}
 
 /// Handle TGW commands
 pub async fn handle_tgw_command(
@@ -34,7 +44,10 @@ pub async fn handle_tgw_command(
         }
         TgwCommands::AttachmentCreate {
             subscription_id,
-            file,
+            aws_account_id,
+            tgw_id,
+            cidrs,
+            data,
             async_ops,
         } => {
             let params = ConnectivityOperationParams {
@@ -46,7 +59,13 @@ pub async fn handle_tgw_command(
                 output_format,
                 query,
             };
-            create_attachment(&params, file).await
+            let attachment_params = TgwAttachmentParams {
+                aws_account_id: aws_account_id.clone(),
+                tgw_id: tgw_id.clone(),
+                cidrs: cidrs.clone(),
+                data: data.clone(),
+            };
+            create_attachment(&params, &attachment_params).await
         }
         TgwCommands::AttachmentCreateWithId {
             subscription_id,
@@ -67,7 +86,8 @@ pub async fn handle_tgw_command(
         TgwCommands::AttachmentUpdate {
             subscription_id,
             attachment_id,
-            file,
+            cidrs,
+            data,
             async_ops,
         } => {
             let params = ConnectivityOperationParams {
@@ -79,7 +99,13 @@ pub async fn handle_tgw_command(
                 output_format,
                 query,
             };
-            update_attachment_cidrs(&params, attachment_id, file).await
+            let attachment_params = TgwAttachmentParams {
+                aws_account_id: None,
+                tgw_id: None,
+                cidrs: cidrs.clone(),
+                data: data.clone(),
+            };
+            update_attachment_cidrs(&params, attachment_id, &attachment_params).await
         }
         TgwCommands::AttachmentDelete {
             subscription_id,
@@ -135,7 +161,10 @@ pub async fn handle_tgw_command(
         TgwCommands::AaAttachmentCreate {
             subscription_id,
             region_id,
-            file,
+            aws_account_id,
+            tgw_id,
+            cidrs,
+            data,
             async_ops,
         } => {
             let params = ConnectivityOperationParams {
@@ -147,13 +176,20 @@ pub async fn handle_tgw_command(
                 output_format,
                 query,
             };
-            create_attachment_aa(&params, *region_id, file).await
+            let attachment_params = TgwAttachmentParams {
+                aws_account_id: aws_account_id.clone(),
+                tgw_id: tgw_id.clone(),
+                cidrs: cidrs.clone(),
+                data: data.clone(),
+            };
+            create_attachment_aa(&params, *region_id, &attachment_params).await
         }
         TgwCommands::AaAttachmentUpdate {
             subscription_id,
             region_id,
             attachment_id,
-            file,
+            cidrs,
+            data,
             async_ops,
         } => {
             let params = ConnectivityOperationParams {
@@ -165,7 +201,13 @@ pub async fn handle_tgw_command(
                 output_format,
                 query,
             };
-            update_attachment_cidrs_aa(&params, *region_id, attachment_id, file).await
+            let attachment_params = TgwAttachmentParams {
+                aws_account_id: None,
+                tgw_id: None,
+                cidrs: cidrs.clone(),
+                data: data.clone(),
+            };
+            update_attachment_cidrs_aa(&params, *region_id, attachment_id, &attachment_params).await
         }
         TgwCommands::AaAttachmentDelete {
             subscription_id,
@@ -243,10 +285,38 @@ async fn list_attachments(
     Ok(())
 }
 
-async fn create_attachment(params: &ConnectivityOperationParams<'_>, file: &str) -> CliResult<()> {
-    let json_string = read_file_input(file)?;
-    let request: TgwAttachmentRequest =
-        serde_json::from_str(&json_string).context("Invalid TGW attachment configuration")?;
+/// Build TGW attachment request from parameters
+fn build_tgw_attachment_request(
+    attachment_params: &TgwAttachmentParams,
+) -> CliResult<TgwAttachmentRequest> {
+    // If --data is provided, use it as the base (escape hatch)
+    if let Some(data) = &attachment_params.data {
+        let json_string = read_file_input(data)?;
+        let request: TgwAttachmentRequest =
+            serde_json::from_str(&json_string).context("Invalid TGW attachment configuration")?;
+        return Ok(request);
+    }
+
+    // Build from first-class parameters
+    let cidrs = if attachment_params.cidrs.is_empty() {
+        None
+    } else {
+        Some(attachment_params.cidrs.clone())
+    };
+
+    Ok(TgwAttachmentRequest {
+        aws_account_id: attachment_params.aws_account_id.clone(),
+        tgw_id: attachment_params.tgw_id.clone(),
+        cidrs,
+        extra: Value::Object(serde_json::Map::new()),
+    })
+}
+
+async fn create_attachment(
+    params: &ConnectivityOperationParams<'_>,
+    attachment_params: &TgwAttachmentParams,
+) -> CliResult<()> {
+    let request = build_tgw_attachment_request(attachment_params)?;
 
     let handler = TransitGatewayHandler::new(params.client.clone());
     let response = handler
@@ -295,11 +365,9 @@ async fn create_attachment_with_id(
 async fn update_attachment_cidrs(
     params: &ConnectivityOperationParams<'_>,
     attachment_id: &str,
-    file: &str,
+    attachment_params: &TgwAttachmentParams,
 ) -> CliResult<()> {
-    let json_string = read_file_input(file)?;
-    let request: TgwAttachmentRequest = serde_json::from_str(&json_string)
-        .context("Invalid TGW attachment update configuration")?;
+    let request = build_tgw_attachment_request(attachment_params)?;
 
     let handler = TransitGatewayHandler::new(params.client.clone());
     let response = handler
@@ -437,11 +505,9 @@ async fn list_attachments_aa(
 async fn create_attachment_aa(
     params: &ConnectivityOperationParams<'_>,
     region_id: i32,
-    file: &str,
+    attachment_params: &TgwAttachmentParams,
 ) -> CliResult<()> {
-    let json_string = read_file_input(file)?;
-    let request: TgwAttachmentRequest = serde_json::from_str(&json_string)
-        .context("Invalid Active-Active TGW attachment configuration")?;
+    let request = build_tgw_attachment_request(attachment_params)?;
 
     let handler = TransitGatewayHandler::new(params.client.clone());
     let response = handler
@@ -467,11 +533,9 @@ async fn update_attachment_cidrs_aa(
     params: &ConnectivityOperationParams<'_>,
     region_id: i32,
     attachment_id: &str,
-    file: &str,
+    attachment_params: &TgwAttachmentParams,
 ) -> CliResult<()> {
-    let json_string = read_file_input(file)?;
-    let request: TgwAttachmentRequest = serde_json::from_str(&json_string)
-        .context("Invalid Active-Active TGW attachment update configuration")?;
+    let request = build_tgw_attachment_request(attachment_params)?;
 
     let handler = TransitGatewayHandler::new(params.client.clone());
     let response = handler

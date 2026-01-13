@@ -12,6 +12,25 @@ use anyhow::Context;
 use redis_cloud::PrivateLinkHandler;
 use serde_json::Value;
 
+/// Parameters for PrivateLink create operation
+#[derive(Debug, Default)]
+pub struct PrivateLinkCreateParams {
+    pub share_name: Option<String>,
+    pub principal: Option<String>,
+    pub principal_type: Option<String>,
+    pub alias: Option<String>,
+    pub data: Option<String>,
+}
+
+/// Parameters for PrivateLink principal operations
+#[derive(Debug, Default)]
+pub struct PrivateLinkPrincipalParams {
+    pub principal: Option<String>,
+    pub principal_type: Option<String>,
+    pub alias: Option<String>,
+    pub data: Option<String>,
+}
+
 /// Handle PrivateLink commands
 pub async fn handle_private_link_command(
     conn_mgr: &ConnectionManager,
@@ -31,6 +50,10 @@ pub async fn handle_private_link_command(
         PrivateLinkCommands::Create {
             subscription,
             region,
+            share_name,
+            principal,
+            principal_type,
+            alias,
             data,
             async_ops,
         } => {
@@ -43,22 +66,62 @@ pub async fn handle_private_link_command(
                 output_format,
                 query,
             };
-            handle_create(&handler, &params, *region, data).await
+            let create_params = PrivateLinkCreateParams {
+                share_name: share_name.clone(),
+                principal: principal.clone(),
+                principal_type: principal_type.clone(),
+                alias: alias.clone(),
+                data: data.clone(),
+            };
+            handle_create(&handler, &params, *region, &create_params).await
         }
         PrivateLinkCommands::AddPrincipal {
             subscription,
             region,
+            principal,
+            principal_type,
+            alias,
             data,
         } => {
-            handle_add_principal(&handler, *subscription, *region, data, output_format, query).await
+            let principal_params = PrivateLinkPrincipalParams {
+                principal: principal.clone(),
+                principal_type: principal_type.clone(),
+                alias: alias.clone(),
+                data: data.clone(),
+            };
+            handle_add_principal(
+                &handler,
+                *subscription,
+                *region,
+                &principal_params,
+                output_format,
+                query,
+            )
+            .await
         }
         PrivateLinkCommands::RemovePrincipal {
             subscription,
             region,
+            principal,
+            principal_type,
+            alias,
             data,
         } => {
-            handle_remove_principal(&handler, *subscription, *region, data, output_format, query)
-                .await
+            let principal_params = PrivateLinkPrincipalParams {
+                principal: principal.clone(),
+                principal_type: principal_type.clone(),
+                alias: alias.clone(),
+                data: data.clone(),
+            };
+            handle_remove_principal(
+                &handler,
+                *subscription,
+                *region,
+                &principal_params,
+                output_format,
+                query,
+            )
+            .await
         }
         PrivateLinkCommands::GetScript {
             subscription,
@@ -108,15 +171,76 @@ async fn handle_get(
     Ok(())
 }
 
+/// Normalize principal type (convert aws-account to aws_account for API)
+fn normalize_principal_type(t: &str) -> String {
+    t.replace('-', "_")
+}
+
+/// Build PrivateLink create payload from parameters
+fn build_create_payload(create_params: &PrivateLinkCreateParams) -> CliResult<Value> {
+    // If --data is provided, use it as the base (escape hatch)
+    if let Some(data) = &create_params.data {
+        let content = read_file_input(data)?;
+        return Ok(serde_json::from_str(&content).context("Failed to parse JSON input")?);
+    }
+
+    // Build payload from first-class parameters
+    let mut payload = serde_json::Map::new();
+
+    if let Some(share_name) = &create_params.share_name {
+        payload.insert("shareName".to_string(), Value::String(share_name.clone()));
+    }
+    if let Some(principal) = &create_params.principal {
+        payload.insert("principal".to_string(), Value::String(principal.clone()));
+    }
+    if let Some(principal_type) = &create_params.principal_type {
+        payload.insert(
+            "type".to_string(),
+            Value::String(normalize_principal_type(principal_type)),
+        );
+    }
+    if let Some(alias) = &create_params.alias {
+        payload.insert("alias".to_string(), Value::String(alias.clone()));
+    }
+
+    Ok(Value::Object(payload))
+}
+
+/// Build PrivateLink principal payload from parameters
+fn build_principal_payload(principal_params: &PrivateLinkPrincipalParams) -> CliResult<Value> {
+    // If --data is provided, use it as the base (escape hatch)
+    if let Some(data) = &principal_params.data {
+        let content = read_file_input(data)?;
+        return Ok(serde_json::from_str(&content).context("Failed to parse JSON input")?);
+    }
+
+    // Build payload from first-class parameters
+    let mut payload = serde_json::Map::new();
+
+    if let Some(principal) = &principal_params.principal {
+        payload.insert("principal".to_string(), Value::String(principal.clone()));
+    }
+    if let Some(principal_type) = &principal_params.principal_type {
+        payload.insert(
+            "type".to_string(),
+            Value::String(normalize_principal_type(principal_type)),
+        );
+    }
+    if let Some(alias) = &principal_params.alias {
+        payload.insert("alias".to_string(), Value::String(alias.clone()));
+    }
+
+    Ok(Value::Object(payload))
+}
+
 /// Create PrivateLink
 async fn handle_create(
     handler: &PrivateLinkHandler,
     params: &ConnectivityOperationParams<'_>,
     region_id: Option<i32>,
-    data: &str,
+    create_params: &PrivateLinkCreateParams,
 ) -> CliResult<()> {
-    let content = read_file_input(data)?;
-    let request: Value = serde_json::from_str(&content).context("Failed to parse JSON input")?;
+    let request = build_create_payload(create_params)?;
 
     let result = if let Some(region) = region_id {
         handler
@@ -147,12 +271,11 @@ async fn handle_add_principal(
     handler: &PrivateLinkHandler,
     subscription_id: i32,
     region_id: Option<i32>,
-    data: &str,
+    principal_params: &PrivateLinkPrincipalParams,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
-    let content = read_file_input(data)?;
-    let request: Value = serde_json::from_str(&content).context("Failed to parse JSON input")?;
+    let request = build_principal_payload(principal_params)?;
 
     let result = if let Some(region) = region_id {
         handler
@@ -176,12 +299,11 @@ async fn handle_remove_principal(
     handler: &PrivateLinkHandler,
     subscription_id: i32,
     region_id: Option<i32>,
-    data: &str,
+    principal_params: &PrivateLinkPrincipalParams,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
-    let content = read_file_input(data)?;
-    let request: Value = serde_json::from_str(&content).context("Failed to parse JSON input")?;
+    let request = build_principal_payload(principal_params)?;
 
     let result = if let Some(region) = region_id {
         handler

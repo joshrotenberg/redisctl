@@ -28,16 +28,73 @@ pub enum VpcPeeringCommands {
         subscription: i32,
     },
     /// Create VPC peering
+    #[command(after_help = "EXAMPLES:
+    # AWS VPC peering
+    redisctl cloud connectivity vpc-peering create --subscription 123 \\
+      --region us-east-1 --aws-account-id 123456789012 --vpc-id vpc-abc123
+
+    # AWS VPC peering with CIDR blocks
+    redisctl cloud connectivity vpc-peering create --subscription 123 \\
+      --region us-east-1 --aws-account-id 123456789012 --vpc-id vpc-abc123 \\
+      --vpc-cidr 10.0.0.0/16 --vpc-cidr 10.1.0.0/16
+
+    # GCP VPC peering
+    redisctl cloud connectivity vpc-peering create --subscription 123 \\
+      --gcp-project-id my-project --gcp-network-name my-network
+
+    # Using JSON data (escape hatch for advanced options)
+    redisctl cloud connectivity vpc-peering create --subscription 123 \\
+      --data '{\"region\": \"us-east-1\", \"awsAccountId\": \"123456789012\", \"vpcId\": \"vpc-abc123\"}'
+")]
     Create {
         /// Subscription ID
         #[arg(long)]
         subscription: i32,
-        /// Configuration JSON file or string (use @filename for file)
-        data: String,
+
+        // AWS-specific parameters
+        /// AWS region (e.g., us-east-1)
+        #[arg(long, required_unless_present_any = ["gcp_project_id", "data"])]
+        region: Option<String>,
+
+        /// AWS account ID (12-digit number)
+        #[arg(long, required_unless_present_any = ["gcp_project_id", "data"])]
+        aws_account_id: Option<String>,
+
+        /// AWS VPC ID (e.g., vpc-abc123)
+        #[arg(long, required_unless_present_any = ["gcp_project_id", "data"])]
+        vpc_id: Option<String>,
+
+        // GCP-specific parameters
+        /// GCP project ID (for GCP VPC peering)
+        #[arg(long, required_unless_present_any = ["region", "data"])]
+        gcp_project_id: Option<String>,
+
+        /// GCP network name (for GCP VPC peering)
+        #[arg(long, required_unless_present_any = ["region", "data"])]
+        gcp_network_name: Option<String>,
+
+        // Common optional parameters
+        /// VPC CIDR block (can be specified multiple times)
+        #[arg(long = "vpc-cidr", value_name = "CIDR")]
+        vpc_cidrs: Vec<String>,
+
+        /// Advanced: Full configuration as JSON string or @file.json (overrides other params)
+        #[arg(long)]
+        data: Option<String>,
+
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Update VPC peering
+    #[command(after_help = "EXAMPLES:
+    # Update VPC CIDR blocks
+    redisctl cloud connectivity vpc-peering update --subscription 123 --peering-id 456 \\
+      --vpc-cidr 10.0.0.0/16 --vpc-cidr 10.1.0.0/16
+
+    # Using JSON data
+    redisctl cloud connectivity vpc-peering update --subscription 123 --peering-id 456 \\
+      --data '{\"vpcCidrs\": [\"10.0.0.0/16\", \"10.1.0.0/16\"]}'
+")]
     Update {
         /// Subscription ID
         #[arg(long)]
@@ -45,8 +102,15 @@ pub enum VpcPeeringCommands {
         /// Peering ID
         #[arg(long)]
         peering_id: i32,
-        /// Configuration JSON file or string (use @filename for file)
-        data: String,
+
+        /// VPC CIDR block (can be specified multiple times)
+        #[arg(long = "vpc-cidr", value_name = "CIDR")]
+        vpc_cidrs: Vec<String>,
+
+        /// Advanced: Full configuration as JSON string or @file.json (overrides other params)
+        #[arg(long)]
+        data: Option<String>,
+
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
@@ -72,18 +136,85 @@ pub enum VpcPeeringCommands {
         subscription: i32,
     },
     /// Create Active-Active VPC peering
-    #[command(name = "create-aa")]
+    #[command(
+        name = "create-aa",
+        after_help = "EXAMPLES:
+    # AWS Active-Active VPC peering
+    redisctl cloud connectivity vpc-peering create-aa --subscription 123 \\
+      --source-region us-east-1 --destination-region us-west-2 \\
+      --aws-account-id 123456789012 --vpc-id vpc-abc123
+
+    # AWS Active-Active with CIDR blocks
+    redisctl cloud connectivity vpc-peering create-aa --subscription 123 \\
+      --source-region us-east-1 --destination-region us-west-2 \\
+      --aws-account-id 123456789012 --vpc-id vpc-abc123 \\
+      --vpc-cidr 10.0.0.0/16
+
+    # GCP Active-Active VPC peering
+    redisctl cloud connectivity vpc-peering create-aa --subscription 123 \\
+      --source-region us-central1 --gcp-project-id my-project --gcp-network-name my-network
+
+    # Using JSON data
+    redisctl cloud connectivity vpc-peering create-aa --subscription 123 \\
+      --data @peering-config.json
+"
+    )]
     CreateActiveActive {
         /// Subscription ID
         #[arg(long)]
         subscription: i32,
-        /// Configuration JSON file or string (use @filename for file)
-        data: String,
+
+        /// Source region (Redis Cloud region)
+        #[arg(long, required_unless_present = "data")]
+        source_region: Option<String>,
+
+        // AWS-specific parameters
+        /// Destination region for AWS (customer VPC region)
+        #[arg(long, required_unless_present_any = ["gcp_project_id", "data"])]
+        destination_region: Option<String>,
+
+        /// AWS account ID (12-digit number)
+        #[arg(long, required_unless_present_any = ["gcp_project_id", "data"])]
+        aws_account_id: Option<String>,
+
+        /// AWS VPC ID (e.g., vpc-abc123)
+        #[arg(long, required_unless_present_any = ["gcp_project_id", "data"])]
+        vpc_id: Option<String>,
+
+        // GCP-specific parameters
+        /// GCP project ID (for GCP VPC peering)
+        #[arg(long, required_unless_present_any = ["destination_region", "data"])]
+        gcp_project_id: Option<String>,
+
+        /// GCP network name (for GCP VPC peering)
+        #[arg(long, required_unless_present_any = ["destination_region", "data"])]
+        gcp_network_name: Option<String>,
+
+        // Common optional parameters
+        /// VPC CIDR block (can be specified multiple times)
+        #[arg(long = "vpc-cidr", value_name = "CIDR")]
+        vpc_cidrs: Vec<String>,
+
+        /// Advanced: Full configuration as JSON string or @file.json (overrides other params)
+        #[arg(long)]
+        data: Option<String>,
+
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Update Active-Active VPC peering
-    #[command(name = "update-aa")]
+    #[command(
+        name = "update-aa",
+        after_help = "EXAMPLES:
+    # Update VPC CIDR blocks
+    redisctl cloud connectivity vpc-peering update-aa --subscription 123 --peering-id 456 \\
+      --vpc-cidr 10.0.0.0/16 --vpc-cidr 10.1.0.0/16
+
+    # Using JSON data
+    redisctl cloud connectivity vpc-peering update-aa --subscription 123 --peering-id 456 \\
+      --data '{\"vpcCidrs\": [\"10.0.0.0/16\"]}'
+"
+    )]
     UpdateActiveActive {
         /// Subscription ID
         #[arg(long)]
@@ -91,8 +222,15 @@ pub enum VpcPeeringCommands {
         /// Peering ID
         #[arg(long)]
         peering_id: i32,
-        /// Configuration JSON file or string (use @filename for file)
-        data: String,
+
+        /// VPC CIDR block (can be specified multiple times)
+        #[arg(long = "vpc-cidr", value_name = "CIDR")]
+        vpc_cidrs: Vec<String>,
+
+        /// Advanced: Full configuration as JSON string or @file.json (overrides other params)
+        #[arg(long)]
+        data: Option<String>,
+
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
@@ -151,24 +289,90 @@ pub enum PscCommands {
         subscription_id: i32,
     },
     /// Create PSC endpoint
-    #[command(name = "endpoint-create")]
+    #[command(
+        name = "endpoint-create",
+        after_help = "EXAMPLES:
+    # Create PSC endpoint with all parameters
+    redisctl cloud connectivity psc endpoint-create 123 \\
+      --gcp-project-id my-project \\
+      --gcp-vpc-name my-vpc \\
+      --gcp-vpc-subnet-name my-subnet \\
+      --endpoint-connection-name redis-psc
+
+    # Using JSON file
+    redisctl cloud connectivity psc endpoint-create 123 --data @endpoint.json
+"
+    )]
     EndpointCreate {
         /// Subscription ID
         subscription_id: i32,
-        /// JSON file with endpoint configuration (use @filename or - for stdin)
-        file: String,
+
+        /// GCP project ID
+        #[arg(long, required_unless_present = "data")]
+        gcp_project_id: Option<String>,
+
+        /// GCP VPC name
+        #[arg(long, required_unless_present = "data")]
+        gcp_vpc_name: Option<String>,
+
+        /// GCP VPC subnet name
+        #[arg(long, required_unless_present = "data")]
+        gcp_vpc_subnet_name: Option<String>,
+
+        /// Endpoint connection name prefix
+        #[arg(long)]
+        endpoint_connection_name: Option<String>,
+
+        /// Advanced: Full configuration as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
+
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Update PSC endpoint
-    #[command(name = "endpoint-update")]
+    #[command(
+        name = "endpoint-update",
+        after_help = "EXAMPLES:
+    # Update PSC endpoint connection name
+    redisctl cloud connectivity psc endpoint-update 123 --endpoint-id 456 \\
+      --endpoint-connection-name new-redis-psc
+
+    # Update with JSON
+    redisctl cloud connectivity psc endpoint-update 123 --endpoint-id 456 \\
+      --data '{\"endpointConnectionName\": \"new-name\"}'
+"
+    )]
     EndpointUpdate {
         /// Subscription ID
         subscription_id: i32,
         /// Endpoint ID
+        #[arg(long)]
         endpoint_id: i32,
-        /// JSON file with endpoint configuration (use @filename or - for stdin)
-        file: String,
+        /// PSC Service ID
+        #[arg(long)]
+        psc_service_id: Option<i32>,
+
+        /// GCP project ID
+        #[arg(long)]
+        gcp_project_id: Option<String>,
+
+        /// GCP VPC name
+        #[arg(long)]
+        gcp_vpc_name: Option<String>,
+
+        /// GCP VPC subnet name
+        #[arg(long)]
+        gcp_vpc_subnet_name: Option<String>,
+
+        /// Endpoint connection name prefix
+        #[arg(long)]
+        endpoint_connection_name: Option<String>,
+
+        /// Advanced: Full configuration as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
+
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
@@ -237,12 +441,44 @@ pub enum PscCommands {
         subscription_id: i32,
     },
     /// Create Active-Active PSC endpoint
-    #[command(name = "aa-endpoint-create")]
+    #[command(
+        name = "aa-endpoint-create",
+        after_help = "EXAMPLES:
+    # Create Active-Active PSC endpoint
+    redisctl cloud connectivity psc aa-endpoint-create 123 \\
+      --gcp-project-id my-project \\
+      --gcp-vpc-name my-vpc \\
+      --gcp-vpc-subnet-name my-subnet \\
+      --endpoint-connection-name redis-psc
+
+    # Using JSON file
+    redisctl cloud connectivity psc aa-endpoint-create 123 --data @endpoint.json
+"
+    )]
     AaEndpointCreate {
         /// Subscription ID
         subscription_id: i32,
-        /// JSON file with endpoint configuration (use @filename or - for stdin)
-        file: String,
+
+        /// GCP project ID
+        #[arg(long, required_unless_present = "data")]
+        gcp_project_id: Option<String>,
+
+        /// GCP VPC name
+        #[arg(long, required_unless_present = "data")]
+        gcp_vpc_name: Option<String>,
+
+        /// GCP VPC subnet name
+        #[arg(long, required_unless_present = "data")]
+        gcp_vpc_subnet_name: Option<String>,
+
+        /// Endpoint connection name prefix
+        #[arg(long)]
+        endpoint_connection_name: Option<String>,
+
+        /// Advanced: Full configuration as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
+
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
@@ -274,12 +510,42 @@ pub enum TgwCommands {
         subscription_id: i32,
     },
     /// Create TGW attachment
-    #[command(name = "attachment-create")]
+    #[command(
+        name = "attachment-create",
+        after_help = "EXAMPLES:
+    # Create TGW attachment with AWS account and TGW ID
+    redisctl cloud connectivity tgw attachment-create 123 \\
+      --aws-account-id 123456789012 --tgw-id tgw-abc123
+
+    # Create with CIDR blocks
+    redisctl cloud connectivity tgw attachment-create 123 \\
+      --aws-account-id 123456789012 --tgw-id tgw-abc123 \\
+      --cidr 10.0.0.0/16 --cidr 10.1.0.0/16
+
+    # Using JSON file
+    redisctl cloud connectivity tgw attachment-create 123 --data @attachment.json
+"
+    )]
     AttachmentCreate {
         /// Subscription ID
         subscription_id: i32,
-        /// JSON file with attachment configuration (use @filename or - for stdin)
-        file: String,
+
+        /// AWS account ID
+        #[arg(long, required_unless_present = "data")]
+        aws_account_id: Option<String>,
+
+        /// Transit Gateway ID
+        #[arg(long, required_unless_present = "data")]
+        tgw_id: Option<String>,
+
+        /// CIDR blocks to route through TGW (can be specified multiple times)
+        #[arg(long = "cidr", value_name = "CIDR")]
+        cidrs: Vec<String>,
+
+        /// Advanced: Full configuration as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
+
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
@@ -294,14 +560,33 @@ pub enum TgwCommands {
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Update TGW attachment CIDRs
-    #[command(name = "attachment-update")]
+    #[command(
+        name = "attachment-update",
+        after_help = "EXAMPLES:
+    # Update TGW attachment CIDR blocks
+    redisctl cloud connectivity tgw attachment-update 123 --attachment-id att-abc123 \\
+      --cidr 10.0.0.0/16 --cidr 10.1.0.0/16
+
+    # Using JSON
+    redisctl cloud connectivity tgw attachment-update 123 --attachment-id att-abc123 \\
+      --data '{\"cidrs\": [\"10.0.0.0/16\"]}'
+"
+    )]
     AttachmentUpdate {
         /// Subscription ID
         subscription_id: i32,
         /// Attachment ID
+        #[arg(long)]
         attachment_id: String,
-        /// JSON file with CIDR configuration (use @filename or - for stdin)
-        file: String,
+
+        /// CIDR blocks to route through TGW (can be specified multiple times)
+        #[arg(long = "cidr", value_name = "CIDR")]
+        cidrs: Vec<String>,
+
+        /// Advanced: Full configuration as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
+
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
@@ -351,28 +636,79 @@ pub enum TgwCommands {
         subscription_id: i32,
     },
     /// Create Active-Active TGW attachment
-    #[command(name = "aa-attachment-create")]
+    #[command(
+        name = "aa-attachment-create",
+        after_help = "EXAMPLES:
+    # Create Active-Active TGW attachment
+    redisctl cloud connectivity tgw aa-attachment-create 123 --region-id 1 \\
+      --aws-account-id 123456789012 --tgw-id tgw-abc123
+
+    # With CIDR blocks
+    redisctl cloud connectivity tgw aa-attachment-create 123 --region-id 1 \\
+      --aws-account-id 123456789012 --tgw-id tgw-abc123 \\
+      --cidr 10.0.0.0/16
+
+    # Using JSON file
+    redisctl cloud connectivity tgw aa-attachment-create 123 --region-id 1 --data @attachment.json
+"
+    )]
     AaAttachmentCreate {
         /// Subscription ID
         subscription_id: i32,
         /// Region ID
+        #[arg(long)]
         region_id: i32,
-        /// JSON file with attachment configuration (use @filename or - for stdin)
-        file: String,
+
+        /// AWS account ID
+        #[arg(long, required_unless_present = "data")]
+        aws_account_id: Option<String>,
+
+        /// Transit Gateway ID
+        #[arg(long, required_unless_present = "data")]
+        tgw_id: Option<String>,
+
+        /// CIDR blocks to route through TGW (can be specified multiple times)
+        #[arg(long = "cidr", value_name = "CIDR")]
+        cidrs: Vec<String>,
+
+        /// Advanced: Full configuration as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
+
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Update Active-Active TGW attachment CIDRs
-    #[command(name = "aa-attachment-update")]
+    #[command(
+        name = "aa-attachment-update",
+        after_help = "EXAMPLES:
+    # Update Active-Active TGW attachment CIDR blocks
+    redisctl cloud connectivity tgw aa-attachment-update 123 --region-id 1 --attachment-id att-abc123 \\
+      --cidr 10.0.0.0/16 --cidr 10.1.0.0/16
+
+    # Using JSON
+    redisctl cloud connectivity tgw aa-attachment-update 123 --region-id 1 --attachment-id att-abc123 \\
+      --data '{\"cidrs\": [\"10.0.0.0/16\"]}'
+"
+    )]
     AaAttachmentUpdate {
         /// Subscription ID
         subscription_id: i32,
         /// Region ID
+        #[arg(long)]
         region_id: i32,
         /// Attachment ID
+        #[arg(long)]
         attachment_id: String,
-        /// JSON file with CIDR configuration (use @filename or - for stdin)
-        file: String,
+
+        /// CIDR blocks to route through TGW (can be specified multiple times)
+        #[arg(long = "cidr", value_name = "CIDR")]
+        cidrs: Vec<String>,
+
+        /// Advanced: Full configuration as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
+
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
@@ -434,6 +770,24 @@ pub enum PrivateLinkCommands {
         region: Option<i32>,
     },
     /// Create PrivateLink
+    #[command(after_help = "EXAMPLES:
+    # Create PrivateLink with AWS account principal
+    redisctl cloud connectivity privatelink create --subscription 123 \\
+      --share-name my-redis-share --principal 123456789012 --type aws-account
+
+    # Create PrivateLink with alias
+    redisctl cloud connectivity privatelink create --subscription 123 \\
+      --share-name my-redis-share --principal 123456789012 \\
+      --type aws-account --alias 'Production Account'
+
+    # Create for Active-Active subscription
+    redisctl cloud connectivity privatelink create --subscription 123 --region 1 \\
+      --share-name my-redis-share --principal 123456789012 --type aws-account
+
+    # Using JSON data (escape hatch)
+    redisctl cloud connectivity privatelink create --subscription 123 \\
+      --data '{\"shareName\": \"my-share\", \"principal\": \"123456789012\", \"type\": \"aws_account\"}'
+")]
     Create {
         /// Subscription ID
         #[arg(long)]
@@ -441,13 +795,47 @@ pub enum PrivateLinkCommands {
         /// Region ID (for Active-Active databases)
         #[arg(long)]
         region: Option<i32>,
-        /// Configuration JSON file or string (use @filename for file)
-        data: String,
+
+        /// Share name for the PrivateLink service
+        #[arg(long, required_unless_present = "data")]
+        share_name: Option<String>,
+
+        /// AWS principal (account ID or ARN)
+        #[arg(long, required_unless_present = "data")]
+        principal: Option<String>,
+
+        /// Principal type (aws-account, iam-role, etc.)
+        #[arg(long = "type", value_name = "TYPE", required_unless_present = "data")]
+        principal_type: Option<String>,
+
+        /// Alias for the principal (optional)
+        #[arg(long)]
+        alias: Option<String>,
+
+        /// Advanced: Full configuration as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
+
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Add principals to PrivateLink
-    #[command(name = "add-principal")]
+    #[command(
+        name = "add-principal",
+        after_help = "EXAMPLES:
+    # Add an AWS account as principal
+    redisctl cloud connectivity privatelink add-principal --subscription 123 \\
+      --principal 123456789012 --type aws-account
+
+    # Add with alias
+    redisctl cloud connectivity privatelink add-principal --subscription 123 \\
+      --principal 123456789012 --type aws-account --alias 'Dev Account'
+
+    # Add to Active-Active subscription
+    redisctl cloud connectivity privatelink add-principal --subscription 123 --region 1 \\
+      --principal 123456789012 --type aws-account
+"
+    )]
     AddPrincipal {
         /// Subscription ID
         #[arg(long)]
@@ -455,11 +843,36 @@ pub enum PrivateLinkCommands {
         /// Region ID (for Active-Active databases)
         #[arg(long)]
         region: Option<i32>,
-        /// Configuration JSON file or string (use @filename for file)
-        data: String,
+
+        /// AWS principal (account ID or ARN)
+        #[arg(long, required_unless_present = "data")]
+        principal: Option<String>,
+
+        /// Principal type (aws-account, iam-role, etc.)
+        #[arg(long = "type", value_name = "TYPE")]
+        principal_type: Option<String>,
+
+        /// Alias for the principal (optional)
+        #[arg(long)]
+        alias: Option<String>,
+
+        /// Advanced: Full configuration as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
     },
     /// Remove principals from PrivateLink
-    #[command(name = "remove-principal")]
+    #[command(
+        name = "remove-principal",
+        after_help = "EXAMPLES:
+    # Remove an AWS account principal
+    redisctl cloud connectivity privatelink remove-principal --subscription 123 \\
+      --principal 123456789012 --type aws-account
+
+    # Remove from Active-Active subscription
+    redisctl cloud connectivity privatelink remove-principal --subscription 123 --region 1 \\
+      --principal 123456789012 --type aws-account
+"
+    )]
     RemovePrincipal {
         /// Subscription ID
         #[arg(long)]
@@ -467,8 +880,22 @@ pub enum PrivateLinkCommands {
         /// Region ID (for Active-Active databases)
         #[arg(long)]
         region: Option<i32>,
-        /// Configuration JSON file or string (use @filename for file)
-        data: String,
+
+        /// AWS principal (account ID or ARN)
+        #[arg(long, required_unless_present = "data")]
+        principal: Option<String>,
+
+        /// Principal type (aws-account, iam-role, etc.)
+        #[arg(long = "type", value_name = "TYPE")]
+        principal_type: Option<String>,
+
+        /// Alias for the principal (optional)
+        #[arg(long)]
+        alias: Option<String>,
+
+        /// Advanced: Full configuration as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
     },
     /// Get VPC endpoint creation script
     #[command(name = "get-script")]
