@@ -443,12 +443,68 @@ NOTE: Memory size is in bytes. Common values:
     },
 
     /// Update database configuration
+    #[command(after_help = "EXAMPLES:
+    # Update memory size
+    redisctl enterprise database update 1 --memory 2147483648
+
+    # Enable replication
+    redisctl enterprise database update 1 --replication true
+
+    # Update persistence and eviction policy
+    redisctl enterprise database update 1 --persistence aof --eviction-policy volatile-lru
+
+    # Update sharding configuration
+    redisctl enterprise database update 1 --shards-count 8
+
+    # Update proxy policy
+    redisctl enterprise database update 1 --proxy-policy all-master-shards
+
+    # Update Redis password
+    redisctl enterprise database update 1 --redis-password newsecret
+
+    # Advanced: Full update via JSON file
+    redisctl enterprise database update 1 --data @updates.json
+
+NOTE: First-class parameters override values in --data when both are provided.")]
     Update {
         /// Database ID
         id: u32,
-        /// Update configuration as JSON string or @file.json
+
+        /// New database name
         #[arg(long)]
-        data: String,
+        name: Option<String>,
+
+        /// Memory size in bytes (e.g., 1073741824 for 1GB)
+        #[arg(long)]
+        memory: Option<u64>,
+
+        /// Enable/disable replication
+        #[arg(long)]
+        replication: Option<bool>,
+
+        /// Data persistence: disabled, aof, snapshot, or aof-and-snapshot
+        #[arg(long)]
+        persistence: Option<String>,
+
+        /// Data eviction policy when memory limit reached
+        #[arg(long)]
+        eviction_policy: Option<String>,
+
+        /// Number of shards
+        #[arg(long)]
+        shards_count: Option<u32>,
+
+        /// Proxy policy: single, all-master-shards, or all-nodes
+        #[arg(long)]
+        proxy_policy: Option<String>,
+
+        /// Redis password for authentication
+        #[arg(long)]
+        redis_password: Option<String>,
+
+        /// Advanced: Full update configuration as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
     },
 
     /// Delete a database

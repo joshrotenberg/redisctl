@@ -3784,3 +3784,64 @@ fn test_database_update_aa_regions_async_flags() {
         .stdout(predicate::str::contains("--wait-timeout"))
         .stdout(predicate::str::contains("--wait-interval"));
 }
+
+// Enterprise database update first-class params tests
+
+#[test]
+fn test_enterprise_database_update_first_class_params_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--name"))
+        .stdout(predicate::str::contains("--memory"))
+        .stdout(predicate::str::contains("--replication"))
+        .stdout(predicate::str::contains("--persistence"))
+        .stdout(predicate::str::contains("--eviction-policy"))
+        .stdout(predicate::str::contains("--shards-count"))
+        .stdout(predicate::str::contains("--proxy-policy"))
+        .stdout(predicate::str::contains("--redis-password"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_enterprise_database_update_has_examples() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EXAMPLES:"));
+}
+
+#[test]
+fn test_enterprise_database_update_requires_id() {
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("update")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+#[test]
+fn test_enterprise_database_update_requires_at_least_one_field() {
+    // With only ID provided, should fail at runtime requiring at least one update field
+    // Note: In CI without profiles, may fail with profile configuration error instead
+    redisctl()
+        .arg("enterprise")
+        .arg("database")
+        .arg("update")
+        .arg("1")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("At least one update field").or(
+            predicate::str::contains("No enterprise profiles configured"),
+        ));
+}
