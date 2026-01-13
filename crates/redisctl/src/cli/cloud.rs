@@ -1498,12 +1498,36 @@ NOTE: Subscription creation requires complex nested structures for cloud provide
     },
 
     /// Update subscription configuration
+    #[command(after_help = "EXAMPLES:
+    # Update subscription name
+    redisctl cloud subscription update 123 --name new-name
+
+    # Update payment method
+    redisctl cloud subscription update 123 --payment-method marketplace
+
+    # Using JSON for advanced options
+    redisctl cloud subscription update 123 --data '{\"name\": \"new-name\"}'
+")]
     Update {
         /// Subscription ID
         id: u32,
-        /// Update configuration as JSON string or @file.json
+
+        /// Updated subscription name
         #[arg(long)]
-        data: String,
+        name: Option<String>,
+
+        /// Payment method: credit-card or marketplace
+        #[arg(long, value_parser = ["credit-card", "marketplace"])]
+        payment_method: Option<String>,
+
+        /// Payment method ID (required if payment-method is credit-card)
+        #[arg(long)]
+        payment_method_id: Option<i32>,
+
+        /// Advanced: Full configuration as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
+
         /// Async operation options
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
@@ -1541,12 +1565,38 @@ NOTE: Subscription creation requires complex nested structures for cloud provide
     },
 
     /// Update CIDR allowlist
+    #[command(after_help = "EXAMPLES:
+    # Set CIDR blocks
+    redisctl cloud subscription update-cidr-allowlist 123 \\
+      --cidr 10.0.0.0/24 --cidr 192.168.1.0/24
+
+    # Set AWS security groups
+    redisctl cloud subscription update-cidr-allowlist 123 \\
+      --security-group sg-12345678
+
+    # Mix both
+    redisctl cloud subscription update-cidr-allowlist 123 \\
+      --cidr 10.0.0.0/24 --security-group sg-12345678
+
+    # Using JSON
+    redisctl cloud subscription update-cidr-allowlist 123 \\
+      --data '{\"cidrIps\": [\"10.0.0.0/24\"], \"securityGroupIds\": [\"sg-12345678\"]}'
+")]
     UpdateCidrAllowlist {
         /// Subscription ID
         id: u32,
-        /// CIDR blocks as JSON array or @file.json
+
+        /// CIDR block to allow (can be specified multiple times)
+        #[arg(long = "cidr", value_name = "CIDR")]
+        cidrs: Vec<String>,
+
+        /// AWS Security Group ID to allow (can be specified multiple times)
+        #[arg(long = "security-group", value_name = "SG_ID")]
+        security_groups: Vec<String>,
+
+        /// Advanced: Full configuration as JSON string or @file.json
         #[arg(long)]
-        cidrs: String,
+        data: Option<String>,
     },
 
     /// Get maintenance windows
@@ -1556,12 +1606,36 @@ NOTE: Subscription creation requires complex nested structures for cloud provide
     },
 
     /// Update maintenance windows
+    #[command(after_help = "EXAMPLES:
+    # Set automatic maintenance
+    redisctl cloud subscription update-maintenance-windows 123 --mode automatic
+
+    # Set manual maintenance windows (up to 7 windows)
+    redisctl cloud subscription update-maintenance-windows 123 \\
+      --mode manual \\
+      --window 'monday:03:00-monday:07:00' \\
+      --window 'thursday:03:00-thursday:07:00'
+
+    # Using JSON for complex configurations
+    redisctl cloud subscription update-maintenance-windows 123 \\
+      --data '{\"mode\": \"manual\", \"windows\": [{\"startHour\": 3, \"durationInHours\": 4, \"days\": [\"Monday\"]}]}'
+")]
     UpdateMaintenanceWindows {
         /// Subscription ID
         id: u32,
-        /// Maintenance windows configuration as JSON or @file.json
+
+        /// Maintenance mode: automatic or manual
+        #[arg(long, value_parser = ["automatic", "manual"])]
+        mode: Option<String>,
+
+        /// Maintenance window in format 'day:HH:MM-day:HH:MM' (can be specified multiple times, up to 7)
+        /// Example: 'monday:03:00-monday:07:00'
+        #[arg(long = "window", value_name = "WINDOW")]
+        windows: Vec<String>,
+
+        /// Advanced: Full configuration as JSON string or @file.json
         #[arg(long)]
-        data: String,
+        data: Option<String>,
     },
 
     /// List Active-Active regions
@@ -1571,24 +1645,95 @@ NOTE: Subscription creation requires complex nested structures for cloud provide
     },
 
     /// Add region to Active-Active subscription
+    #[command(after_help = "EXAMPLES:
+    # Add a new region with required parameters
+    redisctl cloud subscription add-aa-region 123 \\
+      --region us-west-2 \\
+      --deployment-cidr 10.1.0.0/24
+
+    # Add region with existing VPC
+    redisctl cloud subscription add-aa-region 123 \\
+      --region eu-west-1 \\
+      --deployment-cidr 10.2.0.0/24 \\
+      --vpc-id vpc-abc123
+
+    # Using JSON for advanced options
+    redisctl cloud subscription add-aa-region 123 \\
+      --data @region-config.json
+")]
     AddAaRegion {
         /// Subscription ID
         id: u32,
-        /// Region configuration as JSON or @file.json
+
+        /// Cloud provider region name (e.g., us-west-2, eu-west-1)
+        #[arg(long, required_unless_present = "data")]
+        region: Option<String>,
+
+        /// Deployment CIDR block (must be /24, e.g., 10.1.0.0/24)
+        #[arg(long, required_unless_present = "data")]
+        deployment_cidr: Option<String>,
+
+        /// Existing VPC ID to use (optional, creates new VPC if not specified)
         #[arg(long)]
-        data: String,
+        vpc_id: Option<String>,
+
+        /// RESP version (must be compatible with Redis version)
+        #[arg(long)]
+        resp_version: Option<String>,
+
+        /// Dry run - create deployment plan without provisioning
+        #[arg(long)]
+        dry_run: bool,
+
+        /// Advanced: Full configuration as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
+
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 
     /// Delete regions from Active-Active subscription
+    #[command(after_help = "EXAMPLES:
+    # Delete a single region
+    redisctl cloud subscription delete-aa-regions 123 --region us-west-2
+
+    # Delete multiple regions
+    redisctl cloud subscription delete-aa-regions 123 \\
+      --region us-west-2 --region eu-west-1
+
+    # Dry run to preview deletion
+    redisctl cloud subscription delete-aa-regions 123 \\
+      --region us-west-2 --dry-run
+
+    # Using JSON
+    redisctl cloud subscription delete-aa-regions 123 \\
+      --data '{\"regions\": [{\"region\": \"us-west-2\"}]}'
+")]
     DeleteAaRegions {
         /// Subscription ID
         id: u32,
-        /// Regions to delete as JSON array or @file.json
+
+        /// Region to delete (can be specified multiple times)
+        #[arg(long = "region", value_name = "REGION")]
+        regions: Vec<String>,
+
+        /// Dry run - create deletion plan without deleting
         #[arg(long)]
-        regions: String,
+        dry_run: bool,
+
+        /// Advanced: Full configuration as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
+
         /// Skip confirmation prompt
         #[arg(long)]
         force: bool,
+
+        /// Async operation options
+        #[command(flatten)]
+        async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
 }
 

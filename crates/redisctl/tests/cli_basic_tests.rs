@@ -3104,3 +3104,178 @@ fn test_tgw_aa_attachment_update_first_class_params_help() {
         .stdout(predicate::str::contains("--cidr"))
         .stdout(predicate::str::contains("--data"));
 }
+
+// === SUBSCRIPTION FIRST-CLASS PARAMETERS TESTS ===
+
+// Subscription create first-class params tests
+
+#[test]
+fn test_subscription_create_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--name"))
+        .stdout(predicate::str::contains("--dry-run"))
+        .stdout(predicate::str::contains("--deployment-type"))
+        .stdout(predicate::str::contains("--payment-method"))
+        .stdout(predicate::str::contains("--payment-method-id"))
+        .stdout(predicate::str::contains("--memory-storage"))
+        .stdout(predicate::str::contains("--persistent-storage-encryption"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_subscription_create_has_examples() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Examples:").or(predicate::str::contains("EXAMPLES:")));
+}
+
+// Subscription update first-class params tests
+
+#[test]
+fn test_subscription_update_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--name"))
+        .stdout(predicate::str::contains("--payment-method"))
+        .stdout(predicate::str::contains("--payment-method-id"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_subscription_update_requires_id() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("update")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+// Subscription update-cidr-allowlist first-class params tests
+
+#[test]
+fn test_subscription_update_cidr_allowlist_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("update-cidr-allowlist")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--cidr"))
+        .stdout(predicate::str::contains("--security-group"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_subscription_update_cidr_allowlist_requires_id() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("update-cidr-allowlist")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+// Subscription update-maintenance-windows first-class params tests
+
+#[test]
+fn test_subscription_update_maintenance_windows_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("update-maintenance-windows")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--mode"))
+        .stdout(predicate::str::contains("--window"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_subscription_update_maintenance_windows_requires_id() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("update-maintenance-windows")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+// Subscription add-aa-region first-class params tests
+
+#[test]
+fn test_subscription_add_aa_region_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("add-aa-region")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--region"))
+        .stdout(predicate::str::contains("--deployment-cidr"))
+        .stdout(predicate::str::contains("--vpc-id"))
+        .stdout(predicate::str::contains("--resp-version"))
+        .stdout(predicate::str::contains("--dry-run"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_subscription_add_aa_region_requires_id() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("add-aa-region")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+// Subscription delete-aa-regions first-class params tests
+
+#[test]
+fn test_subscription_delete_aa_regions_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("delete-aa-regions")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--region"))
+        .stdout(predicate::str::contains("--dry-run"))
+        .stdout(predicate::str::contains("--data"))
+        .stdout(predicate::str::contains("--force"));
+}
+
+#[test]
+fn test_subscription_delete_aa_regions_requires_id() {
+    redisctl()
+        .arg("cloud")
+        .arg("subscription")
+        .arg("delete-aa-regions")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}

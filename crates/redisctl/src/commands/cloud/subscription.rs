@@ -79,6 +79,9 @@ pub async fn handle_subscription_command(
         }
         CloudSubscriptionCommands::Update {
             id,
+            name,
+            payment_method,
+            payment_method_id,
             data,
             async_ops,
         } => {
@@ -86,7 +89,10 @@ pub async fn handle_subscription_command(
                 conn_mgr,
                 profile_name,
                 *id,
-                data,
+                name.as_deref(),
+                payment_method.as_deref(),
+                *payment_method_id,
+                data.as_deref(),
                 async_ops,
                 output_format,
                 query,
@@ -126,12 +132,19 @@ pub async fn handle_subscription_command(
             subscription_impl::get_cidr_allowlist(conn_mgr, profile_name, *id, output_format, query)
                 .await
         }
-        CloudSubscriptionCommands::UpdateCidrAllowlist { id, cidrs } => {
+        CloudSubscriptionCommands::UpdateCidrAllowlist {
+            id,
+            cidrs,
+            security_groups,
+            data,
+        } => {
             subscription_impl::update_cidr_allowlist(
                 conn_mgr,
                 profile_name,
                 *id,
                 cidrs,
+                security_groups,
+                data.as_deref(),
                 output_format,
                 query,
             )
@@ -147,12 +160,19 @@ pub async fn handle_subscription_command(
             )
             .await
         }
-        CloudSubscriptionCommands::UpdateMaintenanceWindows { id, data } => {
+        CloudSubscriptionCommands::UpdateMaintenanceWindows {
+            id,
+            mode,
+            windows,
+            data,
+        } => {
             subscription_impl::update_maintenance_windows(
                 conn_mgr,
                 profile_name,
                 *id,
-                data,
+                mode.as_deref(),
+                windows,
+                data.as_deref(),
                 output_format,
                 query,
             )
@@ -162,24 +182,49 @@ pub async fn handle_subscription_command(
             subscription_impl::list_aa_regions(conn_mgr, profile_name, *id, output_format, query)
                 .await
         }
-        CloudSubscriptionCommands::AddAaRegion { id, data } => {
+        CloudSubscriptionCommands::AddAaRegion {
+            id,
+            region,
+            deployment_cidr,
+            vpc_id,
+            resp_version,
+            dry_run,
+            data,
+            async_ops,
+        } => {
             subscription_impl::add_aa_region(
                 conn_mgr,
                 profile_name,
                 *id,
-                data,
+                region.as_deref(),
+                deployment_cidr.as_deref(),
+                vpc_id.as_deref(),
+                resp_version.as_deref(),
+                *dry_run,
+                data.as_deref(),
+                async_ops,
                 output_format,
                 query,
             )
             .await
         }
-        CloudSubscriptionCommands::DeleteAaRegions { id, regions, force } => {
+        CloudSubscriptionCommands::DeleteAaRegions {
+            id,
+            regions,
+            dry_run,
+            data,
+            force,
+            async_ops,
+        } => {
             subscription_impl::delete_aa_regions(
                 conn_mgr,
                 profile_name,
                 *id,
                 regions,
+                *dry_run,
+                data.as_deref(),
                 *force,
+                async_ops,
                 output_format,
                 query,
             )

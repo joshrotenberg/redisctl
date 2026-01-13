@@ -146,17 +146,49 @@ pub async fn create_subscription(
 }
 
 /// Update subscription configuration
+#[allow(clippy::too_many_arguments)]
 pub async fn update_subscription(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: u32,
-    data: &str,
+    name: Option<&str>,
+    payment_method: Option<&str>,
+    payment_method_id: Option<i32>,
+    data: Option<&str>,
     async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_cloud_client(profile_name).await?;
-    let request = read_json_data(data)?;
+
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut request = if let Some(data_str) = data {
+        read_json_data(data_str)?
+    } else {
+        serde_json::json!({})
+    };
+
+    let request_obj = request.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(name_val) = name {
+        request_obj.insert("name".to_string(), serde_json::json!(name_val));
+    }
+
+    if let Some(pm) = payment_method {
+        request_obj.insert("paymentMethod".to_string(), serde_json::json!(pm));
+    }
+
+    if let Some(pm_id) = payment_method_id {
+        request_obj.insert("paymentMethodId".to_string(), serde_json::json!(pm_id));
+    }
+
+    // Validate that we have at least one field to update
+    if request_obj.is_empty() {
+        return Err(RedisCtlError::InvalidInput {
+            message: "At least one update field is required (--name, --payment-method, --payment-method-id, or --data)".to_string(),
+        });
+    }
 
     let response = client
         .put_raw(&format!("/subscriptions/{}", id), request)
@@ -387,16 +419,52 @@ pub async fn get_cidr_allowlist(
 }
 
 /// Update CIDR allowlist
+#[allow(clippy::too_many_arguments)]
 pub async fn update_cidr_allowlist(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: u32,
-    cidrs: &str,
+    cidrs: &[String],
+    security_groups: &[String],
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_cloud_client(profile_name).await?;
-    let request = read_json_data(cidrs)?;
+
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut request = if let Some(data_str) = data {
+        read_json_data(data_str)?
+    } else {
+        serde_json::json!({})
+    };
+
+    let request_obj = request.as_object_mut().unwrap();
+
+    // Build cidrIps array from --cidr parameters
+    if !cidrs.is_empty() {
+        let cidr_ips: Vec<Value> = cidrs
+            .iter()
+            .map(|cidr| serde_json::json!({ "cidr": cidr }))
+            .collect();
+        request_obj.insert("cidrIps".to_string(), Value::Array(cidr_ips));
+    }
+
+    // Build securityGroupIds array from --security-group parameters
+    if !security_groups.is_empty() {
+        request_obj.insert(
+            "securityGroupIds".to_string(),
+            serde_json::json!(security_groups),
+        );
+    }
+
+    // Validate that we have at least one field to update
+    if request_obj.is_empty() {
+        return Err(RedisCtlError::InvalidInput {
+            message: "At least one update field is required (--cidr, --security-group, or --data)"
+                .to_string(),
+        });
+    }
 
     let response = client
         .put_raw(&format!("/subscriptions/{}/cidr", id), request)
@@ -484,16 +552,55 @@ pub async fn get_maintenance_windows(
 }
 
 /// Update maintenance windows
+#[allow(clippy::too_many_arguments)]
 pub async fn update_maintenance_windows(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: u32,
-    data: &str,
+    mode: Option<&str>,
+    windows: &[String],
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_cloud_client(profile_name).await?;
-    let request = read_json_data(data)?;
+
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut request = if let Some(data_str) = data {
+        read_json_data(data_str)?
+    } else {
+        serde_json::json!({})
+    };
+
+    let request_obj = request.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(mode_val) = mode {
+        request_obj.insert("mode".to_string(), serde_json::json!(mode_val));
+    }
+
+    // Build windows array from --window parameters
+    // Format: "DAY:HH:MM-HH:MM" e.g., "Monday:03:00-07:00"
+    if !windows.is_empty() {
+        let window_objects: Result<Vec<Value>, _> = windows
+            .iter()
+            .map(|w| parse_maintenance_window(w))
+            .collect();
+        match window_objects {
+            Ok(objs) => {
+                request_obj.insert("windows".to_string(), Value::Array(objs));
+            }
+            Err(e) => return Err(e),
+        }
+    }
+
+    // Validate that we have at least one field to update
+    if request_obj.is_empty() {
+        return Err(RedisCtlError::InvalidInput {
+            message: "At least one update field is required (--mode, --window, or --data)"
+                .to_string(),
+        });
+    }
 
     let response = client
         .put_raw(
@@ -520,6 +627,48 @@ pub async fn update_maintenance_windows(
     }
 
     Ok(())
+}
+
+/// Parse maintenance window string into JSON object
+/// Format: "DAY:HH:MM-HH:MM" or "DAY:HH:MM:DURATION"
+fn parse_maintenance_window(window: &str) -> CliResult<Value> {
+    let parts: Vec<&str> = window.splitn(2, ':').collect();
+    if parts.len() != 2 {
+        return Err(RedisCtlError::InvalidInput {
+            message: format!(
+                "Invalid window format '{}'. Expected 'DAY:HH:MM-HH:MM' (e.g., 'Monday:03:00-07:00')",
+                window
+            ),
+        });
+    }
+
+    let day = parts[0];
+    let time_part = parts[1];
+
+    // Parse time range (HH:MM-HH:MM) or start time with duration
+    if let Some((start, end)) = time_part.split_once('-') {
+        Ok(serde_json::json!({
+            "dayOfWeek": day,
+            "startHour": parse_hour(start)?,
+            "endHour": parse_hour(end)?
+        }))
+    } else {
+        // Just start hour provided
+        Ok(serde_json::json!({
+            "dayOfWeek": day,
+            "startHour": parse_hour(time_part)?
+        }))
+    }
+}
+
+/// Parse hour string (HH:MM or HH) to integer hour
+fn parse_hour(time: &str) -> CliResult<i32> {
+    let hour_str = time.split(':').next().unwrap_or(time);
+    hour_str
+        .parse::<i32>()
+        .map_err(|_| RedisCtlError::InvalidInput {
+            message: format!("Invalid hour '{}'. Expected HH or HH:MM format", time),
+        })
 }
 
 /// Active-Active region for table display
@@ -583,58 +732,103 @@ pub async fn list_aa_regions(
 }
 
 /// Add region to Active-Active subscription
+#[allow(clippy::too_many_arguments)]
 pub async fn add_aa_region(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: u32,
-    data: &str,
+    region: Option<&str>,
+    deployment_cidr: Option<&str>,
+    vpc_id: Option<&str>,
+    resp_version: Option<&str>,
+    dry_run: bool,
+    data: Option<&str>,
+    async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_cloud_client(profile_name).await?;
-    let request = read_json_data(data)?;
+
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut request = if let Some(data_str) = data {
+        read_json_data(data_str)?
+    } else {
+        serde_json::json!({})
+    };
+
+    let request_obj = request.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(region_val) = region {
+        request_obj.insert("region".to_string(), serde_json::json!(region_val));
+    }
+
+    if let Some(cidr) = deployment_cidr {
+        request_obj.insert("deploymentCIDR".to_string(), serde_json::json!(cidr));
+    }
+
+    if let Some(vpc) = vpc_id {
+        request_obj.insert("vpcId".to_string(), serde_json::json!(vpc));
+    }
+
+    if let Some(resp) = resp_version {
+        request_obj.insert("respVersion".to_string(), serde_json::json!(resp));
+    }
+
+    if dry_run {
+        request_obj.insert("dryRun".to_string(), serde_json::json!(true));
+    }
+
+    // Validate that region is provided
+    if !request_obj.contains_key("region") {
+        return Err(RedisCtlError::InvalidInput {
+            message: "--region is required (or provide via --data JSON)".to_string(),
+        });
+    }
 
     let response = client
         .post_raw(&format!("/subscriptions/{}/regions", id), request)
         .await
         .context("Failed to add Active-Active region")?;
 
-    let result = if let Some(q) = query {
-        apply_jmespath(&response, q)?
-    } else {
-        response
-    };
-
-    match output_format {
-        OutputFormat::Table => {
-            println!("Active-Active region added successfully");
-            if let Some(task_id) = result.get("taskId") {
-                println!("Task ID: {}", task_id);
-            }
-        }
-        _ => print_json_or_yaml(result, output_format)?,
-    }
-
-    Ok(())
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        response,
+        async_ops,
+        output_format,
+        query,
+        "Active-Active region added successfully",
+    )
+    .await
 }
 
 /// Delete regions from Active-Active subscription
+#[allow(clippy::too_many_arguments)]
 pub async fn delete_aa_regions(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: u32,
-    regions: &str,
+    regions: &[String],
+    dry_run: bool,
+    data: Option<&str>,
     force: bool,
+    async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     // Confirmation prompt unless --force is used
     if !force {
         use dialoguer::Confirm;
+        let region_list = if regions.is_empty() {
+            "specified regions".to_string()
+        } else {
+            regions.join(", ")
+        };
         let confirm = Confirm::new()
             .with_prompt(format!(
-                "Are you sure you want to delete regions from Active-Active subscription {}?",
-                id
+                "Are you sure you want to delete regions ({}) from Active-Active subscription {}?",
+                region_list, id
             ))
             .default(false)
             .interact()
@@ -649,28 +843,47 @@ pub async fn delete_aa_regions(
     }
 
     let client = conn_mgr.create_cloud_client(profile_name).await?;
-    let _request = read_json_data(regions)?;
 
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut request = if let Some(data_str) = data {
+        read_json_data(data_str)?
+    } else {
+        serde_json::json!({})
+    };
+
+    let request_obj = request.as_object_mut().unwrap();
+
+    // Build regions array from --region parameters
+    if !regions.is_empty() {
+        request_obj.insert("regions".to_string(), serde_json::json!(regions));
+    }
+
+    if dry_run {
+        request_obj.insert("dryRun".to_string(), serde_json::json!(true));
+    }
+
+    // Validate that regions are provided
+    if !request_obj.contains_key("regions") {
+        return Err(RedisCtlError::InvalidInput {
+            message: "At least one --region is required (or provide via --data JSON)".to_string(),
+        });
+    }
+
+    // Use DELETE with body - need to use post_raw with custom method or adjust API
+    // The Redis Cloud API uses DELETE with a request body for this endpoint
     let response = client
-        .delete_raw(&format!("/subscriptions/{}/regions", id))
+        .delete_with_body(&format!("/subscriptions/{}/regions", id), request)
         .await
         .context("Failed to delete Active-Active regions")?;
 
-    let result = if let Some(q) = query {
-        apply_jmespath(&response, q)?
-    } else {
-        response
-    };
-
-    match output_format {
-        OutputFormat::Table => {
-            println!("Active-Active regions deletion initiated");
-            if let Some(task_id) = result.get("taskId") {
-                println!("Task ID: {}", task_id);
-            }
-        }
-        _ => print_json_or_yaml(result, output_format)?,
-    }
-
-    Ok(())
+    handle_async_response(
+        conn_mgr,
+        profile_name,
+        response,
+        async_ops,
+        output_format,
+        query,
+        "Active-Active regions deletion initiated",
+    )
+    .await
 }
