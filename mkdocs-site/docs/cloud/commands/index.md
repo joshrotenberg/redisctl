@@ -6,8 +6,10 @@ All Redis Cloud CLI commands.
 
 | Command Group | Description |
 |---------------|-------------|
-| [subscription](subscriptions.md) | Manage subscriptions |
-| [database](databases.md) | Manage databases |
+| [subscription](subscriptions.md) | Manage Pro subscriptions |
+| [database](databases.md) | Manage Pro databases |
+| [fixed-subscription](fixed-subscriptions.md) | Manage Essentials subscriptions |
+| [fixed-database](fixed-databases.md) | Manage Essentials databases |
 | [acl](access-control.md) | Access control lists |
 | [user](access-control.md) | User management |
 | [task](tasks.md) | Async task monitoring |

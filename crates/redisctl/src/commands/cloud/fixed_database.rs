@@ -4,9 +4,7 @@
 
 use crate::cli::{CloudFixedDatabaseCommands, OutputFormat};
 use crate::commands::cloud::async_utils::handle_async_response;
-use crate::commands::cloud::utils::{
-    confirm_action, handle_output, print_formatted_output, read_file_input,
-};
+use crate::commands::cloud::utils::{confirm_action, handle_output, print_formatted_output};
 use crate::connection::ConnectionManager;
 use crate::error::{RedisCtlError, Result as CliResult};
 use anyhow::Context;
@@ -15,6 +13,32 @@ use redis_cloud::fixed::databases::{
     FixedDatabaseCreateRequest, FixedDatabaseHandler, FixedDatabaseImportRequest,
     FixedDatabaseUpdateRequest,
 };
+
+/// Read JSON data from string or file
+fn read_json_data(data: &str) -> CliResult<serde_json::Value> {
+    let json_str = if let Some(file_path) = data.strip_prefix('@') {
+        std::fs::read_to_string(file_path).map_err(|e| RedisCtlError::InvalidInput {
+            message: format!("Failed to read file {}: {}", file_path, e),
+        })?
+    } else {
+        data.to_string()
+    };
+
+    serde_json::from_str(&json_str).map_err(|e| RedisCtlError::InvalidInput {
+        message: format!("Invalid JSON: {}", e),
+    })
+}
+
+/// Parse tag string in key=value format
+fn parse_tag(tag: &str) -> CliResult<(String, String)> {
+    let parts: Vec<&str> = tag.splitn(2, '=').collect();
+    if parts.len() != 2 {
+        return Err(RedisCtlError::InvalidInput {
+            message: format!("Invalid tag format '{}'. Expected 'key=value' format", tag),
+        });
+    }
+    Ok((parts[0].to_string(), parts[1].to_string()))
+}
 
 /// Parse database ID in format "subscription_id:database_id"
 fn parse_fixed_database_id(id: &str) -> CliResult<(i32, i32)> {
@@ -83,12 +107,60 @@ pub async fn handle_fixed_database_command(
 
         CloudFixedDatabaseCommands::Create {
             subscription_id,
-            file,
+            name,
+            password,
+            enable_tls,
+            eviction_policy,
+            replication,
+            data_persistence,
+            data,
             async_ops,
         } => {
-            let json_string = read_file_input(file)?;
+            // Start with JSON from --data if provided, otherwise empty object
+            let mut request_value = if let Some(data_str) = data {
+                read_json_data(data_str)?
+            } else {
+                serde_json::json!({})
+            };
+
+            let request_obj = request_value.as_object_mut().unwrap();
+
+            // CLI parameters override JSON values
+            if let Some(n) = name {
+                request_obj.insert("name".to_string(), serde_json::json!(n));
+            }
+            if let Some(p) = password {
+                request_obj.insert("password".to_string(), serde_json::json!(p));
+            }
+            if let Some(tls) = enable_tls {
+                request_obj.insert("enableTls".to_string(), serde_json::json!(tls));
+            }
+            if let Some(eviction) = eviction_policy {
+                request_obj.insert(
+                    "dataEvictionPolicy".to_string(),
+                    serde_json::json!(eviction),
+                );
+            }
+            if let Some(repl) = replication {
+                request_obj.insert("replication".to_string(), serde_json::json!(repl));
+            }
+            if let Some(persistence) = data_persistence {
+                request_obj.insert(
+                    "dataPersistence".to_string(),
+                    serde_json::json!(persistence),
+                );
+            }
+
+            // Validate required fields
+            if !request_obj.contains_key("name") {
+                return Err(RedisCtlError::InvalidInput {
+                    message: "--name is required (or provide via --data JSON)".to_string(),
+                }
+                .into());
+            }
+
             let request: FixedDatabaseCreateRequest =
-                serde_json::from_str(&json_string).context("Invalid database configuration")?;
+                serde_json::from_value(request_value).context("Invalid database configuration")?;
 
             let result = handler
                 .create(*subscription_id, &request)
@@ -112,13 +184,62 @@ pub async fn handle_fixed_database_command(
 
         CloudFixedDatabaseCommands::Update {
             id,
-            file,
+            name,
+            password,
+            enable_tls,
+            eviction_policy,
+            replication,
+            data_persistence,
+            data,
             async_ops,
         } => {
             let (subscription_id, database_id) = parse_fixed_database_id(id)?;
-            let json_string = read_file_input(file)?;
+
+            // Start with JSON from --data if provided, otherwise empty object
+            let mut request_value = if let Some(data_str) = data {
+                read_json_data(data_str)?
+            } else {
+                serde_json::json!({})
+            };
+
+            let request_obj = request_value.as_object_mut().unwrap();
+
+            // CLI parameters override JSON values
+            if let Some(n) = name {
+                request_obj.insert("name".to_string(), serde_json::json!(n));
+            }
+            if let Some(p) = password {
+                request_obj.insert("password".to_string(), serde_json::json!(p));
+            }
+            if let Some(tls) = enable_tls {
+                request_obj.insert("enableTls".to_string(), serde_json::json!(tls));
+            }
+            if let Some(eviction) = eviction_policy {
+                request_obj.insert(
+                    "dataEvictionPolicy".to_string(),
+                    serde_json::json!(eviction),
+                );
+            }
+            if let Some(repl) = replication {
+                request_obj.insert("replication".to_string(), serde_json::json!(repl));
+            }
+            if let Some(persistence) = data_persistence {
+                request_obj.insert(
+                    "dataPersistence".to_string(),
+                    serde_json::json!(persistence),
+                );
+            }
+
+            // Validate that we have at least one field to update
+            if request_obj.is_empty() {
+                return Err(RedisCtlError::InvalidInput {
+                    message: "At least one update field is required (--name, --password, --enable-tls, --eviction-policy, --replication, --data-persistence, or --data)".to_string(),
+                }
+                .into());
+            }
+
             let request: FixedDatabaseUpdateRequest =
-                serde_json::from_str(&json_string).context("Invalid update configuration")?;
+                serde_json::from_value(request_value).context("Invalid update configuration")?;
 
             let result = handler
                 .update(subscription_id, database_id, &request)
@@ -233,13 +354,91 @@ pub async fn handle_fixed_database_command(
 
         CloudFixedDatabaseCommands::Import {
             id,
-            file,
+            source_type,
+            import_from_uri,
+            aws_access_key,
+            aws_secret_key,
+            gcs_client_email,
+            gcs_private_key,
+            azure_account_name,
+            azure_account_key,
+            data,
             async_ops,
         } => {
             let (subscription_id, database_id) = parse_fixed_database_id(id)?;
-            let json_string = read_file_input(file)?;
+
+            // Start with JSON from --data if provided, otherwise empty object
+            let mut request_value = if let Some(data_str) = data {
+                read_json_data(data_str)?
+            } else {
+                serde_json::json!({})
+            };
+
+            let request_obj = request_value.as_object_mut().unwrap();
+
+            // CLI parameters override JSON values
+            if let Some(st) = source_type {
+                request_obj.insert("sourceType".to_string(), serde_json::json!(st));
+            }
+
+            if let Some(uri) = import_from_uri {
+                request_obj.insert("importFromUri".to_string(), serde_json::json!([uri]));
+            }
+
+            // AWS credentials
+            if aws_access_key.is_some() || aws_secret_key.is_some() {
+                let mut credentials = serde_json::json!({});
+                if let Some(key) = aws_access_key {
+                    credentials["accessKeyId"] = serde_json::json!(key);
+                }
+                if let Some(secret) = aws_secret_key {
+                    credentials["accessSecretKey"] = serde_json::json!(secret);
+                }
+                request_obj.insert("credentials".to_string(), credentials);
+            }
+
+            // GCS credentials
+            if gcs_client_email.is_some() || gcs_private_key.is_some() {
+                let mut credentials = serde_json::json!({});
+                if let Some(email) = gcs_client_email {
+                    credentials["clientEmail"] = serde_json::json!(email);
+                }
+                if let Some(key) = gcs_private_key {
+                    credentials["privateKey"] = serde_json::json!(key);
+                }
+                request_obj.insert("credentials".to_string(), credentials);
+            }
+
+            // Azure credentials
+            if azure_account_name.is_some() || azure_account_key.is_some() {
+                let mut credentials = serde_json::json!({});
+                if let Some(name) = azure_account_name {
+                    credentials["storageAccountName"] = serde_json::json!(name);
+                }
+                if let Some(key) = azure_account_key {
+                    credentials["storageAccountKey"] = serde_json::json!(key);
+                }
+                request_obj.insert("credentials".to_string(), credentials);
+            }
+
+            // Validate required fields
+            if !request_obj.contains_key("sourceType") {
+                return Err(RedisCtlError::InvalidInput {
+                    message: "--source-type is required (or provide via --data JSON)".to_string(),
+                }
+                .into());
+            }
+
+            if !request_obj.contains_key("importFromUri") {
+                return Err(RedisCtlError::InvalidInput {
+                    message: "--import-from-uri is required (or provide via --data JSON)"
+                        .to_string(),
+                }
+                .into());
+            }
+
             let request: FixedDatabaseImportRequest =
-                serde_json::from_str(&json_string).context("Invalid import configuration")?;
+                serde_json::from_value(request_value).context("Invalid import configuration")?;
 
             let result = handler
                 .import(subscription_id, database_id, &request)
@@ -317,25 +516,42 @@ pub async fn handle_fixed_database_command(
             Ok(())
         }
 
-        CloudFixedDatabaseCommands::UpdateTags { id, file } => {
+        CloudFixedDatabaseCommands::UpdateTags { id, tags, data } => {
             let (subscription_id, database_id) = parse_fixed_database_id(id)?;
-            let json_string = read_file_input(file)?;
 
-            // Parse the JSON directly into the expected format
-            let parsed: serde_json::Value =
-                serde_json::from_str(&json_string).context("Invalid tags configuration")?;
-
-            // Extract tags array or create from object
-            let tags_vec = if let Some(tags_array) = parsed.get("tags").and_then(|v| v.as_array()) {
-                tags_array.clone()
-            } else if parsed.is_object() {
-                // If it's just an object, wrap it in an array
-                vec![parsed]
+            // Start with JSON from --data if provided, otherwise empty object
+            let mut request_value = if let Some(data_str) = data {
+                read_json_data(data_str)?
             } else {
-                return Err(
-                    anyhow::anyhow!("Invalid tags format. Expected object or array.").into(),
-                );
+                serde_json::json!({})
             };
+
+            let request_obj = request_value.as_object_mut().unwrap();
+
+            // Build tags array from --tag parameters
+            if !tags.is_empty() {
+                let mut tag_array = Vec::new();
+                for tag in tags {
+                    let (key, value) = parse_tag(tag)?;
+                    tag_array.push(serde_json::json!({
+                        "key": key,
+                        "value": value
+                    }));
+                }
+                request_obj.insert("tags".to_string(), serde_json::json!(tag_array));
+            }
+
+            // Extract tags array from request
+            let tags_vec =
+                if let Some(tags_array) = request_obj.get("tags").and_then(|v| v.as_array()) {
+                    tags_array.clone()
+                } else {
+                    return Err(RedisCtlError::InvalidInput {
+                        message: "At least one --tag is required (or provide via --data JSON)"
+                            .to_string(),
+                    }
+                    .into());
+                };
 
             // Build the request with the proper structure
             let tags_request = serde_json::json!({
@@ -361,8 +577,8 @@ pub async fn handle_fixed_database_command(
                 .await
                 .context("Failed to update tags")?;
 
-            let data = handle_output(result, output_format, query)?;
-            print_formatted_output(data, output_format)?;
+            let output_data = handle_output(result, output_format, query)?;
+            print_formatted_output(output_data, output_format)?;
             Ok(())
         }
 

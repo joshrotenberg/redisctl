@@ -3408,3 +3408,172 @@ fn test_database_update_tags_requires_id() {
         .failure()
         .stderr(predicate::str::contains("required"));
 }
+
+// Fixed database create first-class params tests
+
+#[test]
+fn test_fixed_database_create_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("fixed-database")
+        .arg("create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--name"))
+        .stdout(predicate::str::contains("--password"))
+        .stdout(predicate::str::contains("--enable-tls"))
+        .stdout(predicate::str::contains("--eviction-policy"))
+        .stdout(predicate::str::contains("--replication"))
+        .stdout(predicate::str::contains("--data-persistence"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_fixed_database_create_has_examples() {
+    redisctl()
+        .arg("cloud")
+        .arg("fixed-database")
+        .arg("create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EXAMPLES:"));
+}
+
+#[test]
+fn test_fixed_database_create_requires_subscription_id() {
+    redisctl()
+        .arg("cloud")
+        .arg("fixed-database")
+        .arg("create")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+// Fixed database update first-class params tests
+
+#[test]
+fn test_fixed_database_update_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("fixed-database")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--name"))
+        .stdout(predicate::str::contains("--password"))
+        .stdout(predicate::str::contains("--enable-tls"))
+        .stdout(predicate::str::contains("--eviction-policy"))
+        .stdout(predicate::str::contains("--replication"))
+        .stdout(predicate::str::contains("--data-persistence"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_fixed_database_update_has_examples() {
+    redisctl()
+        .arg("cloud")
+        .arg("fixed-database")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EXAMPLES:"));
+}
+
+#[test]
+fn test_fixed_database_update_requires_ids() {
+    redisctl()
+        .arg("cloud")
+        .arg("fixed-database")
+        .arg("update")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+// Fixed database import first-class params tests
+
+#[test]
+fn test_fixed_database_import_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("fixed-database")
+        .arg("import")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--source-type"))
+        .stdout(predicate::str::contains("--import-from-uri"))
+        .stdout(predicate::str::contains("--aws-access-key"))
+        .stdout(predicate::str::contains("--aws-secret-key"))
+        .stdout(predicate::str::contains("--gcs-client-email"))
+        .stdout(predicate::str::contains("--gcs-private-key"))
+        .stdout(predicate::str::contains("--azure-account-name"))
+        .stdout(predicate::str::contains("--azure-account-key"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_fixed_database_import_has_examples() {
+    redisctl()
+        .arg("cloud")
+        .arg("fixed-database")
+        .arg("import")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EXAMPLES:"));
+}
+
+#[test]
+fn test_fixed_database_import_requires_ids() {
+    redisctl()
+        .arg("cloud")
+        .arg("fixed-database")
+        .arg("import")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+// Fixed database update-tags first-class params tests
+
+#[test]
+fn test_fixed_database_update_tags_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("fixed-database")
+        .arg("update-tags")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--tag"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_fixed_database_update_tags_has_examples() {
+    redisctl()
+        .arg("cloud")
+        .arg("fixed-database")
+        .arg("update-tags")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EXAMPLES:"));
+}
+
+#[test]
+fn test_fixed_database_update_tags_requires_ids() {
+    redisctl()
+        .arg("cloud")
+        .arg("fixed-database")
+        .arg("update-tags")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}

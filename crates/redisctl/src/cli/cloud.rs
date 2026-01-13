@@ -970,21 +970,105 @@ pub enum CloudFixedDatabaseCommands {
         id: String,
     },
     /// Create a new database in a fixed subscription
+    #[command(after_help = "EXAMPLES:
+    # Simple database with name
+    redisctl cloud fixed-database create 123456 --name mydb --wait
+
+    # Database with password
+    redisctl cloud fixed-database create 123456 \\
+      --name mydb \\
+      --password mysecret \\
+      --wait
+
+    # Advanced: Use JSON for full configuration
+    redisctl cloud fixed-database create 123456 \\
+      --data @database.json
+")]
     Create {
         /// Subscription ID
         subscription_id: i32,
-        /// JSON file with database configuration (use @filename or - for stdin)
-        file: String,
+
+        /// Database name
+        #[arg(long)]
+        name: Option<String>,
+
+        /// Database password
+        #[arg(long)]
+        password: Option<String>,
+
+        /// Enable TLS/SSL
+        #[arg(long)]
+        enable_tls: Option<bool>,
+
+        /// Data eviction policy
+        #[arg(long)]
+        eviction_policy: Option<String>,
+
+        /// Enable replication
+        #[arg(long)]
+        replication: Option<bool>,
+
+        /// Data persistence setting
+        #[arg(long)]
+        data_persistence: Option<String>,
+
+        /// Advanced: Full database configuration as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
+
         /// Async operation options
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Update fixed database configuration
+    #[command(after_help = "EXAMPLES:
+    # Update database name
+    redisctl cloud fixed-database update 123:456 --name new-name
+
+    # Change password
+    redisctl cloud fixed-database update 123:456 --password newpassword
+
+    # Enable TLS
+    redisctl cloud fixed-database update 123:456 --enable-tls true
+
+    # Multiple changes
+    redisctl cloud fixed-database update 123:456 \\
+      --eviction-policy allkeys-lru \\
+      --data-persistence aof-every-1-second \\
+      --wait
+")]
     Update {
         /// Database ID (format: subscription_id:database_id)
         id: String,
-        /// JSON file with update configuration (use @filename or - for stdin)
-        file: String,
+
+        /// New database name
+        #[arg(long)]
+        name: Option<String>,
+
+        /// New password
+        #[arg(long)]
+        password: Option<String>,
+
+        /// Enable TLS/SSL
+        #[arg(long)]
+        enable_tls: Option<bool>,
+
+        /// Data eviction policy
+        #[arg(long)]
+        eviction_policy: Option<String>,
+
+        /// Enable replication
+        #[arg(long)]
+        replication: Option<bool>,
+
+        /// Data persistence setting
+        #[arg(long)]
+        data_persistence: Option<String>,
+
+        /// Advanced: Full update configuration as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
+
         /// Async operation options
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
@@ -1021,11 +1105,65 @@ pub enum CloudFixedDatabaseCommands {
         id: String,
     },
     /// Import data into fixed database
+    #[command(after_help = "EXAMPLES:
+    # Import from S3
+    redisctl cloud fixed-database import 123:456 \\
+      --source-type s3 \\
+      --import-from-uri s3://bucket/backup.rdb \\
+      --wait
+
+    # Import from HTTP
+    redisctl cloud fixed-database import 123:456 \\
+      --source-type http \\
+      --import-from-uri https://example.com/backup.rdb
+
+    # Import with AWS credentials
+    redisctl cloud fixed-database import 123:456 \\
+      --source-type aws-s3 \\
+      --import-from-uri s3://bucket/backup.rdb \\
+      --aws-access-key AKIA... \\
+      --aws-secret-key secret
+")]
     Import {
         /// Database ID (format: subscription_id:database_id)
         id: String,
-        /// JSON file with import configuration (use @filename or - for stdin)
-        file: String,
+
+        /// Source type: http, redis, ftp, aws-s3, gcs, azure-blob-storage
+        #[arg(long)]
+        source_type: Option<String>,
+
+        /// URI to import from
+        #[arg(long)]
+        import_from_uri: Option<String>,
+
+        /// AWS access key ID (for aws-s3)
+        #[arg(long)]
+        aws_access_key: Option<String>,
+
+        /// AWS secret access key (for aws-s3)
+        #[arg(long)]
+        aws_secret_key: Option<String>,
+
+        /// GCS client email (for gcs)
+        #[arg(long)]
+        gcs_client_email: Option<String>,
+
+        /// GCS private key (for gcs)
+        #[arg(long)]
+        gcs_private_key: Option<String>,
+
+        /// Azure storage account name
+        #[arg(long)]
+        azure_account_name: Option<String>,
+
+        /// Azure storage account key
+        #[arg(long)]
+        azure_account_key: Option<String>,
+
+        /// Advanced: Full import configuration as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
+
         /// Async operation options
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
@@ -1061,12 +1199,30 @@ pub enum CloudFixedDatabaseCommands {
         value: String,
     },
     /// Update all tags
-    #[command(name = "update-tags")]
+    #[command(
+        name = "update-tags",
+        after_help = "EXAMPLES:
+    # Set multiple tags
+    redisctl cloud fixed-database update-tags 123:456 \\
+      --tag env=production \\
+      --tag team=backend
+
+    # Replace all tags using JSON
+    redisctl cloud fixed-database update-tags 123:456 \\
+      --data '{\"tags\": [{\"key\": \"env\", \"value\": \"prod\"}]}'
+"
+    )]
     UpdateTags {
         /// Database ID (format: subscription_id:database_id)
         id: String,
-        /// JSON file with tags (use @filename or - for stdin)
-        file: String,
+
+        /// Tag in key=value format (repeatable)
+        #[arg(long = "tag", value_name = "KEY=VALUE")]
+        tags: Vec<String>,
+
+        /// Tags as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
     },
     /// Update specific tag
     #[command(name = "update-tag")]
