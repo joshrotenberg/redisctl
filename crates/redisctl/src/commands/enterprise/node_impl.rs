@@ -82,18 +82,54 @@ pub async fn remove_node(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn update_node(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: u32,
-    data: &str,
+    accept_servers: Option<bool>,
+    external_addr: Option<Vec<String>>,
+    rack_id: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
+    use crate::error::RedisCtlError;
+
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
     let handler = NodeHandler::new(client);
 
-    let update_data = read_json_data(data).context("Failed to parse update data")?;
+    // Start with JSON data if provided, otherwise empty object
+    let mut request_obj: serde_json::Map<String, serde_json::Value> = if let Some(json_data) = data
+    {
+        let parsed = read_json_data(json_data).context("Failed to parse JSON data")?;
+        parsed
+            .as_object()
+            .cloned()
+            .unwrap_or_else(serde_json::Map::new)
+    } else {
+        serde_json::Map::new()
+    };
+
+    // Override with first-class parameters if provided
+    if let Some(accept) = accept_servers {
+        request_obj.insert("accept_servers".to_string(), serde_json::json!(accept));
+    }
+    if let Some(addrs) = &external_addr {
+        request_obj.insert("external_addr".to_string(), serde_json::json!(addrs));
+    }
+    if let Some(rack) = rack_id {
+        request_obj.insert("rack_id".to_string(), serde_json::json!(rack));
+    }
+
+    // Validate at least one update field is provided
+    if request_obj.is_empty() {
+        return Err(RedisCtlError::InvalidInput {
+            message: "At least one update field is required (--accept-servers, --external-addr, --rack-id, or --data)".to_string(),
+        });
+    }
+
+    let update_data = serde_json::Value::Object(request_obj);
     let updated = handler.update(id, update_data).await?;
     let updated_json = serde_json::to_value(updated).context("Failed to serialize updated node")?;
     let data = handle_output(updated_json, output_format, query)?;

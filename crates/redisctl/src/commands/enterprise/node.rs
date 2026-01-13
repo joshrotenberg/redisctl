@@ -29,8 +29,25 @@ pub async fn handle_node_command(
         EnterpriseNodeCommands::Remove { id, force } => {
             node_impl::remove_node(conn_mgr, profile_name, *id, *force, output_format, query).await
         }
-        EnterpriseNodeCommands::Update { id, data } => {
-            node_impl::update_node(conn_mgr, profile_name, *id, data, output_format, query).await
+        EnterpriseNodeCommands::Update {
+            id,
+            accept_servers,
+            external_addr,
+            rack_id,
+            data,
+        } => {
+            node_impl::update_node(
+                conn_mgr,
+                profile_name,
+                *id,
+                *accept_servers,
+                external_addr.clone(),
+                rack_id.as_deref(),
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
 
         // Node Status & Health
