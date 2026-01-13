@@ -3648,3 +3648,79 @@ fn test_fixed_subscription_update_requires_id() {
         .failure()
         .stderr(predicate::str::contains("required"));
 }
+
+// Provider account create first-class params tests
+
+#[test]
+fn test_provider_account_create_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("provider-account")
+        .arg("create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--name"))
+        .stdout(predicate::str::contains("--provider"))
+        .stdout(predicate::str::contains("--access-key-id"))
+        .stdout(predicate::str::contains("--access-secret-key"))
+        .stdout(predicate::str::contains("--console-username"))
+        .stdout(predicate::str::contains("--console-password"))
+        .stdout(predicate::str::contains("--sign-in-login-url"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_provider_account_create_has_examples() {
+    redisctl()
+        .arg("cloud")
+        .arg("provider-account")
+        .arg("create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EXAMPLES:"));
+}
+
+// Provider account update first-class params tests
+
+#[test]
+fn test_provider_account_update_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("provider-account")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--name"))
+        .stdout(predicate::str::contains("--access-key-id"))
+        .stdout(predicate::str::contains("--access-secret-key"))
+        .stdout(predicate::str::contains("--console-username"))
+        .stdout(predicate::str::contains("--console-password"))
+        .stdout(predicate::str::contains("--sign-in-login-url"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_provider_account_update_has_examples() {
+    redisctl()
+        .arg("cloud")
+        .arg("provider-account")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EXAMPLES:"));
+}
+
+#[test]
+fn test_provider_account_update_requires_id() {
+    redisctl()
+        .arg("cloud")
+        .arg("provider-account")
+        .arg("update")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}

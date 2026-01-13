@@ -2,11 +2,9 @@
 
 use crate::cli::OutputFormat;
 use crate::commands::cloud::async_utils::{AsyncOperationArgs, handle_async_response};
-use crate::commands::cloud::utils::{
-    confirm_action, handle_output, print_formatted_output, read_file_input,
-};
+use crate::commands::cloud::utils::{confirm_action, handle_output, print_formatted_output};
 use crate::connection::ConnectionManager;
-use crate::error::Result as CliResult;
+use crate::error::{RedisCtlError, Result as CliResult};
 
 use anyhow::Context;
 use comfy_table::{Cell, Color, Table};
@@ -21,6 +19,43 @@ pub struct CloudAccountOperationParams<'a> {
     pub async_ops: &'a AsyncOperationArgs,
     pub output_format: OutputFormat,
     pub query: Option<&'a str>,
+}
+
+/// Parameters for creating a cloud account
+pub struct CreateParams<'a> {
+    pub name: Option<&'a str>,
+    pub provider: Option<&'a str>,
+    pub access_key_id: Option<&'a str>,
+    pub access_secret_key: Option<&'a str>,
+    pub console_username: Option<&'a str>,
+    pub console_password: Option<&'a str>,
+    pub sign_in_login_url: Option<&'a str>,
+    pub data: Option<&'a str>,
+}
+
+/// Parameters for updating a cloud account
+pub struct UpdateParams<'a> {
+    pub name: Option<&'a str>,
+    pub access_key_id: Option<&'a str>,
+    pub access_secret_key: Option<&'a str>,
+    pub console_username: Option<&'a str>,
+    pub console_password: Option<&'a str>,
+    pub sign_in_login_url: Option<&'a str>,
+    pub data: Option<&'a str>,
+}
+
+/// Read JSON data from string or file (prefixed with @)
+fn read_json_data(data: &str) -> CliResult<serde_json::Value> {
+    let json_str = if let Some(file_path) = data.strip_prefix('@') {
+        std::fs::read_to_string(file_path).map_err(|e| RedisCtlError::InvalidInput {
+            message: format!("Failed to read file {}: {}", file_path, e),
+        })?
+    } else {
+        data.to_string()
+    };
+    serde_json::from_str(&json_str).map_err(|e| RedisCtlError::InvalidInput {
+        message: format!("Invalid JSON: {}", e),
+    })
 }
 
 pub async fn handle_list(
@@ -119,66 +154,102 @@ pub async fn handle_get(
     Ok(())
 }
 
-pub async fn handle_create(params: &CloudAccountOperationParams<'_>, file: &str) -> CliResult<()> {
-    let content = read_file_input(file)?;
-    let mut payload: Value =
-        serde_json::from_str(&content).context("Failed to parse JSON from file")?;
+pub async fn handle_create(
+    params: &CloudAccountOperationParams<'_>,
+    create_params: &CreateParams<'_>,
+) -> CliResult<()> {
+    // Start with data from --data if provided, otherwise empty object
+    let mut payload = if let Some(data_str) = create_params.data {
+        let mut val = read_json_data(data_str)?;
 
-    // If the input is a GCP service account JSON, convert it to the cloud account format
-    if let Some(_project_id) = payload.get("project_id") {
-        // This is a GCP service account JSON
-        let provider_payload = json!({
-            "provider": "GCP",
-            "name": payload.get("client_email")
-                .and_then(|v| v.as_str())
-                .unwrap_or("GCP Cloud Account"),
-            "serviceAccountJson": serde_json::to_string(&payload)?
-        });
-        payload = provider_payload;
+        // If the input is a GCP service account JSON, convert it to the cloud account format
+        if val.get("project_id").is_some() {
+            // This is a GCP service account JSON
+            let provider_payload = json!({
+                "provider": "GCP",
+                "name": val.get("client_email")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("GCP Cloud Account"),
+                "serviceAccountJson": serde_json::to_string(&val)?
+            });
+            val = provider_payload;
+        }
+        val
+    } else {
+        serde_json::json!({})
+    };
+
+    let payload_obj = payload
+        .as_object_mut()
+        .ok_or_else(|| RedisCtlError::InvalidInput {
+            message: "JSON data must be an object".to_string(),
+        })?;
+
+    // Apply first-class params (override JSON values)
+    if let Some(n) = create_params.name {
+        payload_obj.insert("name".to_string(), json!(n));
+    }
+    if let Some(p) = create_params.provider {
+        payload_obj.insert("provider".to_string(), json!(p));
+    }
+    if let Some(aki) = create_params.access_key_id {
+        payload_obj.insert("accessKeyId".to_string(), json!(aki));
+    }
+    if let Some(ask) = create_params.access_secret_key {
+        payload_obj.insert("accessSecretKey".to_string(), json!(ask));
+    }
+    if let Some(cu) = create_params.console_username {
+        payload_obj.insert("consoleUsername".to_string(), json!(cu));
+    }
+    if let Some(cp) = create_params.console_password {
+        payload_obj.insert("consolePassword".to_string(), json!(cp));
+    }
+    if let Some(url) = create_params.sign_in_login_url {
+        payload_obj.insert("signInLoginUrl".to_string(), json!(url));
     }
 
     // Validate required fields based on provider
-    let provider = payload
+    let provider = payload_obj
         .get("provider")
         .and_then(|v| v.as_str())
-        .ok_or_else(|| anyhow::anyhow!("Missing 'provider' field in JSON"))?;
+        .ok_or_else(|| RedisCtlError::InvalidInput {
+            message: "--provider is required (or provide via --data JSON)".to_string(),
+        })?;
 
     match provider {
         "AWS" => {
-            if payload.get("accessKeyId").is_none() {
-                return Err(anyhow::anyhow!("AWS provider requires 'accessKeyId' field").into());
+            if payload_obj.get("accessKeyId").is_none() {
+                return Err(RedisCtlError::InvalidInput {
+                    message: "AWS provider requires --access-key-id".to_string(),
+                });
             }
-            if payload.get("accessSecretKey").is_none() {
-                return Err(
-                    anyhow::anyhow!("AWS provider requires 'accessSecretKey' field").into(),
-                );
+            if payload_obj.get("accessSecretKey").is_none() {
+                return Err(RedisCtlError::InvalidInput {
+                    message: "AWS provider requires --access-secret-key".to_string(),
+                });
             }
         }
         "GCP" => {
-            if payload.get("serviceAccountJson").is_none() {
-                return Err(
-                    anyhow::anyhow!("GCP provider requires 'serviceAccountJson' field").into(),
-                );
+            if payload_obj.get("serviceAccountJson").is_none() {
+                return Err(RedisCtlError::InvalidInput {
+                    message:
+                        "GCP provider requires --data with service account JSON file (@filename)"
+                            .to_string(),
+                });
             }
         }
         "Azure" => {
-            if payload.get("subscriptionId").is_none() {
-                return Err(
-                    anyhow::anyhow!("Azure provider requires 'subscriptionId' field").into(),
-                );
-            }
-            if payload.get("tenantId").is_none() {
-                return Err(anyhow::anyhow!("Azure provider requires 'tenantId' field").into());
-            }
-            if payload.get("clientId").is_none() {
-                return Err(anyhow::anyhow!("Azure provider requires 'clientId' field").into());
-            }
-            if payload.get("clientSecret").is_none() {
-                return Err(anyhow::anyhow!("Azure provider requires 'clientSecret' field").into());
+            // Azure has different required fields - keep using JSON for now
+            if payload_obj.get("subscriptionId").is_none() {
+                return Err(RedisCtlError::InvalidInput {
+                    message: "Azure provider requires 'subscriptionId' in --data JSON".to_string(),
+                });
             }
         }
         _ => {
-            return Err(anyhow::anyhow!("Unknown provider: {}", provider).into());
+            return Err(RedisCtlError::InvalidInput {
+                message: format!("Unknown provider: {}. Use AWS, GCP, or Azure", provider),
+            });
         }
     }
 
@@ -203,11 +274,47 @@ pub async fn handle_create(params: &CloudAccountOperationParams<'_>, file: &str)
 pub async fn handle_update(
     params: &CloudAccountOperationParams<'_>,
     account_id: i32,
-    file: &str,
+    update_params: &UpdateParams<'_>,
 ) -> CliResult<()> {
-    let content = read_file_input(file)?;
-    let payload: Value =
-        serde_json::from_str(&content).context("Failed to parse JSON from file")?;
+    // Start with data from --data if provided, otherwise empty object
+    let mut payload = if let Some(data_str) = update_params.data {
+        read_json_data(data_str)?
+    } else {
+        serde_json::json!({})
+    };
+
+    let payload_obj = payload
+        .as_object_mut()
+        .ok_or_else(|| RedisCtlError::InvalidInput {
+            message: "JSON data must be an object".to_string(),
+        })?;
+
+    // Apply first-class params (override JSON values)
+    if let Some(n) = update_params.name {
+        payload_obj.insert("name".to_string(), json!(n));
+    }
+    if let Some(aki) = update_params.access_key_id {
+        payload_obj.insert("accessKeyId".to_string(), json!(aki));
+    }
+    if let Some(ask) = update_params.access_secret_key {
+        payload_obj.insert("accessSecretKey".to_string(), json!(ask));
+    }
+    if let Some(cu) = update_params.console_username {
+        payload_obj.insert("consoleUsername".to_string(), json!(cu));
+    }
+    if let Some(cp) = update_params.console_password {
+        payload_obj.insert("consolePassword".to_string(), json!(cp));
+    }
+    if let Some(url) = update_params.sign_in_login_url {
+        payload_obj.insert("signInLoginUrl".to_string(), json!(url));
+    }
+
+    // Validate that we have at least one field to update
+    if payload_obj.is_empty() {
+        return Err(RedisCtlError::InvalidInput {
+            message: "At least one update field is required (--name, --access-key-id, --access-secret-key, --console-username, --console-password, --sign-in-login-url, or --data)".to_string(),
+        });
+    }
 
     let response = params
         .client
