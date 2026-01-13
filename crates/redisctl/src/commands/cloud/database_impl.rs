@@ -1098,11 +1098,21 @@ pub async fn flush_crdb(
 }
 
 /// Update Active-Active database regions
+#[allow(clippy::too_many_arguments)]
 pub async fn update_aa_regions(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: &str,
-    file: &str,
+    name: Option<&str>,
+    memory: Option<f64>,
+    dataset_size: Option<f64>,
+    global_data_persistence: Option<&str>,
+    global_password: Option<&str>,
+    eviction_policy: Option<&str>,
+    enable_tls: Option<bool>,
+    oss_cluster: Option<bool>,
+    dry_run: bool,
+    data: Option<&str>,
     async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
@@ -1110,10 +1120,58 @@ pub async fn update_aa_regions(
     let (subscription_id, database_id) = parse_database_id(id)?;
     let client = conn_mgr.create_cloud_client(profile_name).await?;
 
-    // Read the request body from file
-    let file_content = read_file_input(file)?;
-    let request_body: Value =
-        serde_json::from_str(&file_content).context("Failed to parse JSON input")?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut request = if let Some(data_str) = data {
+        read_json_data(data_str)?
+    } else {
+        json!({})
+    };
+
+    let request_obj = request.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(name_val) = name {
+        request_obj.insert("name".to_string(), json!(name_val));
+    }
+
+    if let Some(mem) = memory {
+        request_obj.insert("memoryLimitInGb".to_string(), json!(mem));
+    }
+
+    if let Some(dataset) = dataset_size {
+        request_obj.insert("datasetSizeInGb".to_string(), json!(dataset));
+    }
+
+    if let Some(persistence) = global_data_persistence {
+        request_obj.insert("globalDataPersistence".to_string(), json!(persistence));
+    }
+
+    if let Some(password) = global_password {
+        request_obj.insert("globalPassword".to_string(), json!(password));
+    }
+
+    if let Some(eviction) = eviction_policy {
+        request_obj.insert("dataEvictionPolicy".to_string(), json!(eviction));
+    }
+
+    if let Some(tls) = enable_tls {
+        request_obj.insert("enableTls".to_string(), json!(tls));
+    }
+
+    if let Some(oss) = oss_cluster {
+        request_obj.insert("supportOSSClusterAPI".to_string(), json!(oss));
+    }
+
+    if dry_run {
+        request_obj.insert("dryRun".to_string(), json!(true));
+    }
+
+    // Validate that we have at least one field to update
+    if request_obj.is_empty() {
+        return Err(RedisCtlError::InvalidInput {
+            message: "At least one update field is required (--name, --memory, --dataset-size, --global-data-persistence, --global-password, --eviction-policy, --enable-tls, --oss-cluster, or --data)".to_string(),
+        });
+    }
 
     let response = client
         .put_raw(
@@ -1121,7 +1179,7 @@ pub async fn update_aa_regions(
                 "/subscriptions/{}/databases/{}/regions",
                 subscription_id, database_id
             ),
-            request_body,
+            request,
         )
         .await
         .context("Failed to update Active-Active database regions")?;
@@ -1133,7 +1191,7 @@ pub async fn update_aa_regions(
         async_ops,
         output_format,
         query,
-        "Update AA regions",
+        "Active-Active database regions updated successfully",
     )
     .await
 }

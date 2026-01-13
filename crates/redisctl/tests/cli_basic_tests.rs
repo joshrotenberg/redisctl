@@ -3724,3 +3724,63 @@ fn test_provider_account_update_requires_id() {
         .failure()
         .stderr(predicate::str::contains("required"));
 }
+
+// Database update-aa-regions first-class params tests
+
+#[test]
+fn test_database_update_aa_regions_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("update-aa-regions")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--name"))
+        .stdout(predicate::str::contains("--memory"))
+        .stdout(predicate::str::contains("--dataset-size"))
+        .stdout(predicate::str::contains("--global-data-persistence"))
+        .stdout(predicate::str::contains("--global-password"))
+        .stdout(predicate::str::contains("--eviction-policy"))
+        .stdout(predicate::str::contains("--enable-tls"))
+        .stdout(predicate::str::contains("--oss-cluster"))
+        .stdout(predicate::str::contains("--dry-run"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_database_update_aa_regions_has_examples() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("update-aa-regions")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EXAMPLES:"));
+}
+
+#[test]
+fn test_database_update_aa_regions_requires_id() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("update-aa-regions")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+#[test]
+fn test_database_update_aa_regions_async_flags() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("update-aa-regions")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--wait"))
+        .stdout(predicate::str::contains("--wait-timeout"))
+        .stdout(predicate::str::contains("--wait-interval"));
+}

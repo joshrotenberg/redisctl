@@ -2427,12 +2427,81 @@ pub enum CloudDatabaseCommands {
     },
 
     /// Update Active-Active database regions
-    #[command(name = "update-aa-regions")]
+    #[command(
+        name = "update-aa-regions",
+        after_help = "EXAMPLES:
+    # Update database name
+    redisctl cloud database update-aa-regions 123:456 --name new-db-name --wait
+
+    # Update memory limit
+    redisctl cloud database update-aa-regions 123:456 --memory 10 --wait
+
+    # Update global password for all regions
+    redisctl cloud database update-aa-regions 123:456 --global-password newsecret
+
+    # Update data persistence
+    redisctl cloud database update-aa-regions 123:456 \\
+      --global-data-persistence aof-every-1-second
+
+    # Update eviction policy
+    redisctl cloud database update-aa-regions 123:456 \\
+      --eviction-policy volatile-lru
+
+    # Enable TLS
+    redisctl cloud database update-aa-regions 123:456 --enable-tls true
+
+    # Dry run to validate changes
+    redisctl cloud database update-aa-regions 123:456 --name test --dry-run
+
+    # Use JSON for complex per-region settings
+    redisctl cloud database update-aa-regions 123:456 \\
+      --data @regions.json
+"
+    )]
     UpdateAaRegions {
         /// Database ID (format: subscription_id:database_id)
         id: String,
-        /// JSON file with region configuration (use @filename or - for stdin)
-        file: String,
+
+        /// New database name
+        #[arg(long)]
+        name: Option<String>,
+
+        /// Memory limit in GB (total including replication)
+        #[arg(long)]
+        memory: Option<f64>,
+
+        /// Dataset size in GB (alternative to --memory)
+        #[arg(long)]
+        dataset_size: Option<f64>,
+
+        /// Data persistence for all regions (disabled, aof-every-1-second, aof-every-write, snapshot-every-1-hour, snapshot-every-6-hours, snapshot-every-12-hours)
+        #[arg(long)]
+        global_data_persistence: Option<String>,
+
+        /// Password for all regions
+        #[arg(long)]
+        global_password: Option<String>,
+
+        /// Data eviction policy
+        #[arg(long)]
+        eviction_policy: Option<String>,
+
+        /// Enable/disable TLS
+        #[arg(long)]
+        enable_tls: Option<bool>,
+
+        /// Enable OSS Cluster API
+        #[arg(long)]
+        oss_cluster: Option<bool>,
+
+        /// Dry run - validate without applying changes
+        #[arg(long)]
+        dry_run: bool,
+
+        /// JSON data for complex per-region settings (string or @filename)
+        #[arg(long)]
+        data: Option<String>,
+
         /// Async operation options
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
