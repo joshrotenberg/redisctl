@@ -264,19 +264,79 @@ pub async fn create_database(
 }
 
 /// Update database configuration
+#[allow(clippy::too_many_arguments)]
 pub async fn update_database(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: u32,
-    data: &str,
+    name: Option<&str>,
+    memory: Option<u64>,
+    replication: Option<bool>,
+    persistence: Option<&str>,
+    eviction_policy: Option<&str>,
+    shards_count: Option<u32>,
+    proxy_policy: Option<&str>,
+    redis_password: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
-    let json_data = read_json_data(data)?;
+
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut request = if let Some(data_str) = data {
+        read_json_data(data_str)?
+    } else {
+        serde_json::json!({})
+    };
+
+    let request_obj = request.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(name_val) = name {
+        request_obj.insert("name".to_string(), serde_json::json!(name_val));
+    }
+
+    if let Some(mem) = memory {
+        request_obj.insert("memory_size".to_string(), serde_json::json!(mem));
+    }
+
+    if let Some(repl) = replication {
+        request_obj.insert("replication".to_string(), serde_json::json!(repl));
+    }
+
+    if let Some(persist) = persistence {
+        request_obj.insert("data_persistence".to_string(), serde_json::json!(persist));
+    }
+
+    if let Some(eviction) = eviction_policy {
+        request_obj.insert("eviction_policy".to_string(), serde_json::json!(eviction));
+    }
+
+    if let Some(shards) = shards_count {
+        request_obj.insert("shards_count".to_string(), serde_json::json!(shards));
+    }
+
+    if let Some(proxy) = proxy_policy {
+        request_obj.insert("proxy_policy".to_string(), serde_json::json!(proxy));
+    }
+
+    if let Some(password) = redis_password {
+        request_obj.insert(
+            "authentication_redis_pass".to_string(),
+            serde_json::json!(password),
+        );
+    }
+
+    // Validate that we have at least one field to update
+    if request_obj.is_empty() {
+        return Err(RedisCtlError::InvalidInput {
+            message: "At least one update field is required (--name, --memory, --replication, --persistence, --eviction-policy, --shards-count, --proxy-policy, --redis-password, or --data)".to_string(),
+        });
+    }
 
     let response = client
-        .put_raw(&format!("/v1/bdbs/{}", id), json_data)
+        .put_raw(&format!("/v1/bdbs/{}", id), request)
         .await
         .map_err(RedisCtlError::from)?;
 

@@ -61,9 +61,35 @@ pub async fn handle_database_command(
             )
             .await
         }
-        EnterpriseDatabaseCommands::Update { id, data } => {
-            database_impl::update_database(conn_mgr, profile_name, *id, data, output_format, query)
-                .await
+        EnterpriseDatabaseCommands::Update {
+            id,
+            name,
+            memory,
+            replication,
+            persistence,
+            eviction_policy,
+            shards_count,
+            proxy_policy,
+            redis_password,
+            data,
+        } => {
+            database_impl::update_database(
+                conn_mgr,
+                profile_name,
+                *id,
+                name.as_deref(),
+                *memory,
+                *replication,
+                persistence.as_deref(),
+                eviction_policy.as_deref(),
+                *shards_count,
+                proxy_policy.as_deref(),
+                redis_password.as_deref(),
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
         EnterpriseDatabaseCommands::Delete { id, force } => {
             database_impl::delete_database(
