@@ -207,10 +207,34 @@ pub enum EnterpriseClusterCommands {
     Get,
 
     /// Update cluster configuration
+    #[command(after_help = "EXAMPLES:
+    # Update cluster name
+    redisctl enterprise cluster update --name my-cluster
+
+    # Enable email alerts
+    redisctl enterprise cluster update --email-alerts true
+
+    # Enable rack awareness
+    redisctl enterprise cluster update --rack-aware true
+
+    # Update multiple settings
+    redisctl enterprise cluster update --email-alerts true --rack-aware true
+
+    # Using JSON for advanced configuration
+    redisctl enterprise cluster update --data '{\"cm_session_timeout_minutes\": 30}'")]
     Update {
-        /// Cluster configuration data (JSON file or inline)
+        /// Cluster name
+        #[arg(long)]
+        name: Option<String>,
+        /// Enable/disable email alerts
+        #[arg(long)]
+        email_alerts: Option<bool>,
+        /// Enable/disable rack awareness
+        #[arg(long)]
+        rack_aware: Option<bool>,
+        /// JSON data for advanced configuration (overridden by other flags)
         #[arg(long, value_name = "FILE|JSON")]
-        data: String,
+        data: Option<String>,
     },
 
     /// Get cluster policies

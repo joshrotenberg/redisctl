@@ -35,17 +35,53 @@ pub async fn get_cluster(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn update_cluster(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
-    data: &str,
+    name: Option<&str>,
+    email_alerts: Option<bool>,
+    rack_aware: Option<bool>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
+    use crate::error::RedisCtlError;
+
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
     let handler = ClusterHandler::new(client);
 
-    let update_data = read_json_data(data).context("Failed to parse cluster data")?;
+    // Start with JSON data if provided, otherwise empty object
+    let mut request_obj: serde_json::Map<String, serde_json::Value> = if let Some(json_data) = data
+    {
+        let parsed = read_json_data(json_data).context("Failed to parse JSON data")?;
+        parsed
+            .as_object()
+            .cloned()
+            .unwrap_or_else(serde_json::Map::new)
+    } else {
+        serde_json::Map::new()
+    };
+
+    // Override with first-class parameters if provided
+    if let Some(n) = name {
+        request_obj.insert("name".to_string(), serde_json::json!(n));
+    }
+    if let Some(alerts) = email_alerts {
+        request_obj.insert("email_alerts".to_string(), serde_json::json!(alerts));
+    }
+    if let Some(rack) = rack_aware {
+        request_obj.insert("rack_aware".to_string(), serde_json::json!(rack));
+    }
+
+    // Validate at least one update field is provided
+    if request_obj.is_empty() {
+        return Err(RedisCtlError::InvalidInput {
+            message: "At least one update field is required (--name, --email-alerts, --rack-aware, or --data)".to_string(),
+        });
+    }
+
+    let update_data = serde_json::Value::Object(request_obj);
     let result = handler.update(update_data).await?;
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
