@@ -1336,6 +1336,9 @@ fn test_enterprise_database_update_missing_id() {
 
 #[test]
 fn test_enterprise_database_update_missing_data() {
+    // With first-class parameters, --data is no longer required
+    // The command now requires at least one update field
+    // Note: In CI without profiles, may fail with profile configuration error instead
     redisctl()
         .arg("enterprise")
         .arg("database")
@@ -1343,7 +1346,9 @@ fn test_enterprise_database_update_missing_data() {
         .arg("1")
         .assert()
         .failure()
-        .stderr(predicate::str::contains("required"));
+        .stderr(predicate::str::contains("At least one update field").or(
+            predicate::str::contains("No enterprise profiles configured"),
+        ));
 }
 
 // Error case tests - API commands
