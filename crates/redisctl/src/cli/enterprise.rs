@@ -1122,19 +1122,72 @@ pub enum EnterpriseAclCommands {
     },
 
     /// Create ACL
+    #[command(after_help = "EXAMPLES:
+    # Create ACL with full access
+    redisctl enterprise acl create --name full-access --acl '+@all ~*'
+
+    # Create ACL with read-only access
+    redisctl enterprise acl create --name read-only --acl '+@read ~*' --description 'Read-only access'
+
+    # Create ACL with specific key patterns
+    redisctl enterprise acl create --name app-acl --acl '+@all ~app:*'
+
+    # Advanced: Full configuration via JSON file
+    redisctl enterprise acl create --data @acl.json
+
+NOTE: First-class parameters override values in --data when both are provided.")]
     Create {
-        /// ACL data (JSON file or inline)
-        #[arg(long, value_name = "FILE|JSON")]
-        data: String,
+        /// ACL name (required unless using --data)
+        #[arg(long)]
+        name: Option<String>,
+
+        /// ACL rules string (e.g., '+@all ~*')
+        #[arg(long)]
+        acl: Option<String>,
+
+        /// Description of the ACL
+        #[arg(long)]
+        description: Option<String>,
+
+        /// Advanced: Full ACL configuration as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
     },
 
     /// Update ACL
+    #[command(after_help = "EXAMPLES:
+    # Update ACL name
+    redisctl enterprise acl update 1 --name new-acl-name
+
+    # Update ACL rules
+    redisctl enterprise acl update 1 --acl '+@read +@write ~*'
+
+    # Update description
+    redisctl enterprise acl update 1 --description 'Updated description'
+
+    # Advanced: Full update via JSON file
+    redisctl enterprise acl update 1 --data @updates.json
+
+NOTE: First-class parameters override values in --data when both are provided.")]
     Update {
         /// ACL ID
         id: u32,
-        /// Update data (JSON file or inline)
-        #[arg(long, value_name = "FILE|JSON")]
-        data: String,
+
+        /// New ACL name
+        #[arg(long)]
+        name: Option<String>,
+
+        /// New ACL rules string
+        #[arg(long)]
+        acl: Option<String>,
+
+        /// New description
+        #[arg(long)]
+        description: Option<String>,
+
+        /// Advanced: Full update configuration as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
     },
 
     /// Delete ACL

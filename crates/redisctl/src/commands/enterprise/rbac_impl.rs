@@ -595,44 +595,132 @@ pub async fn get_acl(
     Ok(())
 }
 
+/// Create a new ACL
+#[allow(clippy::too_many_arguments)]
 pub async fn create_acl(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
-    data: &str,
+    name: Option<&str>,
+    acl: Option<&str>,
+    description: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
     let handler = RedisAclHandler::new(client);
 
-    let acl_data = read_json_data(data).context("Failed to parse ACL data")?;
-    let request: CreateRedisAclRequest =
-        serde_json::from_value(acl_data).context("Invalid ACL creation request format")?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut request_json = if let Some(data_str) = data {
+        read_json_data(data_str).context("Failed to parse ACL data")?
+    } else {
+        serde_json::json!({})
+    };
 
-    let acl = handler.create(request).await?;
-    let acl_json = serde_json::to_value(acl).context("Failed to serialize ACL")?;
+    let request_obj = request_json.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(name_val) = name {
+        request_obj.insert("name".to_string(), serde_json::json!(name_val));
+    }
+
+    if let Some(acl_val) = acl {
+        request_obj.insert("acl".to_string(), serde_json::json!(acl_val));
+    }
+
+    if let Some(desc) = description {
+        request_obj.insert("description".to_string(), serde_json::json!(desc));
+    }
+
+    // Validate required fields when not using pure --data mode
+    if data.is_none() {
+        if !request_obj.contains_key("name") {
+            return Err(RedisCtlError::InvalidInput {
+                message: "--name is required (unless using --data with complete configuration)"
+                    .to_string(),
+            });
+        }
+        if !request_obj.contains_key("acl") {
+            return Err(RedisCtlError::InvalidInput {
+                message: "--acl is required (unless using --data with complete configuration)"
+                    .to_string(),
+            });
+        }
+    }
+
+    let request: CreateRedisAclRequest =
+        serde_json::from_value(request_json).context("Invalid ACL creation request format")?;
+
+    let acl_result = handler.create(request).await?;
+    let acl_json = serde_json::to_value(acl_result).context("Failed to serialize ACL")?;
     let data = handle_output(acl_json, output_format, query)?;
     print_formatted_output(data, output_format)?;
     Ok(())
 }
 
+/// Update an ACL
+#[allow(clippy::too_many_arguments)]
 pub async fn update_acl(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: u32,
-    data: &str,
+    name: Option<&str>,
+    acl: Option<&str>,
+    description: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
     let handler = RedisAclHandler::new(client);
 
-    let acl_data = read_json_data(data).context("Failed to parse ACL data")?;
-    let request: CreateRedisAclRequest =
-        serde_json::from_value(acl_data).context("Invalid ACL update request format")?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut request_json = if let Some(data_str) = data {
+        read_json_data(data_str).context("Failed to parse ACL data")?
+    } else {
+        serde_json::json!({})
+    };
 
-    let acl = handler.update(id, request).await?;
-    let acl_json = serde_json::to_value(acl).context("Failed to serialize ACL")?;
+    let request_obj = request_json.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(name_val) = name {
+        request_obj.insert("name".to_string(), serde_json::json!(name_val));
+    }
+
+    if let Some(acl_val) = acl {
+        request_obj.insert("acl".to_string(), serde_json::json!(acl_val));
+    }
+
+    if let Some(desc) = description {
+        request_obj.insert("description".to_string(), serde_json::json!(desc));
+    }
+
+    // Validate that we have at least one field to update
+    if request_obj.is_empty() {
+        return Err(RedisCtlError::InvalidInput {
+            message:
+                "At least one update field is required (--name, --acl, --description, or --data)"
+                    .to_string(),
+        });
+    }
+
+    // For update, we need name and acl - get current values if not provided
+    if !request_obj.contains_key("name") || !request_obj.contains_key("acl") {
+        let current = handler.get(id).await?;
+        if !request_obj.contains_key("name") {
+            request_obj.insert("name".to_string(), serde_json::json!(current.name));
+        }
+        if !request_obj.contains_key("acl") {
+            request_obj.insert("acl".to_string(), serde_json::json!(current.acl));
+        }
+    }
+
+    let request: CreateRedisAclRequest =
+        serde_json::from_value(request_json).context("Invalid ACL update request format")?;
+
+    let acl_result = handler.update(id, request).await?;
+    let acl_json = serde_json::to_value(acl_result).context("Failed to serialize ACL")?;
     let data = handle_output(acl_json, output_format, query)?;
     print_formatted_output(data, output_format)?;
     Ok(())

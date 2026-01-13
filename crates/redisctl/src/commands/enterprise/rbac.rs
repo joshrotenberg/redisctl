@@ -193,11 +193,43 @@ pub async fn handle_acl_command(
         EnterpriseAclCommands::Get { id } => {
             rbac_impl::get_acl(conn_mgr, profile_name, *id, output_format, query).await
         }
-        EnterpriseAclCommands::Create { data } => {
-            rbac_impl::create_acl(conn_mgr, profile_name, data, output_format, query).await
+        EnterpriseAclCommands::Create {
+            name,
+            acl,
+            description,
+            data,
+        } => {
+            rbac_impl::create_acl(
+                conn_mgr,
+                profile_name,
+                name.as_deref(),
+                acl.as_deref(),
+                description.as_deref(),
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
-        EnterpriseAclCommands::Update { id, data } => {
-            rbac_impl::update_acl(conn_mgr, profile_name, *id, data, output_format, query).await
+        EnterpriseAclCommands::Update {
+            id,
+            name,
+            acl,
+            description,
+            data,
+        } => {
+            rbac_impl::update_acl(
+                conn_mgr,
+                profile_name,
+                *id,
+                name.as_deref(),
+                acl.as_deref(),
+                description.as_deref(),
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
         EnterpriseAclCommands::Delete { id, force } => {
             rbac_impl::delete_acl(conn_mgr, profile_name, *id, *force, output_format, query).await
