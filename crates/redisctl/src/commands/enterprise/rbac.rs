@@ -133,11 +133,39 @@ pub async fn handle_role_command(
         EnterpriseRoleCommands::Get { id } => {
             rbac_impl::get_role(conn_mgr, profile_name, *id, output_format, query).await
         }
-        EnterpriseRoleCommands::Create { data } => {
-            rbac_impl::create_role(conn_mgr, profile_name, data, output_format, query).await
+        EnterpriseRoleCommands::Create {
+            name,
+            management,
+            data,
+        } => {
+            rbac_impl::create_role(
+                conn_mgr,
+                profile_name,
+                name.as_deref(),
+                management.as_deref(),
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
-        EnterpriseRoleCommands::Update { id, data } => {
-            rbac_impl::update_role(conn_mgr, profile_name, *id, data, output_format, query).await
+        EnterpriseRoleCommands::Update {
+            id,
+            name,
+            management,
+            data,
+        } => {
+            rbac_impl::update_role(
+                conn_mgr,
+                profile_name,
+                *id,
+                name.as_deref(),
+                management.as_deref(),
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
         EnterpriseRoleCommands::Delete { id, force } => {
             rbac_impl::delete_role(conn_mgr, profile_name, *id, *force, output_format, query).await

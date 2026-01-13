@@ -391,35 +391,92 @@ pub async fn get_role(
     Ok(())
 }
 
+/// Create a new role
 pub async fn create_role(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
-    data: &str,
+    name: Option<&str>,
+    management: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
-    let role_data = read_json_data(data).context("Failed to parse role data")?;
-    let result = client.post_raw("/v1/roles", role_data).await?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut request = if let Some(data_str) = data {
+        read_json_data(data_str).context("Failed to parse role data")?
+    } else {
+        serde_json::json!({})
+    };
+
+    let request_obj = request.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(name_val) = name {
+        request_obj.insert("name".to_string(), serde_json::json!(name_val));
+    }
+
+    if let Some(mgmt) = management {
+        request_obj.insert("management".to_string(), serde_json::json!(mgmt));
+    }
+
+    // Validate required fields when not using pure --data mode
+    if data.is_none() && !request_obj.contains_key("name") {
+        return Err(RedisCtlError::InvalidInput {
+            message: "--name is required (unless using --data with complete configuration)"
+                .to_string(),
+        });
+    }
+
+    let result = client.post_raw("/v1/roles", request).await?;
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
     Ok(())
 }
 
+/// Update a role
+#[allow(clippy::too_many_arguments)]
 pub async fn update_role(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: u32,
-    data: &str,
+    name: Option<&str>,
+    management: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
-    let role_data = read_json_data(data).context("Failed to parse role data")?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut request = if let Some(data_str) = data {
+        read_json_data(data_str).context("Failed to parse role data")?
+    } else {
+        serde_json::json!({})
+    };
+
+    let request_obj = request.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(name_val) = name {
+        request_obj.insert("name".to_string(), serde_json::json!(name_val));
+    }
+
+    if let Some(mgmt) = management {
+        request_obj.insert("management".to_string(), serde_json::json!(mgmt));
+    }
+
+    // Validate that we have at least one field to update
+    if request_obj.is_empty() {
+        return Err(RedisCtlError::InvalidInput {
+            message: "At least one update field is required (--name, --management, or --data)"
+                .to_string(),
+        });
+    }
+
     let result = client
-        .put_raw(&format!("/v1/roles/{}", id), role_data)
+        .put_raw(&format!("/v1/roles/{}", id), request)
         .await?;
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
