@@ -86,6 +86,13 @@ pub async fn handle_database_command(
         }
         CloudDatabaseCommands::Update {
             id,
+            name,
+            memory,
+            replication,
+            data_persistence,
+            eviction_policy,
+            oss_cluster,
+            regex_rules,
             data,
             async_ops,
         } => {
@@ -93,7 +100,14 @@ pub async fn handle_database_command(
                 conn_mgr,
                 profile_name,
                 id,
-                data,
+                name.as_deref(),
+                *memory,
+                *replication,
+                data_persistence.as_deref(),
+                eviction_policy.as_deref(),
+                *oss_cluster,
+                regex_rules.as_deref(),
+                data.as_deref(),
                 async_ops,
                 output_format,
                 query,
@@ -149,6 +163,14 @@ pub async fn handle_database_command(
         }
         CloudDatabaseCommands::Import {
             id,
+            source_type,
+            import_from_uri,
+            aws_access_key,
+            aws_secret_key,
+            gcs_client_email,
+            gcs_private_key,
+            azure_account_name,
+            azure_account_key,
             data,
             async_ops,
         } => {
@@ -156,7 +178,15 @@ pub async fn handle_database_command(
                 conn_mgr,
                 profile_name,
                 id,
-                data,
+                source_type.as_deref(),
+                import_from_uri.as_deref(),
+                aws_access_key.as_deref(),
+                aws_secret_key.as_deref(),
+                gcs_client_email.as_deref(),
+                gcs_private_key.as_deref(),
+                azure_account_name.as_deref(),
+                azure_account_key.as_deref(),
+                data.as_deref(),
                 async_ops,
                 output_format,
                 query,
@@ -194,12 +224,13 @@ pub async fn handle_database_command(
             )
             .await
         }
-        CloudDatabaseCommands::UpdateTags { id, data } => {
+        CloudDatabaseCommands::UpdateTags { id, tags, data } => {
             super::database_impl::update_tags(
                 conn_mgr,
                 profile_name,
                 id,
-                data,
+                tags,
+                data.as_deref(),
                 output_format,
                 query,
             )
