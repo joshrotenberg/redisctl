@@ -1418,22 +1418,106 @@ pub enum CloudProviderAccountCommands {
         account_id: i32,
     },
     /// Create a new cloud provider account
+    #[command(after_help = "EXAMPLES:
+    # Create AWS cloud account with credentials
+    redisctl cloud provider-account create \\
+      --name 'Production AWS' \\
+      --provider AWS \\
+      --access-key-id AKIA... \\
+      --access-secret-key secret \\
+      --console-username admin@example.com \\
+      --console-password mypassword \\
+      --sign-in-login-url https://console.aws.amazon.com
+
+    # Create using JSON file (for GCP service account)
+    redisctl cloud provider-account create --data @gcp-service-account.json
+
+    # Create with JSON string
+    redisctl cloud provider-account create \\
+      --data '{\"name\": \"My Account\", \"provider\": \"AWS\", ...}'
+")]
     Create {
-        /// JSON file containing the cloud account configuration
-        /// For GCP, this should be the service account JSON file
-        /// Use @filename to read from file
-        file: String,
+        /// Account display name
+        #[arg(long)]
+        name: Option<String>,
+
+        /// Cloud provider (AWS, GCP, Azure)
+        #[arg(long)]
+        provider: Option<String>,
+
+        /// Cloud provider access key ID
+        #[arg(long)]
+        access_key_id: Option<String>,
+
+        /// Cloud provider secret access key
+        #[arg(long)]
+        access_secret_key: Option<String>,
+
+        /// Cloud provider console username
+        #[arg(long)]
+        console_username: Option<String>,
+
+        /// Cloud provider console password
+        #[arg(long)]
+        console_password: Option<String>,
+
+        /// Cloud provider console login URL
+        #[arg(long)]
+        sign_in_login_url: Option<String>,
+
+        /// JSON data (string or @filename) - use for GCP service account JSON
+        #[arg(long)]
+        data: Option<String>,
+
         /// Async operation arguments
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
     },
     /// Update a cloud provider account
+    #[command(after_help = "EXAMPLES:
+    # Update account name
+    redisctl cloud provider-account update 123 --name 'New Name'
+
+    # Update credentials
+    redisctl cloud provider-account update 123 \\
+      --access-key-id AKIA... \\
+      --access-secret-key newsecret
+
+    # Update using JSON
+    redisctl cloud provider-account update 123 --data @updated-config.json
+")]
     Update {
         /// Cloud account ID
         account_id: i32,
-        /// JSON file containing updated cloud account configuration
-        /// Use @filename to read from file
-        file: String,
+
+        /// New account display name
+        #[arg(long)]
+        name: Option<String>,
+
+        /// New access key ID
+        #[arg(long)]
+        access_key_id: Option<String>,
+
+        /// New secret access key
+        #[arg(long)]
+        access_secret_key: Option<String>,
+
+        /// New console username
+        #[arg(long)]
+        console_username: Option<String>,
+
+        /// New console password
+        #[arg(long)]
+        console_password: Option<String>,
+
+        /// New console login URL
+        #[arg(long)]
+        sign_in_login_url: Option<String>,
+
+        /// JSON data (string or @filename)
+        #[arg(long)]
+        data: Option<String>,
+
         /// Async operation arguments
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
