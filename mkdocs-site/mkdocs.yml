@@ -121,6 +121,8 @@ nav:
           - cloud/commands/index.md
           - Subscriptions: cloud/commands/subscriptions.md
           - Databases: cloud/commands/databases.md
+          - Essentials Subscriptions: cloud/commands/fixed-subscriptions.md
+          - Essentials Databases: cloud/commands/fixed-databases.md
           - Access Control: cloud/commands/access-control.md
           - Networking: cloud/commands/networking.md
           - Tasks: cloud/commands/tasks.md
