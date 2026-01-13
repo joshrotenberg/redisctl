@@ -5,7 +5,7 @@ Connect your VPC to Redis Cloud for private networking.
 ## Prerequisites
 
 - Redis Cloud subscription with VPC enabled
-- AWS account ID and VPC details
+- AWS account ID and VPC details (or GCP project and network)
 - IAM permissions to accept peering
 
 ## Step 1: Get Subscription VPC Info
@@ -19,15 +19,38 @@ redisctl cloud subscription get 123456 -o json -q '{
 
 ## Step 2: Create Peering Request
 
+### AWS VPC Peering
+
 ```bash
-redisctl cloud vpc-peering create \
-  --subscription-id 123456 \
-  --data '{
-    "region": "us-east-1",
-    "awsAccountId": "123456789012",
-    "vpcId": "vpc-abc123def",
-    "vpcCidr": "10.0.0.0/16"
-  }' \
+redisctl cloud connectivity vpc-peering create \
+  --subscription 123456 \
+  --region us-east-1 \
+  --aws-account-id 123456789012 \
+  --vpc-id vpc-abc123def \
+  --vpc-cidr 10.0.0.0/16 \
+  --wait
+```
+
+### GCP VPC Peering
+
+```bash
+redisctl cloud connectivity vpc-peering create \
+  --subscription 123456 \
+  --gcp-project-id my-gcp-project \
+  --gcp-network-name default \
+  --wait
+```
+
+### With Multiple CIDR Blocks
+
+```bash
+redisctl cloud connectivity vpc-peering create \
+  --subscription 123456 \
+  --region us-east-1 \
+  --aws-account-id 123456789012 \
+  --vpc-id vpc-abc123def \
+  --vpc-cidr 10.0.0.0/16 \
+  --vpc-cidr 10.1.0.0/16 \
   --wait
 ```
 
@@ -70,14 +93,12 @@ VPC_CIDR="${4:?}"
 
 echo "Creating VPC peering..."
 
-PEERING=$(redisctl cloud vpc-peering create \
-  --subscription-id "$SUB_ID" \
-  --data "{
-    \"region\": \"us-east-1\",
-    \"awsAccountId\": \"$AWS_ACCOUNT\",
-    \"vpcId\": \"$VPC_ID\",
-    \"vpcCidr\": \"$VPC_CIDR\"
-  }" \
+PEERING=$(redisctl cloud connectivity vpc-peering create \
+  --subscription "$SUB_ID" \
+  --region us-east-1 \
+  --aws-account-id "$AWS_ACCOUNT" \
+  --vpc-id "$VPC_ID" \
+  --vpc-cidr "$VPC_CIDR" \
   --wait \
   -o json)
 
@@ -89,6 +110,36 @@ echo "Next steps:"
 echo "1. Accept the peering in AWS VPC console"
 echo "2. Update your route tables"
 echo "3. Test connectivity from your VPC"
+```
+
+## Update CIDR Blocks
+
+To add additional CIDR blocks to an existing peering:
+
+```bash
+redisctl cloud connectivity vpc-peering update \
+  --subscription 123456 \
+  --peering-id 789 \
+  --vpc-cidr 10.0.0.0/16 \
+  --vpc-cidr 10.1.0.0/16 \
+  --vpc-cidr 10.2.0.0/16 \
+  --wait
+```
+
+## Active-Active VPC Peering
+
+For Active-Active subscriptions with multiple regions:
+
+```bash
+# Create Active-Active VPC peering
+redisctl cloud connectivity vpc-peering create-aa \
+  --subscription 123456 \
+  --source-region us-east-1 \
+  --destination-region us-west-2 \
+  --aws-account-id 123456789012 \
+  --vpc-id vpc-abc123 \
+  --vpc-cidr 10.0.0.0/16 \
+  --wait
 ```
 
 ## Troubleshooting
@@ -104,6 +155,23 @@ echo "3. Test connectivity from your VPC"
 - Verify route table has correct route
 - Check security group allows Redis port
 - Ensure using private endpoint, not public
+
+### Using JSON for Advanced Options
+
+If you need options not available as CLI flags, use `--data`:
+
+```bash
+redisctl cloud connectivity vpc-peering create \
+  --subscription 123456 \
+  --data '{
+    "region": "us-east-1",
+    "awsAccountId": "123456789012",
+    "vpcId": "vpc-abc123",
+    "vpcCidrs": ["10.0.0.0/16"],
+    "advancedOption": "value"
+  }' \
+  --wait
+```
 
 ## Related
 
