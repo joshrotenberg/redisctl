@@ -25,11 +25,57 @@ pub async fn handle_user_command(
         EnterpriseUserCommands::Get { id } => {
             rbac_impl::get_user(conn_mgr, profile_name, *id, output_format, query).await
         }
-        EnterpriseUserCommands::Create { data } => {
-            rbac_impl::create_user(conn_mgr, profile_name, data, output_format, query).await
+        EnterpriseUserCommands::Create {
+            email,
+            password,
+            role,
+            name,
+            email_alerts,
+            role_uids,
+            auth_method,
+            data,
+        } => {
+            rbac_impl::create_user(
+                conn_mgr,
+                profile_name,
+                email.as_deref(),
+                password.as_deref(),
+                role.as_deref(),
+                name.as_deref(),
+                *email_alerts,
+                role_uids,
+                auth_method.as_deref(),
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
-        EnterpriseUserCommands::Update { id, data } => {
-            rbac_impl::update_user(conn_mgr, profile_name, *id, data, output_format, query).await
+        EnterpriseUserCommands::Update {
+            id,
+            email,
+            password,
+            role,
+            name,
+            email_alerts,
+            role_uids,
+            data,
+        } => {
+            rbac_impl::update_user(
+                conn_mgr,
+                profile_name,
+                *id,
+                email.as_deref(),
+                password.as_deref(),
+                role.as_deref(),
+                name.as_deref(),
+                *email_alerts,
+                role_uids,
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
         EnterpriseUserCommands::Delete { id, force } => {
             rbac_impl::delete_user(conn_mgr, profile_name, *id, *force, output_format, query).await
