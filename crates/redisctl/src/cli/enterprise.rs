@@ -861,19 +861,109 @@ pub enum EnterpriseUserCommands {
     },
 
     /// Create new user
+    #[command(after_help = "EXAMPLES:
+    # Create user with email and password
+    redisctl enterprise user create --email admin@example.com --password secret123 --role admin
+
+    # Create user with display name
+    redisctl enterprise user create --email user@example.com --password secret123 --role db_viewer --name \"John Doe\"
+
+    # Create user with email alerts enabled
+    redisctl enterprise user create --email ops@example.com --password secret123 --role db_member --email-alerts
+
+    # Create user with RBAC role IDs
+    redisctl enterprise user create --email rbac@example.com --password secret123 --role db_viewer --role-uid 1 --role-uid 2
+
+    # Advanced: Full configuration via JSON file
+    redisctl enterprise user create --data @user.json
+
+NOTE: First-class parameters override values in --data when both are provided.")]
     Create {
-        /// User data (JSON file or inline)
-        #[arg(long, value_name = "FILE|JSON")]
-        data: String,
+        /// User's email address (used as login)
+        #[arg(long)]
+        email: Option<String>,
+
+        /// User's password
+        #[arg(long)]
+        password: Option<String>,
+
+        /// User's role (admin, db_viewer, db_member, cluster_viewer, cluster_member, none)
+        #[arg(long)]
+        role: Option<String>,
+
+        /// User's display name
+        #[arg(long)]
+        name: Option<String>,
+
+        /// Enable email alerts for this user
+        #[arg(long)]
+        email_alerts: bool,
+
+        /// Role UID for RBAC (can be repeated)
+        #[arg(long = "role-uid")]
+        role_uids: Vec<u32>,
+
+        /// Authentication method (regular, external, certificate)
+        #[arg(long)]
+        auth_method: Option<String>,
+
+        /// Advanced: Full user configuration as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
     },
 
     /// Update user
+    #[command(after_help = "EXAMPLES:
+    # Update user's name
+    redisctl enterprise user update 1 --name \"Jane Doe\"
+
+    # Update user's role
+    redisctl enterprise user update 1 --role admin
+
+    # Update user's password
+    redisctl enterprise user update 1 --password newsecret123
+
+    # Enable email alerts
+    redisctl enterprise user update 1 --email-alerts true
+
+    # Update RBAC role assignments
+    redisctl enterprise user update 1 --role-uid 1 --role-uid 3
+
+    # Advanced: Full update via JSON file
+    redisctl enterprise user update 1 --data @updates.json
+
+NOTE: First-class parameters override values in --data when both are provided.")]
     Update {
         /// User ID
         id: u32,
-        /// Update data (JSON file or inline)
-        #[arg(long, value_name = "FILE|JSON")]
-        data: String,
+
+        /// New email address
+        #[arg(long)]
+        email: Option<String>,
+
+        /// New password
+        #[arg(long)]
+        password: Option<String>,
+
+        /// New role
+        #[arg(long)]
+        role: Option<String>,
+
+        /// New display name
+        #[arg(long)]
+        name: Option<String>,
+
+        /// Enable/disable email alerts
+        #[arg(long)]
+        email_alerts: Option<bool>,
+
+        /// Role UID for RBAC (can be repeated, replaces existing)
+        #[arg(long = "role-uid")]
+        role_uids: Vec<u32>,
+
+        /// Advanced: Full update configuration as JSON string or @file.json
+        #[arg(long)]
+        data: Option<String>,
     },
 
     /// Delete user

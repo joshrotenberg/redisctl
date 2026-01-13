@@ -3850,3 +3850,116 @@ fn test_enterprise_database_update_requires_at_least_one_field() {
             predicate::str::contains("No enterprise profiles configured"),
         ));
 }
+
+// Enterprise user create first-class params tests
+
+#[test]
+fn test_enterprise_user_create_first_class_params_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("user")
+        .arg("create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--email"))
+        .stdout(predicate::str::contains("--password"))
+        .stdout(predicate::str::contains("--role"))
+        .stdout(predicate::str::contains("--name"))
+        .stdout(predicate::str::contains("--email-alerts"))
+        .stdout(predicate::str::contains("--role-uid"))
+        .stdout(predicate::str::contains("--auth-method"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_enterprise_user_create_has_examples() {
+    redisctl()
+        .arg("enterprise")
+        .arg("user")
+        .arg("create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EXAMPLES:"));
+}
+
+#[test]
+fn test_enterprise_user_create_requires_email() {
+    // Without --email, should fail requiring it
+    // Note: In CI without profiles, may fail with profile configuration error instead
+    redisctl()
+        .arg("enterprise")
+        .arg("user")
+        .arg("create")
+        .arg("--password")
+        .arg("secret")
+        .arg("--role")
+        .arg("admin")
+        .assert()
+        .failure()
+        .stderr(
+            predicate::str::contains("--email is required").or(predicate::str::contains(
+                "No enterprise profiles configured",
+            )),
+        );
+}
+
+// Enterprise user update first-class params tests
+
+#[test]
+fn test_enterprise_user_update_first_class_params_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("user")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--email"))
+        .stdout(predicate::str::contains("--password"))
+        .stdout(predicate::str::contains("--role"))
+        .stdout(predicate::str::contains("--name"))
+        .stdout(predicate::str::contains("--email-alerts"))
+        .stdout(predicate::str::contains("--role-uid"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_enterprise_user_update_has_examples() {
+    redisctl()
+        .arg("enterprise")
+        .arg("user")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EXAMPLES:"));
+}
+
+#[test]
+fn test_enterprise_user_update_requires_id() {
+    redisctl()
+        .arg("enterprise")
+        .arg("user")
+        .arg("update")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+#[test]
+fn test_enterprise_user_update_requires_at_least_one_field() {
+    // With only ID provided, should fail at runtime requiring at least one update field
+    // Note: In CI without profiles, may fail with profile configuration error instead
+    redisctl()
+        .arg("enterprise")
+        .arg("user")
+        .arg("update")
+        .arg("1")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("At least one update field").or(
+            predicate::str::contains("No enterprise profiles configured"),
+        ));
+}

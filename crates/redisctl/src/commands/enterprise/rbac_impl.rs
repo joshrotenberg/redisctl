@@ -4,7 +4,7 @@
 
 use crate::cli::OutputFormat;
 use crate::connection::ConnectionManager;
-use crate::error::Result as CliResult;
+use crate::error::{RedisCtlError, Result as CliResult};
 use anyhow::Context;
 use redis_enterprise::ldap_mappings::LdapMappingHandler;
 use redis_enterprise::redis_acls::{CreateRedisAclRequest, RedisAclHandler};
@@ -57,39 +57,151 @@ pub async fn get_user(
     Ok(())
 }
 
+/// Create a new user
+#[allow(clippy::too_many_arguments)]
 pub async fn create_user(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
-    data: &str,
+    email: Option<&str>,
+    password: Option<&str>,
+    role: Option<&str>,
+    name: Option<&str>,
+    email_alerts: bool,
+    role_uids: &[u32],
+    auth_method: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
-    let user_data = read_json_data(data).context("Failed to parse user data")?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut request = if let Some(data_str) = data {
+        read_json_data(data_str).context("Failed to parse user data")?
+    } else {
+        serde_json::json!({})
+    };
 
-    // CreateUserRequest doesn't have Deserialize, so we'll use the raw endpoint
-    let user_json = client.post_raw("/v1/users", user_data).await?;
+    let request_obj = request.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(email_val) = email {
+        request_obj.insert("email".to_string(), serde_json::json!(email_val));
+    }
+
+    if let Some(password_val) = password {
+        request_obj.insert("password".to_string(), serde_json::json!(password_val));
+    }
+
+    if let Some(role_val) = role {
+        request_obj.insert("role".to_string(), serde_json::json!(role_val));
+    }
+
+    if let Some(name_val) = name {
+        request_obj.insert("name".to_string(), serde_json::json!(name_val));
+    }
+
+    if email_alerts {
+        request_obj.insert("email_alerts".to_string(), serde_json::json!(true));
+    }
+
+    if !role_uids.is_empty() {
+        request_obj.insert("role_uids".to_string(), serde_json::json!(role_uids));
+    }
+
+    if let Some(auth) = auth_method {
+        request_obj.insert("auth_method".to_string(), serde_json::json!(auth));
+    }
+
+    // Validate required fields when not using pure --data mode
+    if data.is_none() {
+        if !request_obj.contains_key("email") {
+            return Err(RedisCtlError::InvalidInput {
+                message: "--email is required (unless using --data with complete configuration)"
+                    .to_string(),
+            });
+        }
+        if !request_obj.contains_key("password") {
+            return Err(RedisCtlError::InvalidInput {
+                message: "--password is required (unless using --data with complete configuration)"
+                    .to_string(),
+            });
+        }
+        if !request_obj.contains_key("role") {
+            return Err(RedisCtlError::InvalidInput {
+                message: "--role is required (unless using --data with complete configuration)"
+                    .to_string(),
+            });
+        }
+    }
+
+    let user_json = client.post_raw("/v1/users", request).await?;
     let data = handle_output(user_json, output_format, query)?;
     print_formatted_output(data, output_format)?;
     Ok(())
 }
 
+/// Update a user
+#[allow(clippy::too_many_arguments)]
 pub async fn update_user(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: u32,
-    data: &str,
+    email: Option<&str>,
+    password: Option<&str>,
+    role: Option<&str>,
+    name: Option<&str>,
+    email_alerts: Option<bool>,
+    role_uids: &[u32],
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
-    let update_data = read_json_data(data).context("Failed to parse update data")?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut request = if let Some(data_str) = data {
+        read_json_data(data_str).context("Failed to parse update data")?
+    } else {
+        serde_json::json!({})
+    };
 
-    // UpdateUserRequest doesn't have Deserialize, so we'll use the raw endpoint
+    let request_obj = request.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(email_val) = email {
+        request_obj.insert("email".to_string(), serde_json::json!(email_val));
+    }
+
+    if let Some(password_val) = password {
+        request_obj.insert("password".to_string(), serde_json::json!(password_val));
+    }
+
+    if let Some(role_val) = role {
+        request_obj.insert("role".to_string(), serde_json::json!(role_val));
+    }
+
+    if let Some(name_val) = name {
+        request_obj.insert("name".to_string(), serde_json::json!(name_val));
+    }
+
+    if let Some(alerts) = email_alerts {
+        request_obj.insert("email_alerts".to_string(), serde_json::json!(alerts));
+    }
+
+    if !role_uids.is_empty() {
+        request_obj.insert("role_uids".to_string(), serde_json::json!(role_uids));
+    }
+
+    // Validate that we have at least one field to update
+    if request_obj.is_empty() {
+        return Err(RedisCtlError::InvalidInput {
+            message: "At least one update field is required (--email, --password, --role, --name, --email-alerts, --role-uid, or --data)".to_string(),
+        });
+    }
+
     let user_json = client
-        .put_raw(&format!("/v1/users/{}", id), update_data)
+        .put_raw(&format!("/v1/users/{}", id), request)
         .await?;
     let data = handle_output(user_json, output_format, query)?;
     print_formatted_output(data, output_format)?;
