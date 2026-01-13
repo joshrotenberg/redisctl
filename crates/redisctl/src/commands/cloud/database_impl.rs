@@ -178,18 +178,70 @@ pub async fn create_database(
 }
 
 /// Update database configuration
+#[allow(clippy::too_many_arguments)]
 pub async fn update_database(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: &str,
-    data: &str,
+    name: Option<&str>,
+    memory: Option<f64>,
+    replication: Option<bool>,
+    data_persistence: Option<&str>,
+    eviction_policy: Option<&str>,
+    oss_cluster: Option<bool>,
+    regex_rules: Option<&str>,
+    data: Option<&str>,
     async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let (subscription_id, database_id) = parse_database_id(id)?;
     let client = conn_mgr.create_cloud_client(profile_name).await?;
-    let request = read_json_data(data)?;
+
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut request = if let Some(data_str) = data {
+        read_json_data(data_str)?
+    } else {
+        json!({})
+    };
+
+    let request_obj = request.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(name_val) = name {
+        request_obj.insert("name".to_string(), json!(name_val));
+    }
+
+    if let Some(mem) = memory {
+        request_obj.insert("memoryLimitInGb".to_string(), json!(mem));
+    }
+
+    if let Some(repl) = replication {
+        request_obj.insert("replication".to_string(), json!(repl));
+    }
+
+    if let Some(persistence) = data_persistence {
+        request_obj.insert("dataPersistence".to_string(), json!(persistence));
+    }
+
+    if let Some(eviction) = eviction_policy {
+        request_obj.insert("dataEvictionPolicy".to_string(), json!(eviction));
+    }
+
+    if let Some(oss) = oss_cluster {
+        request_obj.insert("supportOSSClusterAPI".to_string(), json!(oss));
+    }
+
+    if let Some(regex) = regex_rules {
+        request_obj.insert("regexRules".to_string(), json!([regex]));
+    }
+
+    // Validate that we have at least one field to update
+    if request_obj.is_empty() {
+        return Err(RedisCtlError::InvalidInput {
+            message: "At least one update field is required (--name, --memory, --replication, --data-persistence, --eviction-policy, --oss-cluster, --regex-rules, or --data)".to_string(),
+        });
+    }
 
     let response = client
         .put_raw(
@@ -390,18 +442,93 @@ pub async fn get_import_status(
 }
 
 /// Import data into database
+#[allow(clippy::too_many_arguments)]
 pub async fn import_database(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: &str,
-    data: &str,
+    source_type: Option<&str>,
+    import_from_uri: Option<&str>,
+    aws_access_key: Option<&str>,
+    aws_secret_key: Option<&str>,
+    gcs_client_email: Option<&str>,
+    gcs_private_key: Option<&str>,
+    azure_account_name: Option<&str>,
+    azure_account_key: Option<&str>,
+    data: Option<&str>,
     async_ops: &AsyncOperationArgs,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let (subscription_id, database_id) = parse_database_id(id)?;
     let client = conn_mgr.create_cloud_client(profile_name).await?;
-    let request = read_json_data(data)?;
+
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut request = if let Some(data_str) = data {
+        read_json_data(data_str)?
+    } else {
+        json!({})
+    };
+
+    let request_obj = request.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(st) = source_type {
+        request_obj.insert("sourceType".to_string(), json!(st));
+    }
+
+    if let Some(uri) = import_from_uri {
+        request_obj.insert("importFromUri".to_string(), json!([uri]));
+    }
+
+    // AWS credentials
+    if aws_access_key.is_some() || aws_secret_key.is_some() {
+        let mut credentials = json!({});
+        if let Some(key) = aws_access_key {
+            credentials["accessKeyId"] = json!(key);
+        }
+        if let Some(secret) = aws_secret_key {
+            credentials["accessSecretKey"] = json!(secret);
+        }
+        request_obj.insert("credentials".to_string(), credentials);
+    }
+
+    // GCS credentials
+    if gcs_client_email.is_some() || gcs_private_key.is_some() {
+        let mut credentials = json!({});
+        if let Some(email) = gcs_client_email {
+            credentials["clientEmail"] = json!(email);
+        }
+        if let Some(key) = gcs_private_key {
+            credentials["privateKey"] = json!(key);
+        }
+        request_obj.insert("credentials".to_string(), credentials);
+    }
+
+    // Azure credentials
+    if azure_account_name.is_some() || azure_account_key.is_some() {
+        let mut credentials = json!({});
+        if let Some(name) = azure_account_name {
+            credentials["storageAccountName"] = json!(name);
+        }
+        if let Some(key) = azure_account_key {
+            credentials["storageAccountKey"] = json!(key);
+        }
+        request_obj.insert("credentials".to_string(), credentials);
+    }
+
+    // Validate that we have required fields
+    if !request_obj.contains_key("sourceType") {
+        return Err(RedisCtlError::InvalidInput {
+            message: "--source-type is required (or provide via --data JSON)".to_string(),
+        });
+    }
+
+    if !request_obj.contains_key("importFromUri") {
+        return Err(RedisCtlError::InvalidInput {
+            message: "--import-from-uri is required (or provide via --data JSON)".to_string(),
+        });
+    }
 
     let response = client
         .post_raw(
@@ -640,18 +767,58 @@ pub async fn add_tag(
     Ok(())
 }
 
+/// Parse tag string in key=value format
+fn parse_tag(tag: &str) -> CliResult<(String, String)> {
+    let parts: Vec<&str> = tag.splitn(2, '=').collect();
+    if parts.len() != 2 {
+        return Err(RedisCtlError::InvalidInput {
+            message: format!("Invalid tag format '{}'. Expected 'key=value' format", tag),
+        });
+    }
+    Ok((parts[0].to_string(), parts[1].to_string()))
+}
+
 /// Update database tags
 pub async fn update_tags(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: &str,
-    data: &str,
+    tags: &[String],
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let (subscription_id, database_id) = parse_database_id(id)?;
     let client = conn_mgr.create_cloud_client(profile_name).await?;
-    let request = read_json_data(data)?;
+
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut request = if let Some(data_str) = data {
+        read_json_data(data_str)?
+    } else {
+        json!({})
+    };
+
+    let request_obj = request.as_object_mut().unwrap();
+
+    // Build tags array from --tag parameters
+    if !tags.is_empty() {
+        let mut tag_array = Vec::new();
+        for tag in tags {
+            let (key, value) = parse_tag(tag)?;
+            tag_array.push(json!({
+                "key": key,
+                "value": value
+            }));
+        }
+        request_obj.insert("tags".to_string(), json!(tag_array));
+    }
+
+    // Validate that we have at least one tag
+    if request_obj.is_empty() || !request_obj.contains_key("tags") {
+        return Err(RedisCtlError::InvalidInput {
+            message: "At least one --tag is required (or provide via --data JSON)".to_string(),
+        });
+    }
 
     let response = client
         .put_raw(

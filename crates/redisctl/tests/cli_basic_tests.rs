@@ -3279,3 +3279,132 @@ fn test_subscription_delete_aa_regions_requires_id() {
         .failure()
         .stderr(predicate::str::contains("required"));
 }
+
+// === DATABASE FIRST-CLASS PARAMETERS TESTS ===
+
+// Database update first-class params tests
+
+#[test]
+fn test_database_update_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--name"))
+        .stdout(predicate::str::contains("--memory"))
+        .stdout(predicate::str::contains("--replication"))
+        .stdout(predicate::str::contains("--data-persistence"))
+        .stdout(predicate::str::contains("--eviction-policy"))
+        .stdout(predicate::str::contains("--oss-cluster"))
+        .stdout(predicate::str::contains("--regex-rules"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_database_update_has_examples() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EXAMPLES:"));
+}
+
+#[test]
+fn test_database_update_requires_id() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("update")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+// Database import first-class params tests
+
+#[test]
+fn test_database_import_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("import")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--source-type"))
+        .stdout(predicate::str::contains("--import-from-uri"))
+        .stdout(predicate::str::contains("--aws-access-key"))
+        .stdout(predicate::str::contains("--aws-secret-key"))
+        .stdout(predicate::str::contains("--gcs-client-email"))
+        .stdout(predicate::str::contains("--gcs-private-key"))
+        .stdout(predicate::str::contains("--azure-account-name"))
+        .stdout(predicate::str::contains("--azure-account-key"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_database_import_has_examples() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("import")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EXAMPLES:"));
+}
+
+#[test]
+fn test_database_import_requires_id() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("import")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+// Database update-tags first-class params tests
+
+#[test]
+fn test_database_update_tags_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("update-tags")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--tag"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_database_update_tags_has_examples() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("update-tags")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EXAMPLES:"));
+}
+
+#[test]
+fn test_database_update_tags_requires_id() {
+    redisctl()
+        .arg("cloud")
+        .arg("database")
+        .arg("update-tags")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}

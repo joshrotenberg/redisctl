@@ -1836,12 +1836,70 @@ pub enum CloudDatabaseCommands {
     },
 
     /// Update database configuration
+    #[command(after_help = "EXAMPLES:
+    # Update database name
+    redisctl cloud database update 123:456 --name new-db-name
+
+    # Increase memory
+    redisctl cloud database update 123:456 --memory 10
+
+    # Change eviction policy
+    redisctl cloud database update 123:456 --eviction-policy allkeys-lru
+
+    # Enable replication
+    redisctl cloud database update 123:456 --replication
+
+    # Multiple changes at once
+    redisctl cloud database update 123:456 \\
+      --memory 20 \\
+      --data-persistence aof-every-1-second \\
+      --wait
+
+    # Advanced: Use JSON for complex updates
+    redisctl cloud database update 123:456 \\
+      --data '{\"alerts\": [{\"name\": \"dataset-size\", \"value\": 80}]}'
+")]
     Update {
         /// Database ID (format: subscription_id:database_id)
         id: String,
-        /// Update configuration as JSON string or @file.json
+
+        /// New database name
         #[arg(long)]
-        data: String,
+        name: Option<String>,
+
+        /// Memory limit in GB
+        #[arg(long)]
+        memory: Option<f64>,
+
+        /// Enable replication for high availability
+        #[arg(long)]
+        replication: Option<bool>,
+
+        /// Data persistence policy
+        /// Options: none, aof-every-1-second, aof-every-write, snapshot-every-1-hour,
+        ///          snapshot-every-6-hours, snapshot-every-12-hours
+        #[arg(long)]
+        data_persistence: Option<String>,
+
+        /// Data eviction policy when memory limit reached
+        /// Options: volatile-lru, volatile-ttl, volatile-random, allkeys-lru,
+        ///          allkeys-lfu, allkeys-random, noeviction, volatile-lfu
+        #[arg(long)]
+        eviction_policy: Option<String>,
+
+        /// Enable OSS Cluster API support
+        #[arg(long)]
+        oss_cluster: Option<bool>,
+
+        /// Regular expression for allowed keys
+        #[arg(long)]
+        regex_rules: Option<String>,
+
+        /// Advanced: Full update configuration as JSON string or @file.json
+        /// CLI flags take precedence over values in JSON
+        #[arg(long)]
+        data: Option<String>,
+
         /// Async operation options
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
@@ -1881,12 +1939,80 @@ pub enum CloudDatabaseCommands {
     },
 
     /// Import data into database
+    #[command(after_help = "EXAMPLES:
+    # Import from S3
+    redisctl cloud database import 123:456 \\
+      --source-type s3 \\
+      --import-from-uri s3://bucket/backup.rdb \\
+      --wait
+
+    # Import from FTP
+    redisctl cloud database import 123:456 \\
+      --source-type ftp \\
+      --import-from-uri ftp://user:pass@server/backup.rdb
+
+    # Import from HTTP
+    redisctl cloud database import 123:456 \\
+      --source-type http \\
+      --import-from-uri https://example.com/backup.rdb
+
+    # Import from AWS S3 with credentials
+    redisctl cloud database import 123:456 \\
+      --source-type aws-s3 \\
+      --import-from-uri s3://bucket/backup.rdb \\
+      --aws-access-key AKIA... \\
+      --aws-secret-key secret
+
+    # Import from Google Cloud Storage
+    redisctl cloud database import 123:456 \\
+      --source-type gcs \\
+      --import-from-uri gs://bucket/backup.rdb
+
+    # Advanced: Use JSON for complex configurations
+    redisctl cloud database import 123:456 \\
+      --data @import-config.json
+")]
     Import {
         /// Database ID (format: subscription_id:database_id)
         id: String,
-        /// Import configuration as JSON string or @file.json
+
+        /// Source type: http, redis, ftp, aws-s3, gcs, azure-blob-storage
         #[arg(long)]
-        data: String,
+        source_type: Option<String>,
+
+        /// URI to import from (S3 URL, HTTP URL, FTP URL, etc.)
+        #[arg(long)]
+        import_from_uri: Option<String>,
+
+        /// AWS access key ID (for aws-s3 source type)
+        #[arg(long)]
+        aws_access_key: Option<String>,
+
+        /// AWS secret access key (for aws-s3 source type)
+        #[arg(long)]
+        aws_secret_key: Option<String>,
+
+        /// GCS client email (for gcs source type)
+        #[arg(long)]
+        gcs_client_email: Option<String>,
+
+        /// GCS private key (for gcs source type)
+        #[arg(long)]
+        gcs_private_key: Option<String>,
+
+        /// Azure storage account name (for azure-blob-storage source type)
+        #[arg(long)]
+        azure_account_name: Option<String>,
+
+        /// Azure storage account key (for azure-blob-storage source type)
+        #[arg(long)]
+        azure_account_key: Option<String>,
+
+        /// Advanced: Full import configuration as JSON string or @file.json
+        /// CLI flags take precedence over values in JSON
+        #[arg(long)]
+        data: Option<String>,
+
         /// Async operation options
         #[command(flatten)]
         async_ops: crate::commands::cloud::async_utils::AsyncOperationArgs,
@@ -1929,12 +2055,28 @@ pub enum CloudDatabaseCommands {
     },
 
     /// Update database tags
+    #[command(after_help = "EXAMPLES:
+    # Set multiple tags at once
+    redisctl cloud database update-tags 123:456 \\
+      --tag env=production \\
+      --tag team=backend \\
+      --tag cost-center=12345
+
+    # Replace all tags using JSON
+    redisctl cloud database update-tags 123:456 \\
+      --data '{\"tags\": [{\"key\": \"env\", \"value\": \"prod\"}]}'
+")]
     UpdateTags {
         /// Database ID (format: subscription_id:database_id)
         id: String,
+
+        /// Tag in key=value format (repeatable)
+        #[arg(long = "tag", value_name = "KEY=VALUE")]
+        tags: Vec<String>,
+
         /// Tags as JSON string or @file.json
         #[arg(long)]
-        data: String,
+        data: Option<String>,
     },
 
     /// Update a single tag value
