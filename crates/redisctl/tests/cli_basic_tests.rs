@@ -1351,6 +1351,129 @@ fn test_enterprise_database_update_missing_data() {
         ));
 }
 
+// Enterprise ACL create first-class params tests
+
+#[test]
+fn test_enterprise_acl_create_first_class_params_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("acl")
+        .arg("create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--name"))
+        .stdout(predicate::str::contains("--acl"))
+        .stdout(predicate::str::contains("--description"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_enterprise_acl_create_has_examples() {
+    redisctl()
+        .arg("enterprise")
+        .arg("acl")
+        .arg("create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EXAMPLES:"));
+}
+
+#[test]
+fn test_enterprise_acl_create_requires_name() {
+    // Without --name, should fail requiring it
+    // Note: In CI without profiles, may fail with profile configuration error instead
+    redisctl()
+        .arg("enterprise")
+        .arg("acl")
+        .arg("create")
+        .arg("--acl")
+        .arg("+@all ~*")
+        .assert()
+        .failure()
+        .stderr(
+            predicate::str::contains("--name is required").or(predicate::str::contains(
+                "No enterprise profiles configured",
+            )),
+        );
+}
+
+#[test]
+fn test_enterprise_acl_create_requires_acl() {
+    // Without --acl, should fail requiring it
+    // Note: In CI without profiles, may fail with profile configuration error instead
+    redisctl()
+        .arg("enterprise")
+        .arg("acl")
+        .arg("create")
+        .arg("--name")
+        .arg("test-acl")
+        .assert()
+        .failure()
+        .stderr(
+            predicate::str::contains("--acl is required").or(predicate::str::contains(
+                "No enterprise profiles configured",
+            )),
+        );
+}
+
+// Enterprise ACL update first-class params tests
+
+#[test]
+fn test_enterprise_acl_update_first_class_params_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("acl")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--name"))
+        .stdout(predicate::str::contains("--acl"))
+        .stdout(predicate::str::contains("--description"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_enterprise_acl_update_has_examples() {
+    redisctl()
+        .arg("enterprise")
+        .arg("acl")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EXAMPLES:"));
+}
+
+#[test]
+fn test_enterprise_acl_update_requires_id() {
+    redisctl()
+        .arg("enterprise")
+        .arg("acl")
+        .arg("update")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+#[test]
+fn test_enterprise_acl_update_requires_at_least_one_field() {
+    // With only ID provided, should fail at runtime requiring at least one update field
+    // Note: In CI without profiles, may fail with profile configuration error instead
+    redisctl()
+        .arg("enterprise")
+        .arg("acl")
+        .arg("update")
+        .arg("1")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("At least one update field").or(
+            predicate::str::contains("No enterprise profiles configured"),
+        ));
+}
+
 // Error case tests - API commands
 
 #[test]
