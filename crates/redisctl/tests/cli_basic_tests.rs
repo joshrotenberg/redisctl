@@ -3577,3 +3577,74 @@ fn test_fixed_database_update_tags_requires_ids() {
         .failure()
         .stderr(predicate::str::contains("required"));
 }
+
+// Fixed subscription create first-class params tests
+
+#[test]
+fn test_fixed_subscription_create_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("fixed-subscription")
+        .arg("create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--name"))
+        .stdout(predicate::str::contains("--plan-id"))
+        .stdout(predicate::str::contains("--payment-method"))
+        .stdout(predicate::str::contains("--payment-method-id"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_fixed_subscription_create_has_examples() {
+    redisctl()
+        .arg("cloud")
+        .arg("fixed-subscription")
+        .arg("create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EXAMPLES:"));
+}
+
+// Fixed subscription update first-class params tests
+
+#[test]
+fn test_fixed_subscription_update_first_class_params_help() {
+    redisctl()
+        .arg("cloud")
+        .arg("fixed-subscription")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--name"))
+        .stdout(predicate::str::contains("--plan-id"))
+        .stdout(predicate::str::contains("--payment-method"))
+        .stdout(predicate::str::contains("--payment-method-id"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_fixed_subscription_update_has_examples() {
+    redisctl()
+        .arg("cloud")
+        .arg("fixed-subscription")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EXAMPLES:"));
+}
+
+#[test]
+fn test_fixed_subscription_update_requires_id() {
+    redisctl()
+        .arg("cloud")
+        .arg("fixed-subscription")
+        .arg("update")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
