@@ -701,12 +701,36 @@ pub enum EnterpriseNodeCommands {
     },
 
     /// Update node configuration
+    #[command(after_help = "EXAMPLES:
+    # Update node to accept new shards
+    redisctl enterprise node update 1 --accept-servers true
+
+    # Set node's external address
+    redisctl enterprise node update 1 --external-addr 10.0.0.1
+
+    # Set rack ID for rack awareness
+    redisctl enterprise node update 1 --rack-id rack1
+
+    # Update multiple settings
+    redisctl enterprise node update 1 --accept-servers false --rack-id rack2
+
+    # Using JSON for advanced configuration
+    redisctl enterprise node update 1 --data '{\"max_redis_servers\": 200}'")]
     Update {
         /// Node ID
         id: u32,
-        /// Update data (JSON file or inline)
+        /// Whether node accepts new shards
+        #[arg(long)]
+        accept_servers: Option<bool>,
+        /// External IP addresses (can be specified multiple times)
+        #[arg(long)]
+        external_addr: Option<Vec<String>>,
+        /// Rack ID for rack-aware placement
+        #[arg(long)]
+        rack_id: Option<String>,
+        /// JSON data for advanced configuration (overridden by other flags)
         #[arg(long, value_name = "FILE|JSON")]
-        data: String,
+        data: Option<String>,
     },
 
     /// Get node status
