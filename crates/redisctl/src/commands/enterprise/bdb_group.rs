@@ -1,4 +1,5 @@
 use crate::error::RedisCtlError;
+use anyhow::Context;
 use clap::Subcommand;
 
 use crate::cli::OutputFormat;
@@ -17,19 +18,54 @@ pub enum BdbGroupCommands {
     },
 
     /// Create a new database group
+    #[command(after_help = "EXAMPLES:
+    # Create a database group with name
+    redisctl enterprise bdb-group create --name my-group
+
+    # Create a database group with memory size limit
+    redisctl enterprise bdb-group create --name pool-group --memory-size 10737418240
+
+    # Using JSON for advanced configuration
+    redisctl enterprise bdb-group create --data @group.json")]
     Create {
-        /// JSON data for database group creation (use @filename or - for stdin)
-        #[arg(short, long)]
-        data: String,
+        /// Group name (required unless using --data)
+        #[arg(long)]
+        name: Option<String>,
+
+        /// Memory pool size limit in bytes for all databases in the group
+        #[arg(long)]
+        memory_size: Option<u64>,
+
+        /// JSON data for advanced configuration (overridden by other flags)
+        #[arg(long)]
+        data: Option<String>,
     },
 
     /// Update a database group
+    #[command(after_help = "EXAMPLES:
+    # Update group name
+    redisctl enterprise bdb-group update 1 --name new-group-name
+
+    # Update memory size limit
+    redisctl enterprise bdb-group update 1 --memory-size 21474836480
+
+    # Using JSON for advanced configuration
+    redisctl enterprise bdb-group update 1 --data @updates.json")]
     Update {
         /// Database group UID
         uid: u32,
-        /// JSON data for update (use @filename or - for stdin)
-        #[arg(short, long)]
-        data: String,
+
+        /// New group name
+        #[arg(long)]
+        name: Option<String>,
+
+        /// New memory pool size limit in bytes
+        #[arg(long)]
+        memory_size: Option<u64>,
+
+        /// JSON data for advanced configuration (overridden by other flags)
+        #[arg(long)]
+        data: Option<String>,
     },
 
     /// Delete a database group
@@ -37,7 +73,7 @@ pub enum BdbGroupCommands {
         /// Database group UID
         uid: u32,
         /// Force deletion without confirmation
-        #[arg(short, long)]
+        #[arg(long)]
         force: bool,
     },
 
@@ -96,7 +132,7 @@ impl BdbGroupCommands {
                 let response: serde_json::Value = client
                     .get(&format!("/v1/bdb_groups/{}", uid))
                     .await
-                    .map_err(RedisCtlError::from)?;
+                    .context(format!("Failed to get database group {}", uid))?;
 
                 let output_data = if let Some(q) = query {
                     super::utils::apply_jmespath(&response, q)?
@@ -106,11 +142,41 @@ impl BdbGroupCommands {
                 super::utils::print_formatted_output(output_data, output_format)?;
             }
 
-            BdbGroupCommands::Create { data } => {
-                let json_data = super::utils::read_json_data(data)?;
+            BdbGroupCommands::Create {
+                name,
+                memory_size,
+                data,
+            } => {
+                // Start with JSON data if provided, otherwise empty object
+                let mut request_obj: serde_json::Map<String, serde_json::Value> =
+                    if let Some(json_data) = data {
+                        let parsed = super::utils::read_json_data(json_data)?;
+                        parsed
+                            .as_object()
+                            .cloned()
+                            .unwrap_or_else(serde_json::Map::new)
+                    } else {
+                        serde_json::Map::new()
+                    };
 
+                // Override with first-class parameters if provided
+                if let Some(n) = name {
+                    request_obj.insert("name".to_string(), serde_json::json!(n));
+                }
+                if let Some(ms) = memory_size {
+                    request_obj.insert("memory_size".to_string(), serde_json::json!(ms));
+                }
+
+                // Validate required fields for create
+                if !request_obj.contains_key("name") {
+                    return Err(RedisCtlError::InvalidInput {
+                        message: "--name is required when not using --data".to_string(),
+                    });
+                }
+
+                let payload = serde_json::Value::Object(request_obj);
                 let response: serde_json::Value = client
-                    .post("/v1/bdb_groups", &json_data)
+                    .post("/v1/bdb_groups", &payload)
                     .await
                     .map_err(RedisCtlError::from)?;
 
@@ -122,13 +188,46 @@ impl BdbGroupCommands {
                 super::utils::print_formatted_output(output_data, output_format)?;
             }
 
-            BdbGroupCommands::Update { uid, data } => {
-                let json_data = super::utils::read_json_data(data)?;
+            BdbGroupCommands::Update {
+                uid,
+                name,
+                memory_size,
+                data,
+            } => {
+                // Start with JSON data if provided, otherwise empty object
+                let mut request_obj: serde_json::Map<String, serde_json::Value> =
+                    if let Some(json_data) = data {
+                        let parsed = super::utils::read_json_data(json_data)?;
+                        parsed
+                            .as_object()
+                            .cloned()
+                            .unwrap_or_else(serde_json::Map::new)
+                    } else {
+                        serde_json::Map::new()
+                    };
 
+                // Override with first-class parameters if provided
+                if let Some(n) = name {
+                    request_obj.insert("name".to_string(), serde_json::json!(n));
+                }
+                if let Some(ms) = memory_size {
+                    request_obj.insert("memory_size".to_string(), serde_json::json!(ms));
+                }
+
+                // Validate at least one update field is provided
+                if request_obj.is_empty() {
+                    return Err(RedisCtlError::InvalidInput {
+                        message:
+                            "At least one update field is required (--name, --memory-size, or --data)"
+                                .to_string(),
+                    });
+                }
+
+                let payload = serde_json::Value::Object(request_obj);
                 let response: serde_json::Value = client
-                    .put(&format!("/v1/bdb_groups/{}", uid), &json_data)
+                    .put(&format!("/v1/bdb_groups/{}", uid), &payload)
                     .await
-                    .map_err(RedisCtlError::from)?;
+                    .context(format!("Failed to update database group {}", uid))?;
 
                 let output_data = if let Some(q) = query {
                     super::utils::apply_jmespath(&response, q)?
@@ -148,7 +247,7 @@ impl BdbGroupCommands {
                 client
                     .delete(&format!("/v1/bdb_groups/{}", uid))
                     .await
-                    .map_err(RedisCtlError::from)?;
+                    .context(format!("Failed to delete database group {}", uid))?;
 
                 println!("Database group {} deleted successfully", uid);
             }
@@ -161,7 +260,7 @@ impl BdbGroupCommands {
                 let mut group_data: serde_json::Value = client
                     .get(&format!("/v1/bdb_groups/{}", group_uid))
                     .await
-                    .map_err(RedisCtlError::from)?;
+                    .context(format!("Failed to get database group {}", group_uid))?;
 
                 // Add database to the group
                 if let Some(bdbs) = group_data["bdbs"].as_array_mut() {
@@ -179,7 +278,10 @@ impl BdbGroupCommands {
                 let response: serde_json::Value = client
                     .put(&format!("/v1/bdb_groups/{}", group_uid), &group_data)
                     .await
-                    .map_err(RedisCtlError::from)?;
+                    .context(format!(
+                        "Failed to add database {} to group {}",
+                        database, group_uid
+                    ))?;
 
                 println!("Database {} added to group {}", database, group_uid);
 
@@ -199,7 +301,7 @@ impl BdbGroupCommands {
                 let mut group_data: serde_json::Value = client
                     .get(&format!("/v1/bdb_groups/{}", group_uid))
                     .await
-                    .map_err(RedisCtlError::from)?;
+                    .context(format!("Failed to get database group {}", group_uid))?;
 
                 // Remove database from the group
                 if let Some(bdbs) = group_data["bdbs"].as_array_mut() {
@@ -218,7 +320,10 @@ impl BdbGroupCommands {
                 let response: serde_json::Value = client
                     .put(&format!("/v1/bdb_groups/{}", group_uid), &group_data)
                     .await
-                    .map_err(RedisCtlError::from)?;
+                    .context(format!(
+                        "Failed to remove database {} from group {}",
+                        database, group_uid
+                    ))?;
 
                 println!("Database {} removed from group {}", database, group_uid);
 
@@ -234,7 +339,7 @@ impl BdbGroupCommands {
                 let response: serde_json::Value = client
                     .get(&format!("/v1/bdb_groups/{}", group_uid))
                     .await
-                    .map_err(RedisCtlError::from)?;
+                    .context(format!("Failed to get database group {}", group_uid))?;
 
                 // Extract just the databases list
                 let databases = &response["bdbs"];
@@ -263,4 +368,106 @@ pub async fn handle_bdb_group_command(
     bdb_group_cmd
         .execute(conn_mgr, profile_name, output_format, query)
         .await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_bdb_group_command_parsing() {
+        use clap::Parser;
+
+        #[derive(Parser)]
+        struct TestCli {
+            #[command(subcommand)]
+            cmd: BdbGroupCommands,
+        }
+
+        // Test list command
+        let cli = TestCli::parse_from(["test", "list"]);
+        assert!(matches!(cli.cmd, BdbGroupCommands::List));
+
+        // Test get command
+        let cli = TestCli::parse_from(["test", "get", "1"]);
+        if let BdbGroupCommands::Get { uid } = cli.cmd {
+            assert_eq!(uid, 1);
+        } else {
+            panic!("Expected Get command");
+        }
+
+        // Test create command with first-class params
+        let cli = TestCli::parse_from([
+            "test",
+            "create",
+            "--name",
+            "my-group",
+            "--memory-size",
+            "10737418240",
+        ]);
+        if let BdbGroupCommands::Create {
+            name,
+            memory_size,
+            data,
+        } = cli.cmd
+        {
+            assert_eq!(name, Some("my-group".to_string()));
+            assert_eq!(memory_size, Some(10737418240));
+            assert!(data.is_none());
+        } else {
+            panic!("Expected Create command");
+        }
+
+        // Test update command
+        let cli = TestCli::parse_from(["test", "update", "1", "--name", "new-name"]);
+        if let BdbGroupCommands::Update { uid, name, .. } = cli.cmd {
+            assert_eq!(uid, 1);
+            assert_eq!(name, Some("new-name".to_string()));
+        } else {
+            panic!("Expected Update command");
+        }
+
+        // Test delete command
+        let cli = TestCli::parse_from(["test", "delete", "1", "--force"]);
+        if let BdbGroupCommands::Delete { uid, force } = cli.cmd {
+            assert_eq!(uid, 1);
+            assert!(force);
+        } else {
+            panic!("Expected Delete command");
+        }
+
+        // Test add-database command
+        let cli = TestCli::parse_from(["test", "add-database", "1", "--database", "2"]);
+        if let BdbGroupCommands::AddDatabase {
+            group_uid,
+            database,
+        } = cli.cmd
+        {
+            assert_eq!(group_uid, 1);
+            assert_eq!(database, 2);
+        } else {
+            panic!("Expected AddDatabase command");
+        }
+
+        // Test remove-database command
+        let cli = TestCli::parse_from(["test", "remove-database", "1", "--database", "2"]);
+        if let BdbGroupCommands::RemoveDatabase {
+            group_uid,
+            database,
+        } = cli.cmd
+        {
+            assert_eq!(group_uid, 1);
+            assert_eq!(database, 2);
+        } else {
+            panic!("Expected RemoveDatabase command");
+        }
+
+        // Test list-databases command
+        let cli = TestCli::parse_from(["test", "list-databases", "1"]);
+        if let BdbGroupCommands::ListDatabases { group_uid } = cli.cmd {
+            assert_eq!(group_uid, 1);
+        } else {
+            panic!("Expected ListDatabases command");
+        }
+    }
 }
