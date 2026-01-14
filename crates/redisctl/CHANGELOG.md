@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.5](https://github.com/redis-developer/redisctl/compare/redisctl-v0.7.4...redisctl-v0.7.5) - 2026-01-14
+
+### Added
+
+- *(enterprise)* add first-class params for all remaining commands ([#558](https://github.com/redis-developer/redisctl/pull/558))
+- *(enterprise)* add first-class params for job-scheduler, bdb-group, suffix, migration ([#556](https://github.com/redis-developer/redisctl/pull/556))
+- *(enterprise)* add first-class params for LDAP mapping create/update ([#554](https://github.com/redis-developer/redisctl/pull/554))
+- *(cli)* add first-class params for enterprise CRDB update ([#553](https://github.com/redis-developer/redisctl/pull/553))
+- *(cli)* add first-class params for enterprise cluster update ([#552](https://github.com/redis-developer/redisctl/pull/552))
+- *(cli)* add first-class params for enterprise node update ([#551](https://github.com/redis-developer/redisctl/pull/551))
+- *(cli)* add first-class params for enterprise ACL create/update ([#550](https://github.com/redis-developer/redisctl/pull/550))
+- *(cli)* add first-class params for enterprise role create/update ([#549](https://github.com/redis-developer/redisctl/pull/549))
+- *(cli)* add first-class params for enterprise user create/update ([#548](https://github.com/redis-developer/redisctl/pull/548))
+- *(cli)* add first-class params for enterprise database update ([#547](https://github.com/redis-developer/redisctl/pull/547))
+- *(cli)* add first-class params for database update-aa-regions ([#546](https://github.com/redis-developer/redisctl/pull/546))
+- *(cloud)* add first-class CLI params for provider-account commands ([#545](https://github.com/redis-developer/redisctl/pull/545))
+- *(cloud)* add first-class CLI params for fixed-subscription commands ([#544](https://github.com/redis-developer/redisctl/pull/544))
+- *(cloud)* add first-class CLI params for fixed-database commands ([#543](https://github.com/redis-developer/redisctl/pull/543))
+- *(cloud)* add first-class params to database commands ([#542](https://github.com/redis-developer/redisctl/pull/542))
+- *(cloud)* add first-class params to subscription commands ([#541](https://github.com/redis-developer/redisctl/pull/541))
+- *(cloud)* add first-class CLI params for all connectivity commands ([#540](https://github.com/redis-developer/redisctl/pull/540))
+
 ## [0.7.4](https://github.com/redis-developer/redisctl/compare/redisctl-v0.7.3...redisctl-v0.7.4) - 2026-01-12
 
 ### Added
