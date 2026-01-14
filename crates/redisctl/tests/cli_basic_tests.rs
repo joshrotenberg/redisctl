@@ -4346,3 +4346,153 @@ fn test_enterprise_role_update_requires_at_least_one_field() {
             predicate::str::contains("No enterprise profiles configured"),
         ));
 }
+
+// Enterprise LDAP mappings create first-class params tests
+
+#[test]
+fn test_enterprise_ldap_mappings_create_first_class_params_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("ldap-mappings")
+        .arg("create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--name"))
+        .stdout(predicate::str::contains("--dn"))
+        .stdout(predicate::str::contains("--role"))
+        .stdout(predicate::str::contains("--email"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_enterprise_ldap_mappings_create_has_examples() {
+    redisctl()
+        .arg("enterprise")
+        .arg("ldap-mappings")
+        .arg("create")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EXAMPLES:"));
+}
+
+#[test]
+fn test_enterprise_ldap_mappings_create_requires_name() {
+    // Without --name, should fail requiring it
+    // Note: In CI without profiles, may fail with profile configuration error instead
+    redisctl()
+        .arg("enterprise")
+        .arg("ldap-mappings")
+        .arg("create")
+        .arg("--dn")
+        .arg("CN=Engineers,OU=Groups,DC=example,DC=com")
+        .arg("--role")
+        .arg("db_viewer")
+        .assert()
+        .failure()
+        .stderr(
+            predicate::str::contains("--name is required").or(predicate::str::contains(
+                "No enterprise profiles configured",
+            )),
+        );
+}
+
+#[test]
+fn test_enterprise_ldap_mappings_create_requires_dn() {
+    // Without --dn, should fail requiring it
+    // Note: In CI without profiles, may fail with profile configuration error instead
+    redisctl()
+        .arg("enterprise")
+        .arg("ldap-mappings")
+        .arg("create")
+        .arg("--name")
+        .arg("engineers")
+        .arg("--role")
+        .arg("db_viewer")
+        .assert()
+        .failure()
+        .stderr(
+            predicate::str::contains("--dn is required").or(predicate::str::contains(
+                "No enterprise profiles configured",
+            )),
+        );
+}
+
+#[test]
+fn test_enterprise_ldap_mappings_create_requires_role() {
+    // Without --role, should fail requiring it
+    // Note: In CI without profiles, may fail with profile configuration error instead
+    redisctl()
+        .arg("enterprise")
+        .arg("ldap-mappings")
+        .arg("create")
+        .arg("--name")
+        .arg("engineers")
+        .arg("--dn")
+        .arg("CN=Engineers,OU=Groups,DC=example,DC=com")
+        .assert()
+        .failure()
+        .stderr(
+            predicate::str::contains("--role is required").or(predicate::str::contains(
+                "No enterprise profiles configured",
+            )),
+        );
+}
+
+// Enterprise LDAP mappings update first-class params tests
+
+#[test]
+fn test_enterprise_ldap_mappings_update_first_class_params_help() {
+    redisctl()
+        .arg("enterprise")
+        .arg("ldap-mappings")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--name"))
+        .stdout(predicate::str::contains("--dn"))
+        .stdout(predicate::str::contains("--role"))
+        .stdout(predicate::str::contains("--email"))
+        .stdout(predicate::str::contains("--data"));
+}
+
+#[test]
+fn test_enterprise_ldap_mappings_update_has_examples() {
+    redisctl()
+        .arg("enterprise")
+        .arg("ldap-mappings")
+        .arg("update")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("EXAMPLES:"));
+}
+
+#[test]
+fn test_enterprise_ldap_mappings_update_requires_id() {
+    redisctl()
+        .arg("enterprise")
+        .arg("ldap-mappings")
+        .arg("update")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("required"));
+}
+
+#[test]
+fn test_enterprise_ldap_mappings_update_requires_at_least_one_field() {
+    // With only ID provided, should fail at runtime requiring at least one update field
+    // Note: In CI without profiles, may fail with profile configuration error instead
+    redisctl()
+        .arg("enterprise")
+        .arg("ldap-mappings")
+        .arg("update")
+        .arg("1")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("At least one update field").or(
+            predicate::str::contains("No enterprise profiles configured"),
+        ));
+}

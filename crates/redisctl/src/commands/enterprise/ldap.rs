@@ -43,19 +43,64 @@ pub enum LdapMappingsCommands {
     },
 
     /// Create new LDAP mapping
+    #[command(after_help = "EXAMPLES:
+    # Create LDAP mapping with required fields
+    redisctl enterprise ldap-mappings create --name engineers --dn 'CN=Engineers,OU=Groups,DC=example,DC=com' --role db_viewer
+
+    # Create with email alerts
+    redisctl enterprise ldap-mappings create --name admins --dn 'CN=Admins,OU=Groups,DC=example,DC=com' --role admin --email alerts@example.com
+
+    # Using JSON for advanced configuration
+    redisctl enterprise ldap-mappings create --data '{\"name\":\"ops\",\"dn\":\"CN=Ops,OU=Groups,DC=example,DC=com\",\"role\":\"db_member\"}'")]
     Create {
-        /// JSON data for new mapping
-        #[arg(long, required = true)]
-        data: String,
+        /// Mapping name
+        #[arg(long)]
+        name: Option<String>,
+        /// LDAP group distinguished name
+        #[arg(long)]
+        dn: Option<String>,
+        /// Role identifier
+        #[arg(long)]
+        role: Option<String>,
+        /// Email address for alerts
+        #[arg(long)]
+        email: Option<String>,
+        /// JSON data for advanced configuration (overridden by other flags)
+        #[arg(long)]
+        data: Option<String>,
     },
 
     /// Update existing LDAP mapping
+    #[command(after_help = "EXAMPLES:
+    # Update mapping name
+    redisctl enterprise ldap-mappings update 1 --name new-name
+
+    # Update role
+    redisctl enterprise ldap-mappings update 1 --role admin
+
+    # Update email
+    redisctl enterprise ldap-mappings update 1 --email newalerts@example.com
+
+    # Using JSON for advanced configuration
+    redisctl enterprise ldap-mappings update 1 --data '{\"role_uids\":[1,2,3]}'")]
     Update {
         /// Mapping UID
         uid: u64,
-        /// JSON data for update
-        #[arg(long, required = true)]
-        data: String,
+        /// Mapping name
+        #[arg(long)]
+        name: Option<String>,
+        /// LDAP group distinguished name
+        #[arg(long)]
+        dn: Option<String>,
+        /// Role identifier
+        #[arg(long)]
+        role: Option<String>,
+        /// Email address for alerts
+        #[arg(long)]
+        email: Option<String>,
+        /// JSON data for advanced configuration (overridden by other flags)
+        #[arg(long)]
+        data: Option<String>,
     },
 
     /// Delete LDAP mapping
@@ -107,11 +152,47 @@ pub async fn handle_ldap_mappings_command(
         LdapMappingsCommands::Get { uid } => {
             handle_mappings_get(conn_mgr, profile_name, uid, output_format, query).await
         }
-        LdapMappingsCommands::Create { data } => {
-            handle_mappings_create(conn_mgr, profile_name, &data, output_format, query).await
+        LdapMappingsCommands::Create {
+            name,
+            dn,
+            role,
+            email,
+            data,
+        } => {
+            handle_mappings_create(
+                conn_mgr,
+                profile_name,
+                name.as_deref(),
+                dn.as_deref(),
+                role.as_deref(),
+                email.as_deref(),
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
-        LdapMappingsCommands::Update { uid, data } => {
-            handle_mappings_update(conn_mgr, profile_name, uid, &data, output_format, query).await
+        LdapMappingsCommands::Update {
+            uid,
+            name,
+            dn,
+            role,
+            email,
+            data,
+        } => {
+            handle_mappings_update(
+                conn_mgr,
+                profile_name,
+                uid,
+                name.as_deref(),
+                dn.as_deref(),
+                role.as_deref(),
+                email.as_deref(),
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
         LdapMappingsCommands::Delete { uid } => {
             handle_mappings_delete(conn_mgr, profile_name, uid, output_format, query).await
@@ -265,18 +346,65 @@ async fn handle_mappings_get(
     utils::print_formatted_output(result, output_format)
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn handle_mappings_create(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
-    data: &str,
+    name: Option<&str>,
+    dn: Option<&str>,
+    role: Option<&str>,
+    email: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> Result<(), RedisCtlError> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
-    let payload: Value =
-        serde_json::from_str(data).context("Invalid JSON data for LDAP mapping")?;
+    // Start with JSON data if provided, otherwise empty object
+    let mut request_obj: serde_json::Map<String, serde_json::Value> = if let Some(json_data) = data
+    {
+        let parsed: Value =
+            serde_json::from_str(json_data).context("Invalid JSON data for LDAP mapping")?;
+        parsed
+            .as_object()
+            .cloned()
+            .unwrap_or_else(serde_json::Map::new)
+    } else {
+        serde_json::Map::new()
+    };
 
+    // Override with first-class parameters if provided
+    if let Some(n) = name {
+        request_obj.insert("name".to_string(), serde_json::json!(n));
+    }
+    if let Some(d) = dn {
+        request_obj.insert("dn".to_string(), serde_json::json!(d));
+    }
+    if let Some(r) = role {
+        request_obj.insert("role".to_string(), serde_json::json!(r));
+    }
+    if let Some(e) = email {
+        request_obj.insert("email".to_string(), serde_json::json!(e));
+    }
+
+    // Validate required fields for create
+    if !request_obj.contains_key("name") {
+        return Err(RedisCtlError::InvalidInput {
+            message: "--name is required when not using --data".to_string(),
+        });
+    }
+    if !request_obj.contains_key("dn") {
+        return Err(RedisCtlError::InvalidInput {
+            message: "--dn is required when not using --data".to_string(),
+        });
+    }
+    if !request_obj.contains_key("role") {
+        return Err(RedisCtlError::InvalidInput {
+            message: "--role is required when not using --data".to_string(),
+        });
+    }
+
+    let payload = serde_json::Value::Object(request_obj);
     let response = client
         .post_raw("/v1/ldap_mappings", payload)
         .await
@@ -291,19 +419,58 @@ async fn handle_mappings_create(
     utils::print_formatted_output(result, output_format)
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn handle_mappings_update(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     uid: u64,
-    data: &str,
+    name: Option<&str>,
+    dn: Option<&str>,
+    role: Option<&str>,
+    email: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> Result<(), RedisCtlError> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
-    let payload: Value =
-        serde_json::from_str(data).context("Invalid JSON data for LDAP mapping update")?;
+    // Start with JSON data if provided, otherwise empty object
+    let mut request_obj: serde_json::Map<String, serde_json::Value> = if let Some(json_data) = data
+    {
+        let parsed: Value =
+            serde_json::from_str(json_data).context("Invalid JSON data for LDAP mapping update")?;
+        parsed
+            .as_object()
+            .cloned()
+            .unwrap_or_else(serde_json::Map::new)
+    } else {
+        serde_json::Map::new()
+    };
 
+    // Override with first-class parameters if provided
+    if let Some(n) = name {
+        request_obj.insert("name".to_string(), serde_json::json!(n));
+    }
+    if let Some(d) = dn {
+        request_obj.insert("dn".to_string(), serde_json::json!(d));
+    }
+    if let Some(r) = role {
+        request_obj.insert("role".to_string(), serde_json::json!(r));
+    }
+    if let Some(e) = email {
+        request_obj.insert("email".to_string(), serde_json::json!(e));
+    }
+
+    // Validate at least one update field is provided
+    if request_obj.is_empty() {
+        return Err(RedisCtlError::InvalidInput {
+            message:
+                "At least one update field is required (--name, --dn, --role, --email, or --data)"
+                    .to_string(),
+        });
+    }
+
+    let payload = serde_json::Value::Object(request_obj);
     let endpoint = format!("/v1/ldap_mappings/{}", uid);
     let response = client
         .put_raw(&endpoint, payload)
