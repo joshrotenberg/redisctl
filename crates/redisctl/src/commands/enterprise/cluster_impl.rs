@@ -115,13 +115,48 @@ pub async fn get_cluster_policy(
 pub async fn update_cluster_policy(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
-    data: &str,
+    default_shards_placement: Option<&str>,
+    rack_aware: Option<bool>,
+    default_redis_version: Option<&str>,
+    persistent_node_removal: Option<bool>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
-    let policy_data = read_json_data(data).context("Failed to parse policy data")?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut policy_data = if let Some(data_str) = data {
+        read_json_data(data_str).context("Failed to parse policy data")?
+    } else {
+        serde_json::json!({})
+    };
+
+    let policy_obj = policy_data.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(placement) = default_shards_placement {
+        policy_obj.insert(
+            "default_shards_placement".to_string(),
+            serde_json::json!(placement),
+        );
+    }
+    if let Some(rack) = rack_aware {
+        policy_obj.insert("rack_aware".to_string(), serde_json::json!(rack));
+    }
+    if let Some(version) = default_redis_version {
+        policy_obj.insert(
+            "default_provisioned_redis_version".to_string(),
+            serde_json::json!(version),
+        );
+    }
+    if let Some(persistent) = persistent_node_removal {
+        policy_obj.insert(
+            "persistent_node_removal".to_string(),
+            serde_json::json!(persistent),
+        );
+    }
+
     let result = match client
         .put_raw("/v1/cluster/policy", policy_data.clone())
         .await
@@ -189,14 +224,76 @@ pub async fn update_cluster_license(
 pub async fn bootstrap_cluster(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
-    data: &str,
+    cluster_name: Option<&str>,
+    username: Option<&str>,
+    password: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
     let _handler = BootstrapHandler::new(client.clone());
 
-    let bootstrap_data = read_json_data(data).context("Failed to parse bootstrap data")?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut bootstrap_data = if let Some(data_str) = data {
+        read_json_data(data_str).context("Failed to parse bootstrap data")?
+    } else {
+        serde_json::json!({})
+    };
+
+    // Build nested structure for bootstrap request
+    // Structure: { "action": "create_cluster", "cluster": { "name": "..." }, "credentials": { "username": "...", "password": "..." } }
+    let bootstrap_obj = bootstrap_data.as_object_mut().unwrap();
+
+    // Set action if not already set
+    if !bootstrap_obj.contains_key("action") {
+        bootstrap_obj.insert("action".to_string(), serde_json::json!("create_cluster"));
+    }
+
+    // CLI parameters override JSON values
+    if let Some(name) = cluster_name {
+        let cluster = bootstrap_obj
+            .entry("cluster")
+            .or_insert(serde_json::json!({}));
+        if let Some(cluster_obj) = cluster.as_object_mut() {
+            cluster_obj.insert("name".to_string(), serde_json::json!(name));
+        }
+    }
+
+    if username.is_some() || password.is_some() {
+        let credentials = bootstrap_obj
+            .entry("credentials")
+            .or_insert(serde_json::json!({}));
+        if let Some(creds_obj) = credentials.as_object_mut() {
+            if let Some(user) = username {
+                creds_obj.insert("username".to_string(), serde_json::json!(user));
+            }
+            if let Some(pass) = password {
+                creds_obj.insert("password".to_string(), serde_json::json!(pass));
+            }
+        }
+    }
+
+    // Validate required fields
+    let has_cluster_name = bootstrap_obj
+        .get("cluster")
+        .and_then(|c| c.get("name"))
+        .is_some();
+    let has_username = bootstrap_obj
+        .get("credentials")
+        .and_then(|c| c.get("username"))
+        .is_some();
+    let has_password = bootstrap_obj
+        .get("credentials")
+        .and_then(|c| c.get("password"))
+        .is_some();
+
+    if !has_cluster_name || !has_username || !has_password {
+        return Err(RedisCtlError::InvalidInput {
+            message: "Bootstrap requires --cluster-name, --username, and --password (or equivalent in --data)".to_string()
+        });
+    }
+
     // Use raw API since BootstrapRequest doesn't have Deserialize trait
     let result = client
         .post_raw("/v1/bootstrap", bootstrap_data)
@@ -210,35 +307,67 @@ pub async fn bootstrap_cluster(
 pub async fn join_cluster(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
-    data: &str,
+    nodes_arg: &[String],
+    username_arg: Option<&str>,
+    password_arg: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
-    let join_data = read_json_data(data).context("Failed to parse join data")?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut join_data = if let Some(data_str) = data {
+        read_json_data(data_str).context("Failed to parse join data")?
+    } else {
+        serde_json::json!({})
+    };
+
+    let join_obj = join_data.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if !nodes_arg.is_empty() {
+        join_obj.insert("nodes".to_string(), serde_json::json!(nodes_arg));
+    }
+    if let Some(user) = username_arg {
+        join_obj.insert("username".to_string(), serde_json::json!(user));
+    }
+    if let Some(pass) = password_arg {
+        join_obj.insert("password".to_string(), serde_json::json!(pass));
+    }
 
     // Extract required fields for join operation
-    let nodes = join_data
+    let nodes = join_obj
         .get("nodes")
         .and_then(|n| n.as_array())
         .and_then(|arr| arr.first())
         .and_then(|n| n.as_str())
-        .ok_or_else(|| anyhow::anyhow!("Missing 'nodes' field in join data"))?;
+        .ok_or_else(|| RedisCtlError::InvalidInput {
+            message: "Join requires --nodes (or nodes in --data)".to_string(),
+        })?
+        .to_string();
 
-    let username = join_data
+    let username = join_obj
         .get("username")
         .and_then(|u| u.as_str())
-        .ok_or_else(|| anyhow::anyhow!("Missing 'username' field in join data"))?;
+        .ok_or_else(|| RedisCtlError::InvalidInput {
+            message: "Join requires --username (or username in --data)".to_string(),
+        })?
+        .to_string();
 
-    let password = join_data
+    let password = join_obj
         .get("password")
         .and_then(|p| p.as_str())
-        .ok_or_else(|| anyhow::anyhow!("Missing 'password' field in join data"))?;
+        .ok_or_else(|| RedisCtlError::InvalidInput {
+            message: "Join requires --password (or password in --data)".to_string(),
+        })?
+        .to_string();
 
     // Use ClusterHandler for join operation
     let cluster_handler = ClusterHandler::new(client);
-    let result = cluster_handler.join_node(nodes, username, password).await?;
+    let result = cluster_handler
+        .join_node(&nodes, &username, &password)
+        .await?;
     let data = handle_output(result, output_format, query)?;
     print_formatted_output(data, output_format)?;
     Ok(())
@@ -247,13 +376,19 @@ pub async fn join_cluster(
 pub async fn recover_cluster(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
-    data: &str,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
-    let recovery_data = read_json_data(data).context("Failed to parse recovery data")?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let recovery_data = if let Some(data_str) = data {
+        read_json_data(data_str).context("Failed to parse recovery data")?
+    } else {
+        serde_json::json!({})
+    };
+
     let result = client
         .post_raw("/v1/cluster/recover", recovery_data)
         .await?;
@@ -511,13 +646,41 @@ pub async fn get_cluster_certificates(
 pub async fn update_cluster_certificates(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
-    data: &str,
+    name: Option<&str>,
+    certificate: Option<&str>,
+    key: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
-    let cert_data = read_json_data(data).context("Failed to parse certificate data")?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut cert_data = if let Some(data_str) = data {
+        read_json_data(data_str).context("Failed to parse certificate data")?
+    } else {
+        serde_json::json!({})
+    };
+
+    let cert_obj = cert_data.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(cert_name) = name {
+        cert_obj.insert("name".to_string(), serde_json::json!(cert_name));
+    }
+    if let Some(cert) = certificate {
+        // Read certificate content - it could be a file reference
+        let cert_content = read_json_data(cert).unwrap_or_else(|_| serde_json::json!(cert));
+        let cert_str = cert_content.as_str().unwrap_or(cert);
+        cert_obj.insert("certificate".to_string(), serde_json::json!(cert_str));
+    }
+    if let Some(k) = key {
+        // Read key content - it could be a file reference
+        let key_content = read_json_data(k).unwrap_or_else(|_| serde_json::json!(k));
+        let key_str = key_content.as_str().unwrap_or(k);
+        cert_obj.insert("key".to_string(), serde_json::json!(key_str));
+    }
+
     let result = client
         .put_raw("/v1/cluster/certificates", cert_data)
         .await?;
@@ -562,14 +725,54 @@ pub async fn get_ocsp_config(
 pub async fn update_ocsp_config(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
-    data: &str,
+    enabled: Option<bool>,
+    responder_url: Option<&str>,
+    response_timeout: Option<u32>,
+    query_frequency: Option<u32>,
+    recovery_frequency: Option<u32>,
+    recovery_max_tries: Option<u32>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
     let _handler = OcspHandler::new(client.clone());
 
-    let ocsp_data = read_json_data(data).context("Failed to parse OCSP data")?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut ocsp_data = if let Some(data_str) = data {
+        read_json_data(data_str).context("Failed to parse OCSP data")?
+    } else {
+        serde_json::json!({})
+    };
+
+    let ocsp_obj = ocsp_data.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(en) = enabled {
+        ocsp_obj.insert("enabled".to_string(), serde_json::json!(en));
+    }
+    if let Some(url) = responder_url {
+        ocsp_obj.insert("responder_url".to_string(), serde_json::json!(url));
+    }
+    if let Some(timeout) = response_timeout {
+        ocsp_obj.insert("response_timeout".to_string(), serde_json::json!(timeout));
+    }
+    if let Some(freq) = query_frequency {
+        ocsp_obj.insert("query_frequency".to_string(), serde_json::json!(freq));
+    }
+    if let Some(rec_freq) = recovery_frequency {
+        ocsp_obj.insert(
+            "recovery_frequency".to_string(),
+            serde_json::json!(rec_freq),
+        );
+    }
+    if let Some(max_tries) = recovery_max_tries {
+        ocsp_obj.insert(
+            "recovery_max_tries".to_string(),
+            serde_json::json!(max_tries),
+        );
+    }
+
     // Use raw API since handler.update_config expects OcspConfig, not Value
     let result = client.put_raw("/v1/ocsp", ocsp_data).await?;
     let result_json = serde_json::to_value(result).context("Failed to serialize result")?;

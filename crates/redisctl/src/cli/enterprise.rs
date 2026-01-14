@@ -242,11 +242,40 @@ pub enum EnterpriseClusterCommands {
     GetPolicy,
 
     /// Update cluster policies
-    #[command(name = "update-policy")]
+    #[command(
+        name = "update-policy",
+        after_help = "EXAMPLES:
+    # Set default shards placement
+    redisctl enterprise cluster update-policy --default-shards-placement dense
+
+    # Enable rack awareness
+    redisctl enterprise cluster update-policy --rack-aware true
+
+    # Set default Redis version
+    redisctl enterprise cluster update-policy --default-redis-version 7.2
+
+    # Enable persistent node removal
+    redisctl enterprise cluster update-policy --persistent-node-removal true
+
+    # Using JSON for advanced configuration
+    redisctl enterprise cluster update-policy --data @policy.json"
+    )]
     UpdatePolicy {
-        /// Policy data (JSON file or inline)
+        /// Default shards placement strategy (dense, sparse)
+        #[arg(long)]
+        default_shards_placement: Option<String>,
+        /// Enable/disable rack awareness
+        #[arg(long)]
+        rack_aware: Option<bool>,
+        /// Default Redis version for new databases
+        #[arg(long)]
+        default_redis_version: Option<String>,
+        /// Enable/disable persistent node removal
+        #[arg(long)]
+        persistent_node_removal: Option<bool>,
+        /// Policy data (JSON file or inline, overridden by other flags)
         #[arg(long, value_name = "FILE|JSON")]
-        data: String,
+        data: Option<String>,
     },
 
     /// Get license information
@@ -262,24 +291,66 @@ pub enum EnterpriseClusterCommands {
     },
 
     /// Bootstrap new cluster
+    #[command(after_help = "EXAMPLES:
+    # Bootstrap with required parameters
+    redisctl enterprise cluster bootstrap --cluster-name mycluster \\
+        --username admin@example.com --password mypassword
+
+    # Using JSON for additional options
+    redisctl enterprise cluster bootstrap --data @bootstrap.json")]
     Bootstrap {
-        /// Bootstrap configuration (JSON file or inline)
+        /// Cluster name (FQDN)
+        #[arg(long)]
+        cluster_name: Option<String>,
+        /// Admin username (email)
+        #[arg(long)]
+        username: Option<String>,
+        /// Admin password
+        #[arg(long)]
+        password: Option<String>,
+        /// Bootstrap configuration (JSON file or inline, overridden by other flags)
         #[arg(long, value_name = "FILE|JSON")]
-        data: String,
+        data: Option<String>,
     },
 
     /// Join node to cluster
+    #[command(after_help = "EXAMPLES:
+    # Join with required parameters
+    redisctl enterprise cluster join --nodes 192.168.1.100 \\
+        --username admin@example.com --password mypassword
+
+    # Join multiple nodes
+    redisctl enterprise cluster join --nodes 192.168.1.100 --nodes 192.168.1.101 \\
+        --username admin@example.com --password mypassword
+
+    # Using JSON for additional options
+    redisctl enterprise cluster join --data @join.json")]
     Join {
-        /// Join configuration (JSON file or inline)
+        /// Node address(es) to connect to (can be specified multiple times)
+        #[arg(long)]
+        nodes: Vec<String>,
+        /// Admin username (email)
+        #[arg(long)]
+        username: Option<String>,
+        /// Admin password
+        #[arg(long)]
+        password: Option<String>,
+        /// Join configuration (JSON file or inline, overridden by other flags)
         #[arg(long, value_name = "FILE|JSON")]
-        data: String,
+        data: Option<String>,
     },
 
     /// Recover cluster
+    #[command(after_help = "EXAMPLES:
+    # Recover with default options
+    redisctl enterprise cluster recover
+
+    # Using JSON for recovery options
+    redisctl enterprise cluster recover --data @recover.json")]
     Recover {
         /// Recovery configuration (JSON file or inline)
         #[arg(long, value_name = "FILE|JSON")]
-        data: String,
+        data: Option<String>,
     },
 
     /// Reset cluster (dangerous!)
@@ -338,11 +409,31 @@ pub enum EnterpriseClusterCommands {
     GetCertificates,
 
     /// Update certificates
-    #[command(name = "update-certificates")]
+    #[command(
+        name = "update-certificates",
+        after_help = "EXAMPLES:
+    # Update proxy certificate from file
+    redisctl enterprise cluster update-certificates --name proxy --certificate @proxy.pem
+
+    # Update API certificate with key
+    redisctl enterprise cluster update-certificates --name api --certificate @api.pem --key @api.key
+
+    # Using JSON for advanced configuration
+    redisctl enterprise cluster update-certificates --data @certs.json"
+    )]
     UpdateCertificates {
-        /// Certificate data (JSON file or inline)
+        /// Certificate name (proxy, api, cm, metrics_exporter, syncer)
+        #[arg(long)]
+        name: Option<String>,
+        /// Certificate content or file path (use @filename for files)
+        #[arg(long)]
+        certificate: Option<String>,
+        /// Private key content or file path (use @filename for files)
+        #[arg(long)]
+        key: Option<String>,
+        /// Certificate data (JSON file or inline, overridden by other flags)
         #[arg(long, value_name = "FILE|JSON")]
-        data: String,
+        data: Option<String>,
     },
 
     /// Rotate certificates
@@ -354,11 +445,45 @@ pub enum EnterpriseClusterCommands {
     GetOcsp,
 
     /// Update OCSP configuration
-    #[command(name = "update-ocsp")]
+    #[command(
+        name = "update-ocsp",
+        after_help = "EXAMPLES:
+    # Enable OCSP with responder URL
+    redisctl enterprise cluster update-ocsp --enabled true \\
+        --responder-url http://ocsp.example.com
+
+    # Configure OCSP timeouts
+    redisctl enterprise cluster update-ocsp --response-timeout 30 \\
+        --query-frequency 3600
+
+    # Disable OCSP
+    redisctl enterprise cluster update-ocsp --enabled false
+
+    # Using JSON for advanced configuration
+    redisctl enterprise cluster update-ocsp --data @ocsp.json"
+    )]
     UpdateOcsp {
-        /// OCSP configuration data (JSON file or inline)
+        /// Enable/disable OCSP
+        #[arg(long)]
+        enabled: Option<bool>,
+        /// OCSP responder URL
+        #[arg(long)]
+        responder_url: Option<String>,
+        /// Response timeout in seconds
+        #[arg(long)]
+        response_timeout: Option<u32>,
+        /// Query frequency in seconds
+        #[arg(long)]
+        query_frequency: Option<u32>,
+        /// Recovery frequency in seconds
+        #[arg(long)]
+        recovery_frequency: Option<u32>,
+        /// Maximum recovery attempts
+        #[arg(long)]
+        recovery_max_tries: Option<u32>,
+        /// OCSP configuration data (JSON file or inline, overridden by other flags)
         #[arg(long, value_name = "FILE|JSON")]
-        data: String,
+        data: Option<String>,
     },
 }
 
@@ -549,22 +674,78 @@ NOTE: First-class parameters override values in --data when both are provided.")
         poll_interval: u64,
     },
 
-    /// Export database
+    /// Export database to external storage
+    #[command(after_help = "EXAMPLES:
+    # Export to S3
+    redisctl enterprise database export 1 --location s3://bucket/backup.rdb \\
+        --aws-access-key AKIAIOSFODNN7EXAMPLE --aws-secret-key wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+
+    # Export to FTP
+    redisctl enterprise database export 1 --location ftp://user:pass@ftp.example.com/backup.rdb
+
+    # Export to SFTP
+    redisctl enterprise database export 1 --location sftp://user@sftp.example.com/backup.rdb
+
+    # Using JSON for advanced configuration
+    redisctl enterprise database export 1 --data @export.json")]
     Export {
         /// Database ID
         id: u32,
-        /// Export configuration as JSON string or @file.json
+
+        /// Export location (S3, FTP, SFTP, or local path)
         #[arg(long)]
-        data: String,
+        location: Option<String>,
+
+        /// AWS access key for S3 exports
+        #[arg(long)]
+        aws_access_key: Option<String>,
+
+        /// AWS secret key for S3 exports
+        #[arg(long)]
+        aws_secret_key: Option<String>,
+
+        /// Export configuration as JSON string or @file.json (overridden by other flags)
+        #[arg(long)]
+        data: Option<String>,
     },
 
-    /// Import to database
+    /// Import data to database from external storage
+    #[command(after_help = "EXAMPLES:
+    # Import from S3
+    redisctl enterprise database import 1 --location s3://bucket/backup.rdb \\
+        --aws-access-key AKIAIOSFODNN7EXAMPLE --aws-secret-key wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+
+    # Import from FTP with flush
+    redisctl enterprise database import 1 --location ftp://user:pass@ftp.example.com/backup.rdb --flush
+
+    # Import from HTTP/HTTPS
+    redisctl enterprise database import 1 --location https://example.com/backup.rdb
+
+    # Using JSON for advanced configuration
+    redisctl enterprise database import 1 --data @import.json")]
     Import {
         /// Database ID
         id: u32,
-        /// Import configuration as JSON string or @file.json
+
+        /// Import location (S3, FTP, SFTP, HTTP, or local path)
         #[arg(long)]
-        data: String,
+        location: Option<String>,
+
+        /// AWS access key for S3 imports
+        #[arg(long)]
+        aws_access_key: Option<String>,
+
+        /// AWS secret key for S3 imports
+        #[arg(long)]
+        aws_secret_key: Option<String>,
+
+        /// Flush database before import
+        #[arg(long)]
+        flush: bool,
+
+        /// Import configuration as JSON string or @file.json (overridden by other flags)
+        #[arg(long)]
+        data: Option<String>,
     },
 
     /// Trigger database backup
@@ -573,13 +754,27 @@ NOTE: First-class parameters override values in --data when both are provided.")
         id: u32,
     },
 
-    /// Restore database
+    /// Restore database from backup
+    #[command(after_help = "EXAMPLES:
+    # Restore from latest backup
+    redisctl enterprise database restore 1
+
+    # Restore from specific backup
+    redisctl enterprise database restore 1 --backup-uid backup-12345
+
+    # Using JSON for advanced configuration
+    redisctl enterprise database restore 1 --data @restore.json")]
     Restore {
         /// Database ID
         id: u32,
-        /// Restore configuration as JSON string or @file.json
+
+        /// Specific backup UID to restore from (uses latest if not specified)
         #[arg(long)]
-        data: String,
+        backup_uid: Option<String>,
+
+        /// Restore configuration as JSON string or @file.json (overridden by other flags)
+        #[arg(long)]
+        data: Option<String>,
     },
 
     /// Flush database data
@@ -598,12 +793,30 @@ NOTE: First-class parameters override values in --data when both are provided.")
     },
 
     /// Update sharding configuration
+    #[command(after_help = "EXAMPLES:
+    # Update shard count
+    redisctl enterprise database update-shards 1 --shards-count 4
+
+    # Update shards placement policy
+    redisctl enterprise database update-shards 1 --shards-placement sparse
+
+    # Using JSON for advanced configuration
+    redisctl enterprise database update-shards 1 --data @shards.json")]
     UpdateShards {
         /// Database ID
         id: u32,
-        /// Shards configuration as JSON string or @file.json
+
+        /// Number of shards
         #[arg(long)]
-        data: String,
+        shards_count: Option<u32>,
+
+        /// Shards placement policy (dense, sparse)
+        #[arg(long)]
+        shards_placement: Option<String>,
+
+        /// Shards configuration as JSON string or @file.json (overridden by other flags)
+        #[arg(long)]
+        data: Option<String>,
     },
 
     /// Get enabled modules
@@ -613,12 +826,33 @@ NOTE: First-class parameters override values in --data when both are provided.")
     },
 
     /// Update modules configuration
+    #[command(after_help = "EXAMPLES:
+    # Add a module
+    redisctl enterprise database update-modules 1 --add-module search
+
+    # Add module with arguments
+    redisctl enterprise database update-modules 1 --add-module 'search:MAXSEARCHRESULTS 100'
+
+    # Remove a module
+    redisctl enterprise database update-modules 1 --remove-module ReJSON
+
+    # Using JSON for advanced configuration
+    redisctl enterprise database update-modules 1 --data @modules.json")]
     UpdateModules {
         /// Database ID
         id: u32,
-        /// Modules configuration as JSON string or @file.json
+
+        /// Module to add (format: module_name or module_name:args)
+        #[arg(long = "add-module")]
+        add_modules: Vec<String>,
+
+        /// Module to remove (by name)
+        #[arg(long = "remove-module")]
+        remove_modules: Vec<String>,
+
+        /// Modules configuration as JSON string or @file.json (overridden by other flags)
         #[arg(long)]
-        data: String,
+        data: Option<String>,
     },
 
     /// Upgrade database Redis version
@@ -658,12 +892,30 @@ NOTE: First-class parameters override values in --data when both are provided.")
     },
 
     /// Update ACL configuration
+    #[command(after_help = "EXAMPLES:
+    # Set default user enabled
+    redisctl enterprise database update-acl 1 --default-user true
+
+    # Set ACL by UID
+    redisctl enterprise database update-acl 1 --acl-uid 5
+
+    # Using JSON for advanced configuration
+    redisctl enterprise database update-acl 1 --data @acl.json")]
     UpdateAcl {
         /// Database ID
         id: u32,
-        /// ACL configuration as JSON string or @file.json
+
+        /// ACL UID to assign to this database
         #[arg(long)]
-        data: String,
+        acl_uid: Option<u32>,
+
+        /// Enable/disable default user
+        #[arg(long)]
+        default_user: Option<bool>,
+
+        /// ACL configuration as JSON string or @file.json (overridden by other flags)
+        #[arg(long)]
+        data: Option<String>,
     },
 
     /// Get database statistics
@@ -709,10 +961,29 @@ pub enum EnterpriseNodeCommands {
     },
 
     /// Add node to cluster
+    #[command(after_help = "EXAMPLES:
+    # Add node with IP address
+    redisctl enterprise node add --address 192.168.1.100
+
+    # Add node with credentials
+    redisctl enterprise node add --address 192.168.1.100 \\
+        --username admin@example.com --password secret
+
+    # Using JSON for advanced configuration
+    redisctl enterprise node add --data @node.json")]
     Add {
-        /// Node configuration (JSON file or inline)
+        /// Node IP address or hostname
+        #[arg(long)]
+        address: Option<String>,
+        /// Admin username
+        #[arg(long)]
+        username: Option<String>,
+        /// Admin password
+        #[arg(long)]
+        password: Option<String>,
+        /// Node configuration (JSON file or inline, overridden by other flags)
         #[arg(long, value_name = "FILE|JSON")]
-        data: String,
+        data: Option<String>,
     },
 
     /// Remove node from cluster
@@ -833,13 +1104,30 @@ pub enum EnterpriseNodeCommands {
     },
 
     /// Update node configuration
-    #[command(name = "update-config")]
+    #[command(
+        name = "update-config",
+        after_help = "EXAMPLES:
+    # Set max Redis servers
+    redisctl enterprise node update-config 1 --max-redis-servers 200
+
+    # Set bigstore driver
+    redisctl enterprise node update-config 1 --bigstore-driver rocksdb
+
+    # Using JSON for advanced configuration
+    redisctl enterprise node update-config 1 --data @config.json"
+    )]
     UpdateConfig {
         /// Node ID
         id: u32,
-        /// Configuration data (JSON file or inline)
+        /// Maximum Redis servers on this node
+        #[arg(long)]
+        max_redis_servers: Option<u32>,
+        /// BigStore driver (rocksdb, speedb)
+        #[arg(long)]
+        bigstore_driver: Option<String>,
+        /// Configuration data (JSON file or inline, overridden by other flags)
         #[arg(long, value_name = "FILE|JSON")]
-        data: String,
+        data: Option<String>,
     },
 
     /// Get rack awareness configuration
@@ -1327,10 +1615,31 @@ pub enum EnterpriseCrdbCommands {
     },
 
     /// Create Active-Active database
+    #[command(after_help = "EXAMPLES:
+    # Create CRDB with name and memory
+    redisctl enterprise crdb create --name my-crdb --memory-size 1073741824
+
+    # Create CRDB with default database name
+    redisctl enterprise crdb create --name my-crdb --default-db-name mydb
+
+    # Using JSON for advanced configuration
+    redisctl enterprise crdb create --data @crdb.json")]
     Create {
-        /// CRDB configuration as JSON string or @file.json
+        /// CRDB name
         #[arg(long)]
-        data: String,
+        name: Option<String>,
+        /// Memory size in bytes
+        #[arg(long)]
+        memory_size: Option<u64>,
+        /// Default database name
+        #[arg(long)]
+        default_db_name: Option<String>,
+        /// Enable encryption
+        #[arg(long)]
+        encryption: Option<bool>,
+        /// CRDB configuration as JSON string or @file.json (overridden by other flags)
+        #[arg(long)]
+        data: Option<String>,
     },
 
     /// Update CRDB configuration
@@ -1390,13 +1699,40 @@ pub enum EnterpriseCrdbCommands {
     },
 
     /// Add cluster to CRDB
-    #[command(name = "add-cluster")]
+    #[command(
+        name = "add-cluster",
+        after_help = "EXAMPLES:
+    # Add cluster with URL
+    redisctl enterprise crdb add-cluster 1 --url https://cluster2.example.com:9443
+
+    # Add cluster with credentials
+    redisctl enterprise crdb add-cluster 1 --url https://cluster2.example.com:9443 \\
+        --username admin@example.com --password mypassword
+
+    # Using JSON for full configuration
+    redisctl enterprise crdb add-cluster 1 --data @cluster.json"
+    )]
     AddCluster {
         /// CRDB ID
         id: u32,
-        /// Cluster configuration as JSON string or @file.json
+        /// Cluster URL (e.g., https://cluster2.example.com:9443)
         #[arg(long)]
-        data: String,
+        url: Option<String>,
+        /// Cluster name
+        #[arg(long)]
+        name: Option<String>,
+        /// Admin username for the cluster
+        #[arg(long)]
+        username: Option<String>,
+        /// Admin password for the cluster
+        #[arg(long)]
+        password: Option<String>,
+        /// Enable replication compression
+        #[arg(long)]
+        compression: Option<bool>,
+        /// Cluster configuration as JSON string or @file.json (optional)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: Option<String>,
     },
 
     /// Remove cluster from CRDB
@@ -1410,16 +1746,36 @@ pub enum EnterpriseCrdbCommands {
     },
 
     /// Update cluster configuration in CRDB
-    #[command(name = "update-cluster")]
+    #[command(
+        name = "update-cluster",
+        after_help = "EXAMPLES:
+    # Update cluster URL
+    redisctl enterprise crdb update-cluster 1 --cluster 2 --url https://newurl.example.com:9443
+
+    # Enable compression
+    redisctl enterprise crdb update-cluster 1 --cluster 2 --compression true
+
+    # Using JSON for full configuration
+    redisctl enterprise crdb update-cluster 1 --cluster 2 --data @update.json"
+    )]
     UpdateCluster {
         /// CRDB ID
         id: u32,
         /// Cluster ID to update
         #[arg(long)]
         cluster: u32,
-        /// Update configuration as JSON string or @file.json
+        /// Cluster URL
         #[arg(long)]
-        data: String,
+        url: Option<String>,
+        /// Enable replication compression
+        #[arg(long)]
+        compression: Option<bool>,
+        /// Proxy policy (e.g., "single", "all-master-shards", "all-nodes")
+        #[arg(long)]
+        proxy_policy: Option<String>,
+        /// Update configuration as JSON string or @file.json (optional)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: Option<String>,
     },
 
     // Instance Management
@@ -1442,7 +1798,18 @@ pub enum EnterpriseCrdbCommands {
     },
 
     /// Update CRDB instance
-    #[command(name = "update-instance")]
+    #[command(
+        name = "update-instance",
+        after_help = "EXAMPLES:
+    # Update instance memory size
+    redisctl enterprise crdb update-instance 1 --instance 2 --memory-size 2147483648
+
+    # Update instance port
+    redisctl enterprise crdb update-instance 1 --instance 2 --port 12001
+
+    # Using JSON for full configuration
+    redisctl enterprise crdb update-instance 1 --instance 2 --data @instance.json"
+    )]
     UpdateInstance {
         /// CRDB ID
         #[arg(name = "crdb-id")]
@@ -1450,9 +1817,18 @@ pub enum EnterpriseCrdbCommands {
         /// Instance ID
         #[arg(long)]
         instance: u32,
-        /// Update configuration as JSON string or @file.json
+        /// Memory size in bytes
         #[arg(long)]
-        data: String,
+        memory_size: Option<u64>,
+        /// Port number
+        #[arg(long)]
+        port: Option<u16>,
+        /// Enable/disable the instance
+        #[arg(long)]
+        enabled: Option<bool>,
+        /// Update configuration as JSON string or @file.json (optional)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: Option<String>,
     },
 
     /// Flush CRDB instance data
@@ -1527,13 +1903,30 @@ pub enum EnterpriseCrdbCommands {
     },
 
     /// Update conflict resolution policy
-    #[command(name = "update-conflict-policy")]
+    #[command(
+        name = "update-conflict-policy",
+        after_help = "EXAMPLES:
+    # Set conflict policy to last-write-wins
+    redisctl enterprise crdb update-conflict-policy 1 --policy last-write-wins
+
+    # Set policy with source preference
+    redisctl enterprise crdb update-conflict-policy 1 --policy source-wins --source-id 2
+
+    # Using JSON for full configuration
+    redisctl enterprise crdb update-conflict-policy 1 --data @policy.json"
+    )]
     UpdateConflictPolicy {
         /// CRDB ID
         id: u32,
-        /// Policy configuration as JSON string or @file.json
+        /// Conflict resolution policy (e.g., "last-write-wins", "source-wins")
         #[arg(long)]
-        data: String,
+        policy: Option<String>,
+        /// Source cluster ID for source-wins policy
+        #[arg(long)]
+        source_id: Option<u32>,
+        /// Policy configuration as JSON string or @file.json (optional)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: Option<String>,
     },
 
     /// Manually resolve conflict
@@ -1629,21 +2022,45 @@ pub enum EnterpriseCrdbCommands {
 
     // Backup & Recovery
     /// Create CRDB backup
+    #[command(after_help = "EXAMPLES:
+    # Backup to S3
+    redisctl enterprise crdb backup 1 --location s3://bucket/crdb-backup
+
+    # Using JSON for advanced configuration
+    redisctl enterprise crdb backup 1 --data @backup.json")]
     Backup {
         /// CRDB ID
         id: u32,
-        /// Backup configuration as JSON string or @file.json
+        /// Backup location (e.g., S3 URL)
         #[arg(long)]
-        data: String,
+        location: Option<String>,
+        /// Backup configuration as JSON string or @file.json (overridden by other flags)
+        #[arg(long)]
+        data: Option<String>,
     },
 
     /// Restore CRDB
+    #[command(after_help = "EXAMPLES:
+    # Restore from specific backup
+    redisctl enterprise crdb restore 1 --backup-uid backup-12345
+
+    # Restore from location
+    redisctl enterprise crdb restore 1 --location s3://bucket/crdb-backup
+
+    # Using JSON for advanced configuration
+    redisctl enterprise crdb restore 1 --data @restore.json")]
     Restore {
         /// CRDB ID
         id: u32,
-        /// Restore configuration as JSON string or @file.json
+        /// Backup UID to restore from
         #[arg(long)]
-        data: String,
+        backup_uid: Option<String>,
+        /// Restore location (e.g., S3 URL)
+        #[arg(long)]
+        location: Option<String>,
+        /// Restore configuration as JSON string or @file.json (overridden by other flags)
+        #[arg(long)]
+        data: Option<String>,
     },
 
     /// List available backups
@@ -1654,12 +2071,21 @@ pub enum EnterpriseCrdbCommands {
     },
 
     /// Export CRDB data
+    #[command(after_help = "EXAMPLES:
+    # Export to S3
+    redisctl enterprise crdb export 1 --location s3://bucket/crdb-export
+
+    # Using JSON for advanced configuration
+    redisctl enterprise crdb export 1 --data @export.json")]
     Export {
         /// CRDB ID
         id: u32,
-        /// Export configuration as JSON string or @file.json
+        /// Export location (e.g., S3 URL)
         #[arg(long)]
-        data: String,
+        location: Option<String>,
+        /// Export configuration as JSON string or @file.json (overridden by other flags)
+        #[arg(long)]
+        data: Option<String>,
     },
 }
 

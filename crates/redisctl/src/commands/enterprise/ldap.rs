@@ -14,10 +14,41 @@ pub enum LdapCommands {
     Get,
 
     /// Update LDAP configuration
+    #[command(after_help = "EXAMPLES:
+    # Update LDAP server URLs
+    redisctl enterprise ldap update --server-urls ldap://ldap.example.com:389
+
+    # Update bind credentials
+    redisctl enterprise ldap update --bind-dn 'CN=admin,DC=example,DC=com' --bind-pass secret
+
+    # Update search settings
+    redisctl enterprise ldap update --user-dn 'OU=Users,DC=example,DC=com' \\
+        --group-dn 'OU=Groups,DC=example,DC=com'
+
+    # Using JSON for full configuration
+    redisctl enterprise ldap update --data @ldap.json")]
     Update {
-        /// JSON data for LDAP configuration
-        #[arg(long, required = true)]
-        data: String,
+        /// LDAP server URLs (comma-separated)
+        #[arg(long)]
+        server_urls: Option<String>,
+        /// Bind DN for LDAP connection
+        #[arg(long)]
+        bind_dn: Option<String>,
+        /// Bind password for LDAP connection
+        #[arg(long)]
+        bind_pass: Option<String>,
+        /// Base DN for user searches
+        #[arg(long)]
+        user_dn: Option<String>,
+        /// Base DN for group searches
+        #[arg(long)]
+        group_dn: Option<String>,
+        /// Enable/disable LDAP
+        #[arg(long)]
+        enabled: Option<bool>,
+        /// JSON data for LDAP configuration (overridden by other flags)
+        #[arg(long)]
+        data: Option<String>,
     },
 
     /// Delete LDAP configuration
@@ -119,8 +150,29 @@ pub async fn handle_ldap_command(
 ) -> Result<(), RedisCtlError> {
     match cmd {
         LdapCommands::Get => handle_ldap_get(conn_mgr, profile_name, output_format, query).await,
-        LdapCommands::Update { data } => {
-            handle_ldap_update(conn_mgr, profile_name, &data, output_format, query).await
+        LdapCommands::Update {
+            server_urls,
+            bind_dn,
+            bind_pass,
+            user_dn,
+            group_dn,
+            enabled,
+            data,
+        } => {
+            handle_ldap_update(
+                conn_mgr,
+                profile_name,
+                server_urls.as_deref(),
+                bind_dn.as_deref(),
+                bind_pass.as_deref(),
+                user_dn.as_deref(),
+                group_dn.as_deref(),
+                enabled,
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
         LdapCommands::Delete => {
             handle_ldap_delete(conn_mgr, profile_name, output_format, query).await
@@ -222,17 +274,53 @@ async fn handle_ldap_get(
     utils::print_formatted_output(result, output_format)
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn handle_ldap_update(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
-    data: &str,
+    server_urls: Option<&str>,
+    bind_dn: Option<&str>,
+    bind_pass: Option<&str>,
+    user_dn: Option<&str>,
+    group_dn: Option<&str>,
+    enabled: Option<bool>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> Result<(), RedisCtlError> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
-    let payload: Value =
-        serde_json::from_str(data).context("Invalid JSON data for LDAP configuration")?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut payload = if let Some(data_str) = data {
+        utils::read_json_data(data_str).context("Invalid JSON data for LDAP configuration")?
+    } else {
+        serde_json::json!({})
+    };
+
+    let payload_obj = payload.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(urls) = server_urls {
+        payload_obj.insert(
+            "uris".to_string(),
+            serde_json::json!(urls.split(',').collect::<Vec<_>>()),
+        );
+    }
+    if let Some(dn) = bind_dn {
+        payload_obj.insert("bind_dn".to_string(), serde_json::json!(dn));
+    }
+    if let Some(pass) = bind_pass {
+        payload_obj.insert("bind_pass".to_string(), serde_json::json!(pass));
+    }
+    if let Some(dn) = user_dn {
+        payload_obj.insert("user_dn".to_string(), serde_json::json!(dn));
+    }
+    if let Some(dn) = group_dn {
+        payload_obj.insert("group_dn".to_string(), serde_json::json!(dn));
+    }
+    if let Some(en) = enabled {
+        payload_obj.insert("enabled".to_string(), serde_json::json!(en));
+    }
 
     let response = client
         .put_raw("/v1/cluster/ldap", payload)

@@ -23,8 +23,23 @@ pub async fn handle_node_command(
         EnterpriseNodeCommands::Get { id } => {
             node_impl::get_node(conn_mgr, profile_name, *id, output_format, query).await
         }
-        EnterpriseNodeCommands::Add { data } => {
-            node_impl::add_node(conn_mgr, profile_name, data, output_format, query).await
+        EnterpriseNodeCommands::Add {
+            address,
+            username,
+            password,
+            data,
+        } => {
+            node_impl::add_node(
+                conn_mgr,
+                profile_name,
+                address.as_deref(),
+                username.as_deref(),
+                password.as_deref(),
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
         EnterpriseNodeCommands::Remove { id, force } => {
             node_impl::remove_node(conn_mgr, profile_name, *id, *force, output_format, query).await
@@ -96,9 +111,23 @@ pub async fn handle_node_command(
         EnterpriseNodeCommands::GetConfig { id } => {
             node_impl::get_node_config(conn_mgr, profile_name, *id, output_format, query).await
         }
-        EnterpriseNodeCommands::UpdateConfig { id, data } => {
-            node_impl::update_node_config(conn_mgr, profile_name, *id, data, output_format, query)
-                .await
+        EnterpriseNodeCommands::UpdateConfig {
+            id,
+            max_redis_servers,
+            bigstore_driver,
+            data,
+        } => {
+            node_impl::update_node_config(
+                conn_mgr,
+                profile_name,
+                *id,
+                *max_redis_servers,
+                bigstore_driver.as_deref(),
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
         EnterpriseNodeCommands::GetRack { id } => {
             node_impl::get_node_rack(conn_mgr, profile_name, *id, output_format, query).await

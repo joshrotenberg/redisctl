@@ -46,13 +46,34 @@ pub async fn get_node(
 pub async fn add_node(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
-    data: &str,
+    address: Option<&str>,
+    username: Option<&str>,
+    password: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
-    let node_data = read_json_data(data).context("Failed to parse node data")?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut node_data = if let Some(data_str) = data {
+        read_json_data(data_str).context("Failed to parse node data")?
+    } else {
+        serde_json::json!({})
+    };
+
+    let node_obj = node_data.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(addr) = address {
+        node_obj.insert("address".to_string(), serde_json::json!(addr));
+    }
+    if let Some(user) = username {
+        node_obj.insert("username".to_string(), serde_json::json!(user));
+    }
+    if let Some(pass) = password {
+        node_obj.insert("password".to_string(), serde_json::json!(pass));
+    }
 
     // Note: The actual add node operation typically requires cluster join operations
     // This is a placeholder for the actual implementation which would use cluster join
@@ -343,14 +364,35 @@ pub async fn update_node_config(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: u32,
-    data: &str,
+    max_redis_servers: Option<u32>,
+    bigstore_driver: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
     let handler = NodeHandler::new(client);
 
-    let config_data = read_json_data(data).context("Failed to parse config data")?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut config_data = if let Some(data_str) = data {
+        read_json_data(data_str).context("Failed to parse config data")?
+    } else {
+        serde_json::json!({})
+    };
+
+    let config_obj = config_data.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(max_servers) = max_redis_servers {
+        config_obj.insert(
+            "max_redis_servers".to_string(),
+            serde_json::json!(max_servers),
+        );
+    }
+    if let Some(driver) = bigstore_driver {
+        config_obj.insert("bigstore_driver".to_string(), serde_json::json!(driver));
+    }
+
     let updated = handler.update(id, config_data).await?;
     let updated_json = serde_json::to_value(updated).context("Failed to serialize updated node")?;
     let data = handle_output(updated_json, output_format, query)?;

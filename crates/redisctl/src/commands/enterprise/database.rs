@@ -105,20 +105,66 @@ pub async fn handle_database_command(
         EnterpriseDatabaseCommands::Watch { id, poll_interval } => {
             database_impl::watch_database(conn_mgr, profile_name, *id, *poll_interval, query).await
         }
-        EnterpriseDatabaseCommands::Export { id, data } => {
-            database_impl::export_database(conn_mgr, profile_name, *id, data, output_format, query)
-                .await
+        EnterpriseDatabaseCommands::Export {
+            id,
+            location,
+            aws_access_key,
+            aws_secret_key,
+            data,
+        } => {
+            database_impl::export_database(
+                conn_mgr,
+                profile_name,
+                *id,
+                location.as_deref(),
+                aws_access_key.as_deref(),
+                aws_secret_key.as_deref(),
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
-        EnterpriseDatabaseCommands::Import { id, data } => {
-            database_impl::import_database(conn_mgr, profile_name, *id, data, output_format, query)
-                .await
+        EnterpriseDatabaseCommands::Import {
+            id,
+            location,
+            aws_access_key,
+            aws_secret_key,
+            flush,
+            data,
+        } => {
+            database_impl::import_database(
+                conn_mgr,
+                profile_name,
+                *id,
+                location.as_deref(),
+                aws_access_key.as_deref(),
+                aws_secret_key.as_deref(),
+                *flush,
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
         EnterpriseDatabaseCommands::Backup { id } => {
             database_impl::backup_database(conn_mgr, profile_name, *id, output_format, query).await
         }
-        EnterpriseDatabaseCommands::Restore { id, data } => {
-            database_impl::restore_database(conn_mgr, profile_name, *id, data, output_format, query)
-                .await
+        EnterpriseDatabaseCommands::Restore {
+            id,
+            backup_uid,
+            data,
+        } => {
+            database_impl::restore_database(
+                conn_mgr,
+                profile_name,
+                *id,
+                backup_uid.as_deref(),
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
         EnterpriseDatabaseCommands::Flush { id, force } => {
             database_impl::flush_database(conn_mgr, profile_name, *id, *force, output_format, query)
@@ -128,12 +174,19 @@ pub async fn handle_database_command(
             database_impl::get_database_shards(conn_mgr, profile_name, *id, output_format, query)
                 .await
         }
-        EnterpriseDatabaseCommands::UpdateShards { id, data } => {
+        EnterpriseDatabaseCommands::UpdateShards {
+            id,
+            shards_count,
+            shards_placement,
+            data,
+        } => {
             database_impl::update_database_shards(
                 conn_mgr,
                 profile_name,
                 *id,
-                data,
+                *shards_count,
+                shards_placement.as_deref(),
+                data.as_deref(),
                 output_format,
                 query,
             )
@@ -143,12 +196,19 @@ pub async fn handle_database_command(
             database_impl::get_database_modules(conn_mgr, profile_name, *id, output_format, query)
                 .await
         }
-        EnterpriseDatabaseCommands::UpdateModules { id, data } => {
+        EnterpriseDatabaseCommands::UpdateModules {
+            id,
+            add_modules,
+            remove_modules,
+            data,
+        } => {
             database_impl::update_database_modules(
                 conn_mgr,
                 profile_name,
                 *id,
-                data,
+                add_modules,
+                remove_modules,
+                data.as_deref(),
                 output_format,
                 query,
             )
@@ -185,12 +245,19 @@ pub async fn handle_database_command(
         EnterpriseDatabaseCommands::GetAcl { id } => {
             database_impl::get_database_acl(conn_mgr, profile_name, *id, output_format, query).await
         }
-        EnterpriseDatabaseCommands::UpdateAcl { id, data } => {
+        EnterpriseDatabaseCommands::UpdateAcl {
+            id,
+            acl_uid,
+            default_user,
+            data,
+        } => {
             database_impl::update_database_acl(
                 conn_mgr,
                 profile_name,
                 *id,
-                data,
+                *acl_uid,
+                *default_user,
+                data.as_deref(),
                 output_format,
                 query,
             )

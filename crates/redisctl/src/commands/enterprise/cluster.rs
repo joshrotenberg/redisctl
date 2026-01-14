@@ -41,9 +41,25 @@ pub async fn handle_cluster_command(
         EnterpriseClusterCommands::GetPolicy => {
             cluster_impl::get_cluster_policy(conn_mgr, profile_name, output_format, query).await
         }
-        EnterpriseClusterCommands::UpdatePolicy { data } => {
-            cluster_impl::update_cluster_policy(conn_mgr, profile_name, data, output_format, query)
-                .await
+        EnterpriseClusterCommands::UpdatePolicy {
+            default_shards_placement,
+            rack_aware,
+            default_redis_version,
+            persistent_node_removal,
+            data,
+        } => {
+            cluster_impl::update_cluster_policy(
+                conn_mgr,
+                profile_name,
+                default_shards_placement.as_deref(),
+                *rack_aware,
+                default_redis_version.as_deref(),
+                *persistent_node_removal,
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
         EnterpriseClusterCommands::GetLicense => {
             cluster_impl::get_cluster_license(conn_mgr, profile_name, output_format, query).await
@@ -60,15 +76,51 @@ pub async fn handle_cluster_command(
         }
 
         // Cluster Operations
-        EnterpriseClusterCommands::Bootstrap { data } => {
-            cluster_impl::bootstrap_cluster(conn_mgr, profile_name, data, output_format, query)
-                .await
+        EnterpriseClusterCommands::Bootstrap {
+            cluster_name,
+            username,
+            password,
+            data,
+        } => {
+            cluster_impl::bootstrap_cluster(
+                conn_mgr,
+                profile_name,
+                cluster_name.as_deref(),
+                username.as_deref(),
+                password.as_deref(),
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
-        EnterpriseClusterCommands::Join { data } => {
-            cluster_impl::join_cluster(conn_mgr, profile_name, data, output_format, query).await
+        EnterpriseClusterCommands::Join {
+            nodes,
+            username,
+            password,
+            data,
+        } => {
+            cluster_impl::join_cluster(
+                conn_mgr,
+                profile_name,
+                nodes,
+                username.as_deref(),
+                password.as_deref(),
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
         EnterpriseClusterCommands::Recover { data } => {
-            cluster_impl::recover_cluster(conn_mgr, profile_name, data, output_format, query).await
+            cluster_impl::recover_cluster(
+                conn_mgr,
+                profile_name,
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
         EnterpriseClusterCommands::Reset { force } => {
             cluster_impl::reset_cluster(conn_mgr, profile_name, *force, output_format, query).await
@@ -127,11 +179,19 @@ pub async fn handle_cluster_command(
             cluster_impl::get_cluster_certificates(conn_mgr, profile_name, output_format, query)
                 .await
         }
-        EnterpriseClusterCommands::UpdateCertificates { data } => {
+        EnterpriseClusterCommands::UpdateCertificates {
+            name,
+            certificate,
+            key,
+            data,
+        } => {
             cluster_impl::update_cluster_certificates(
                 conn_mgr,
                 profile_name,
-                data,
+                name.as_deref(),
+                certificate.as_deref(),
+                key.as_deref(),
+                data.as_deref(),
                 output_format,
                 query,
             )
@@ -143,9 +203,29 @@ pub async fn handle_cluster_command(
         EnterpriseClusterCommands::GetOcsp => {
             cluster_impl::get_ocsp_config(conn_mgr, profile_name, output_format, query).await
         }
-        EnterpriseClusterCommands::UpdateOcsp { data } => {
-            cluster_impl::update_ocsp_config(conn_mgr, profile_name, data, output_format, query)
-                .await
+        EnterpriseClusterCommands::UpdateOcsp {
+            enabled,
+            responder_url,
+            response_timeout,
+            query_frequency,
+            recovery_frequency,
+            recovery_max_tries,
+            data,
+        } => {
+            cluster_impl::update_ocsp_config(
+                conn_mgr,
+                profile_name,
+                *enabled,
+                responder_url.as_deref(),
+                *response_timeout,
+                *query_frequency,
+                *recovery_frequency,
+                *recovery_max_tries,
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
     }
 }

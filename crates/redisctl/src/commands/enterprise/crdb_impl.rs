@@ -50,15 +50,42 @@ pub async fn get_crdb(
 }
 
 /// Create a new CRDB
+#[allow(clippy::too_many_arguments)]
 pub async fn create_crdb(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
-    data: &str,
+    name: Option<&str>,
+    memory_size: Option<u64>,
+    default_db_name: Option<&str>,
+    encryption: Option<bool>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
-    let json_data = read_json_data(data)?;
+
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut json_data = if let Some(data_str) = data {
+        read_json_data(data_str)?
+    } else {
+        serde_json::json!({})
+    };
+
+    let data_obj = json_data.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(n) = name {
+        data_obj.insert("name".to_string(), serde_json::json!(n));
+    }
+    if let Some(mem) = memory_size {
+        data_obj.insert("memory_size".to_string(), serde_json::json!(mem));
+    }
+    if let Some(db_name) = default_db_name {
+        data_obj.insert("default_db_name".to_string(), serde_json::json!(db_name));
+    }
+    if let Some(enc) = encryption {
+        data_obj.insert("encryption".to_string(), serde_json::json!(enc));
+    }
 
     let response = client
         .post_raw("/v1/crdbs", json_data)
@@ -184,16 +211,57 @@ pub async fn get_participating_clusters(
 }
 
 /// Add cluster to CRDB
+#[allow(clippy::too_many_arguments)]
 pub async fn add_cluster_to_crdb(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: u32,
-    data: &str,
+    url: Option<&str>,
+    name: Option<&str>,
+    username: Option<&str>,
+    password: Option<&str>,
+    compression: Option<bool>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
-    let json_data = read_json_data(data)?;
+
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut json_data = if let Some(data_str) = data {
+        read_json_data(data_str)?
+    } else {
+        serde_json::json!({})
+    };
+
+    let data_obj = json_data.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(u) = url {
+        data_obj.insert("url".to_string(), serde_json::json!(u));
+    }
+    if let Some(n) = name {
+        data_obj.insert("name".to_string(), serde_json::json!(n));
+    }
+    if let Some(user) = username {
+        let credentials = data_obj
+            .entry("credentials")
+            .or_insert(serde_json::json!({}));
+        if let Some(cred_obj) = credentials.as_object_mut() {
+            cred_obj.insert("username".to_string(), serde_json::json!(user));
+        }
+    }
+    if let Some(pass) = password {
+        let credentials = data_obj
+            .entry("credentials")
+            .or_insert(serde_json::json!({}));
+        if let Some(cred_obj) = credentials.as_object_mut() {
+            cred_obj.insert("password".to_string(), serde_json::json!(pass));
+        }
+    }
+    if let Some(comp) = compression {
+        data_obj.insert("compression".to_string(), serde_json::json!(comp));
+    }
 
     let response = client
         .post_raw(
@@ -283,17 +351,40 @@ pub async fn get_crdb_instance(
 }
 
 /// Update CRDB instance
+#[allow(clippy::too_many_arguments)]
 pub async fn update_crdb_instance(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     crdb_id: u32,
     instance_id: u32,
-    data: &str,
+    memory_size: Option<u64>,
+    port: Option<u16>,
+    enabled: Option<bool>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
-    let json_data = read_json_data(data)?;
+
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut json_data = if let Some(data_str) = data {
+        read_json_data(data_str)?
+    } else {
+        serde_json::json!({})
+    };
+
+    let data_obj = json_data.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(mem) = memory_size {
+        data_obj.insert("memory_size".to_string(), serde_json::json!(mem));
+    }
+    if let Some(p) = port {
+        data_obj.insert("port".to_string(), serde_json::json!(p));
+    }
+    if let Some(e) = enabled {
+        data_obj.insert("enabled".to_string(), serde_json::json!(e));
+    }
 
     let response = client
         .put_raw(
@@ -607,18 +698,40 @@ pub async fn health_check_crdb(
 
 // Additional missing functions
 
+#[allow(clippy::too_many_arguments)]
 pub async fn update_cluster_in_crdb(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: u32,
     cluster_id: u32,
-    data: &str,
+    url: Option<&str>,
+    compression: Option<bool>,
+    proxy_policy: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
-    let update_data = read_json_data(data).context("Failed to parse update data")?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut update_data = if let Some(data_str) = data {
+        read_json_data(data_str).context("Failed to parse update data")?
+    } else {
+        serde_json::json!({})
+    };
+
+    let data_obj = update_data.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(u) = url {
+        data_obj.insert("url".to_string(), serde_json::json!(u));
+    }
+    if let Some(comp) = compression {
+        data_obj.insert("compression".to_string(), serde_json::json!(comp));
+    }
+    if let Some(policy) = proxy_policy {
+        data_obj.insert("proxy_policy".to_string(), serde_json::json!(policy));
+    }
 
     let result = client
         .put_raw(
@@ -675,17 +788,35 @@ pub async fn get_conflict_policy(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn update_conflict_policy(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: u32,
-    data: &str,
+    policy: Option<&str>,
+    source_id: Option<u32>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
-    let policy_data = read_json_data(data).context("Failed to parse policy data")?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut policy_data = if let Some(data_str) = data {
+        read_json_data(data_str).context("Failed to parse policy data")?
+    } else {
+        serde_json::json!({})
+    };
+
+    let data_obj = policy_data.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(p) = policy {
+        data_obj.insert("policy".to_string(), serde_json::json!(p));
+    }
+    if let Some(src) = source_id {
+        data_obj.insert("source_id".to_string(), serde_json::json!(src));
+    }
 
     let result = client
         .put_raw(&format!("/v1/crdbs/{}/conflict_policy", id), policy_data)
@@ -767,13 +898,26 @@ pub async fn backup_crdb(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: u32,
-    data: &str,
+    location: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
-    let backup_data = read_json_data(data).context("Failed to parse backup data")?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut backup_data = if let Some(data_str) = data {
+        read_json_data(data_str).context("Failed to parse backup data")?
+    } else {
+        serde_json::json!({})
+    };
+
+    let backup_obj = backup_data.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(loc) = location {
+        backup_obj.insert("location".to_string(), serde_json::json!(loc));
+    }
 
     let result = client
         .post_raw(&format!("/v1/crdbs/{}/backup", id), backup_data)
@@ -789,13 +933,30 @@ pub async fn restore_crdb(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: u32,
-    data: &str,
+    backup_uid: Option<&str>,
+    location: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
-    let restore_data = read_json_data(data).context("Failed to parse restore data")?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut restore_data = if let Some(data_str) = data {
+        read_json_data(data_str).context("Failed to parse restore data")?
+    } else {
+        serde_json::json!({})
+    };
+
+    let restore_obj = restore_data.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(uid) = backup_uid {
+        restore_obj.insert("backup_uid".to_string(), serde_json::json!(uid));
+    }
+    if let Some(loc) = location {
+        restore_obj.insert("location".to_string(), serde_json::json!(loc));
+    }
 
     let result = client
         .post_raw(&format!("/v1/crdbs/{}/restore", id), restore_data)
@@ -830,13 +991,26 @@ pub async fn export_crdb(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: u32,
-    data: &str,
+    location: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
-    let export_data = read_json_data(data).context("Failed to parse export data")?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut export_data = if let Some(data_str) = data {
+        read_json_data(data_str).context("Failed to parse export data")?
+    } else {
+        serde_json::json!({})
+    };
+
+    let export_obj = export_data.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(loc) = location {
+        export_obj.insert("location".to_string(), serde_json::json!(loc));
+    }
 
     let result = client
         .post_raw(&format!("/v1/crdbs/{}/export", id), export_data)

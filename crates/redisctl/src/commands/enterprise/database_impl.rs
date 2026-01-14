@@ -473,19 +473,53 @@ fn format_bytes(bytes: u64) -> String {
 }
 
 /// Export database
+#[allow(clippy::too_many_arguments)]
 pub async fn export_database(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: u32,
-    data: &str,
+    location: Option<&str>,
+    aws_access_key: Option<&str>,
+    aws_secret_key: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
-    let json_data = read_json_data(data)?;
+
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut request = if let Some(data_str) = data {
+        read_json_data(data_str)?
+    } else {
+        serde_json::json!({})
+    };
+
+    let request_obj = request.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(loc) = location {
+        request_obj.insert("export_location".to_string(), serde_json::json!(loc));
+    }
+    if let Some(key) = aws_access_key {
+        request_obj.insert("aws_access_key_id".to_string(), serde_json::json!(key));
+    }
+    if let Some(secret) = aws_secret_key {
+        request_obj.insert(
+            "aws_secret_access_key".to_string(),
+            serde_json::json!(secret),
+        );
+    }
+
+    // Validate required fields
+    if !request_obj.contains_key("export_location") {
+        return Err(RedisCtlError::InvalidInput {
+            message: "--location is required (unless using --data with export_location)"
+                .to_string(),
+        });
+    }
 
     let response = client
-        .post_raw(&format!("/v1/bdbs/{}/export", id), json_data)
+        .post_raw(&format!("/v1/bdbs/{}/export", id), request)
         .await
         .map_err(RedisCtlError::from)?;
 
@@ -495,19 +529,57 @@ pub async fn export_database(
 }
 
 /// Import to database
+#[allow(clippy::too_many_arguments)]
 pub async fn import_database(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: u32,
-    data: &str,
+    location: Option<&str>,
+    aws_access_key: Option<&str>,
+    aws_secret_key: Option<&str>,
+    flush: bool,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
-    let json_data = read_json_data(data)?;
+
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut request = if let Some(data_str) = data {
+        read_json_data(data_str)?
+    } else {
+        serde_json::json!({})
+    };
+
+    let request_obj = request.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(loc) = location {
+        request_obj.insert("import_location".to_string(), serde_json::json!(loc));
+    }
+    if let Some(key) = aws_access_key {
+        request_obj.insert("aws_access_key_id".to_string(), serde_json::json!(key));
+    }
+    if let Some(secret) = aws_secret_key {
+        request_obj.insert(
+            "aws_secret_access_key".to_string(),
+            serde_json::json!(secret),
+        );
+    }
+    if flush {
+        request_obj.insert("flush".to_string(), serde_json::json!(true));
+    }
+
+    // Validate required fields
+    if !request_obj.contains_key("import_location") {
+        return Err(RedisCtlError::InvalidInput {
+            message: "--location is required (unless using --data with import_location)"
+                .to_string(),
+        });
+    }
 
     let response = client
-        .post_raw(&format!("/v1/bdbs/{}/import", id), json_data)
+        .post_raw(&format!("/v1/bdbs/{}/import", id), request)
         .await
         .map_err(RedisCtlError::from)?;
 
@@ -540,15 +612,29 @@ pub async fn restore_database(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: u32,
-    data: &str,
+    backup_uid: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
-    let json_data = read_json_data(data)?;
+
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut request = if let Some(data_str) = data {
+        read_json_data(data_str)?
+    } else {
+        serde_json::json!({})
+    };
+
+    let request_obj = request.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(uid) = backup_uid {
+        request_obj.insert("backup_uid".to_string(), serde_json::json!(uid));
+    }
 
     let response = client
-        .post_raw(&format!("/v1/bdbs/{}/restore", id), json_data)
+        .post_raw(&format!("/v1/bdbs/{}/restore", id), request)
         .await
         .map_err(RedisCtlError::from)?;
 
@@ -611,15 +697,40 @@ pub async fn update_database_shards(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: u32,
-    data: &str,
+    shards_count: Option<u32>,
+    shards_placement: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
-    let json_data = read_json_data(data)?;
+
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut request = if let Some(data_str) = data {
+        read_json_data(data_str)?
+    } else {
+        serde_json::json!({})
+    };
+
+    let request_obj = request.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(count) = shards_count {
+        request_obj.insert("shards_count".to_string(), serde_json::json!(count));
+    }
+    if let Some(placement) = shards_placement {
+        request_obj.insert("shards_placement".to_string(), serde_json::json!(placement));
+    }
+
+    // Validate at least one field is provided
+    if request_obj.is_empty() {
+        return Err(RedisCtlError::InvalidInput {
+            message: "At least one update field is required (--shards-count, --shards-placement, or --data)".to_string(),
+        });
+    }
 
     let response = client
-        .put_raw(&format!("/v1/bdbs/{}/shards", id), json_data)
+        .put_raw(&format!("/v1/bdbs/{}/shards", id), request)
         .await
         .map_err(RedisCtlError::from)?;
 
@@ -652,15 +763,67 @@ pub async fn update_database_modules(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: u32,
-    data: &str,
+    add_modules: &[String],
+    remove_modules: &[String],
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
-    let json_data = read_json_data(data)?;
+
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut request = if let Some(data_str) = data {
+        read_json_data(data_str)?
+    } else {
+        serde_json::json!({})
+    };
+
+    let request_obj = request.as_object_mut().unwrap();
+
+    // Handle module additions
+    if !add_modules.is_empty() {
+        let mut module_list: Vec<serde_json::Value> = Vec::new();
+
+        for module_spec in add_modules {
+            // Parse module_name:args format
+            let (module_name, module_args) = if let Some(idx) = module_spec.find(':') {
+                let (name, args) = module_spec.split_at(idx);
+                (name.trim(), Some(args[1..].trim()))
+            } else {
+                (module_spec.as_str(), None)
+            };
+
+            let mut module_config = serde_json::json!({
+                "module_name": module_name
+            });
+            if let Some(args) = module_args {
+                module_config["module_args"] = serde_json::json!(args);
+            }
+            module_list.push(module_config);
+        }
+
+        request_obj.insert("module_list".to_string(), serde_json::json!(module_list));
+    }
+
+    // Handle module removals
+    if !remove_modules.is_empty() {
+        request_obj.insert(
+            "remove_modules".to_string(),
+            serde_json::json!(remove_modules),
+        );
+    }
+
+    // Validate at least one operation is provided
+    if request_obj.is_empty() {
+        return Err(RedisCtlError::InvalidInput {
+            message:
+                "At least one operation is required (--add-module, --remove-module, or --data)"
+                    .to_string(),
+        });
+    }
 
     let response = client
-        .put_raw(&format!("/v1/bdbs/{}/modules", id), json_data)
+        .put_raw(&format!("/v1/bdbs/{}/modules", id), request)
         .await
         .map_err(RedisCtlError::from)?;
 
@@ -693,15 +856,41 @@ pub async fn update_database_acl(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: u32,
-    data: &str,
+    acl_uid: Option<u32>,
+    default_user: Option<bool>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
-    let json_data = read_json_data(data)?;
+
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut request = if let Some(data_str) = data {
+        read_json_data(data_str)?
+    } else {
+        serde_json::json!({})
+    };
+
+    let request_obj = request.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(uid) = acl_uid {
+        request_obj.insert("acl_uid".to_string(), serde_json::json!(uid));
+    }
+    if let Some(default) = default_user {
+        request_obj.insert("default_user".to_string(), serde_json::json!(default));
+    }
+
+    // Validate at least one field is provided
+    if request_obj.is_empty() {
+        return Err(RedisCtlError::InvalidInput {
+            message: "At least one update field is required (--acl-uid, --default-user, or --data)"
+                .to_string(),
+        });
+    }
 
     let response = client
-        .put_raw(&format!("/v1/bdbs/{}/acl", id), json_data)
+        .put_raw(&format!("/v1/bdbs/{}/acl", id), request)
         .await
         .map_err(RedisCtlError::from)?;
 
