@@ -48,11 +48,37 @@ pub enum AlertsCommands {
     #[command(name = "settings-get")]
     SettingsGet,
     /// Update alert settings
-    #[command(name = "settings-update")]
+    #[command(
+        name = "settings-update",
+        after_help = "EXAMPLES:
+    # Enable cluster alerts
+    redisctl enterprise alerts settings-update --cluster-alerts true
+
+    # Set alert thresholds
+    redisctl enterprise alerts settings-update --memory-threshold 80 --cpu-threshold 90
+
+    # Using JSON for full configuration
+    redisctl enterprise alerts settings-update --data @settings.json"
+    )]
     SettingsUpdate {
-        /// JSON data for alert settings (use '-' for stdin)
+        /// Enable/disable cluster alerts
         #[arg(long)]
-        data: String,
+        cluster_alerts: Option<bool>,
+        /// Enable/disable node alerts
+        #[arg(long)]
+        node_alerts: Option<bool>,
+        /// Enable/disable database alerts
+        #[arg(long)]
+        bdb_alerts: Option<bool>,
+        /// Memory usage threshold percentage for alerts
+        #[arg(long)]
+        memory_threshold: Option<u32>,
+        /// CPU usage threshold percentage for alerts
+        #[arg(long)]
+        cpu_threshold: Option<u32>,
+        /// JSON data for alert settings (optional, use '-' for stdin)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: Option<String>,
     },
 }
 
@@ -120,11 +146,23 @@ impl AlertsCommands {
             Self::SettingsGet => {
                 handle_get_alert_settings(&conn_manager, profile_name, output_format, query).await
             }
-            Self::SettingsUpdate { data } => {
+            Self::SettingsUpdate {
+                cluster_alerts,
+                node_alerts,
+                bdb_alerts,
+                memory_threshold,
+                cpu_threshold,
+                data,
+            } => {
                 handle_update_alert_settings(
                     &conn_manager,
                     profile_name,
-                    data,
+                    *cluster_alerts,
+                    *node_alerts,
+                    *bdb_alerts,
+                    *memory_threshold,
+                    *cpu_threshold,
+                    data.as_deref(),
                     output_format,
                     query,
                 )
@@ -387,16 +425,46 @@ async fn handle_get_alert_settings(
     super::utils::print_formatted_output(response, output_format).map_err(|e| anyhow::anyhow!(e))
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn handle_update_alert_settings(
     conn_mgr: &crate::connection::ConnectionManager,
     profile_name: Option<&str>,
-    data: &str,
+    cluster_alerts: Option<bool>,
+    node_alerts: Option<bool>,
+    bdb_alerts: Option<bool>,
+    memory_threshold: Option<u32>,
+    cpu_threshold: Option<u32>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> AnyhowResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
-    let json_data = super::utils::read_json_data(data)?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut json_data = if let Some(data_str) = data {
+        super::utils::read_json_data(data_str)?
+    } else {
+        serde_json::json!({})
+    };
+
+    let data_obj = json_data.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(ca) = cluster_alerts {
+        data_obj.insert("cluster_alerts_enabled".to_string(), serde_json::json!(ca));
+    }
+    if let Some(na) = node_alerts {
+        data_obj.insert("node_alerts_enabled".to_string(), serde_json::json!(na));
+    }
+    if let Some(ba) = bdb_alerts {
+        data_obj.insert("bdb_alerts_enabled".to_string(), serde_json::json!(ba));
+    }
+    if let Some(mt) = memory_threshold {
+        data_obj.insert("memory_threshold".to_string(), serde_json::json!(mt));
+    }
+    if let Some(ct) = cpu_threshold {
+        data_obj.insert("cpu_threshold".to_string(), serde_json::json!(ct));
+    }
 
     // Alert settings are updated through cluster configuration
     let update_payload = serde_json::json!({
@@ -468,7 +536,12 @@ mod tests {
         // Settings commands
         let _cmd = AlertsCommands::SettingsGet;
         let _cmd = AlertsCommands::SettingsUpdate {
-            data: "{}".to_string(),
+            cluster_alerts: Some(true),
+            node_alerts: None,
+            bdb_alerts: None,
+            memory_threshold: None,
+            cpu_threshold: None,
+            data: None,
         };
     }
 }

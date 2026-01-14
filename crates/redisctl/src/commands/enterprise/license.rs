@@ -12,10 +12,19 @@ pub enum LicenseCommands {
     /// Get current license information
     Get,
     /// Update license with JSON data
+    #[command(after_help = "EXAMPLES:
+    # Update license with key
+    redisctl enterprise license update --license-key ABC123...
+
+    # Using JSON file
+    redisctl enterprise license update --data @license.json")]
     Update {
-        /// License data as JSON string or @file.json
+        /// License key string
         #[arg(long)]
-        data: String,
+        license_key: Option<String>,
+        /// License data as JSON string or @file.json (optional)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: Option<String>,
     },
     /// Upload license file
     Upload {
@@ -24,10 +33,19 @@ pub enum LicenseCommands {
         file: String,
     },
     /// Validate license
+    #[command(after_help = "EXAMPLES:
+    # Validate license key
+    redisctl enterprise license validate --license-key ABC123...
+
+    # Validate from JSON
+    redisctl enterprise license validate --data @license.json")]
     Validate {
-        /// License data as JSON string or @file.json
+        /// License key string to validate
         #[arg(long)]
-        data: String,
+        license_key: Option<String>,
+        /// License data as JSON string or @file.json (optional)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: Option<String>,
     },
     /// Check license expiration
     Expiry,
@@ -52,15 +70,30 @@ impl LicenseCommands {
             Self::Get => {
                 handle_get_license(&conn_manager, profile_name, output_format, query).await
             }
-            Self::Update { data } => {
-                handle_update_license(&conn_manager, profile_name, data, output_format, query).await
+            Self::Update { license_key, data } => {
+                handle_update_license(
+                    &conn_manager,
+                    profile_name,
+                    license_key.as_deref(),
+                    data.as_deref(),
+                    output_format,
+                    query,
+                )
+                .await
             }
             Self::Upload { file } => {
                 handle_upload_license(&conn_manager, profile_name, file, output_format, query).await
             }
-            Self::Validate { data } => {
-                handle_validate_license(&conn_manager, profile_name, data, output_format, query)
-                    .await
+            Self::Validate { license_key, data } => {
+                handle_validate_license(
+                    &conn_manager,
+                    profile_name,
+                    license_key.as_deref(),
+                    data.as_deref(),
+                    output_format,
+                    query,
+                )
+                .await
             }
             Self::Expiry => {
                 handle_license_expiry(&conn_manager, profile_name, output_format, query).await
@@ -100,13 +133,26 @@ async fn handle_get_license(
 async fn handle_update_license(
     conn_mgr: &crate::connection::ConnectionManager,
     profile_name: Option<&str>,
-    data: &str,
+    license_key: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> AnyhowResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
-    let json_data = super::utils::read_json_data(data)?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut json_data = if let Some(data_str) = data {
+        super::utils::read_json_data(data_str)?
+    } else {
+        serde_json::json!({})
+    };
+
+    let data_obj = json_data.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(key) = license_key {
+        data_obj.insert("license".to_string(), serde_json::json!(key));
+    }
 
     let response = client
         .put::<_, Value>("/v1/license", &json_data)
@@ -167,13 +213,26 @@ async fn handle_upload_license(
 async fn handle_validate_license(
     conn_mgr: &crate::connection::ConnectionManager,
     profile_name: Option<&str>,
-    data: &str,
+    license_key: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> AnyhowResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
-    let json_data = super::utils::read_json_data(data)?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut json_data = if let Some(data_str) = data {
+        super::utils::read_json_data(data_str)?
+    } else {
+        serde_json::json!({})
+    };
+
+    let data_obj = json_data.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(key) = license_key {
+        data_obj.insert("license".to_string(), serde_json::json!(key));
+    }
 
     // The validation endpoint might not exist, so we'll use the regular PUT with dry_run if available
     // Otherwise, we'll just try to parse and validate the license locally
@@ -379,7 +438,8 @@ mod tests {
 
         // Update command
         let _cmd = LicenseCommands::Update {
-            data: "{}".to_string(),
+            license_key: Some("ABC123".to_string()),
+            data: None,
         };
 
         // Upload command
@@ -389,7 +449,8 @@ mod tests {
 
         // Validate command
         let _cmd = LicenseCommands::Validate {
-            data: "{}".to_string(),
+            license_key: Some("ABC123".to_string()),
+            data: None,
         };
 
         // Expiry command

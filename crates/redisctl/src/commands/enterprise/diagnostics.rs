@@ -13,10 +13,25 @@ pub enum DiagnosticsCommands {
     Get,
 
     /// Update diagnostics configuration
+    #[command(after_help = "EXAMPLES:
+    # Enable diagnostics
+    redisctl enterprise diagnostics update --enabled true
+
+    # Set collection interval
+    redisctl enterprise diagnostics update --interval 3600
+
+    # Using JSON for full configuration
+    redisctl enterprise diagnostics update --data @config.json")]
     Update {
-        /// JSON data for configuration update (use @filename or - for stdin)
-        #[arg(short, long)]
-        data: String,
+        /// Enable/disable diagnostics collection
+        #[arg(long)]
+        enabled: Option<bool>,
+        /// Collection interval in seconds
+        #[arg(long)]
+        interval: Option<u32>,
+        /// JSON data for configuration update (optional)
+        #[arg(short, long, value_name = "FILE|JSON")]
+        data: Option<String>,
     },
 
     /// Run diagnostic checks
@@ -78,8 +93,28 @@ impl DiagnosticsCommands {
                 super::utils::print_formatted_output(output_data, output_format)?;
             }
 
-            DiagnosticsCommands::Update { data } => {
-                let json_data = super::utils::read_json_data(data)?;
+            DiagnosticsCommands::Update {
+                enabled,
+                interval,
+                data,
+            } => {
+                // Start with JSON from --data if provided, otherwise empty object
+                let mut json_data = if let Some(data_str) = data {
+                    super::utils::read_json_data(data_str)?
+                } else {
+                    serde_json::json!({})
+                };
+
+                let data_obj = json_data.as_object_mut().unwrap();
+
+                // CLI parameters override JSON values
+                if let Some(e) = enabled {
+                    data_obj.insert("enabled".to_string(), serde_json::json!(e));
+                }
+                if let Some(i) = interval {
+                    data_obj.insert("interval".to_string(), serde_json::json!(i));
+                }
+
                 let result = handler
                     .update_config(json_data)
                     .await

@@ -60,24 +60,47 @@ pub enum ShardCommands {
     },
 
     /// Perform bulk failover operation
-    #[command(name = "bulk-failover")]
-    BulkFailover {
-        /// JSON data specifying shards to failover (use @filename or - for stdin)
-        #[arg(short, long)]
-        data: String,
+    #[command(
+        name = "bulk-failover",
+        after_help = "EXAMPLES:
+    # Failover specific shards by UID
+    redisctl enterprise shard bulk-failover --shard-uids 1,2,3
 
+    # Using JSON for full specification
+    redisctl enterprise shard bulk-failover --data @shards.json"
+    )]
+    BulkFailover {
+        /// Comma-separated list of shard UIDs to failover
+        #[arg(long, value_delimiter = ',')]
+        shard_uids: Option<Vec<u32>>,
+        /// JSON data specifying shards to failover (optional)
+        #[arg(short, long, value_name = "FILE|JSON")]
+        data: Option<String>,
         /// Force without confirmation
         #[arg(short, long)]
         force: bool,
     },
 
     /// Perform bulk migration operation
-    #[command(name = "bulk-migrate")]
-    BulkMigrate {
-        /// JSON data specifying shard migrations (use @filename or - for stdin)
-        #[arg(short, long)]
-        data: String,
+    #[command(
+        name = "bulk-migrate",
+        after_help = "EXAMPLES:
+    # Migrate shards to target node
+    redisctl enterprise shard bulk-migrate --shard-uids 1,2,3 --target-node 2
 
+    # Using JSON for full specification
+    redisctl enterprise shard bulk-migrate --data @migrations.json"
+    )]
+    BulkMigrate {
+        /// Comma-separated list of shard UIDs to migrate
+        #[arg(long, value_delimiter = ',')]
+        shard_uids: Option<Vec<u32>>,
+        /// Target node UID for migration
+        #[arg(long)]
+        target_node: Option<u32>,
+        /// JSON data specifying shard migrations (optional)
+        #[arg(short, long, value_name = "FILE|JSON")]
+        data: Option<String>,
         /// Force without confirmation
         #[arg(short, long)]
         force: bool,
@@ -251,12 +274,29 @@ impl ShardCommands {
                 println!("Shard {} migration to node {} initiated", uid, target_node);
             }
 
-            ShardCommands::BulkFailover { data, force } => {
+            ShardCommands::BulkFailover {
+                shard_uids,
+                data,
+                force,
+            } => {
                 if !force && !super::utils::confirm_action("Perform bulk shard failover?")? {
                     return Ok(());
                 }
 
-                let json_data = super::utils::read_json_data(data)?;
+                // Start with JSON from --data if provided, otherwise empty object
+                let mut json_data = if let Some(data_str) = data {
+                    super::utils::read_json_data(data_str)?
+                } else {
+                    serde_json::json!({})
+                };
+
+                // CLI parameters override JSON values
+                if let Some(uids) = shard_uids {
+                    json_data
+                        .as_object_mut()
+                        .unwrap()
+                        .insert("shard_uids".to_string(), serde_json::json!(uids));
+                }
 
                 let _: serde_json::Value = client
                     .post("/v1/shards/actions/failover", &json_data)
@@ -266,12 +306,32 @@ impl ShardCommands {
                 println!("Bulk shard failover initiated successfully");
             }
 
-            ShardCommands::BulkMigrate { data, force } => {
+            ShardCommands::BulkMigrate {
+                shard_uids,
+                target_node,
+                data,
+                force,
+            } => {
                 if !force && !super::utils::confirm_action("Perform bulk shard migration?")? {
                     return Ok(());
                 }
 
-                let json_data = super::utils::read_json_data(data)?;
+                // Start with JSON from --data if provided, otherwise empty object
+                let mut json_data = if let Some(data_str) = data {
+                    super::utils::read_json_data(data_str)?
+                } else {
+                    serde_json::json!({})
+                };
+
+                let json_obj = json_data.as_object_mut().unwrap();
+
+                // CLI parameters override JSON values
+                if let Some(uids) = shard_uids {
+                    json_obj.insert("shard_uids".to_string(), serde_json::json!(uids));
+                }
+                if let Some(node) = target_node {
+                    json_obj.insert("target_node".to_string(), serde_json::json!(node));
+                }
 
                 let _: serde_json::Value = client
                     .post("/v1/shards/actions/migrate", &json_data)

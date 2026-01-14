@@ -14,10 +14,31 @@ pub enum OcspCommands {
     Get,
 
     /// Update OCSP configuration
+    #[command(after_help = "EXAMPLES:
+    # Enable OCSP with responder URL
+    redisctl enterprise ocsp update --enabled true --responder-url https://ocsp.example.com
+
+    # Set response timeout
+    redisctl enterprise ocsp update --response-timeout 5000
+
+    # Using JSON for full configuration
+    redisctl enterprise ocsp update --data @ocsp.json")]
     Update {
-        /// JSON data for OCSP configuration
-        #[arg(long, required = true)]
-        data: String,
+        /// Enable/disable OCSP validation
+        #[arg(long)]
+        enabled: Option<bool>,
+        /// OCSP responder URL
+        #[arg(long)]
+        responder_url: Option<String>,
+        /// Response timeout in milliseconds
+        #[arg(long)]
+        response_timeout: Option<u32>,
+        /// Query frequency in seconds
+        #[arg(long)]
+        query_frequency: Option<u32>,
+        /// JSON data for OCSP configuration (optional)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: Option<String>,
     },
 
     /// Get OCSP status
@@ -46,8 +67,25 @@ pub async fn handle_ocsp_command(
 ) -> Result<(), RedisCtlError> {
     match cmd {
         OcspCommands::Get => handle_ocsp_get(conn_mgr, profile_name, output_format, query).await,
-        OcspCommands::Update { data } => {
-            handle_ocsp_update(conn_mgr, profile_name, &data, output_format, query).await
+        OcspCommands::Update {
+            enabled,
+            responder_url,
+            response_timeout,
+            query_frequency,
+            data,
+        } => {
+            handle_ocsp_update(
+                conn_mgr,
+                profile_name,
+                enabled,
+                responder_url.as_deref(),
+                response_timeout,
+                query_frequency,
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
         OcspCommands::Status => {
             handle_ocsp_status(conn_mgr, profile_name, output_format, query).await
@@ -93,17 +131,42 @@ async fn handle_ocsp_get(
     utils::print_formatted_output(result, output_format)
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn handle_ocsp_update(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
-    data: &str,
+    enabled: Option<bool>,
+    responder_url: Option<&str>,
+    response_timeout: Option<u32>,
+    query_frequency: Option<u32>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> Result<(), RedisCtlError> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
-    let payload: Value =
-        serde_json::from_str(data).context("Invalid JSON data for OCSP configuration")?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut payload = if let Some(data_str) = data {
+        utils::read_json_data(data_str)?
+    } else {
+        serde_json::json!({})
+    };
+
+    let payload_obj = payload.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(e) = enabled {
+        payload_obj.insert("enabled".to_string(), serde_json::json!(e));
+    }
+    if let Some(url) = responder_url {
+        payload_obj.insert("responder_url".to_string(), serde_json::json!(url));
+    }
+    if let Some(rt) = response_timeout {
+        payload_obj.insert("response_timeout".to_string(), serde_json::json!(rt));
+    }
+    if let Some(qf) = query_frequency {
+        payload_obj.insert("query_frequency".to_string(), serde_json::json!(qf));
+    }
 
     let response = client
         .put_raw("/v1/ocsp", payload)

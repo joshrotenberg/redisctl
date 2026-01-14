@@ -16,10 +16,25 @@ pub enum CmSettingsCommands {
     },
 
     /// Update cluster manager settings
+    #[command(after_help = "EXAMPLES:
+    # Update a specific setting
+    redisctl enterprise cm-settings set --watchdog-enabled true
+
+    # Update multiple settings
+    redisctl enterprise cm-settings set --cm-port 8443 --watchdog-enabled false
+
+    # Using JSON for full configuration
+    redisctl enterprise cm-settings set --data @settings.json")]
     Set {
-        /// Settings data (JSON file or inline, use @filename or - for stdin)
-        #[arg(short, long)]
-        data: String,
+        /// Enable/disable watchdog
+        #[arg(long)]
+        watchdog_enabled: Option<bool>,
+        /// Cluster manager port
+        #[arg(long)]
+        cm_port: Option<u16>,
+        /// Settings data (JSON file or inline, optional)
+        #[arg(short, long, value_name = "FILE|JSON")]
+        data: Option<String>,
 
         /// Force update without confirmation
         #[arg(short, long)]
@@ -114,12 +129,32 @@ impl CmSettingsCommands {
                 super::utils::print_formatted_output(output_data, output_format)?;
             }
 
-            CmSettingsCommands::Set { data, force } => {
-                if !force && !super::utils::confirm_action("Update cluster manager settings?")? {
+            CmSettingsCommands::Set {
+                watchdog_enabled,
+                cm_port,
+                data,
+                force,
+            } => {
+                if !*force && !super::utils::confirm_action("Update cluster manager settings?")? {
                     return Ok(());
                 }
 
-                let json_data = super::utils::read_json_data(data)?;
+                // Start with JSON from --data if provided, otherwise empty object
+                let mut json_data = if let Some(data_str) = data {
+                    super::utils::read_json_data(data_str)?
+                } else {
+                    serde_json::json!({})
+                };
+
+                let data_obj = json_data.as_object_mut().unwrap();
+
+                // CLI parameters override JSON values
+                if let Some(we) = watchdog_enabled {
+                    data_obj.insert("watchdog_enabled".to_string(), serde_json::json!(we));
+                }
+                if let Some(port) = cm_port {
+                    data_obj.insert("cm_port".to_string(), serde_json::json!(port));
+                }
 
                 let response: serde_json::Value = client
                     .put("/v1/cm_settings", &json_data)

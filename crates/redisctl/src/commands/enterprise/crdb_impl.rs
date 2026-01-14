@@ -929,6 +929,7 @@ pub async fn backup_crdb(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn restore_crdb(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,

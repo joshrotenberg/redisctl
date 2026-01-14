@@ -693,6 +693,7 @@ pub async fn get_database_shards(
 }
 
 /// Update database shards
+#[allow(clippy::too_many_arguments)]
 pub async fn update_database_shards(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
@@ -759,6 +760,7 @@ pub async fn get_database_modules(
 }
 
 /// Update database modules
+#[allow(clippy::too_many_arguments)]
 pub async fn update_database_modules(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
@@ -852,6 +854,7 @@ pub async fn get_database_acl(
 }
 
 /// Update database ACL
+#[allow(clippy::too_many_arguments)]
 pub async fn update_database_acl(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,

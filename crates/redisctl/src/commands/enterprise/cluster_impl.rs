@@ -112,6 +112,7 @@ pub async fn get_cluster_policy(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn update_cluster_policy(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
@@ -221,6 +222,7 @@ pub async fn update_cluster_license(
 // Cluster Operations Commands
 // ============================================================================
 
+#[allow(clippy::too_many_arguments)]
 pub async fn bootstrap_cluster(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
@@ -304,6 +306,7 @@ pub async fn bootstrap_cluster(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn join_cluster(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
@@ -643,6 +646,7 @@ pub async fn get_cluster_certificates(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn update_cluster_certificates(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
@@ -722,6 +726,7 @@ pub async fn get_ocsp_config(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn update_ocsp_config(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,

@@ -13,11 +13,25 @@ pub enum LocalCommands {
     Services,
 
     /// Update local services configuration
-    #[command(name = "services-update")]
+    #[command(
+        name = "services-update",
+        after_help = "EXAMPLES:
+    # Update service action
+    redisctl enterprise local services-update --action start --service cm_server
+
+    # Using JSON for full configuration
+    redisctl enterprise local services-update --data @services.json"
+    )]
     ServicesUpdate {
-        /// Service configuration as JSON string or @file.json
+        /// Service action (start, stop, restart)
         #[arg(long)]
-        data: String,
+        action: Option<String>,
+        /// Service name
+        #[arg(long)]
+        service: Option<String>,
+        /// Service configuration as JSON string or @file.json (optional)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: Option<String>,
     },
 }
 
@@ -61,8 +75,27 @@ impl LocalCommands {
                 super::utils::print_formatted_output(output_data, output_format)?;
             }
 
-            LocalCommands::ServicesUpdate { data } => {
-                let json_data = super::utils::read_json_data(data)?;
+            LocalCommands::ServicesUpdate {
+                action,
+                service,
+                data,
+            } => {
+                // Start with JSON from --data if provided, otherwise empty object
+                let mut json_data = if let Some(data_str) = data {
+                    super::utils::read_json_data(data_str)?
+                } else {
+                    serde_json::json!({})
+                };
+
+                let data_obj = json_data.as_object_mut().unwrap();
+
+                // CLI parameters override JSON values
+                if let Some(a) = action {
+                    data_obj.insert("action".to_string(), serde_json::json!(a));
+                }
+                if let Some(s) = service {
+                    data_obj.insert("service".to_string(), serde_json::json!(s));
+                }
 
                 let response: serde_json::Value = client
                     .post("/v1/local/services", &json_data)

@@ -43,6 +43,7 @@ pub async fn get_node(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn add_node(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
@@ -360,6 +361,7 @@ pub async fn get_node_config(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn update_node_config(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,

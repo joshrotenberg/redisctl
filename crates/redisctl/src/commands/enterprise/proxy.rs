@@ -29,20 +29,52 @@ pub enum ProxyCommands {
     },
 
     /// Update proxy configuration
+    #[command(after_help = "EXAMPLES:
+    # Update proxy threads
+    redisctl enterprise proxy update 1 --threads 4
+
+    # Update proxy max connections
+    redisctl enterprise proxy update 1 --max-connections 1000
+
+    # Using JSON for full configuration
+    redisctl enterprise proxy update 1 --data @proxy.json")]
     Update {
         /// Proxy UID
         uid: u64,
-        /// JSON data for update (use @filename or - for stdin)
-        #[arg(short, long)]
-        data: String,
+        /// Number of proxy threads
+        #[arg(long)]
+        threads: Option<u32>,
+        /// Maximum client connections
+        #[arg(long)]
+        max_connections: Option<u32>,
+        /// Enable/disable the proxy
+        #[arg(long)]
+        enabled: Option<bool>,
+        /// JSON data for update (optional, use @filename or - for stdin)
+        #[arg(short, long, value_name = "FILE|JSON")]
+        data: Option<String>,
     },
 
     /// Update all proxies configuration
-    #[command(name = "update-all")]
+    #[command(
+        name = "update-all",
+        after_help = "EXAMPLES:
+    # Update all proxies threads
+    redisctl enterprise proxy update-all --threads 4
+
+    # Using JSON for full configuration
+    redisctl enterprise proxy update-all --data @proxy.json"
+    )]
     UpdateAll {
-        /// JSON data for update (use @filename or - for stdin)
-        #[arg(short, long)]
-        data: String,
+        /// Number of proxy threads
+        #[arg(long)]
+        threads: Option<u32>,
+        /// Maximum client connections
+        #[arg(long)]
+        max_connections: Option<u32>,
+        /// JSON data for update (optional, use @filename or - for stdin)
+        #[arg(short, long, value_name = "FILE|JSON")]
+        data: Option<String>,
     },
 }
 
@@ -98,8 +130,29 @@ async fn handle_proxy_command_impl(
 
             super::utils::print_formatted_output(output_data, output_format)?;
         }
-        ProxyCommands::Update { uid, data } => {
-            let payload = super::utils::read_json_data(data)?;
+        ProxyCommands::Update {
+            uid,
+            threads,
+            max_connections,
+            enabled,
+            data,
+        } => {
+            let mut payload = if let Some(data_str) = data {
+                super::utils::read_json_data(data_str)?
+            } else {
+                serde_json::json!({})
+            };
+
+            let payload_obj = payload.as_object_mut().unwrap();
+            if let Some(t) = threads {
+                payload_obj.insert("threads".to_string(), serde_json::json!(t));
+            }
+            if let Some(mc) = max_connections {
+                payload_obj.insert("max_connections".to_string(), serde_json::json!(mc));
+            }
+            if let Some(e) = enabled {
+                payload_obj.insert("enabled".to_string(), serde_json::json!(e));
+            }
 
             let response: serde_json::Value = client
                 .put(&format!("/v1/proxies/{}", uid), &payload)
@@ -114,8 +167,24 @@ async fn handle_proxy_command_impl(
 
             super::utils::print_formatted_output(output_data, output_format)?;
         }
-        ProxyCommands::UpdateAll { data } => {
-            let payload = super::utils::read_json_data(data)?;
+        ProxyCommands::UpdateAll {
+            threads,
+            max_connections,
+            data,
+        } => {
+            let mut payload = if let Some(data_str) = data {
+                super::utils::read_json_data(data_str)?
+            } else {
+                serde_json::json!({})
+            };
+
+            let payload_obj = payload.as_object_mut().unwrap();
+            if let Some(t) = threads {
+                payload_obj.insert("threads".to_string(), serde_json::json!(t));
+            }
+            if let Some(mc) = max_connections {
+                payload_obj.insert("max_connections".to_string(), serde_json::json!(mc));
+            }
 
             let response: serde_json::Value = client
                 .put("/v1/proxies", &payload)
@@ -162,18 +231,18 @@ mod tests {
         }
 
         // Test update command
-        let cli = TestCli::parse_from(["test", "update", "1", "--data", "@proxy.json"]);
-        if let ProxyCommands::Update { uid, data } = cli.cmd {
+        let cli = TestCli::parse_from(["test", "update", "1", "--threads", "4"]);
+        if let ProxyCommands::Update { uid, threads, .. } = cli.cmd {
             assert_eq!(uid, 1);
-            assert_eq!(data, "@proxy.json");
+            assert_eq!(threads, Some(4));
         } else {
             panic!("Expected Update command");
         }
 
         // Test update-all command
-        let cli = TestCli::parse_from(["test", "update-all", "--data", "-"]);
-        if let ProxyCommands::UpdateAll { data } = cli.cmd {
-            assert_eq!(data, "-");
+        let cli = TestCli::parse_from(["test", "update-all", "--threads", "4"]);
+        if let ProxyCommands::UpdateAll { threads, .. } = cli.cmd {
+            assert_eq!(threads, Some(4));
         } else {
             panic!("Expected UpdateAll command");
         }

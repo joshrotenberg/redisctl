@@ -1553,11 +1553,37 @@ pub enum EnterpriseLdapCommands {
     GetConfig,
 
     /// Update LDAP configuration
-    #[command(name = "update-config")]
+    #[command(
+        name = "update-config",
+        after_help = "EXAMPLES:
+    # Enable LDAP with server URL
+    redisctl enterprise rbac ldap update-config --enabled true --server-url ldap://ldap.example.com
+
+    # Using JSON for full configuration
+    redisctl enterprise rbac ldap update-config --data @ldap.json"
+    )]
     UpdateConfig {
-        /// LDAP config data (JSON file or inline)
+        /// Enable or disable LDAP
+        #[arg(long)]
+        enabled: Option<bool>,
+        /// LDAP server URL
+        #[arg(long)]
+        server_url: Option<String>,
+        /// Bind DN for LDAP authentication
+        #[arg(long)]
+        bind_dn: Option<String>,
+        /// Bind password for LDAP authentication
+        #[arg(long)]
+        bind_password: Option<String>,
+        /// Base DN for user search
+        #[arg(long)]
+        base_dn: Option<String>,
+        /// User search filter
+        #[arg(long)]
+        user_filter: Option<String>,
+        /// LDAP config data (JSON file or inline, optional)
         #[arg(long, value_name = "FILE|JSON")]
-        data: String,
+        data: Option<String>,
     },
 
     /// Test LDAP connection
