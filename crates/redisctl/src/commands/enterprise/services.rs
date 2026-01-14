@@ -20,12 +20,27 @@ pub enum ServicesCommands {
     },
 
     /// Update service configuration
+    #[command(after_help = "EXAMPLES:
+    # Enable a service
+    redisctl enterprise services update cm_server --enabled true
+
+    # Update service with timeout
+    redisctl enterprise services update cm_server --timeout 30
+
+    # Using JSON for full configuration
+    redisctl enterprise services update cm_server --data @config.json")]
     Update {
         /// Service name
         service: String,
-        /// JSON data for service configuration
-        #[arg(long, required = true)]
-        data: String,
+        /// Enable/disable the service
+        #[arg(long)]
+        enabled: Option<bool>,
+        /// Service timeout in seconds
+        #[arg(long)]
+        timeout: Option<u32>,
+        /// JSON data for service configuration (optional)
+        #[arg(long, value_name = "FILE|JSON")]
+        data: Option<String>,
     },
 
     /// Restart service
@@ -67,12 +82,19 @@ pub async fn handle_services_command(
         ServicesCommands::Get { service } => {
             handle_services_get(conn_mgr, profile_name, &service, output_format, query).await
         }
-        ServicesCommands::Update { service, data } => {
+        ServicesCommands::Update {
+            service,
+            enabled,
+            timeout,
+            data,
+        } => {
             handle_services_update(
                 conn_mgr,
                 profile_name,
                 &service,
-                &data,
+                enabled,
+                timeout,
+                data.as_deref(),
                 output_format,
                 query,
             )
@@ -140,18 +162,35 @@ async fn handle_services_get(
     utils::print_formatted_output(result, output_format)
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn handle_services_update(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     service: &str,
-    data: &str,
+    enabled: Option<bool>,
+    timeout: Option<u32>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> Result<(), RedisCtlError> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
-    let payload: Value =
-        serde_json::from_str(data).context("Invalid JSON data for service configuration")?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut payload = if let Some(data_str) = data {
+        utils::read_json_data(data_str)?
+    } else {
+        serde_json::json!({})
+    };
+
+    let payload_obj = payload.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(e) = enabled {
+        payload_obj.insert("enabled".to_string(), serde_json::json!(e));
+    }
+    if let Some(t) = timeout {
+        payload_obj.insert("timeout".to_string(), serde_json::json!(t));
+    }
 
     let endpoint = format!("/v1/services/{}", service);
     let response = client

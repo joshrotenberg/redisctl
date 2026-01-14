@@ -251,8 +251,29 @@ pub async fn handle_ldap_command(
         EnterpriseLdapCommands::GetConfig => {
             rbac_impl::get_ldap_config(conn_mgr, profile_name, output_format, query).await
         }
-        EnterpriseLdapCommands::UpdateConfig { data } => {
-            rbac_impl::update_ldap_config(conn_mgr, profile_name, data, output_format, query).await
+        EnterpriseLdapCommands::UpdateConfig {
+            enabled,
+            server_url,
+            bind_dn,
+            bind_password,
+            base_dn,
+            user_filter,
+            data,
+        } => {
+            rbac_impl::update_ldap_config(
+                conn_mgr,
+                profile_name,
+                *enabled,
+                server_url.as_deref(),
+                bind_dn.as_deref(),
+                bind_password.as_deref(),
+                base_dn.as_deref(),
+                user_filter.as_deref(),
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
         EnterpriseLdapCommands::TestConnection => {
             rbac_impl::test_ldap_connection(conn_mgr, profile_name, output_format, query).await

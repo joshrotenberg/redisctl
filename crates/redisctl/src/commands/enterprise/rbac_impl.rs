@@ -797,19 +797,54 @@ pub async fn get_ldap_config(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn update_ldap_config(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
-    data: &str,
+    enabled: Option<bool>,
+    server_url: Option<&str>,
+    bind_dn: Option<&str>,
+    bind_password: Option<&str>,
+    base_dn: Option<&str>,
+    user_filter: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
 
-    let ldap_data = read_json_data(data).context("Failed to parse LDAP data")?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut ldap_data = if let Some(data_str) = data {
+        read_json_data(data_str).context("Failed to parse LDAP data")?
+    } else {
+        serde_json::json!({})
+    };
+
+    let ldap_obj = ldap_data.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(en) = enabled {
+        ldap_obj.insert("enabled".to_string(), serde_json::json!(en));
+    }
+    if let Some(url) = server_url {
+        ldap_obj.insert("server_url".to_string(), serde_json::json!(url));
+    }
+    if let Some(dn) = bind_dn {
+        ldap_obj.insert("bind_dn".to_string(), serde_json::json!(dn));
+    }
+    if let Some(pass) = bind_password {
+        ldap_obj.insert("bind_password".to_string(), serde_json::json!(pass));
+    }
+    if let Some(dn) = base_dn {
+        ldap_obj.insert("base_dn".to_string(), serde_json::json!(dn));
+    }
+    if let Some(filter) = user_filter {
+        ldap_obj.insert("user_filter".to_string(), serde_json::json!(filter));
+    }
+
     let result = client.put_raw("/v1/cluster/ldap", ldap_data).await?;
-    let data = handle_output(result, output_format, query)?;
-    print_formatted_output(data, output_format)?;
+    let output_data = handle_output(result, output_format, query)?;
+    print_formatted_output(output_data, output_format)?;
     Ok(())
 }
 

@@ -38,14 +38,30 @@ pub enum ModuleCommands {
     },
 
     /// Configure module for database
-    #[command(name = "config-bdb")]
+    #[command(
+        name = "config-bdb",
+        after_help = "EXAMPLES:
+    # Configure module with name
+    redisctl enterprise module config-bdb 1 --module-name ReJSON --module-args '--maxarrsize 1000'
+
+    # Using JSON for full configuration
+    redisctl enterprise module config-bdb 1 --data @module-config.json"
+    )]
     ConfigBdb {
         /// Database UID
         bdb_uid: u32,
 
-        /// Configuration data (JSON file or inline)
+        /// Module name (e.g., ReJSON, search)
+        #[arg(long)]
+        module_name: Option<String>,
+
+        /// Module arguments
+        #[arg(long)]
+        module_args: Option<String>,
+
+        /// Configuration data (JSON file or inline, optional)
         #[arg(long, value_name = "FILE|JSON")]
-        data: String,
+        data: Option<String>,
     },
 
     /// Validate module.json against Redis Enterprise schema

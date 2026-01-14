@@ -40,8 +40,23 @@ pub async fn handle_module_commands(
         ModuleCommands::Delete { uid, force } => {
             handle_delete(conn_mgr, profile_name, uid, *force, output_format, query).await
         }
-        ModuleCommands::ConfigBdb { bdb_uid, data } => {
-            handle_config_bdb(conn_mgr, profile_name, *bdb_uid, data, output_format, query).await
+        ModuleCommands::ConfigBdb {
+            bdb_uid,
+            module_name,
+            module_args,
+            data,
+        } => {
+            handle_config_bdb(
+                conn_mgr,
+                profile_name,
+                *bdb_uid,
+                module_name.as_deref(),
+                module_args.as_deref(),
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
         ModuleCommands::Validate { file, strict } => {
             handle_validate(file, *strict, output_format).await
@@ -272,19 +287,36 @@ async fn handle_delete(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn handle_config_bdb(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     bdb_uid: u32,
-    data: &str,
+    module_name: Option<&str>,
+    module_args: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
     let client = conn_mgr.create_enterprise_client(profile_name).await?;
     let handler = ModuleHandler::new(client);
 
-    // Parse data (from file or inline JSON)
-    let config = crate::commands::enterprise::utils::read_json_data(data)?;
+    // Start with JSON from --data if provided, otherwise empty object
+    let mut config = if let Some(data_str) = data {
+        crate::commands::enterprise::utils::read_json_data(data_str)?
+    } else {
+        serde_json::json!({})
+    };
+
+    let config_obj = config.as_object_mut().unwrap();
+
+    // CLI parameters override JSON values
+    if let Some(name) = module_name {
+        config_obj.insert("module_name".to_string(), serde_json::json!(name));
+    }
+    if let Some(args) = module_args {
+        config_obj.insert("module_args".to_string(), serde_json::json!(args));
+    }
 
     let result = handler
         .config_bdb(bdb_uid, config)

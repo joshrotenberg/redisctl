@@ -21,8 +21,25 @@ pub async fn handle_crdb_command(
         EnterpriseCrdbCommands::Get { id } => {
             crdb_impl::get_crdb(conn_mgr, profile_name, *id, output_format, query).await
         }
-        EnterpriseCrdbCommands::Create { data } => {
-            crdb_impl::create_crdb(conn_mgr, profile_name, data, output_format, query).await
+        EnterpriseCrdbCommands::Create {
+            name,
+            memory_size,
+            default_db_name,
+            encryption,
+            data,
+        } => {
+            crdb_impl::create_crdb(
+                conn_mgr,
+                profile_name,
+                name.as_deref(),
+                *memory_size,
+                default_db_name.as_deref(),
+                *encryption,
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
         EnterpriseCrdbCommands::Update {
             id,
@@ -57,9 +74,29 @@ pub async fn handle_crdb_command(
             crdb_impl::get_participating_clusters(conn_mgr, profile_name, *id, output_format, query)
                 .await
         }
-        EnterpriseCrdbCommands::AddCluster { id, data } => {
-            crdb_impl::add_cluster_to_crdb(conn_mgr, profile_name, *id, data, output_format, query)
-                .await
+        EnterpriseCrdbCommands::AddCluster {
+            id,
+            url,
+            name,
+            username,
+            password,
+            compression,
+            data,
+        } => {
+            crdb_impl::add_cluster_to_crdb(
+                conn_mgr,
+                profile_name,
+                *id,
+                url.as_deref(),
+                name.as_deref(),
+                username.as_deref(),
+                password.as_deref(),
+                *compression,
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
         EnterpriseCrdbCommands::RemoveCluster { id, cluster } => {
             crdb_impl::remove_cluster_from_crdb(
@@ -73,13 +110,23 @@ pub async fn handle_crdb_command(
             )
             .await
         }
-        EnterpriseCrdbCommands::UpdateCluster { id, cluster, data } => {
+        EnterpriseCrdbCommands::UpdateCluster {
+            id,
+            cluster,
+            url,
+            compression,
+            proxy_policy,
+            data,
+        } => {
             crdb_impl::update_cluster_in_crdb(
                 conn_mgr,
                 profile_name,
                 *id,
                 *cluster,
-                data,
+                url.as_deref(),
+                *compression,
+                proxy_policy.as_deref(),
+                data.as_deref(),
                 output_format,
                 query,
             )
@@ -104,6 +151,9 @@ pub async fn handle_crdb_command(
         EnterpriseCrdbCommands::UpdateInstance {
             crdb_id,
             instance,
+            memory_size,
+            port,
+            enabled,
             data,
         } => {
             crdb_impl::update_crdb_instance(
@@ -111,7 +161,10 @@ pub async fn handle_crdb_command(
                 profile_name,
                 *crdb_id,
                 *instance,
-                data,
+                *memory_size,
+                *port,
+                *enabled,
+                data.as_deref(),
                 output_format,
                 query,
             )
@@ -161,12 +214,19 @@ pub async fn handle_crdb_command(
         EnterpriseCrdbCommands::GetConflictPolicy { id } => {
             crdb_impl::get_conflict_policy(conn_mgr, profile_name, *id, output_format, query).await
         }
-        EnterpriseCrdbCommands::UpdateConflictPolicy { id, data } => {
+        EnterpriseCrdbCommands::UpdateConflictPolicy {
+            id,
+            policy,
+            source_id,
+            data,
+        } => {
             crdb_impl::update_conflict_policy(
                 conn_mgr,
                 profile_name,
                 *id,
-                data,
+                policy.as_deref(),
+                *source_id,
+                data.as_deref(),
                 output_format,
                 query,
             )
@@ -253,17 +313,50 @@ pub async fn handle_crdb_command(
         }
 
         // Backup & Recovery
-        EnterpriseCrdbCommands::Backup { id, data } => {
-            crdb_impl::backup_crdb(conn_mgr, profile_name, *id, data, output_format, query).await
+        EnterpriseCrdbCommands::Backup { id, location, data } => {
+            crdb_impl::backup_crdb(
+                conn_mgr,
+                profile_name,
+                *id,
+                location.as_deref(),
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
-        EnterpriseCrdbCommands::Restore { id, data } => {
-            crdb_impl::restore_crdb(conn_mgr, profile_name, *id, data, output_format, query).await
+        EnterpriseCrdbCommands::Restore {
+            id,
+            backup_uid,
+            location,
+            data,
+        } => {
+            crdb_impl::restore_crdb(
+                conn_mgr,
+                profile_name,
+                *id,
+                backup_uid.as_deref(),
+                location.as_deref(),
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
         EnterpriseCrdbCommands::GetBackups { id } => {
             crdb_impl::get_crdb_backups(conn_mgr, profile_name, *id, output_format, query).await
         }
-        EnterpriseCrdbCommands::Export { id, data } => {
-            crdb_impl::export_crdb(conn_mgr, profile_name, *id, data, output_format, query).await
+        EnterpriseCrdbCommands::Export { id, location, data } => {
+            crdb_impl::export_crdb(
+                conn_mgr,
+                profile_name,
+                *id,
+                location.as_deref(),
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
     }
 }
