@@ -3,7 +3,7 @@
 //! Wraps Redis Enterprise API client operations for MCP tool invocation.
 
 use redis_enterprise::{
-    AlertHandler, BdbHandler, ClusterHandler, CrdbHandler, CreateDatabaseRequest,
+    AlertHandler, BdbHandler, ClusterHandler, CrdbHandler, CrdbTasksHandler, CreateDatabaseRequest,
     CreateLdapMappingRequest, CreateRedisAclRequest, CreateRoleRequest, CreateUserRequest,
     DebugInfoHandler, DiagnosticRequest, DiagnosticsHandler, EndpointsHandler, EnterpriseClient,
     JobSchedulerHandler, LdapMappingHandler, LicenseHandler, LogsHandler, ModuleHandler,
@@ -852,5 +852,49 @@ impl EnterpriseTools {
         let request = DiagnosticRequest::builder().build();
         let report = handler.run(request).await.map_err(|e| self.to_error(e))?;
         self.to_result(serde_json::to_value(report).map_err(|e| self.to_error(e))?)
+    }
+
+    // =========================================================================
+    // CRDB Task Operations
+    // =========================================================================
+
+    /// List all CRDB tasks
+    pub async fn list_crdb_tasks(&self) -> Result<CallToolResult, RmcpError> {
+        let handler = CrdbTasksHandler::new(self.client.clone());
+        let tasks = handler.list().await.map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(tasks).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Get a specific CRDB task
+    pub async fn get_crdb_task(&self, task_id: &str) -> Result<CallToolResult, RmcpError> {
+        let handler = CrdbTasksHandler::new(self.client.clone());
+        let task = handler.get(task_id).await.map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(task).map_err(|e| self.to_error(e))?)
+    }
+
+    /// List CRDB tasks for a specific Active-Active database
+    pub async fn list_crdb_tasks_by_crdb(
+        &self,
+        crdb_guid: &str,
+    ) -> Result<CallToolResult, RmcpError> {
+        let handler = CrdbTasksHandler::new(self.client.clone());
+        let tasks = handler
+            .list_by_crdb(crdb_guid)
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(tasks).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Cancel a CRDB task
+    pub async fn cancel_crdb_task(&self, task_id: &str) -> Result<CallToolResult, RmcpError> {
+        let handler = CrdbTasksHandler::new(self.client.clone());
+        handler
+            .cancel(task_id)
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::json!({
+            "success": true,
+            "message": format!("CRDB task {} cancelled", task_id)
+        }))
     }
 }
