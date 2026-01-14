@@ -337,6 +337,32 @@ pub struct EssentialsDatabaseIdParam {
     pub database_id: i64,
 }
 
+// Cloud - VPC Peering parameter structs
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct VpcPeeringIdParam {
+    /// The subscription ID
+    pub subscription_id: i64,
+    /// The VPC peering ID
+    pub peering_id: i64,
+}
+
+// Cloud - Cloud Account parameter structs
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct CloudAccountIdParam {
+    /// The cloud account ID
+    pub account_id: i64,
+}
+
+// Enterprise - CRDB Task parameter structs
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct CrdbTaskIdParam {
+    /// The CRDB task ID
+    pub task_id: String,
+}
+
 impl RedisCtlMcp {
     /// Create a new MCP server instance
     pub fn new(profile: Option<&str>, read_only: bool) -> anyhow::Result<Self> {
@@ -1808,6 +1834,143 @@ impl RedisCtlMcp {
         tools
             .delete_essentials_database(params.subscription_id, params.database_id)
             .await
+    }
+
+    // =========================================================================
+    // Cloud Tools - VPC Peering Operations
+    // =========================================================================
+
+    #[tool(description = "Get VPC peerings for a subscription")]
+    async fn cloud_vpc_peerings_get(
+        &self,
+        Parameters(params): Parameters<SubscriptionIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(
+            subscription_id = params.subscription_id,
+            "Tool called: cloud_vpc_peerings_get"
+        );
+        let tools = self.get_cloud_tools().await?;
+        tools.get_vpc_peerings(params.subscription_id).await
+    }
+
+    #[tool(description = "Delete a VPC peering. This is a destructive operation.")]
+    async fn cloud_vpc_peering_delete(
+        &self,
+        Parameters(params): Parameters<VpcPeeringIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(
+            subscription_id = params.subscription_id,
+            peering_id = params.peering_id,
+            "Tool called: cloud_vpc_peering_delete"
+        );
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_cloud_tools().await?;
+        tools
+            .delete_vpc_peering(params.subscription_id, params.peering_id)
+            .await
+    }
+
+    // =========================================================================
+    // Cloud Tools - Cloud Account Operations
+    // =========================================================================
+
+    #[tool(
+        description = "List all cloud provider accounts (AWS, GCP, Azure) configured in your Redis Cloud account"
+    )]
+    async fn cloud_accounts_list(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: cloud_accounts_list");
+        let tools = self.get_cloud_tools().await?;
+        tools.list_cloud_accounts().await
+    }
+
+    #[tool(description = "Get detailed information about a specific cloud provider account")]
+    async fn cloud_account_get_by_id(
+        &self,
+        Parameters(params): Parameters<CloudAccountIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(
+            account_id = params.account_id,
+            "Tool called: cloud_account_get_by_id"
+        );
+        let tools = self.get_cloud_tools().await?;
+        tools.get_cloud_account(params.account_id).await
+    }
+
+    #[tool(description = "Delete a cloud provider account. This is a destructive operation.")]
+    async fn cloud_account_delete(
+        &self,
+        Parameters(params): Parameters<CloudAccountIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(
+            account_id = params.account_id,
+            "Tool called: cloud_account_delete"
+        );
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_cloud_tools().await?;
+        tools.delete_cloud_account(params.account_id).await
+    }
+
+    // =========================================================================
+    // Enterprise Tools - CRDB Task Operations
+    // =========================================================================
+
+    #[tool(description = "List all Active-Active (CRDB) tasks in the Redis Enterprise cluster")]
+    async fn enterprise_crdb_tasks_list(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: enterprise_crdb_tasks_list");
+        let tools = self.get_enterprise_tools().await?;
+        tools.list_crdb_tasks().await
+    }
+
+    #[tool(description = "Get detailed information about a specific CRDB task")]
+    async fn enterprise_crdb_task_get(
+        &self,
+        Parameters(params): Parameters<CrdbTaskIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(task_id = %params.task_id, "Tool called: enterprise_crdb_task_get");
+        let tools = self.get_enterprise_tools().await?;
+        tools.get_crdb_task(&params.task_id).await
+    }
+
+    #[tool(description = "List CRDB tasks for a specific Active-Active database")]
+    async fn enterprise_crdb_tasks_by_crdb(
+        &self,
+        Parameters(params): Parameters<CrdbGuidParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(crdb_guid = %params.crdb_guid, "Tool called: enterprise_crdb_tasks_by_crdb");
+        let tools = self.get_enterprise_tools().await?;
+        tools.list_crdb_tasks_by_crdb(&params.crdb_guid).await
+    }
+
+    #[tool(description = "Cancel a CRDB task")]
+    async fn enterprise_crdb_task_cancel(
+        &self,
+        Parameters(params): Parameters<CrdbTaskIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(task_id = %params.task_id, "Tool called: enterprise_crdb_task_cancel");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_enterprise_tools().await?;
+        tools.cancel_crdb_task(&params.task_id).await
     }
 }
 

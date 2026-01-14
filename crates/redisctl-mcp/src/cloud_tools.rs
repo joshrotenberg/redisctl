@@ -4,8 +4,8 @@
 
 use redis_cloud::fixed::subscriptions::FixedSubscriptionCreateRequest;
 use redis_cloud::{
-    AccountHandler, CloudClient, DatabaseHandler, FixedDatabaseHandler, FixedSubscriptionHandler,
-    SubscriptionHandler, TaskHandler,
+    AccountHandler, CloudAccountHandler, CloudClient, DatabaseHandler, FixedDatabaseHandler,
+    FixedSubscriptionHandler, SubscriptionHandler, TaskHandler, VpcPeeringHandler,
 };
 use redisctl_config::Config;
 use rmcp::{ErrorData as RmcpError, model::*};
@@ -318,6 +318,74 @@ impl CloudTools {
         let handler = FixedDatabaseHandler::new(self.client.clone());
         let result = handler
             .delete_by_id(subscription_id as i32, database_id as i32)
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(result).map_err(|e| self.to_error(e))?)
+    }
+
+    // =========================================================================
+    // VPC Peering Operations
+    // =========================================================================
+
+    /// Get VPC peerings for a subscription
+    pub async fn get_vpc_peerings(
+        &self,
+        subscription_id: i64,
+    ) -> Result<CallToolResult, RmcpError> {
+        let handler = VpcPeeringHandler::new(self.client.clone());
+        let peerings = handler
+            .get(subscription_id as i32)
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(peerings).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Delete a VPC peering
+    pub async fn delete_vpc_peering(
+        &self,
+        subscription_id: i64,
+        peering_id: i64,
+    ) -> Result<CallToolResult, RmcpError> {
+        let handler = VpcPeeringHandler::new(self.client.clone());
+        handler
+            .delete(subscription_id as i32, peering_id as i32)
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::json!({
+            "success": true,
+            "message": format!("VPC peering {} deleted from subscription {}", peering_id, subscription_id)
+        }))
+    }
+
+    // =========================================================================
+    // Cloud Account Operations
+    // =========================================================================
+
+    /// List all cloud accounts
+    pub async fn list_cloud_accounts(&self) -> Result<CallToolResult, RmcpError> {
+        let handler = CloudAccountHandler::new(self.client.clone());
+        let accounts = handler
+            .get_cloud_accounts()
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(accounts).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Get a specific cloud account
+    pub async fn get_cloud_account(&self, account_id: i64) -> Result<CallToolResult, RmcpError> {
+        let handler = CloudAccountHandler::new(self.client.clone());
+        let account = handler
+            .get_cloud_account_by_id(account_id as i32)
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(account).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Delete a cloud account
+    pub async fn delete_cloud_account(&self, account_id: i64) -> Result<CallToolResult, RmcpError> {
+        let handler = CloudAccountHandler::new(self.client.clone());
+        let result = handler
+            .delete_cloud_account(account_id as i32)
             .await
             .map_err(|e| self.to_error(e))?;
         self.to_result(serde_json::to_value(result).map_err(|e| self.to_error(e))?)
