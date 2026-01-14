@@ -24,8 +24,29 @@ pub async fn handle_crdb_command(
         EnterpriseCrdbCommands::Create { data } => {
             crdb_impl::create_crdb(conn_mgr, profile_name, data, output_format, query).await
         }
-        EnterpriseCrdbCommands::Update { id, data } => {
-            crdb_impl::update_crdb(conn_mgr, profile_name, *id, data, output_format, query).await
+        EnterpriseCrdbCommands::Update {
+            id,
+            memory_size,
+            encryption,
+            data_persistence,
+            replication,
+            eviction_policy,
+            data,
+        } => {
+            crdb_impl::update_crdb(
+                conn_mgr,
+                profile_name,
+                *id,
+                *memory_size,
+                *encryption,
+                data_persistence.as_deref(),
+                *replication,
+                eviction_policy.as_deref(),
+                data.as_deref(),
+                output_format,
+                query,
+            )
+            .await
         }
         EnterpriseCrdbCommands::Delete { id, force } => {
             crdb_impl::delete_crdb(conn_mgr, profile_name, *id, *force, output_format, query).await

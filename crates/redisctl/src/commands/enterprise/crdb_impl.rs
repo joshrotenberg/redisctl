@@ -71,17 +71,61 @@ pub async fn create_crdb(
 }
 
 /// Update CRDB configuration
+#[allow(clippy::too_many_arguments)]
 pub async fn update_crdb(
     conn_mgr: &ConnectionManager,
     profile_name: Option<&str>,
     id: u32,
-    data: &str,
+    memory_size: Option<u64>,
+    encryption: Option<bool>,
+    data_persistence: Option<&str>,
+    replication: Option<bool>,
+    eviction_policy: Option<&str>,
+    data: Option<&str>,
     output_format: OutputFormat,
     query: Option<&str>,
 ) -> CliResult<()> {
-    let client = conn_mgr.create_enterprise_client(profile_name).await?;
-    let json_data = read_json_data(data)?;
+    use crate::error::RedisCtlError;
 
+    let client = conn_mgr.create_enterprise_client(profile_name).await?;
+
+    // Start with JSON data if provided, otherwise empty object
+    let mut request_obj: serde_json::Map<String, serde_json::Value> = if let Some(json_data) = data
+    {
+        let parsed = read_json_data(json_data)?;
+        parsed
+            .as_object()
+            .cloned()
+            .unwrap_or_else(serde_json::Map::new)
+    } else {
+        serde_json::Map::new()
+    };
+
+    // Override with first-class parameters if provided
+    if let Some(mem) = memory_size {
+        request_obj.insert("memory_size".to_string(), serde_json::json!(mem));
+    }
+    if let Some(enc) = encryption {
+        request_obj.insert("encryption".to_string(), serde_json::json!(enc));
+    }
+    if let Some(persist) = data_persistence {
+        request_obj.insert("data_persistence".to_string(), serde_json::json!(persist));
+    }
+    if let Some(repl) = replication {
+        request_obj.insert("replication".to_string(), serde_json::json!(repl));
+    }
+    if let Some(evict) = eviction_policy {
+        request_obj.insert("eviction_policy".to_string(), serde_json::json!(evict));
+    }
+
+    // Validate at least one update field is provided
+    if request_obj.is_empty() {
+        return Err(RedisCtlError::InvalidInput {
+            message: "At least one update field is required (--memory-size, --encryption, --data-persistence, --replication, --eviction-policy, or --data)".to_string(),
+        });
+    }
+
+    let json_data = serde_json::Value::Object(request_obj);
     let response = client
         .put_raw(&format!("/v1/crdbs/{}", id), json_data)
         .await
