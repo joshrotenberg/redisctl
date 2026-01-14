@@ -4,9 +4,11 @@
 
 use redis_enterprise::{
     AlertHandler, BdbHandler, ClusterHandler, CrdbHandler, CreateDatabaseRequest,
-    CreateRedisAclRequest, CreateRoleRequest, CreateUserRequest, DebugInfoHandler,
-    EnterpriseClient, LicenseHandler, LogsHandler, ModuleHandler, NodeHandler, RedisAclHandler,
-    RolesHandler, ShardHandler, StatsHandler, UserHandler,
+    CreateLdapMappingRequest, CreateRedisAclRequest, CreateRoleRequest, CreateUserRequest,
+    DebugInfoHandler, DiagnosticRequest, DiagnosticsHandler, EndpointsHandler, EnterpriseClient,
+    JobSchedulerHandler, LdapMappingHandler, LicenseHandler, LogsHandler, ModuleHandler,
+    NodeHandler, ProxyHandler, RedisAclHandler, RolesHandler, ShardHandler, StatsHandler,
+    UserHandler,
 };
 use redisctl_config::Config;
 use rmcp::{ErrorData as RmcpError, model::*};
@@ -617,5 +619,238 @@ impl EnterpriseTools {
             .await
             .map_err(|e| self.to_error(e))?;
         self.to_result(serde_json::to_value(status).map_err(|e| self.to_error(e))?)
+    }
+
+    // =========================================================================
+    // LDAP Mapping Operations
+    // =========================================================================
+
+    /// List all LDAP mappings
+    pub async fn list_ldap_mappings(&self) -> Result<CallToolResult, RmcpError> {
+        let handler = LdapMappingHandler::new(self.client.clone());
+        let mappings = handler.list().await.map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(mappings).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Get a specific LDAP mapping
+    pub async fn get_ldap_mapping(&self, uid: u64) -> Result<CallToolResult, RmcpError> {
+        let handler = LdapMappingHandler::new(self.client.clone());
+        let mapping = handler
+            .get(uid as u32)
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(mapping).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Create a new LDAP mapping
+    pub async fn create_ldap_mapping(
+        &self,
+        name: &str,
+        dn: &str,
+        role: &str,
+        email: Option<&str>,
+    ) -> Result<CallToolResult, RmcpError> {
+        let handler = LdapMappingHandler::new(self.client.clone());
+        let request = match email {
+            Some(e) => CreateLdapMappingRequest::builder()
+                .name(name)
+                .dn(dn)
+                .role(role)
+                .email(e)
+                .build(),
+            None => CreateLdapMappingRequest::builder()
+                .name(name)
+                .dn(dn)
+                .role(role)
+                .build(),
+        };
+        let mapping = handler
+            .create(request)
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(mapping).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Delete an LDAP mapping
+    pub async fn delete_ldap_mapping(&self, uid: u64) -> Result<CallToolResult, RmcpError> {
+        let handler = LdapMappingHandler::new(self.client.clone());
+        handler
+            .delete(uid as u32)
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::json!({
+            "success": true,
+            "message": format!("LDAP mapping {} deleted successfully", uid)
+        }))
+    }
+
+    // =========================================================================
+    // Job Scheduler Operations
+    // =========================================================================
+
+    /// List all scheduled jobs
+    pub async fn list_jobs(&self) -> Result<CallToolResult, RmcpError> {
+        let handler = JobSchedulerHandler::new(self.client.clone());
+        let jobs = handler.list().await.map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(jobs).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Get a specific scheduled job
+    pub async fn get_job(&self, job_id: &str) -> Result<CallToolResult, RmcpError> {
+        let handler = JobSchedulerHandler::new(self.client.clone());
+        let job = handler.get(job_id).await.map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(job).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Get job execution history
+    pub async fn get_job_history(&self, job_id: &str) -> Result<CallToolResult, RmcpError> {
+        let handler = JobSchedulerHandler::new(self.client.clone());
+        let history = handler
+            .history(job_id)
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(history).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Trigger a job execution
+    pub async fn trigger_job(&self, job_id: &str) -> Result<CallToolResult, RmcpError> {
+        let handler = JobSchedulerHandler::new(self.client.clone());
+        let execution = handler
+            .trigger(job_id)
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(execution).map_err(|e| self.to_error(e))?)
+    }
+
+    // =========================================================================
+    // Proxy Operations
+    // =========================================================================
+
+    /// List all proxies
+    pub async fn list_proxies(&self) -> Result<CallToolResult, RmcpError> {
+        let handler = ProxyHandler::new(self.client.clone());
+        let proxies = handler.list().await.map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(proxies).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Get a specific proxy
+    pub async fn get_proxy(&self, uid: u64) -> Result<CallToolResult, RmcpError> {
+        let handler = ProxyHandler::new(self.client.clone());
+        let proxy = handler
+            .get(uid as u32)
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(proxy).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Get proxy statistics
+    pub async fn get_proxy_stats(&self, uid: u64) -> Result<CallToolResult, RmcpError> {
+        let handler = ProxyHandler::new(self.client.clone());
+        let stats = handler
+            .stats(uid as u32)
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(stats).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Get proxies for a specific database
+    pub async fn list_proxies_by_database(
+        &self,
+        database_id: u64,
+    ) -> Result<CallToolResult, RmcpError> {
+        let handler = ProxyHandler::new(self.client.clone());
+        let proxies = handler
+            .list_by_database(database_id as u32)
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(proxies).map_err(|e| self.to_error(e))?)
+    }
+
+    // =========================================================================
+    // Endpoint Operations
+    // =========================================================================
+
+    /// List all endpoints
+    pub async fn list_endpoints(&self) -> Result<CallToolResult, RmcpError> {
+        let handler = EndpointsHandler::new(self.client.clone());
+        let endpoints = handler.list().await.map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(endpoints).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Get a specific endpoint
+    pub async fn get_endpoint(&self, uid: &str) -> Result<CallToolResult, RmcpError> {
+        let handler = EndpointsHandler::new(self.client.clone());
+        let endpoint = handler.get(uid).await.map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(endpoint).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Get endpoint statistics
+    pub async fn get_endpoint_stats(&self, uid: &str) -> Result<CallToolResult, RmcpError> {
+        let handler = EndpointsHandler::new(self.client.clone());
+        let stats = handler.stats(uid).await.map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(stats).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Get endpoints for a specific database
+    pub async fn list_endpoints_by_database(
+        &self,
+        database_id: u64,
+    ) -> Result<CallToolResult, RmcpError> {
+        let handler = EndpointsHandler::new(self.client.clone());
+        let endpoints = handler
+            .list_by_database(database_id as u32)
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(endpoints).map_err(|e| self.to_error(e))?)
+    }
+
+    // =========================================================================
+    // Diagnostics Operations
+    // =========================================================================
+
+    /// List diagnostic checks
+    pub async fn list_diagnostic_checks(&self) -> Result<CallToolResult, RmcpError> {
+        let handler = DiagnosticsHandler::new(self.client.clone());
+        let checks = handler.list_checks().await.map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(checks).map_err(|e| self.to_error(e))?)
+    }
+
+    /// List diagnostic reports
+    pub async fn list_diagnostic_reports(&self) -> Result<CallToolResult, RmcpError> {
+        let handler = DiagnosticsHandler::new(self.client.clone());
+        let reports = handler.list_reports().await.map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(reports).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Get a specific diagnostic report
+    pub async fn get_diagnostic_report(
+        &self,
+        report_id: &str,
+    ) -> Result<CallToolResult, RmcpError> {
+        let handler = DiagnosticsHandler::new(self.client.clone());
+        let report = handler
+            .get_report(report_id)
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(report).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Get the last diagnostic report
+    pub async fn get_last_diagnostic_report(&self) -> Result<CallToolResult, RmcpError> {
+        let handler = DiagnosticsHandler::new(self.client.clone());
+        let report = handler
+            .get_last_report()
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(report).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Run diagnostics
+    pub async fn run_diagnostics(&self) -> Result<CallToolResult, RmcpError> {
+        let handler = DiagnosticsHandler::new(self.client.clone());
+        // Run all diagnostics by default (empty request)
+        let request = DiagnosticRequest::builder().build();
+        let report = handler.run(request).await.map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(report).map_err(|e| self.to_error(e))?)
     }
 }

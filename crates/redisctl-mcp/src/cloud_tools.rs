@@ -4,8 +4,8 @@
 
 use redis_cloud::fixed::subscriptions::FixedSubscriptionCreateRequest;
 use redis_cloud::{
-    AccountHandler, CloudClient, DatabaseHandler, FixedSubscriptionHandler, SubscriptionHandler,
-    TaskHandler,
+    AccountHandler, CloudClient, DatabaseHandler, FixedDatabaseHandler, FixedSubscriptionHandler,
+    SubscriptionHandler, TaskHandler,
 };
 use redisctl_config::Config;
 use rmcp::{ErrorData as RmcpError, model::*};
@@ -276,5 +276,50 @@ impl CloudTools {
             .await
             .map_err(|e| self.to_error(e))?;
         self.to_result(serde_json::to_value(task).map_err(|e| self.to_error(e))?)
+    }
+
+    // =========================================================================
+    // Essentials (Fixed) Database Operations
+    // =========================================================================
+
+    /// List databases in an Essentials subscription
+    pub async fn list_essentials_databases(
+        &self,
+        subscription_id: i64,
+    ) -> Result<CallToolResult, RmcpError> {
+        let handler = FixedDatabaseHandler::new(self.client.clone());
+        let dbs = handler
+            .list(subscription_id as i32, None, None)
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(dbs).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Get a specific Essentials database
+    pub async fn get_essentials_database(
+        &self,
+        subscription_id: i64,
+        database_id: i64,
+    ) -> Result<CallToolResult, RmcpError> {
+        let handler = FixedDatabaseHandler::new(self.client.clone());
+        let db = handler
+            .get_by_id(subscription_id as i32, database_id as i32)
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(db).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Delete an Essentials database
+    pub async fn delete_essentials_database(
+        &self,
+        subscription_id: i64,
+        database_id: i64,
+    ) -> Result<CallToolResult, RmcpError> {
+        let handler = FixedDatabaseHandler::new(self.client.clone());
+        let result = handler
+            .delete_by_id(subscription_id as i32, database_id as i32)
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(result).map_err(|e| self.to_error(e))?)
     }
 }
