@@ -363,6 +363,32 @@ pub struct CrdbTaskIdParam {
     pub task_id: String,
 }
 
+// Cloud - Transit Gateway parameter structs
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct TransitGatewayAttachmentIdParam {
+    /// The subscription ID
+    pub subscription_id: i64,
+    /// The Transit Gateway attachment ID
+    pub attachment_id: String,
+}
+
+// Enterprise - BDB Groups parameter structs
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct BdbGroupIdParam {
+    /// The BDB group UID
+    pub uid: i64,
+}
+
+// Enterprise - DNS Suffix parameter structs
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct SuffixNameParam {
+    /// The DNS suffix name
+    pub name: String,
+}
+
 impl RedisCtlMcp {
     /// Create a new MCP server instance
     pub fn new(profile: Option<&str>, read_only: bool) -> anyhow::Result<Self> {
@@ -1971,6 +1997,197 @@ impl RedisCtlMcp {
 
         let tools = self.get_enterprise_tools().await?;
         tools.cancel_crdb_task(&params.task_id).await
+    }
+
+    // =========================================================================
+    // Cloud Tools - Private Link Operations
+    // =========================================================================
+
+    #[tool(description = "Get AWS PrivateLink configuration for a subscription")]
+    async fn cloud_private_link_get(
+        &self,
+        Parameters(params): Parameters<SubscriptionIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(
+            subscription_id = params.subscription_id,
+            "Tool called: cloud_private_link_get"
+        );
+        let tools = self.get_cloud_tools().await?;
+        tools.get_private_link(params.subscription_id).await
+    }
+
+    #[tool(description = "Delete AWS PrivateLink configuration for a subscription")]
+    async fn cloud_private_link_delete(
+        &self,
+        Parameters(params): Parameters<SubscriptionIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(
+            subscription_id = params.subscription_id,
+            "Tool called: cloud_private_link_delete"
+        );
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_cloud_tools().await?;
+        tools.delete_private_link(params.subscription_id).await
+    }
+
+    // =========================================================================
+    // Cloud Tools - Transit Gateway Operations
+    // =========================================================================
+
+    #[tool(description = "Get AWS Transit Gateway attachments for a subscription")]
+    async fn cloud_transit_gateway_attachments_get(
+        &self,
+        Parameters(params): Parameters<SubscriptionIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(
+            subscription_id = params.subscription_id,
+            "Tool called: cloud_transit_gateway_attachments_get"
+        );
+        let tools = self.get_cloud_tools().await?;
+        tools
+            .get_transit_gateway_attachments(params.subscription_id)
+            .await
+    }
+
+    #[tool(description = "Delete an AWS Transit Gateway attachment")]
+    async fn cloud_transit_gateway_attachment_delete(
+        &self,
+        Parameters(params): Parameters<TransitGatewayAttachmentIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(
+            subscription_id = params.subscription_id,
+            attachment_id = %params.attachment_id,
+            "Tool called: cloud_transit_gateway_attachment_delete"
+        );
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_cloud_tools().await?;
+        tools
+            .delete_transit_gateway_attachment(params.subscription_id, &params.attachment_id)
+            .await
+    }
+
+    // =========================================================================
+    // Enterprise Tools - BDB Groups Operations
+    // =========================================================================
+
+    #[tool(description = "List all database groups in the Redis Enterprise cluster")]
+    async fn enterprise_bdb_groups_list(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: enterprise_bdb_groups_list");
+        let tools = self.get_enterprise_tools().await?;
+        tools.list_bdb_groups().await
+    }
+
+    #[tool(description = "Get detailed information about a specific database group")]
+    async fn enterprise_bdb_group_get(
+        &self,
+        Parameters(params): Parameters<BdbGroupIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(uid = params.uid, "Tool called: enterprise_bdb_group_get");
+        let tools = self.get_enterprise_tools().await?;
+        tools.get_bdb_group(params.uid as u64).await
+    }
+
+    #[tool(description = "Delete a database group")]
+    async fn enterprise_bdb_group_delete(
+        &self,
+        Parameters(params): Parameters<BdbGroupIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(uid = params.uid, "Tool called: enterprise_bdb_group_delete");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_enterprise_tools().await?;
+        tools.delete_bdb_group(params.uid as u64).await
+    }
+
+    // =========================================================================
+    // Enterprise Tools - OCSP Operations
+    // =========================================================================
+
+    #[tool(description = "Get OCSP (Online Certificate Status Protocol) configuration")]
+    async fn enterprise_ocsp_config_get(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: enterprise_ocsp_config_get");
+        let tools = self.get_enterprise_tools().await?;
+        tools.get_ocsp_config().await
+    }
+
+    #[tool(description = "Get OCSP status showing certificate validation state")]
+    async fn enterprise_ocsp_status_get(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: enterprise_ocsp_status_get");
+        let tools = self.get_enterprise_tools().await?;
+        tools.get_ocsp_status().await
+    }
+
+    #[tool(description = "Test OCSP connectivity and certificate validation")]
+    async fn enterprise_ocsp_test(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: enterprise_ocsp_test");
+        let tools = self.get_enterprise_tools().await?;
+        tools.test_ocsp().await
+    }
+
+    // =========================================================================
+    // Enterprise Tools - DNS Suffix Operations
+    // =========================================================================
+
+    #[tool(description = "List all DNS suffixes in the Redis Enterprise cluster")]
+    async fn enterprise_suffixes_list(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: enterprise_suffixes_list");
+        let tools = self.get_enterprise_tools().await?;
+        tools.list_suffixes().await
+    }
+
+    #[tool(description = "Get detailed information about a specific DNS suffix")]
+    async fn enterprise_suffix_get(
+        &self,
+        Parameters(params): Parameters<SuffixNameParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(name = %params.name, "Tool called: enterprise_suffix_get");
+        let tools = self.get_enterprise_tools().await?;
+        tools.get_suffix(&params.name).await
+    }
+
+    #[tool(description = "Get cluster-level DNS suffixes")]
+    async fn enterprise_cluster_suffixes_get(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: enterprise_cluster_suffixes_get");
+        let tools = self.get_enterprise_tools().await?;
+        tools.get_cluster_suffixes().await
+    }
+
+    #[tool(description = "Delete a DNS suffix")]
+    async fn enterprise_suffix_delete(
+        &self,
+        Parameters(params): Parameters<SuffixNameParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(name = %params.name, "Tool called: enterprise_suffix_delete");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_enterprise_tools().await?;
+        tools.delete_suffix(&params.name).await
     }
 }
 

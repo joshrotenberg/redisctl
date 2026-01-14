@@ -5,7 +5,8 @@
 use redis_cloud::fixed::subscriptions::FixedSubscriptionCreateRequest;
 use redis_cloud::{
     AccountHandler, CloudAccountHandler, CloudClient, DatabaseHandler, FixedDatabaseHandler,
-    FixedSubscriptionHandler, SubscriptionHandler, TaskHandler, VpcPeeringHandler,
+    FixedSubscriptionHandler, PrivateLinkHandler, SubscriptionHandler, TaskHandler,
+    TransitGatewayHandler, VpcPeeringHandler,
 };
 use redisctl_config::Config;
 use rmcp::{ErrorData as RmcpError, model::*};
@@ -386,6 +387,67 @@ impl CloudTools {
         let handler = CloudAccountHandler::new(self.client.clone());
         let result = handler
             .delete_cloud_account(account_id as i32)
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(result).map_err(|e| self.to_error(e))?)
+    }
+
+    // =========================================================================
+    // Private Link Operations (AWS PrivateLink)
+    // =========================================================================
+
+    /// Get Private Link configuration for a subscription
+    pub async fn get_private_link(
+        &self,
+        subscription_id: i64,
+    ) -> Result<CallToolResult, RmcpError> {
+        let handler = PrivateLinkHandler::new(self.client.clone());
+        let result = handler
+            .get(subscription_id as i32)
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(result)
+    }
+
+    /// Delete Private Link configuration for a subscription
+    pub async fn delete_private_link(
+        &self,
+        subscription_id: i64,
+    ) -> Result<CallToolResult, RmcpError> {
+        let handler = PrivateLinkHandler::new(self.client.clone());
+        let result = handler
+            .delete(subscription_id as i32)
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(result)
+    }
+
+    // =========================================================================
+    // Transit Gateway Operations (AWS Transit Gateway)
+    // =========================================================================
+
+    /// Get Transit Gateway attachments for a subscription
+    pub async fn get_transit_gateway_attachments(
+        &self,
+        subscription_id: i64,
+    ) -> Result<CallToolResult, RmcpError> {
+        let handler = TransitGatewayHandler::new(self.client.clone());
+        let result = handler
+            .get_attachments(subscription_id as i32)
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(result).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Delete a Transit Gateway attachment
+    pub async fn delete_transit_gateway_attachment(
+        &self,
+        subscription_id: i64,
+        attachment_id: &str,
+    ) -> Result<CallToolResult, RmcpError> {
+        let handler = TransitGatewayHandler::new(self.client.clone());
+        let result = handler
+            .delete_attachment(subscription_id as i32, attachment_id.to_string())
             .await
             .map_err(|e| self.to_error(e))?;
         self.to_result(serde_json::to_value(result).map_err(|e| self.to_error(e))?)
