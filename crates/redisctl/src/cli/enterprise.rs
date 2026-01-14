@@ -1334,12 +1334,42 @@ pub enum EnterpriseCrdbCommands {
     },
 
     /// Update CRDB configuration
+    #[command(after_help = "EXAMPLES:
+    # Update memory size (1GB)
+    redisctl enterprise crdb update 1 --memory-size 1073741824
+
+    # Enable encryption
+    redisctl enterprise crdb update 1 --encryption true
+
+    # Set data persistence policy
+    redisctl enterprise crdb update 1 --data-persistence aof
+
+    # Update multiple settings
+    redisctl enterprise crdb update 1 --memory-size 2147483648 --replication true
+
+    # Using JSON for advanced configuration
+    redisctl enterprise crdb update 1 --data '{\"causal_consistency\": true}'")]
     Update {
         /// CRDB ID
         id: u32,
-        /// Update configuration as JSON string or @file.json
+        /// Memory size limit in bytes
         #[arg(long)]
-        data: String,
+        memory_size: Option<u64>,
+        /// Enable/disable encryption
+        #[arg(long)]
+        encryption: Option<bool>,
+        /// Data persistence policy (disabled, aof, snapshot)
+        #[arg(long)]
+        data_persistence: Option<String>,
+        /// Enable/disable replication
+        #[arg(long)]
+        replication: Option<bool>,
+        /// Eviction policy (e.g., allkeys-lru, volatile-lru)
+        #[arg(long)]
+        eviction_policy: Option<String>,
+        /// JSON data for advanced configuration (overridden by other flags)
+        #[arg(long)]
+        data: Option<String>,
     },
 
     /// Delete CRDB
