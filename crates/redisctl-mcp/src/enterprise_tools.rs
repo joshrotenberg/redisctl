@@ -3,12 +3,12 @@
 //! Wraps Redis Enterprise API client operations for MCP tool invocation.
 
 use redis_enterprise::{
-    AlertHandler, BdbHandler, ClusterHandler, CrdbHandler, CrdbTasksHandler, CreateDatabaseRequest,
-    CreateLdapMappingRequest, CreateRedisAclRequest, CreateRoleRequest, CreateUserRequest,
-    DebugInfoHandler, DiagnosticRequest, DiagnosticsHandler, EndpointsHandler, EnterpriseClient,
-    JobSchedulerHandler, LdapMappingHandler, LicenseHandler, LogsHandler, ModuleHandler,
-    NodeHandler, ProxyHandler, RedisAclHandler, RolesHandler, ShardHandler, StatsHandler,
-    UserHandler,
+    AlertHandler, BdbGroupsHandler, BdbHandler, ClusterHandler, CrdbHandler, CrdbTasksHandler,
+    CreateDatabaseRequest, CreateLdapMappingRequest, CreateRedisAclRequest, CreateRoleRequest,
+    CreateUserRequest, DebugInfoHandler, DiagnosticRequest, DiagnosticsHandler, EndpointsHandler,
+    EnterpriseClient, JobSchedulerHandler, LdapMappingHandler, LicenseHandler, LogsHandler,
+    ModuleHandler, NodeHandler, OcspHandler, ProxyHandler, RedisAclHandler, RolesHandler,
+    ShardHandler, StatsHandler, SuffixesHandler, UserHandler,
 };
 use redisctl_config::Config;
 use rmcp::{ErrorData as RmcpError, model::*};
@@ -895,6 +895,103 @@ impl EnterpriseTools {
         self.to_result(serde_json::json!({
             "success": true,
             "message": format!("CRDB task {} cancelled", task_id)
+        }))
+    }
+
+    // =========================================================================
+    // BDB Groups Operations
+    // =========================================================================
+
+    /// List all BDB groups
+    pub async fn list_bdb_groups(&self) -> Result<CallToolResult, RmcpError> {
+        let handler = BdbGroupsHandler::new(self.client.clone());
+        let groups = handler.list().await.map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(groups).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Get a specific BDB group
+    pub async fn get_bdb_group(&self, uid: u64) -> Result<CallToolResult, RmcpError> {
+        let handler = BdbGroupsHandler::new(self.client.clone());
+        let group = handler
+            .get(uid as u32)
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(group).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Delete a BDB group
+    pub async fn delete_bdb_group(&self, uid: u64) -> Result<CallToolResult, RmcpError> {
+        let handler = BdbGroupsHandler::new(self.client.clone());
+        handler
+            .delete(uid as u32)
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::json!({
+            "success": true,
+            "message": format!("BDB group {} deleted successfully", uid)
+        }))
+    }
+
+    // =========================================================================
+    // OCSP Operations
+    // =========================================================================
+
+    /// Get OCSP configuration
+    pub async fn get_ocsp_config(&self) -> Result<CallToolResult, RmcpError> {
+        let handler = OcspHandler::new(self.client.clone());
+        let config = handler.get_config().await.map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(config).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Get OCSP status
+    pub async fn get_ocsp_status(&self) -> Result<CallToolResult, RmcpError> {
+        let handler = OcspHandler::new(self.client.clone());
+        let status = handler.get_status().await.map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(status).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Test OCSP connectivity
+    pub async fn test_ocsp(&self) -> Result<CallToolResult, RmcpError> {
+        let handler = OcspHandler::new(self.client.clone());
+        let result = handler.test().await.map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(result).map_err(|e| self.to_error(e))?)
+    }
+
+    // =========================================================================
+    // DNS Suffix Operations
+    // =========================================================================
+
+    /// List all DNS suffixes
+    pub async fn list_suffixes(&self) -> Result<CallToolResult, RmcpError> {
+        let handler = SuffixesHandler::new(self.client.clone());
+        let suffixes = handler.list().await.map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(suffixes).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Get a specific DNS suffix
+    pub async fn get_suffix(&self, name: &str) -> Result<CallToolResult, RmcpError> {
+        let handler = SuffixesHandler::new(self.client.clone());
+        let suffix = handler.get(name).await.map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(suffix).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Get cluster DNS suffixes
+    pub async fn get_cluster_suffixes(&self) -> Result<CallToolResult, RmcpError> {
+        let handler = SuffixesHandler::new(self.client.clone());
+        let suffixes = handler
+            .cluster_suffixes()
+            .await
+            .map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::to_value(suffixes).map_err(|e| self.to_error(e))?)
+    }
+
+    /// Delete a DNS suffix
+    pub async fn delete_suffix(&self, name: &str) -> Result<CallToolResult, RmcpError> {
+        let handler = SuffixesHandler::new(self.client.clone());
+        handler.delete(name).await.map_err(|e| self.to_error(e))?;
+        self.to_result(serde_json::json!({
+            "success": true,
+            "message": format!("DNS suffix '{}' deleted successfully", name)
         }))
     }
 }
