@@ -274,6 +274,69 @@ pub struct CreateEssentialsSubscriptionParam {
     pub payment_method_id: Option<i64>,
 }
 
+// Enterprise - LDAP Mapping parameter structs
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct LdapMappingIdParam {
+    /// The LDAP mapping ID (uid)
+    pub mapping_id: i64,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct CreateLdapMappingParam {
+    /// Name for the LDAP mapping
+    pub name: String,
+    /// LDAP group distinguished name
+    pub dn: String,
+    /// Role identifier to map to
+    pub role: String,
+    /// Email address for alerts (optional)
+    #[serde(default)]
+    pub email: Option<String>,
+}
+
+// Enterprise - Job Scheduler parameter structs
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct JobIdParam {
+    /// The scheduled job ID
+    pub job_id: String,
+}
+
+// Enterprise - Proxy parameter structs
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct ProxyIdParam {
+    /// The proxy ID (uid)
+    pub proxy_id: i64,
+}
+
+// Enterprise - Endpoint parameter structs
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct EndpointIdParam {
+    /// The endpoint ID (uid)
+    pub endpoint_id: String,
+}
+
+// Enterprise - Diagnostics parameter structs
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DiagnosticReportIdParam {
+    /// The diagnostic report ID
+    pub report_id: String,
+}
+
+// Cloud - Essentials Database parameter structs
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct EssentialsDatabaseIdParam {
+    /// The Essentials subscription ID
+    pub subscription_id: i64,
+    /// The database ID
+    pub database_id: i64,
+}
+
 impl RedisCtlMcp {
     /// Create a new MCP server instance
     pub fn new(profile: Option<&str>, read_only: bool) -> anyhow::Result<Self> {
@@ -1419,6 +1482,332 @@ impl RedisCtlMcp {
         info!(task_id = %params.task_id, "Tool called: enterprise_debuginfo_status");
         let tools = self.get_enterprise_tools().await?;
         tools.get_debuginfo_status(&params.task_id).await
+    }
+
+    // =========================================================================
+    // Enterprise Tools - LDAP Mapping Operations
+    // =========================================================================
+
+    #[tool(description = "List all LDAP mappings in the Redis Enterprise cluster")]
+    async fn enterprise_ldap_mappings_list(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: enterprise_ldap_mappings_list");
+        let tools = self.get_enterprise_tools().await?;
+        tools.list_ldap_mappings().await
+    }
+
+    #[tool(description = "Get detailed information about a specific LDAP mapping")]
+    async fn enterprise_ldap_mapping_get(
+        &self,
+        Parameters(params): Parameters<LdapMappingIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(
+            mapping_id = params.mapping_id,
+            "Tool called: enterprise_ldap_mapping_get"
+        );
+        let tools = self.get_enterprise_tools().await?;
+        tools.get_ldap_mapping(params.mapping_id as u64).await
+    }
+
+    #[tool(description = "Create a new LDAP mapping to map LDAP groups to Redis Enterprise roles")]
+    async fn enterprise_ldap_mapping_create(
+        &self,
+        Parameters(params): Parameters<CreateLdapMappingParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(name = %params.name, "Tool called: enterprise_ldap_mapping_create");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_enterprise_tools().await?;
+        tools
+            .create_ldap_mapping(
+                &params.name,
+                &params.dn,
+                &params.role,
+                params.email.as_deref(),
+            )
+            .await
+    }
+
+    #[tool(description = "Delete an LDAP mapping from the Redis Enterprise cluster")]
+    async fn enterprise_ldap_mapping_delete(
+        &self,
+        Parameters(params): Parameters<LdapMappingIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(
+            mapping_id = params.mapping_id,
+            "Tool called: enterprise_ldap_mapping_delete"
+        );
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_enterprise_tools().await?;
+        tools.delete_ldap_mapping(params.mapping_id as u64).await
+    }
+
+    // =========================================================================
+    // Enterprise Tools - Job Scheduler Operations
+    // =========================================================================
+
+    #[tool(description = "List all scheduled jobs in the Redis Enterprise cluster")]
+    async fn enterprise_jobs_list(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: enterprise_jobs_list");
+        let tools = self.get_enterprise_tools().await?;
+        tools.list_jobs().await
+    }
+
+    #[tool(description = "Get detailed information about a specific scheduled job")]
+    async fn enterprise_job_get(
+        &self,
+        Parameters(params): Parameters<JobIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(job_id = %params.job_id, "Tool called: enterprise_job_get");
+        let tools = self.get_enterprise_tools().await?;
+        tools.get_job(&params.job_id).await
+    }
+
+    #[tool(description = "Get execution history for a specific scheduled job")]
+    async fn enterprise_job_history(
+        &self,
+        Parameters(params): Parameters<JobIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(job_id = %params.job_id, "Tool called: enterprise_job_history");
+        let tools = self.get_enterprise_tools().await?;
+        tools.get_job_history(&params.job_id).await
+    }
+
+    #[tool(description = "Trigger immediate execution of a scheduled job")]
+    async fn enterprise_job_trigger(
+        &self,
+        Parameters(params): Parameters<JobIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(job_id = %params.job_id, "Tool called: enterprise_job_trigger");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_enterprise_tools().await?;
+        tools.trigger_job(&params.job_id).await
+    }
+
+    // =========================================================================
+    // Enterprise Tools - Proxy Operations
+    // =========================================================================
+
+    #[tool(description = "List all proxies in the Redis Enterprise cluster")]
+    async fn enterprise_proxies_list(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: enterprise_proxies_list");
+        let tools = self.get_enterprise_tools().await?;
+        tools.list_proxies().await
+    }
+
+    #[tool(description = "Get detailed information about a specific proxy")]
+    async fn enterprise_proxy_get(
+        &self,
+        Parameters(params): Parameters<ProxyIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(
+            proxy_id = params.proxy_id,
+            "Tool called: enterprise_proxy_get"
+        );
+        let tools = self.get_enterprise_tools().await?;
+        tools.get_proxy(params.proxy_id as u64).await
+    }
+
+    #[tool(description = "Get statistics for a specific proxy")]
+    async fn enterprise_proxy_stats(
+        &self,
+        Parameters(params): Parameters<ProxyIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(
+            proxy_id = params.proxy_id,
+            "Tool called: enterprise_proxy_stats"
+        );
+        let tools = self.get_enterprise_tools().await?;
+        tools.get_proxy_stats(params.proxy_id as u64).await
+    }
+
+    #[tool(description = "List proxies for a specific database")]
+    async fn enterprise_proxies_by_database(
+        &self,
+        Parameters(params): Parameters<EnterpriseDatabaseIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(
+            database_id = params.database_id,
+            "Tool called: enterprise_proxies_by_database"
+        );
+        let tools = self.get_enterprise_tools().await?;
+        tools
+            .list_proxies_by_database(params.database_id as u64)
+            .await
+    }
+
+    // =========================================================================
+    // Enterprise Tools - Endpoint Operations
+    // =========================================================================
+
+    #[tool(description = "List all database endpoints in the Redis Enterprise cluster")]
+    async fn enterprise_endpoints_list(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: enterprise_endpoints_list");
+        let tools = self.get_enterprise_tools().await?;
+        tools.list_endpoints().await
+    }
+
+    #[tool(description = "Get detailed information about a specific endpoint")]
+    async fn enterprise_endpoint_get(
+        &self,
+        Parameters(params): Parameters<EndpointIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(endpoint_id = %params.endpoint_id, "Tool called: enterprise_endpoint_get");
+        let tools = self.get_enterprise_tools().await?;
+        tools.get_endpoint(&params.endpoint_id).await
+    }
+
+    #[tool(description = "Get statistics for a specific endpoint")]
+    async fn enterprise_endpoint_stats(
+        &self,
+        Parameters(params): Parameters<EndpointIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(endpoint_id = %params.endpoint_id, "Tool called: enterprise_endpoint_stats");
+        let tools = self.get_enterprise_tools().await?;
+        tools.get_endpoint_stats(&params.endpoint_id).await
+    }
+
+    #[tool(description = "List endpoints for a specific database")]
+    async fn enterprise_endpoints_by_database(
+        &self,
+        Parameters(params): Parameters<EnterpriseDatabaseIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(
+            database_id = params.database_id,
+            "Tool called: enterprise_endpoints_by_database"
+        );
+        let tools = self.get_enterprise_tools().await?;
+        tools
+            .list_endpoints_by_database(params.database_id as u64)
+            .await
+    }
+
+    // =========================================================================
+    // Enterprise Tools - Diagnostics Operations
+    // =========================================================================
+
+    #[tool(description = "List available diagnostic checks in the Redis Enterprise cluster")]
+    async fn enterprise_diagnostic_checks_list(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: enterprise_diagnostic_checks_list");
+        let tools = self.get_enterprise_tools().await?;
+        tools.list_diagnostic_checks().await
+    }
+
+    #[tool(description = "List diagnostic reports in the Redis Enterprise cluster")]
+    async fn enterprise_diagnostic_reports_list(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: enterprise_diagnostic_reports_list");
+        let tools = self.get_enterprise_tools().await?;
+        tools.list_diagnostic_reports().await
+    }
+
+    #[tool(description = "Get a specific diagnostic report")]
+    async fn enterprise_diagnostic_report_get(
+        &self,
+        Parameters(params): Parameters<DiagnosticReportIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(report_id = %params.report_id, "Tool called: enterprise_diagnostic_report_get");
+        let tools = self.get_enterprise_tools().await?;
+        tools.get_diagnostic_report(&params.report_id).await
+    }
+
+    #[tool(description = "Get the most recent diagnostic report")]
+    async fn enterprise_diagnostic_report_last(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: enterprise_diagnostic_report_last");
+        let tools = self.get_enterprise_tools().await?;
+        tools.get_last_diagnostic_report().await
+    }
+
+    #[tool(description = "Run diagnostics on the Redis Enterprise cluster")]
+    async fn enterprise_diagnostics_run(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: enterprise_diagnostics_run");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_enterprise_tools().await?;
+        tools.run_diagnostics().await
+    }
+
+    // =========================================================================
+    // Cloud Tools - Essentials Database Operations
+    // =========================================================================
+
+    #[tool(description = "List all databases in an Essentials subscription")]
+    async fn cloud_essentials_databases_list(
+        &self,
+        Parameters(params): Parameters<SubscriptionIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(
+            subscription_id = params.subscription_id,
+            "Tool called: cloud_essentials_databases_list"
+        );
+        let tools = self.get_cloud_tools().await?;
+        tools
+            .list_essentials_databases(params.subscription_id)
+            .await
+    }
+
+    #[tool(description = "Get detailed information about a specific Essentials database")]
+    async fn cloud_essentials_database_get(
+        &self,
+        Parameters(params): Parameters<EssentialsDatabaseIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(
+            subscription_id = params.subscription_id,
+            database_id = params.database_id,
+            "Tool called: cloud_essentials_database_get"
+        );
+        let tools = self.get_cloud_tools().await?;
+        tools
+            .get_essentials_database(params.subscription_id, params.database_id)
+            .await
+    }
+
+    #[tool(description = "Delete an Essentials database. This is a destructive operation.")]
+    async fn cloud_essentials_database_delete(
+        &self,
+        Parameters(params): Parameters<EssentialsDatabaseIdParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(
+            subscription_id = params.subscription_id,
+            database_id = params.database_id,
+            "Tool called: cloud_essentials_database_delete"
+        );
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_cloud_tools().await?;
+        tools
+            .delete_essentials_database(params.subscription_id, params.database_id)
+            .await
     }
 }
 
