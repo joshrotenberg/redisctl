@@ -12,6 +12,7 @@ use tokio::sync::RwLock;
 use tracing::{debug, info};
 
 use crate::cloud_tools::CloudTools;
+use crate::database_tools::{DatabaseTools, is_write_command, value_to_json};
 use crate::enterprise_tools::EnterpriseTools;
 
 /// Configuration for the MCP server
@@ -33,6 +34,7 @@ pub struct RedisCtlMcp {
     tool_router: ToolRouter<RedisCtlMcp>,
     cloud_tools: Arc<RwLock<Option<CloudTools>>>,
     enterprise_tools: Arc<RwLock<Option<EnterpriseTools>>>,
+    database_tools: Arc<RwLock<Option<DatabaseTools>>>,
 }
 
 // Parameter structs for tools that need arguments
@@ -389,6 +391,97 @@ pub struct SuffixNameParam {
     pub name: String,
 }
 
+// Database tools parameter structs
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseExecuteParam {
+    /// Redis command to execute (e.g., "GET", "INFO", "SCAN")
+    pub command: String,
+    /// Command arguments
+    #[serde(default)]
+    pub args: Vec<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseInfoParam {
+    /// INFO section to retrieve (e.g., "server", "memory", "stats"). Optional, returns all sections if not specified.
+    #[serde(default)]
+    pub section: Option<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseScanParam {
+    /// Pattern to match keys (default: "*")
+    #[serde(default = "default_scan_pattern")]
+    pub pattern: String,
+    /// Maximum number of keys to return (default: 100)
+    #[serde(default = "default_scan_count")]
+    pub count: usize,
+}
+
+fn default_scan_pattern() -> String {
+    "*".to_string()
+}
+
+fn default_scan_count() -> usize {
+    100
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseKeyParam {
+    /// Redis key name
+    pub key: String,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseSlowlogParam {
+    /// Number of slowlog entries to return (default: 10)
+    #[serde(default = "default_slowlog_count")]
+    pub count: Option<usize>,
+}
+
+fn default_slowlog_count() -> Option<usize> {
+    Some(10)
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseConfigGetParam {
+    /// Pattern to match configuration parameters (e.g., "*", "max*", "timeout")
+    pub pattern: String,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseLrangeParam {
+    /// Redis key name
+    pub key: String,
+    /// Start index (0-based, negative values count from end)
+    #[serde(default)]
+    pub start: isize,
+    /// Stop index (inclusive, negative values count from end, -1 means end)
+    #[serde(default = "default_lrange_stop")]
+    pub stop: isize,
+}
+
+fn default_lrange_stop() -> isize {
+    -1
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseZrangeParam {
+    /// Redis key name
+    pub key: String,
+    /// Start index (0-based)
+    #[serde(default)]
+    pub start: isize,
+    /// Stop index (inclusive, -1 means end)
+    #[serde(default = "default_zrange_stop")]
+    pub stop: isize,
+}
+
+fn default_zrange_stop() -> isize {
+    -1
+}
+
 impl RedisCtlMcp {
     /// Create a new MCP server instance
     pub fn new(profile: Option<&str>, read_only: bool) -> anyhow::Result<Self> {
@@ -408,6 +501,7 @@ impl RedisCtlMcp {
             tool_router: Self::tool_router(),
             cloud_tools: Arc::new(RwLock::new(None)),
             enterprise_tools: Arc::new(RwLock::new(None)),
+            database_tools: Arc::new(RwLock::new(None)),
         })
     }
 
@@ -434,6 +528,19 @@ impl RedisCtlMcp {
         if guard.is_none() {
             debug!("Initializing Enterprise tools");
             let tools = EnterpriseTools::new(self.config.profile.as_deref())
+                .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+            *guard = Some(tools);
+        }
+        Ok(guard.clone().unwrap())
+    }
+
+    /// Initialize Database tools lazily
+    async fn get_database_tools(&self) -> Result<DatabaseTools, RmcpError> {
+        let mut guard = self.database_tools.write().await;
+        if guard.is_none() {
+            debug!("Initializing Database tools");
+            let tools = DatabaseTools::new(self.config.profile.as_deref())
+                .await
                 .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
             *guard = Some(tools);
         }
@@ -2188,6 +2295,504 @@ impl RedisCtlMcp {
 
         let tools = self.get_enterprise_tools().await?;
         tools.delete_suffix(&params.name).await
+    }
+
+    // =========================================================================
+    // Database Tools - Direct Redis Connection
+    // =========================================================================
+
+    #[tool(
+        description = "Execute a Redis command directly. Use for commands not covered by specific tools. Write commands are blocked in read-only mode."
+    )]
+    async fn database_execute(
+        &self,
+        Parameters(params): Parameters<DatabaseExecuteParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(command = %params.command, args = ?params.args, "Tool called: database_execute");
+
+        // Check if it's a write command in read-only mode
+        if self.config.read_only && is_write_command(&params.command) {
+            return Err(RmcpError::invalid_request(
+                format!(
+                    "Command '{}' is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.",
+                    params.command
+                ),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .execute(&params.command, &params.args)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        let json = value_to_json(&result);
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::to_string_pretty(&json).unwrap_or_else(|_| json.to_string()),
+        )]))
+    }
+
+    #[tool(
+        description = "Get Redis server information (INFO command). Returns server stats, memory usage, replication info, etc."
+    )]
+    async fn database_info(
+        &self,
+        Parameters(params): Parameters<DatabaseInfoParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(section = ?params.section, "Tool called: database_info");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .info(params.section.as_deref())
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(result)]))
+    }
+
+    #[tool(description = "Get the number of keys in the current database (DBSIZE command)")]
+    async fn database_dbsize(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: database_dbsize");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .dbsize()
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({ "dbsize": result }).to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Scan keys matching a pattern (SCAN command). Safe alternative to KEYS that doesn't block the server."
+    )]
+    async fn database_scan(
+        &self,
+        Parameters(params): Parameters<DatabaseScanParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(pattern = %params.pattern, count = params.count, "Tool called: database_scan");
+
+        let tools = self.get_database_tools().await?;
+        let keys = tools
+            .scan(&params.pattern, params.count)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "pattern": params.pattern,
+                "count": keys.len(),
+                "keys": keys
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get the type of a key (TYPE command). Returns string, list, set, zset, hash, stream, or none."
+    )]
+    async fn database_type(
+        &self,
+        Parameters(params): Parameters<DatabaseKeyParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_type");
+
+        let tools = self.get_database_tools().await?;
+        let key_type = tools
+            .key_type(&params.key)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "type": key_type
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get the TTL of a key in seconds (TTL command). Returns -1 if no expiration, -2 if key doesn't exist."
+    )]
+    async fn database_ttl(
+        &self,
+        Parameters(params): Parameters<DatabaseKeyParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_ttl");
+
+        let tools = self.get_database_tools().await?;
+        let ttl = tools
+            .ttl(&params.key)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "ttl_seconds": ttl
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(description = "Get memory usage of a key in bytes (MEMORY USAGE command)")]
+    async fn database_memory_usage(
+        &self,
+        Parameters(params): Parameters<DatabaseKeyParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_memory_usage");
+
+        let tools = self.get_database_tools().await?;
+        let usage = tools
+            .memory_usage(&params.key)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "memory_bytes": usage
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get slow log entries (SLOWLOG GET command). Shows queries that exceeded the slowlog threshold."
+    )]
+    async fn database_slowlog(
+        &self,
+        Parameters(params): Parameters<DatabaseSlowlogParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(count = ?params.count, "Tool called: database_slowlog");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .slowlog_get(params.count)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        let json = value_to_json(&result);
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::to_string_pretty(&json).unwrap_or_else(|_| json.to_string()),
+        )]))
+    }
+
+    #[tool(description = "Get the number of entries in the slow log (SLOWLOG LEN command)")]
+    async fn database_slowlog_len(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: database_slowlog_len");
+
+        let tools = self.get_database_tools().await?;
+        let len = tools
+            .slowlog_len()
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({ "slowlog_len": len }).to_string(),
+        )]))
+    }
+
+    #[tool(description = "Get list of connected clients (CLIENT LIST command)")]
+    async fn database_client_list(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: database_client_list");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .client_list()
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(result)]))
+    }
+
+    #[tool(description = "Get Redis configuration values (CONFIG GET command)")]
+    async fn database_config_get(
+        &self,
+        Parameters(params): Parameters<DatabaseConfigGetParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(pattern = %params.pattern, "Tool called: database_config_get");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .config_get(&params.pattern)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        // Convert vec of tuples to JSON object
+        let config: serde_json::Map<String, serde_json::Value> = result
+            .into_iter()
+            .map(|(k, v)| (k, serde_json::Value::String(v)))
+            .collect();
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::to_string_pretty(&config).unwrap_or_else(|_| "{}".to_string()),
+        )]))
+    }
+
+    #[tool(description = "List loaded Redis modules (MODULE LIST command)")]
+    async fn database_module_list(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: database_module_list");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .module_list()
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        let json = value_to_json(&result);
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::to_string_pretty(&json).unwrap_or_else(|_| json.to_string()),
+        )]))
+    }
+
+    #[tool(description = "Ping the Redis server to check connectivity")]
+    async fn database_ping(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: database_ping");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .ping()
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({ "response": result }).to_string(),
+        )]))
+    }
+
+    #[tool(description = "Get the value of a string key (GET command)")]
+    async fn database_get(
+        &self,
+        Parameters(params): Parameters<DatabaseKeyParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_get");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .get(&params.key)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "value": result
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(description = "Check if a key exists (EXISTS command)")]
+    async fn database_exists(
+        &self,
+        Parameters(params): Parameters<DatabaseKeyParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_exists");
+
+        let tools = self.get_database_tools().await?;
+        let exists = tools
+            .exists(&params.key)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "exists": exists
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(description = "Get all fields and values of a hash (HGETALL command)")]
+    async fn database_hgetall(
+        &self,
+        Parameters(params): Parameters<DatabaseKeyParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_hgetall");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .hgetall(&params.key)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        // Convert vec of tuples to JSON object
+        let hash: serde_json::Map<String, serde_json::Value> = result
+            .into_iter()
+            .map(|(k, v)| (k, serde_json::Value::String(v)))
+            .collect();
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "fields": hash
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(description = "Get the number of fields in a hash (HLEN command)")]
+    async fn database_hlen(
+        &self,
+        Parameters(params): Parameters<DatabaseKeyParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_hlen");
+
+        let tools = self.get_database_tools().await?;
+        let len = tools
+            .hlen(&params.key)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "length": len
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(description = "Get a range of elements from a list (LRANGE command)")]
+    async fn database_lrange(
+        &self,
+        Parameters(params): Parameters<DatabaseLrangeParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, start = params.start, stop = params.stop, "Tool called: database_lrange");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .lrange(&params.key, params.start, params.stop)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "start": params.start,
+                "stop": params.stop,
+                "values": result
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(description = "Get the length of a list (LLEN command)")]
+    async fn database_llen(
+        &self,
+        Parameters(params): Parameters<DatabaseKeyParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_llen");
+
+        let tools = self.get_database_tools().await?;
+        let len = tools
+            .llen(&params.key)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "length": len
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(description = "Get all members of a set (SMEMBERS command)")]
+    async fn database_smembers(
+        &self,
+        Parameters(params): Parameters<DatabaseKeyParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_smembers");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .smembers(&params.key)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "members": result
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(description = "Get the cardinality (size) of a set (SCARD command)")]
+    async fn database_scard(
+        &self,
+        Parameters(params): Parameters<DatabaseKeyParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_scard");
+
+        let tools = self.get_database_tools().await?;
+        let card = tools
+            .scard(&params.key)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "cardinality": card
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(description = "Get a range of elements from a sorted set (ZRANGE command)")]
+    async fn database_zrange(
+        &self,
+        Parameters(params): Parameters<DatabaseZrangeParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, start = params.start, stop = params.stop, "Tool called: database_zrange");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .zrange(&params.key, params.start, params.stop)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "start": params.start,
+                "stop": params.stop,
+                "members": result
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(description = "Get the cardinality (size) of a sorted set (ZCARD command)")]
+    async fn database_zcard(
+        &self,
+        Parameters(params): Parameters<DatabaseKeyParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_zcard");
+
+        let tools = self.get_database_tools().await?;
+        let card = tools
+            .zcard(&params.key)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "cardinality": card
+            })
+            .to_string(),
+        )]))
     }
 }
 

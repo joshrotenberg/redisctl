@@ -71,6 +71,7 @@ async-trait = "0.1"
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "multipart"] }
 url = "2.5"
 base64 = "0.22"
+urlencoding = "2.1"
 chrono = { version = "0.4", features = ["serde"] }
 
 # Configuration
@@ -92,6 +93,9 @@ wiremock = "0.6"
 mockall = "0.13"
 serial_test = "3.1"
 pretty_assertions = "1.4"
+
+# Redis client
+redis = { version = "0.27", features = ["tokio-comp", "tokio-rustls-comp", "connection-manager"] }
 
 # Internal crates
 redisctl-config = { path = "crates/redisctl-config" }
