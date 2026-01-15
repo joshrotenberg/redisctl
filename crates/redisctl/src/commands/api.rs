@@ -52,6 +52,9 @@ pub async fn handle_api_command(params: ApiCommandParams) -> CliResult<()> {
             )
             .await
         }
+        DeploymentType::Database => Err(anyhow::anyhow!(
+            "Raw API access is not supported for database profiles. Database profiles are for direct Redis connections."
+        ).into()),
     }
 }
 

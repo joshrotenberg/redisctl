@@ -199,6 +199,7 @@ fn format_command(command: &Commands) -> String {
                 Remove { name } => format!("profile remove {}", name),
                 DefaultEnterprise { name } => format!("profile default-enterprise {}", name),
                 DefaultCloud { name } => format!("profile default-cloud {}", name),
+                DefaultDatabase { name } => format!("profile default-database {}", name),
                 Validate => "profile validate".to_string(),
             }
         }

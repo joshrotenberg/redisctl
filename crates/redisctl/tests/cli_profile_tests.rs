@@ -639,3 +639,308 @@ fn test_profile_path_help() {
             "Show the path to the configuration file",
         ));
 }
+
+// === DATABASE PROFILE TESTS ===
+
+#[test]
+fn test_profile_set_database() {
+    let temp_dir = TempDir::new().unwrap();
+
+    test_cmd(&temp_dir)
+        .arg("profile")
+        .arg("set")
+        .arg("test-database")
+        .arg("--type")
+        .arg("database")
+        .arg("--host")
+        .arg("localhost")
+        .arg("--port")
+        .arg("6379")
+        .arg("--password")
+        .arg("secret123")
+        .assert()
+        .success();
+
+    // Verify profile was created
+    test_cmd(&temp_dir)
+        .arg("profile")
+        .arg("list")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("test-database"));
+}
+
+#[test]
+fn test_profile_set_database_with_all_options() {
+    let temp_dir = TempDir::new().unwrap();
+
+    test_cmd(&temp_dir)
+        .arg("profile")
+        .arg("set")
+        .arg("full-database")
+        .arg("--type")
+        .arg("database")
+        .arg("--host")
+        .arg("redis.example.com")
+        .arg("--port")
+        .arg("12345")
+        .arg("--password")
+        .arg("secret")
+        .arg("--username")
+        .arg("myuser")
+        .arg("--db")
+        .arg("5")
+        .assert()
+        .success();
+
+    // Verify profile was created with correct type
+    test_cmd(&temp_dir)
+        .arg("profile")
+        .arg("show")
+        .arg("full-database")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("database"));
+}
+
+#[test]
+fn test_profile_set_database_no_tls() {
+    let temp_dir = TempDir::new().unwrap();
+
+    // Test --no-tls flag (password provided to avoid interactive prompt)
+    test_cmd(&temp_dir)
+        .arg("profile")
+        .arg("set")
+        .arg("local-redis")
+        .arg("--type")
+        .arg("database")
+        .arg("--host")
+        .arg("localhost")
+        .arg("--port")
+        .arg("6379")
+        .arg("--no-tls")
+        .arg("--password")
+        .arg("localpass")
+        .assert()
+        .success();
+
+    // Verify profile was created
+    test_cmd(&temp_dir)
+        .arg("profile")
+        .arg("list")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("local-redis"));
+}
+
+#[test]
+fn test_profile_set_database_requires_host() {
+    let temp_dir = TempDir::new().unwrap();
+
+    // Should fail without --host
+    test_cmd(&temp_dir)
+        .arg("profile")
+        .arg("set")
+        .arg("bad-database")
+        .arg("--type")
+        .arg("database")
+        .arg("--port")
+        .arg("6379")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("--host"));
+}
+
+#[test]
+fn test_profile_set_database_requires_port() {
+    let temp_dir = TempDir::new().unwrap();
+
+    // Should fail without --port
+    test_cmd(&temp_dir)
+        .arg("profile")
+        .arg("set")
+        .arg("bad-database")
+        .arg("--type")
+        .arg("database")
+        .arg("--host")
+        .arg("localhost")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("--port"));
+}
+
+#[test]
+fn test_profile_default_database() {
+    let temp_dir = TempDir::new().unwrap();
+
+    // Create database profile
+    test_cmd(&temp_dir)
+        .arg("profile")
+        .arg("set")
+        .arg("my-cache")
+        .arg("--type")
+        .arg("database")
+        .arg("--host")
+        .arg("localhost")
+        .arg("--port")
+        .arg("6379")
+        .arg("--password")
+        .arg("secret")
+        .assert()
+        .success();
+
+    // Set as default
+    test_cmd(&temp_dir)
+        .arg("profile")
+        .arg("default-database")
+        .arg("my-cache")
+        .assert()
+        .success();
+}
+
+#[test]
+fn test_profile_default_database_alias() {
+    let temp_dir = TempDir::new().unwrap();
+
+    // Create database profile
+    test_cmd(&temp_dir)
+        .arg("profile")
+        .arg("set")
+        .arg("my-cache")
+        .arg("--type")
+        .arg("database")
+        .arg("--host")
+        .arg("localhost")
+        .arg("--port")
+        .arg("6379")
+        .arg("--password")
+        .arg("secret")
+        .assert()
+        .success();
+
+    // Set as default using alias
+    test_cmd(&temp_dir)
+        .arg("profile")
+        .arg("def-db")
+        .arg("my-cache")
+        .assert()
+        .success();
+}
+
+#[test]
+fn test_profile_default_database_nonexistent() {
+    let temp_dir = TempDir::new().unwrap();
+
+    // Should fail for nonexistent profile
+    test_cmd(&temp_dir)
+        .arg("profile")
+        .arg("default-database")
+        .arg("nonexistent")
+        .assert()
+        .failure();
+}
+
+#[test]
+fn test_profile_help_shows_database_type() {
+    redisctl()
+        .arg("profile")
+        .arg("set")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("database"));
+}
+
+#[test]
+fn test_profile_help_shows_database_options() {
+    redisctl()
+        .arg("profile")
+        .arg("set")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--host"))
+        .stdout(predicate::str::contains("--port"))
+        .stdout(predicate::str::contains("--no-tls"))
+        .stdout(predicate::str::contains("--db"));
+}
+
+#[test]
+fn test_profile_help_shows_database_example() {
+    redisctl()
+        .arg("profile")
+        .arg("set")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--type database"));
+}
+
+#[test]
+fn test_profile_help_shows_default_database_command() {
+    redisctl()
+        .arg("profile")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("default-database"));
+}
+
+#[test]
+fn test_profile_list_shows_database_profiles() {
+    let temp_dir = TempDir::new().unwrap();
+
+    // Create one of each type
+    test_cmd(&temp_dir)
+        .arg("profile")
+        .arg("set")
+        .arg("cloud-profile")
+        .arg("--type")
+        .arg("cloud")
+        .arg("--api-key")
+        .arg("key")
+        .arg("--api-secret")
+        .arg("secret")
+        .assert()
+        .success();
+
+    test_cmd(&temp_dir)
+        .arg("profile")
+        .arg("set")
+        .arg("ent-profile")
+        .arg("--type")
+        .arg("enterprise")
+        .arg("--url")
+        .arg("https://localhost:9443")
+        .arg("--username")
+        .arg("admin")
+        .arg("--password")
+        .arg("pass")
+        .assert()
+        .success();
+
+    test_cmd(&temp_dir)
+        .arg("profile")
+        .arg("set")
+        .arg("db-profile")
+        .arg("--type")
+        .arg("database")
+        .arg("--host")
+        .arg("localhost")
+        .arg("--port")
+        .arg("6379")
+        .arg("--password")
+        .arg("secret")
+        .assert()
+        .success();
+
+    // List should show all three
+    test_cmd(&temp_dir)
+        .arg("profile")
+        .arg("list")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("cloud-profile"))
+        .stdout(predicate::str::contains("ent-profile"))
+        .stdout(predicate::str::contains("db-profile"));
+}

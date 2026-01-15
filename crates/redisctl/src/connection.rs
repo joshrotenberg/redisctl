@@ -125,6 +125,7 @@ impl ConnectionManager {
                         actual_type: match profile.deployment_type {
                             DeploymentType::Cloud => "cloud",
                             DeploymentType::Enterprise => "enterprise",
+                            DeploymentType::Database => "database",
                         }
                         .to_string(),
                         expected_type: "cloud".to_string(),
@@ -261,6 +262,7 @@ impl ConnectionManager {
                         actual_type: match profile.deployment_type {
                             DeploymentType::Cloud => "cloud",
                             DeploymentType::Enterprise => "enterprise",
+                            DeploymentType::Database => "database",
                         }
                         .to_string(),
                         expected_type: "enterprise".to_string(),
