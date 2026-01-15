@@ -239,6 +239,7 @@ impl Profile {
     }
 
     /// Returns Database credentials if this is a Database profile
+    #[allow(clippy::type_complexity)]
     pub fn database_credentials(&self) -> Option<(&str, u16, Option<&str>, bool, &str, u8)> {
         match &self.credentials {
             ProfileCredentials::Database {
