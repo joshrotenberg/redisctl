@@ -32,6 +32,10 @@ pub async fn handle_profile_command(
             username,
             password,
             insecure,
+            host,
+            port,
+            no_tls,
+            db,
             #[cfg(feature = "secure-storage")]
             use_keyring,
         } => {
@@ -46,6 +50,10 @@ pub async fn handle_profile_command(
                 username,
                 password,
                 insecure,
+                host,
+                port,
+                no_tls,
+                db,
                 #[cfg(feature = "secure-storage")]
                 use_keyring,
             )
@@ -54,6 +62,7 @@ pub async fn handle_profile_command(
         Remove { name } => handle_remove(conn_mgr, name).await,
         DefaultEnterprise { name } => handle_default_enterprise(conn_mgr, name).await,
         DefaultCloud { name } => handle_default_cloud(conn_mgr, name).await,
+        DefaultDatabase { name } => handle_default_database(conn_mgr, name).await,
         Validate => handle_validate(conn_mgr).await,
     }
 }
@@ -105,6 +114,17 @@ async fn handle_list(
                                 obj["url"] = serde_json::json!(url);
                                 obj["username"] = serde_json::json!(username);
                                 obj["insecure"] = serde_json::json!(insecure);
+                            }
+                        }
+                        redisctl_config::DeploymentType::Database => {
+                            if let Some((host, port, _, tls, username, database)) =
+                                profile.database_credentials()
+                            {
+                                obj["host"] = serde_json::json!(host);
+                                obj["port"] = serde_json::json!(port);
+                                obj["tls"] = serde_json::json!(tls);
+                                obj["username"] = serde_json::json!(username);
+                                obj["database"] = serde_json::json!(database);
                             }
                         }
                     }
@@ -166,16 +186,28 @@ async fn handle_list(
                             );
                         }
                     }
+                    redisctl_config::DeploymentType::Database => {
+                        if let Some((host, port, _, tls, _, _)) = profile.database_credentials() {
+                            details = format!(
+                                "{}:{} {}",
+                                host,
+                                port,
+                                if tls { "(TLS)" } else { "(no TLS)" }
+                            );
+                        }
+                    }
                 }
 
                 let is_default_enterprise =
                     conn_mgr.config.default_enterprise.as_deref() == Some(name);
                 let is_default_cloud = conn_mgr.config.default_cloud.as_deref() == Some(name);
-                let name_display = if is_default_enterprise || is_default_cloud {
-                    format!("{}*", name)
-                } else {
-                    name.to_string()
-                };
+                let is_default_database = conn_mgr.config.default_database.as_deref() == Some(name);
+                let name_display =
+                    if is_default_enterprise || is_default_cloud || is_default_database {
+                        format!("{}*", name)
+                    } else {
+                        name.to_string()
+                    };
 
                 println!(
                     "{:<15} {:<12} {}",
@@ -252,6 +284,19 @@ async fn handle_show(
                                 output_data["insecure"] = serde_json::json!(insecure);
                             }
                         }
+                        redisctl_config::DeploymentType::Database => {
+                            if let Some((host, port, has_password, tls, username, database)) =
+                                profile.database_credentials()
+                            {
+                                output_data["host"] = serde_json::json!(host);
+                                output_data["port"] = serde_json::json!(port);
+                                output_data["password_configured"] =
+                                    serde_json::json!(has_password.is_some());
+                                output_data["tls"] = serde_json::json!(tls);
+                                output_data["username"] = serde_json::json!(username);
+                                output_data["database"] = serde_json::json!(database);
+                            }
+                        }
                     }
 
                     let fmt = match output_format {
@@ -293,6 +338,25 @@ async fn handle_show(
                                 println!("Insecure: {}", insecure);
                             }
                         }
+                        redisctl_config::DeploymentType::Database => {
+                            if let Some((host, port, has_password, tls, username, database)) =
+                                profile.database_credentials()
+                            {
+                                println!("Host: {}", host);
+                                println!("Port: {}", port);
+                                println!("Username: {}", username);
+                                println!(
+                                    "Password: {}",
+                                    if has_password.is_some() {
+                                        "configured"
+                                    } else {
+                                        "not set"
+                                    }
+                                );
+                                println!("TLS: {}", tls);
+                                println!("Database: {}", database);
+                            }
+                        }
                     }
 
                     if is_default_enterprise {
@@ -300,6 +364,9 @@ async fn handle_show(
                     }
                     if is_default_cloud {
                         println!("Default for cloud: yes");
+                    }
+                    if conn_mgr.config.default_database.as_deref() == Some(name) {
+                        println!("Default for database: yes");
                     }
                 }
             }
@@ -322,6 +389,10 @@ async fn handle_set(
     username: &Option<String>,
     password: &Option<String>,
     insecure: &bool,
+    host: &Option<String>,
+    port: &Option<u16>,
+    no_tls: &bool,
+    db: &Option<u8>,
     #[cfg(feature = "secure-storage")] use_keyring: &bool,
 ) -> Result<(), RedisCtlError> {
     debug!("Setting profile: {}", name);
@@ -448,6 +519,63 @@ async fn handle_set(
                 resilience: None,
             }
         }
+        redisctl_config::DeploymentType::Database => {
+            let host = host
+                .clone()
+                .ok_or_else(|| anyhow::anyhow!("Host is required for Database profiles"))?;
+            let port =
+                port.ok_or_else(|| anyhow::anyhow!("Port is required for Database profiles"))?;
+
+            // Prompt for password if not provided (optional for database profiles)
+            let password = match password {
+                Some(p) if !p.is_empty() => Some(p.clone()),
+                _ => {
+                    print!("Enter password (press Enter for none): ");
+                    use std::io::{self, Write};
+                    io::stdout().flush().unwrap();
+                    let pass = rpassword::read_password().context("Failed to read password")?;
+                    if pass.is_empty() { None } else { Some(pass) }
+                }
+            };
+
+            // Use username if provided, otherwise default to "default"
+            let username = username.clone().unwrap_or_else(|| "default".to_string());
+
+            // Handle keyring storage if requested
+            #[cfg(feature = "secure-storage")]
+            let stored_password = if *use_keyring {
+                if let Some(ref p) = password {
+                    use redisctl_config::CredentialStore;
+                    let store = CredentialStore::new();
+                    let pass_ref = store
+                        .store_credential(&format!("{}-password", name), p)
+                        .context("Failed to store password in keyring")?;
+                    println!("Password stored securely in OS keyring");
+                    Some(pass_ref)
+                } else {
+                    None
+                }
+            } else {
+                password.clone()
+            };
+
+            #[cfg(not(feature = "secure-storage"))]
+            let stored_password = password.clone();
+
+            redisctl_config::Profile {
+                deployment_type: redisctl_config::DeploymentType::Database,
+                credentials: redisctl_config::ProfileCredentials::Database {
+                    host,
+                    port,
+                    password: stored_password,
+                    tls: !*no_tls,
+                    username,
+                    database: db.unwrap_or(0),
+                },
+                files_api_key: None,
+                resilience: None,
+            }
+        }
     };
 
     // Update the configuration
@@ -483,6 +611,10 @@ async fn handle_set(
             redisctl_config::DeploymentType::Cloud => {
                 println!("Tip: Set as default for cloud commands with:");
                 println!("  redisctl profile default-cloud {}", name);
+            }
+            redisctl_config::DeploymentType::Database => {
+                println!("Tip: Set as default for database commands with:");
+                println!("  redisctl profile default-database {}", name);
             }
         }
     }
@@ -632,6 +764,39 @@ async fn handle_default_cloud(
     Ok(())
 }
 
+async fn handle_default_database(
+    conn_mgr: &ConnectionManager,
+    name: &str,
+) -> Result<(), RedisCtlError> {
+    debug!("Setting default database profile: {}", name);
+
+    // Check if profile exists and is a database profile
+    match conn_mgr.config.profiles.get(name) {
+        Some(profile) => {
+            if profile.deployment_type != redisctl_config::DeploymentType::Database {
+                return Err(anyhow::anyhow!("Profile '{}' is not a database profile", name).into());
+            }
+        }
+        None => return Err(RedisCtlError::ProfileNotFound { name: name.into() }),
+    }
+
+    // Update the configuration
+    let mut config = conn_mgr.config.clone();
+    config.default_database = Some(name.to_string());
+
+    // Save the configuration to the appropriate location
+    if let Some(ref path) = conn_mgr.config_path {
+        config
+            .save_to_path(path)
+            .context("Failed to save configuration")?;
+    } else {
+        config.save().context("Failed to save configuration")?;
+    }
+
+    println!("Default database profile set to '{}'.", name);
+    Ok(())
+}
+
 async fn handle_validate(conn_mgr: &ConnectionManager) -> Result<(), RedisCtlError> {
     debug!("Validating configuration");
 
@@ -716,6 +881,26 @@ async fn handle_validate(conn_mgr: &ConnectionManager) -> Result<(), RedisCtlErr
                     has_errors = true;
                 }
             },
+            redisctl_config::DeploymentType::Database => match profile.database_credentials() {
+                Some((host, port, password, _tls, _username, _database)) => {
+                    if host.is_empty() {
+                        println!("✗ Missing host");
+                        has_errors = true;
+                    } else if port == 0 {
+                        println!("✗ Invalid port");
+                        has_errors = true;
+                    } else if password.is_none() || password.as_ref().is_none_or(|p| p.is_empty()) {
+                        println!("⚠ No password configured");
+                        has_warnings = true;
+                    } else {
+                        println!("✓ Valid");
+                    }
+                }
+                None => {
+                    println!("✗ Missing Database credentials");
+                    has_errors = true;
+                }
+            },
         }
     }
 
@@ -735,6 +920,15 @@ async fn handle_validate(conn_mgr: &ConnectionManager) -> Result<(), RedisCtlErr
             println!("✓ Default cloud profile: {}", default_cloud);
         } else {
             println!("✗ Default cloud profile '{}' not found", default_cloud);
+            has_errors = true;
+        }
+    }
+
+    if let Some(default_db) = &conn_mgr.config.default_database {
+        if conn_mgr.config.profiles.contains_key(default_db) {
+            println!("✓ Default database profile: {}", default_db);
+        } else {
+            println!("✗ Default database profile '{}' not found", default_db);
             has_errors = true;
         }
     }

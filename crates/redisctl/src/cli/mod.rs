@@ -153,6 +153,9 @@ pub enum Commands {
     # Create an Enterprise profile
     redisctl profile set myenterprise --type enterprise --url https://cluster:9443 --username admin
 
+    # Create a Database profile
+    redisctl profile set mycache --type database --host localhost --port 6379
+
     # List all profiles
     redisctl profile list
 
@@ -165,6 +168,7 @@ pub enum Commands {
     # Set default profiles
     redisctl profile default-cloud mycloud
     redisctl profile default-enterprise myenterprise
+    redisctl profile default-database mycache
 ")]
     Profile(ProfileCommands),
 
@@ -318,6 +322,18 @@ pub enum ProfileCommands {
         --url https://localhost:9443 \\
         --username admin@redis.local \\
         --insecure
+
+    # Create a Database profile (direct Redis connection)
+    redisctl profile set my-cache --type database \\
+        --host redis-12345.cloud.redislabs.com \\
+        --port 12345 \\
+        --password mypassword
+
+    # Create Database profile without TLS (local dev)
+    redisctl profile set local-redis --type database \\
+        --host localhost \\
+        --port 6379 \\
+        --no-tls
 ")]
     Set {
         /// Profile name
@@ -355,6 +371,22 @@ pub enum ProfileCommands {
         #[arg(long)]
         insecure: bool,
 
+        /// Redis host (for Database profiles)
+        #[arg(long, required_if_eq("type", "database"))]
+        host: Option<String>,
+
+        /// Redis port (for Database profiles)
+        #[arg(long, required_if_eq("type", "database"))]
+        port: Option<u16>,
+
+        /// Disable TLS (for Database profiles, TLS is enabled by default)
+        #[arg(long)]
+        no_tls: bool,
+
+        /// Redis database number (for Database profiles, default: 0)
+        #[arg(long)]
+        db: Option<u8>,
+
         /// Store credentials in OS keyring instead of config file
         #[cfg(feature = "secure-storage")]
         #[arg(long)]
@@ -379,6 +411,13 @@ pub enum ProfileCommands {
     #[command(name = "default-cloud", visible_alias = "def-cloud")]
     DefaultCloud {
         /// Profile name to set as default for cloud commands
+        name: String,
+    },
+
+    /// Set the default profile for database commands
+    #[command(name = "default-database", visible_alias = "def-db")]
+    DefaultDatabase {
+        /// Profile name to set as default for database commands
         name: String,
     },
 

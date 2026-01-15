@@ -23,6 +23,9 @@ pub struct Config {
     /// Default profile for cloud commands
     #[serde(default, rename = "default_cloud")]
     pub default_cloud: Option<String>,
+    /// Default profile for database commands
+    #[serde(default, rename = "default_database")]
+    pub default_database: Option<String>,
     /// Global Files.com API key for support package uploads
     /// Can be overridden per-profile. Supports keyring: prefix for secure storage.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -55,6 +58,7 @@ pub struct Profile {
 pub enum DeploymentType {
     Cloud,
     Enterprise,
+    Database,
 }
 
 /// Connection credentials for different deployment types
@@ -74,6 +78,18 @@ pub enum ProfileCredentials {
         #[serde(default)]
         insecure: bool,
     },
+    Database {
+        host: String,
+        port: u16,
+        #[serde(default)]
+        password: Option<String>,
+        #[serde(default = "default_tls")]
+        tls: bool,
+        #[serde(default = "default_username")]
+        username: String,
+        #[serde(default)]
+        database: u8,
+    },
 }
 
 impl std::fmt::Display for DeploymentType {
@@ -81,8 +97,17 @@ impl std::fmt::Display for DeploymentType {
         match self {
             DeploymentType::Cloud => write!(f, "cloud"),
             DeploymentType::Enterprise => write!(f, "enterprise"),
+            DeploymentType::Database => write!(f, "database"),
         }
     }
+}
+
+fn default_tls() -> bool {
+    true
+}
+
+fn default_username() -> String {
+    "default".to_string()
 }
 
 impl Profile {
@@ -121,6 +146,9 @@ impl Profile {
         matches!(
             self.credentials,
             ProfileCredentials::Enterprise {
+                password: Some(_),
+                ..
+            } | ProfileCredentials::Database {
                 password: Some(_),
                 ..
             }
@@ -209,6 +237,83 @@ impl Profile {
             _ => Ok(None),
         }
     }
+
+    /// Returns Database credentials if this is a Database profile
+    pub fn database_credentials(&self) -> Option<(&str, u16, Option<&str>, bool, &str, u8)> {
+        match &self.credentials {
+            ProfileCredentials::Database {
+                host,
+                port,
+                password,
+                tls,
+                username,
+                database,
+            } => Some((
+                host.as_str(),
+                *port,
+                password.as_deref(),
+                *tls,
+                username.as_str(),
+                *database,
+            )),
+            _ => None,
+        }
+    }
+
+    /// Get resolved Database credentials (with keyring support)
+    #[allow(clippy::type_complexity)]
+    pub fn resolve_database_credentials(
+        &self,
+    ) -> Result<Option<(String, u16, Option<String>, bool, String, u8)>> {
+        match &self.credentials {
+            ProfileCredentials::Database {
+                host,
+                port,
+                password,
+                tls,
+                username,
+                database,
+            } => {
+                let store = CredentialStore::new();
+
+                // Resolve each credential with environment variable fallback
+                let resolved_host =
+                    store
+                        .get_credential(host, Some("REDIS_HOST"))
+                        .map_err(|e| {
+                            ConfigError::CredentialError(format!("Failed to resolve host: {}", e))
+                        })?;
+                let resolved_username = store
+                    .get_credential(username, Some("REDIS_USERNAME"))
+                    .map_err(|e| {
+                        ConfigError::CredentialError(format!("Failed to resolve username: {}", e))
+                    })?;
+                let resolved_password = password
+                    .as_ref()
+                    .map(|p| {
+                        store
+                            .get_credential(p, Some("REDIS_PASSWORD"))
+                            .map_err(|e| {
+                                ConfigError::CredentialError(format!(
+                                    "Failed to resolve password: {}",
+                                    e
+                                ))
+                            })
+                    })
+                    .transpose()?;
+
+                Ok(Some((
+                    resolved_host,
+                    *port,
+                    resolved_password,
+                    *tls,
+                    resolved_username,
+                    *database,
+                )))
+            }
+            _ => Ok(None),
+        }
+    }
 }
 
 impl Config {
@@ -253,14 +358,22 @@ impl Config {
             return Ok(profile_name.to_string());
         }
 
-        // No enterprise profiles available
+        // No enterprise profiles available - suggest other profile types
         let cloud_profiles = self.get_profiles_of_type(DeploymentType::Cloud);
-        if !cloud_profiles.is_empty() {
+        let database_profiles = self.get_profiles_of_type(DeploymentType::Database);
+        if !cloud_profiles.is_empty() || !database_profiles.is_empty() {
+            let mut suggestions = Vec::new();
+            if !cloud_profiles.is_empty() {
+                suggestions.push(format!("cloud: {}", cloud_profiles.join(", ")));
+            }
+            if !database_profiles.is_empty() {
+                suggestions.push(format!("database: {}", database_profiles.join(", ")));
+            }
             Err(ConfigError::NoProfilesOfType {
                 deployment_type: "enterprise".to_string(),
                 suggestion: format!(
-                    "Available cloud profiles: {}. Use 'redisctl profile set' to create an enterprise profile.",
-                    cloud_profiles.join(", ")
+                    "Available profiles: {}. Use 'redisctl profile set' to create an enterprise profile.",
+                    suggestions.join("; ")
                 ),
             })
         } else {
@@ -288,19 +401,70 @@ impl Config {
             return Ok(profile_name.to_string());
         }
 
-        // No cloud profiles available
+        // No cloud profiles available - suggest other profile types
         let enterprise_profiles = self.get_profiles_of_type(DeploymentType::Enterprise);
-        if !enterprise_profiles.is_empty() {
+        let database_profiles = self.get_profiles_of_type(DeploymentType::Database);
+        if !enterprise_profiles.is_empty() || !database_profiles.is_empty() {
+            let mut suggestions = Vec::new();
+            if !enterprise_profiles.is_empty() {
+                suggestions.push(format!("enterprise: {}", enterprise_profiles.join(", ")));
+            }
+            if !database_profiles.is_empty() {
+                suggestions.push(format!("database: {}", database_profiles.join(", ")));
+            }
             Err(ConfigError::NoProfilesOfType {
                 deployment_type: "cloud".to_string(),
                 suggestion: format!(
-                    "Available enterprise profiles: {}. Use 'redisctl profile set' to create a cloud profile.",
-                    enterprise_profiles.join(", ")
+                    "Available profiles: {}. Use 'redisctl profile set' to create a cloud profile.",
+                    suggestions.join("; ")
                 ),
             })
         } else {
             Err(ConfigError::NoProfilesOfType {
                 deployment_type: "cloud".to_string(),
+                suggestion: "Use 'redisctl profile set' to create a profile.".to_string(),
+            })
+        }
+    }
+
+    /// Resolve the profile to use for database commands
+    pub fn resolve_database_profile(&self, explicit_profile: Option<&str>) -> Result<String> {
+        if let Some(profile_name) = explicit_profile {
+            // Explicitly specified profile
+            return Ok(profile_name.to_string());
+        }
+
+        if let Some(ref default) = self.default_database {
+            // Type-specific default
+            return Ok(default.clone());
+        }
+
+        if let Some(profile_name) = self.find_first_profile_of_type(DeploymentType::Database) {
+            // First database profile
+            return Ok(profile_name.to_string());
+        }
+
+        // No database profiles available - suggest other profile types
+        let cloud_profiles = self.get_profiles_of_type(DeploymentType::Cloud);
+        let enterprise_profiles = self.get_profiles_of_type(DeploymentType::Enterprise);
+        if !cloud_profiles.is_empty() || !enterprise_profiles.is_empty() {
+            let mut suggestions = Vec::new();
+            if !cloud_profiles.is_empty() {
+                suggestions.push(format!("cloud: {}", cloud_profiles.join(", ")));
+            }
+            if !enterprise_profiles.is_empty() {
+                suggestions.push(format!("enterprise: {}", enterprise_profiles.join(", ")));
+            }
+            Err(ConfigError::NoProfilesOfType {
+                deployment_type: "database".to_string(),
+                suggestion: format!(
+                    "Available profiles: {}. Use 'redisctl profile set' to create a database profile.",
+                    suggestions.join("; ")
+                ),
+            })
+        } else {
+            Err(ConfigError::NoProfilesOfType {
+                deployment_type: "database".to_string(),
                 suggestion: "Use 'redisctl profile set' to create a profile.".to_string(),
             })
         }
@@ -370,6 +534,9 @@ impl Config {
         }
         if self.default_cloud.as_deref() == Some(name) {
             self.default_cloud = None;
+        }
+        if self.default_database.as_deref() == Some(name) {
+            self.default_database = None;
         }
         self.profiles.remove(name)
     }
@@ -745,6 +912,99 @@ api_url = "${REDIS_TEST_URL:-https://api.redislabs.com/v1}"
         // Try to resolve enterprise profile - should get helpful error
         let err = config.resolve_enterprise_profile(None).unwrap_err();
         assert!(err.to_string().contains("No enterprise profiles"));
-        assert!(err.to_string().contains("Available cloud profiles: cloud1"));
+        assert!(err.to_string().contains("cloud: cloud1"));
+    }
+
+    #[test]
+    fn test_database_profile_serialization() {
+        let mut config = Config::default();
+
+        let db_profile = Profile {
+            deployment_type: DeploymentType::Database,
+            credentials: ProfileCredentials::Database {
+                host: "localhost".to_string(),
+                port: 6379,
+                password: Some("secret".to_string()),
+                tls: true,
+                username: "default".to_string(),
+                database: 0,
+            },
+            files_api_key: None,
+            resilience: None,
+        };
+
+        config.set_profile("myredis".to_string(), db_profile);
+        config.default_database = Some("myredis".to_string());
+
+        let serialized = toml::to_string(&config).unwrap();
+        let deserialized: Config = toml::from_str(&serialized).unwrap();
+
+        assert_eq!(config.default_database, deserialized.default_database);
+        assert_eq!(config.profiles.len(), deserialized.profiles.len());
+
+        let profile = deserialized.profiles.get("myredis").unwrap();
+        assert_eq!(profile.deployment_type, DeploymentType::Database);
+
+        let (host, port, password, tls, username, database) =
+            profile.database_credentials().unwrap();
+        assert_eq!(host, "localhost");
+        assert_eq!(port, 6379);
+        assert_eq!(password, Some("secret"));
+        assert!(tls);
+        assert_eq!(username, "default");
+        assert_eq!(database, 0);
+    }
+
+    #[test]
+    fn test_database_profile_resolution() {
+        let mut config = Config::default();
+
+        // Add a database profile
+        let db_profile = Profile {
+            deployment_type: DeploymentType::Database,
+            credentials: ProfileCredentials::Database {
+                host: "localhost".to_string(),
+                port: 6379,
+                password: None,
+                tls: false,
+                username: "default".to_string(),
+                database: 0,
+            },
+            files_api_key: None,
+            resilience: None,
+        };
+        config.set_profile("db1".to_string(), db_profile);
+
+        // Test explicit profile
+        assert_eq!(config.resolve_database_profile(Some("db1")).unwrap(), "db1");
+
+        // Test first database profile (no default set)
+        assert_eq!(config.resolve_database_profile(None).unwrap(), "db1");
+
+        // Set default database
+        config.default_database = Some("db1".to_string());
+        assert_eq!(config.resolve_database_profile(None).unwrap(), "db1");
+    }
+
+    #[test]
+    fn test_database_profile_defaults() {
+        // Test that TLS defaults to true and username defaults to "default"
+        let toml_content = r#"
+[profiles.minimal]
+deployment_type = "database"
+host = "redis.example.com"
+port = 12345
+"#;
+        let config: Config = toml::from_str(toml_content).unwrap();
+        let profile = config.profiles.get("minimal").unwrap();
+
+        let (host, port, password, tls, username, database) =
+            profile.database_credentials().unwrap();
+        assert_eq!(host, "redis.example.com");
+        assert_eq!(port, 12345);
+        assert!(password.is_none());
+        assert!(tls); // defaults to true
+        assert_eq!(username, "default"); // defaults to "default"
+        assert_eq!(database, 0); // defaults to 0
     }
 }
