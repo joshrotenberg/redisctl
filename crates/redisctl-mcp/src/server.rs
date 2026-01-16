@@ -878,6 +878,7 @@ pub struct FtSchemaField {
     /// - "dm:fr": Double Metaphone for French
     /// - "dm:pt": Double Metaphone for Portuguese
     /// - "dm:es": Double Metaphone for Spanish
+    ///
     /// Useful for name search where spelling varies.
     #[serde(default)]
     pub phonetic: Option<String>,
@@ -1589,6 +1590,285 @@ pub struct BfMexistsParam {
     pub key: String,
     /// Items to check
     pub items: Vec<String>,
+}
+
+// ========== STREAMS PARAM STRUCTS ==========
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct StreamFieldPair {
+    /// Field name
+    pub field: String,
+    /// Field value
+    pub value: String,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct XaddParam {
+    /// Stream key name
+    pub key: String,
+    /// Entry ID. Use "*" to auto-generate a unique ID (recommended). Or specify a timestamp-sequence ID like "1234567890123-0".
+    #[serde(default = "default_xadd_id")]
+    pub id: String,
+    /// Field-value pairs for the stream entry (array of objects with "field" and "value" properties)
+    pub fields: Vec<StreamFieldPair>,
+    /// Maximum stream length. Old entries are evicted when exceeded.
+    #[serde(default)]
+    pub maxlen: Option<i64>,
+    /// Use approximate trimming (~) for better performance. Only applies when maxlen is set.
+    #[serde(default)]
+    pub approximate: bool,
+}
+
+fn default_xadd_id() -> String {
+    "*".to_string()
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct XreadParam {
+    /// Stream key(s) to read from
+    pub keys: Vec<String>,
+    /// Starting ID(s) for each stream. Use "0" to read from beginning, "$" for only new entries. Must match keys length.
+    pub ids: Vec<String>,
+    /// Maximum number of entries to return per stream
+    #[serde(default)]
+    pub count: Option<i64>,
+    /// Block for specified milliseconds waiting for new entries. Use 0 to block indefinitely.
+    #[serde(default)]
+    pub block: Option<i64>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct XrangeParam {
+    /// Stream key name
+    pub key: String,
+    /// Start ID. Use "-" for the first entry, or a specific ID like "1234567890123-0".
+    pub start: String,
+    /// End ID. Use "+" for the last entry, or a specific ID like "1234567890123-0".
+    pub end: String,
+    /// Maximum number of entries to return
+    #[serde(default)]
+    pub count: Option<i64>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct XrevrangeParam {
+    /// Stream key name
+    pub key: String,
+    /// End ID (note: reversed - this is the later ID). Use "+" for the last entry.
+    pub end: String,
+    /// Start ID (note: reversed - this is the earlier ID). Use "-" for the first entry.
+    pub start: String,
+    /// Maximum number of entries to return
+    #[serde(default)]
+    pub count: Option<i64>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct XinfoStreamParam {
+    /// Stream key name
+    pub key: String,
+    /// Return full stream information including entries (more verbose)
+    #[serde(default)]
+    pub full: bool,
+    /// Number of entries to return when using full mode
+    #[serde(default)]
+    pub count: Option<i64>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct XinfoConsumersParam {
+    /// Stream key name
+    pub key: String,
+    /// Consumer group name
+    pub group: String,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct XgroupCreateParam {
+    /// Stream key name
+    pub key: String,
+    /// Consumer group name
+    pub group: String,
+    /// Starting ID for the group. Use "$" to only receive new messages, "0" to receive all existing messages.
+    #[serde(default = "default_xgroup_id")]
+    pub id: String,
+    /// Create the stream if it doesn't exist
+    #[serde(default)]
+    pub mkstream: bool,
+}
+
+fn default_xgroup_id() -> String {
+    "$".to_string()
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct XgroupDestroyParam {
+    /// Stream key name
+    pub key: String,
+    /// Consumer group name to destroy
+    pub group: String,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct XgroupDelconsumerParam {
+    /// Stream key name
+    pub key: String,
+    /// Consumer group name
+    pub group: String,
+    /// Consumer name to delete
+    pub consumer: String,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct XgroupSetidParam {
+    /// Stream key name
+    pub key: String,
+    /// Consumer group name
+    pub group: String,
+    /// New last delivered ID for the group
+    pub id: String,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct XreadgroupParam {
+    /// Consumer group name
+    pub group: String,
+    /// Consumer name (will be auto-created if doesn't exist)
+    pub consumer: String,
+    /// Stream key(s) to read from
+    pub keys: Vec<String>,
+    /// ID(s) for each stream. Use ">" to get only new messages, or a specific ID to replay pending messages.
+    pub ids: Vec<String>,
+    /// Maximum number of entries to return per stream
+    #[serde(default)]
+    pub count: Option<i64>,
+    /// Block for specified milliseconds waiting for new entries. Use 0 to block indefinitely.
+    #[serde(default)]
+    pub block: Option<i64>,
+    /// Don't add messages to the pending list (fire and forget mode)
+    #[serde(default)]
+    pub noack: bool,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct XackParam {
+    /// Stream key name
+    pub key: String,
+    /// Consumer group name
+    pub group: String,
+    /// Message ID(s) to acknowledge
+    pub ids: Vec<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct XdelParam {
+    /// Stream key name
+    pub key: String,
+    /// Entry ID(s) to delete
+    pub ids: Vec<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct XtrimParam {
+    /// Stream key name
+    pub key: String,
+    /// Maximum stream length to trim to
+    pub maxlen: i64,
+    /// Use approximate trimming (~) for better performance
+    #[serde(default)]
+    pub approximate: bool,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct XpendingParam {
+    /// Stream key name
+    pub key: String,
+    /// Consumer group name
+    pub group: String,
+    /// Start ID for range query (use "-" for first). Required with end and count for detailed output.
+    #[serde(default)]
+    pub start: Option<String>,
+    /// End ID for range query (use "+" for last). Required with start and count for detailed output.
+    #[serde(default)]
+    pub end: Option<String>,
+    /// Maximum number of entries to return. Required with start and end for detailed output.
+    #[serde(default)]
+    pub count: Option<i64>,
+    /// Filter by specific consumer (optional, only with start/end/count)
+    #[serde(default)]
+    pub consumer: Option<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct XclaimParam {
+    /// Stream key name
+    pub key: String,
+    /// Consumer group name
+    pub group: String,
+    /// Consumer name to claim messages for
+    pub consumer: String,
+    /// Minimum idle time in milliseconds - only claim messages idle for at least this long
+    pub min_idle_time: i64,
+    /// Message ID(s) to claim
+    pub ids: Vec<String>,
+    /// Set the idle time (ms) of the message. If not specified, idle time is reset to 0.
+    #[serde(default)]
+    pub idle: Option<i64>,
+    /// Set the internal message time to this Unix timestamp (ms)
+    #[serde(default)]
+    pub time: Option<i64>,
+    /// Set the retry counter for the message
+    #[serde(default)]
+    pub retrycount: Option<i64>,
+    /// Claim the message even if it's not in the pending list
+    #[serde(default)]
+    pub force: bool,
+    /// Return just the message IDs, not the full messages
+    #[serde(default)]
+    pub justid: bool,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct XautoclaimParam {
+    /// Stream key name
+    pub key: String,
+    /// Consumer group name
+    pub group: String,
+    /// Consumer name to claim messages for
+    pub consumer: String,
+    /// Minimum idle time in milliseconds - only claim messages idle for at least this long
+    pub min_idle_time: i64,
+    /// Start ID for scanning pending entries. Use "0-0" to start from the beginning.
+    pub start: String,
+    /// Maximum number of entries to claim
+    #[serde(default)]
+    pub count: Option<i64>,
+    /// Return just the message IDs, not the full messages
+    #[serde(default)]
+    pub justid: bool,
+}
+
+// ========== PUB/SUB PARAM STRUCTS ==========
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct PublishParam {
+    /// Channel name to publish to
+    pub channel: String,
+    /// Message to publish
+    pub message: String,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct PubsubChannelsParam {
+    /// Optional pattern to filter channels (e.g., "news.*")
+    #[serde(default)]
+    pub pattern: Option<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct PubsubNumsubParam {
+    /// Channel names to get subscriber counts for
+    pub channels: Vec<String>,
 }
 
 impl RedisCtlMcp {
@@ -6483,6 +6763,654 @@ impl RedisCtlMcp {
             serde_json::json!({
                 "key": params.key,
                 "info": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    // ========== REDIS STREAMS TOOLS ==========
+
+    #[tool(
+        description = "Add an entry to a Redis stream (XADD command). Streams are append-only logs perfect for event sourcing, activity feeds, and message queues. Each entry has an auto-generated or specified ID and contains field-value pairs. Use maxlen to cap stream size and prevent unbounded growth."
+    )]
+    async fn database_xadd(
+        &self,
+        Parameters(params): Parameters<XaddParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, id = %params.id, fields = params.fields.len(), "Tool called: database_xadd");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "XADD is a write operation. Server is in read-only mode.",
+                None,
+            ));
+        }
+
+        let fields: Vec<(String, String)> = params
+            .fields
+            .into_iter()
+            .map(|f| (f.field, f.value))
+            .collect();
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .xadd(
+                &params.key,
+                &params.id,
+                &fields,
+                params.maxlen,
+                params.approximate,
+            )
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "entry_id": result
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Read entries from one or more Redis streams (XREAD command). Returns entries with IDs greater than the specified IDs. Use \"0\" to read from the beginning, \"$\" to read only new entries. Supports blocking mode to wait for new entries - useful for real-time consumers."
+    )]
+    async fn database_xread(
+        &self,
+        Parameters(params): Parameters<XreadParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(keys = ?params.keys, ids = ?params.ids, "Tool called: database_xread");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .xread(&params.keys, &params.ids, params.count, params.block)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::to_string_pretty(&value_to_json(&result))
+                .unwrap_or_else(|_| "null".to_string()),
+        )]))
+    }
+
+    #[tool(
+        description = "Read entries from a stream within an ID range (XRANGE command). Use \"-\" for the first entry and \"+\" for the last entry. Returns entries in chronological order. Perfect for replaying events or paginating through stream history."
+    )]
+    async fn database_xrange(
+        &self,
+        Parameters(params): Parameters<XrangeParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, start = %params.start, end = %params.end, "Tool called: database_xrange");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .xrange(&params.key, &params.start, &params.end, params.count)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::to_string_pretty(&value_to_json(&result))
+                .unwrap_or_else(|_| "null".to_string()),
+        )]))
+    }
+
+    #[tool(
+        description = "Read entries from a stream in reverse order (XREVRANGE command). Returns entries from newest to oldest. Use \"+\" for the last entry and \"-\" for the first. Useful for getting the most recent entries first."
+    )]
+    async fn database_xrevrange(
+        &self,
+        Parameters(params): Parameters<XrevrangeParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, end = %params.end, start = %params.start, "Tool called: database_xrevrange");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .xrevrange(&params.key, &params.end, &params.start, params.count)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::to_string_pretty(&value_to_json(&result))
+                .unwrap_or_else(|_| "null".to_string()),
+        )]))
+    }
+
+    #[tool(
+        description = "Get the number of entries in a stream (XLEN command). Returns the count of entries currently in the stream."
+    )]
+    async fn database_xlen(
+        &self,
+        Parameters(params): Parameters<DatabaseKeyParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_xlen");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .xlen(&params.key)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "length": result
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get detailed information about a stream (XINFO STREAM command). Returns metadata including length, first/last entry IDs, consumer groups, and optionally full entry data. Essential for monitoring and debugging streams."
+    )]
+    async fn database_xinfo_stream(
+        &self,
+        Parameters(params): Parameters<XinfoStreamParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, full = params.full, "Tool called: database_xinfo_stream");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .xinfo_stream(&params.key, params.full, params.count)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::to_string_pretty(&value_to_json(&result))
+                .unwrap_or_else(|_| "null".to_string()),
+        )]))
+    }
+
+    #[tool(
+        description = "Get information about consumer groups on a stream (XINFO GROUPS command). Returns details for each group including name, consumers count, pending messages, and last delivered ID."
+    )]
+    async fn database_xinfo_groups(
+        &self,
+        Parameters(params): Parameters<DatabaseKeyParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_xinfo_groups");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .xinfo_groups(&params.key)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::to_string_pretty(&value_to_json(&result))
+                .unwrap_or_else(|_| "null".to_string()),
+        )]))
+    }
+
+    #[tool(
+        description = "Get information about consumers in a group (XINFO CONSUMERS command). Returns details for each consumer including name, pending messages count, and idle time."
+    )]
+    async fn database_xinfo_consumers(
+        &self,
+        Parameters(params): Parameters<XinfoConsumersParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, group = %params.group, "Tool called: database_xinfo_consumers");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .xinfo_consumers(&params.key, &params.group)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::to_string_pretty(&value_to_json(&result))
+                .unwrap_or_else(|_| "null".to_string()),
+        )]))
+    }
+
+    #[tool(
+        description = "Create a consumer group on a stream (XGROUP CREATE command). Consumer groups enable multiple consumers to cooperatively process stream entries, with automatic load balancing and message acknowledgment. Use mkstream=true to create the stream if it doesn't exist."
+    )]
+    async fn database_xgroup_create(
+        &self,
+        Parameters(params): Parameters<XgroupCreateParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, group = %params.group, id = %params.id, "Tool called: database_xgroup_create");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "XGROUP CREATE is a write operation. Server is in read-only mode.",
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        tools
+            .xgroup_create(&params.key, &params.group, &params.id, params.mkstream)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "group": params.group,
+                "status": "created"
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Destroy a consumer group (XGROUP DESTROY command). Removes the group and all its consumers. Pending messages are lost. Use with caution in production."
+    )]
+    async fn database_xgroup_destroy(
+        &self,
+        Parameters(params): Parameters<XgroupDestroyParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, group = %params.group, "Tool called: database_xgroup_destroy");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "XGROUP DESTROY is a write operation. Server is in read-only mode.",
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .xgroup_destroy(&params.key, &params.group)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "group": params.group,
+                "destroyed": result == 1
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Delete a consumer from a group (XGROUP DELCONSUMER command). Returns the number of pending messages that were owned by the consumer. The pending messages become unassigned."
+    )]
+    async fn database_xgroup_delconsumer(
+        &self,
+        Parameters(params): Parameters<XgroupDelconsumerParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, group = %params.group, consumer = %params.consumer, "Tool called: database_xgroup_delconsumer");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "XGROUP DELCONSUMER is a write operation. Server is in read-only mode.",
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .xgroup_delconsumer(&params.key, &params.group, &params.consumer)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "group": params.group,
+                "consumer": params.consumer,
+                "pending_messages_released": result
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Set the last delivered ID of a consumer group (XGROUP SETID command). Useful for resetting a group to reprocess messages or skip ahead."
+    )]
+    async fn database_xgroup_setid(
+        &self,
+        Parameters(params): Parameters<XgroupSetidParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, group = %params.group, id = %params.id, "Tool called: database_xgroup_setid");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "XGROUP SETID is a write operation. Server is in read-only mode.",
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        tools
+            .xgroup_setid(&params.key, &params.group, &params.id)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "group": params.group,
+                "id": params.id,
+                "status": "updated"
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Read entries as a consumer in a group (XREADGROUP command). This is the primary way to consume streams with consumer groups. Use \">\" as the ID to get only new (undelivered) messages. Messages are added to the pending list until acknowledged with XACK."
+    )]
+    async fn database_xreadgroup(
+        &self,
+        Parameters(params): Parameters<XreadgroupParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(group = %params.group, consumer = %params.consumer, keys = ?params.keys, "Tool called: database_xreadgroup");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .xreadgroup(
+                &params.group,
+                &params.consumer,
+                &params.keys,
+                &params.ids,
+                params.count,
+                params.block,
+                params.noack,
+            )
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::to_string_pretty(&value_to_json(&result))
+                .unwrap_or_else(|_| "null".to_string()),
+        )]))
+    }
+
+    #[tool(
+        description = "Acknowledge messages as processed (XACK command). Removes messages from the pending entries list. Essential for reliable stream processing - unacknowledged messages can be reclaimed by other consumers."
+    )]
+    async fn database_xack(
+        &self,
+        Parameters(params): Parameters<XackParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, group = %params.group, ids = ?params.ids, "Tool called: database_xack");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "XACK is a write operation. Server is in read-only mode.",
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .xack(&params.key, &params.group, &params.ids)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "group": params.group,
+                "acknowledged": result
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Delete entries from a stream (XDEL command). Removes specific entries by ID. Note: Memory may not be immediately reclaimed due to stream's radix tree structure."
+    )]
+    async fn database_xdel(
+        &self,
+        Parameters(params): Parameters<XdelParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, ids = ?params.ids, "Tool called: database_xdel");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "XDEL is a write operation. Server is in read-only mode.",
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .xdel(&params.key, &params.ids)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "deleted": result
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Trim a stream to a maximum length (XTRIM command). Removes oldest entries to cap stream size. Use approximate=true for better performance (may leave slightly more entries than specified)."
+    )]
+    async fn database_xtrim(
+        &self,
+        Parameters(params): Parameters<XtrimParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, maxlen = params.maxlen, "Tool called: database_xtrim");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "XTRIM is a write operation. Server is in read-only mode.",
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .xtrim(&params.key, params.maxlen, params.approximate)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "trimmed": result
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get pending entries for a consumer group (XPENDING command). Without range parameters, returns a summary. With start/end/count, returns details about specific pending messages including their ID, consumer, idle time, and delivery count."
+    )]
+    async fn database_xpending(
+        &self,
+        Parameters(params): Parameters<XpendingParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, group = %params.group, "Tool called: database_xpending");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .xpending(
+                &params.key,
+                &params.group,
+                params.start.as_deref(),
+                params.end.as_deref(),
+                params.count,
+                params.consumer.as_deref(),
+            )
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::to_string_pretty(&value_to_json(&result))
+                .unwrap_or_else(|_| "null".to_string()),
+        )]))
+    }
+
+    #[tool(
+        description = "Claim pending messages from another consumer (XCLAIM command). Transfers ownership of messages that have been idle for too long, enabling recovery from failed consumers. Returns the claimed messages."
+    )]
+    async fn database_xclaim(
+        &self,
+        Parameters(params): Parameters<XclaimParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, group = %params.group, consumer = %params.consumer, "Tool called: database_xclaim");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "XCLAIM is a write operation. Server is in read-only mode.",
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .xclaim(
+                &params.key,
+                &params.group,
+                &params.consumer,
+                params.min_idle_time,
+                &params.ids,
+                params.idle,
+                params.time,
+                params.retrycount,
+                params.force,
+                params.justid,
+            )
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::to_string_pretty(&value_to_json(&result))
+                .unwrap_or_else(|_| "null".to_string()),
+        )]))
+    }
+
+    #[tool(
+        description = "Auto-claim pending messages (XAUTOCLAIM command). Automatically scans and claims messages idle longer than min_idle_time. Simpler than XCLAIM - just specify a starting ID and the command finds and claims eligible messages."
+    )]
+    async fn database_xautoclaim(
+        &self,
+        Parameters(params): Parameters<XautoclaimParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, group = %params.group, consumer = %params.consumer, "Tool called: database_xautoclaim");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "XAUTOCLAIM is a write operation. Server is in read-only mode.",
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .xautoclaim(
+                &params.key,
+                &params.group,
+                &params.consumer,
+                params.min_idle_time,
+                &params.start,
+                params.count,
+                params.justid,
+            )
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::to_string_pretty(&value_to_json(&result))
+                .unwrap_or_else(|_| "null".to_string()),
+        )]))
+    }
+
+    // ========== PUB/SUB TOOLS ==========
+
+    #[tool(
+        description = "Publish a message to a channel (PUBLISH command). Sends a message to all subscribers of the channel. Returns the number of clients that received the message. Note: Pub/Sub is fire-and-forget - messages are not persisted. For durable messaging, use Streams instead."
+    )]
+    async fn database_publish(
+        &self,
+        Parameters(params): Parameters<PublishParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(channel = %params.channel, "Tool called: database_publish");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "PUBLISH is a write operation. Server is in read-only mode.",
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .publish(&params.channel, &params.message)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "channel": params.channel,
+                "receivers": result
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "List active Pub/Sub channels (PUBSUB CHANNELS command). Returns channels that have at least one subscriber. Use pattern to filter channels (e.g., \"news.*\" matches \"news.sports\", \"news.weather\")."
+    )]
+    async fn database_pubsub_channels(
+        &self,
+        Parameters(params): Parameters<PubsubChannelsParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(pattern = ?params.pattern, "Tool called: database_pubsub_channels");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .pubsub_channels(params.pattern.as_deref())
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "channels": result
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get subscriber count for specific channels (PUBSUB NUMSUB command). Returns the number of subscribers for each specified channel. Useful for monitoring channel popularity."
+    )]
+    async fn database_pubsub_numsub(
+        &self,
+        Parameters(params): Parameters<PubsubNumsubParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(channels = ?params.channels, "Tool called: database_pubsub_numsub");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .pubsub_numsub(&params.channels)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::to_string_pretty(&value_to_json(&result))
+                .unwrap_or_else(|_| "null".to_string()),
+        )]))
+    }
+
+    #[tool(
+        description = "Get the number of pattern subscriptions (PUBSUB NUMPAT command). Returns the total count of clients subscribed to patterns (via PSUBSCRIBE). Does not count channel subscriptions."
+    )]
+    async fn database_pubsub_numpat(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: database_pubsub_numpat");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .pubsub_numpat()
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "pattern_subscriptions": result
             })
             .to_string(),
         )]))

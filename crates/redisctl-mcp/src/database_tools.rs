@@ -1612,6 +1612,452 @@ impl DatabaseTools {
         let mut conn = self.conn.clone();
         redis::cmd("BF.INFO").arg(key).query_async(&mut conn).await
     }
+
+    // ========== REDIS STREAMS OPERATIONS ==========
+
+    /// Add an entry to a stream (XADD command).
+    ///
+    /// Returns the ID of the added entry.
+    /// Use "*" for id to auto-generate a unique ID.
+    pub async fn xadd(
+        &self,
+        key: &str,
+        id: &str,
+        fields: &[(String, String)],
+        maxlen: Option<i64>,
+        approximate: bool,
+    ) -> RedisResult<String> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("XADD");
+        cmd.arg(key);
+
+        if let Some(max) = maxlen {
+            cmd.arg("MAXLEN");
+            if approximate {
+                cmd.arg("~");
+            }
+            cmd.arg(max);
+        }
+
+        cmd.arg(id);
+        for (field, value) in fields {
+            cmd.arg(field).arg(value);
+        }
+
+        cmd.query_async(&mut conn).await
+    }
+
+    /// Read entries from one or more streams (XREAD command).
+    ///
+    /// Returns entries from each stream starting after the given IDs.
+    /// Use "0" to read from the beginning, "$" for only new entries.
+    pub async fn xread(
+        &self,
+        keys: &[String],
+        ids: &[String],
+        count: Option<i64>,
+        block: Option<i64>,
+    ) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("XREAD");
+
+        if let Some(c) = count {
+            cmd.arg("COUNT").arg(c);
+        }
+        if let Some(b) = block {
+            cmd.arg("BLOCK").arg(b);
+        }
+
+        cmd.arg("STREAMS");
+        for key in keys {
+            cmd.arg(key);
+        }
+        for id in ids {
+            cmd.arg(id);
+        }
+
+        cmd.query_async(&mut conn).await
+    }
+
+    /// Read entries from a stream within a range (XRANGE command).
+    ///
+    /// Use "-" for start to begin at the first entry.
+    /// Use "+" for end to read to the last entry.
+    pub async fn xrange(
+        &self,
+        key: &str,
+        start: &str,
+        end: &str,
+        count: Option<i64>,
+    ) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("XRANGE");
+        cmd.arg(key).arg(start).arg(end);
+
+        if let Some(c) = count {
+            cmd.arg("COUNT").arg(c);
+        }
+
+        cmd.query_async(&mut conn).await
+    }
+
+    /// Read entries from a stream in reverse order (XREVRANGE command).
+    ///
+    /// Use "+" for start (most recent) and "-" for end (oldest).
+    pub async fn xrevrange(
+        &self,
+        key: &str,
+        end: &str,
+        start: &str,
+        count: Option<i64>,
+    ) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("XREVRANGE");
+        cmd.arg(key).arg(end).arg(start);
+
+        if let Some(c) = count {
+            cmd.arg("COUNT").arg(c);
+        }
+
+        cmd.query_async(&mut conn).await
+    }
+
+    /// Get the length of a stream (XLEN command).
+    pub async fn xlen(&self, key: &str) -> RedisResult<i64> {
+        let mut conn = self.conn.clone();
+        redis::cmd("XLEN").arg(key).query_async(&mut conn).await
+    }
+
+    /// Get information about a stream (XINFO STREAM command).
+    pub async fn xinfo_stream(
+        &self,
+        key: &str,
+        full: bool,
+        count: Option<i64>,
+    ) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("XINFO");
+        cmd.arg("STREAM").arg(key);
+
+        if full {
+            cmd.arg("FULL");
+            if let Some(c) = count {
+                cmd.arg("COUNT").arg(c);
+            }
+        }
+
+        cmd.query_async(&mut conn).await
+    }
+
+    /// Get information about consumer groups (XINFO GROUPS command).
+    pub async fn xinfo_groups(&self, key: &str) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        redis::cmd("XINFO")
+            .arg("GROUPS")
+            .arg(key)
+            .query_async(&mut conn)
+            .await
+    }
+
+    /// Get information about consumers in a group (XINFO CONSUMERS command).
+    pub async fn xinfo_consumers(&self, key: &str, group: &str) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        redis::cmd("XINFO")
+            .arg("CONSUMERS")
+            .arg(key)
+            .arg(group)
+            .query_async(&mut conn)
+            .await
+    }
+
+    /// Create a consumer group (XGROUP CREATE command).
+    ///
+    /// Use "$" for id to only receive new messages.
+    /// Use "0" for id to receive all existing messages.
+    pub async fn xgroup_create(
+        &self,
+        key: &str,
+        group: &str,
+        id: &str,
+        mkstream: bool,
+    ) -> RedisResult<()> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("XGROUP");
+        cmd.arg("CREATE").arg(key).arg(group).arg(id);
+
+        if mkstream {
+            cmd.arg("MKSTREAM");
+        }
+
+        cmd.query_async(&mut conn).await
+    }
+
+    /// Destroy a consumer group (XGROUP DESTROY command).
+    pub async fn xgroup_destroy(&self, key: &str, group: &str) -> RedisResult<i64> {
+        let mut conn = self.conn.clone();
+        redis::cmd("XGROUP")
+            .arg("DESTROY")
+            .arg(key)
+            .arg(group)
+            .query_async(&mut conn)
+            .await
+    }
+
+    /// Delete a consumer from a group (XGROUP DELCONSUMER command).
+    pub async fn xgroup_delconsumer(
+        &self,
+        key: &str,
+        group: &str,
+        consumer: &str,
+    ) -> RedisResult<i64> {
+        let mut conn = self.conn.clone();
+        redis::cmd("XGROUP")
+            .arg("DELCONSUMER")
+            .arg(key)
+            .arg(group)
+            .arg(consumer)
+            .query_async(&mut conn)
+            .await
+    }
+
+    /// Set the last delivered ID of a consumer group (XGROUP SETID command).
+    pub async fn xgroup_setid(&self, key: &str, group: &str, id: &str) -> RedisResult<()> {
+        let mut conn = self.conn.clone();
+        redis::cmd("XGROUP")
+            .arg("SETID")
+            .arg(key)
+            .arg(group)
+            .arg(id)
+            .query_async(&mut conn)
+            .await
+    }
+
+    /// Read entries from a stream as a consumer in a group (XREADGROUP command).
+    #[allow(clippy::too_many_arguments)]
+    pub async fn xreadgroup(
+        &self,
+        group: &str,
+        consumer: &str,
+        keys: &[String],
+        ids: &[String],
+        count: Option<i64>,
+        block: Option<i64>,
+        noack: bool,
+    ) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("XREADGROUP");
+        cmd.arg("GROUP").arg(group).arg(consumer);
+
+        if let Some(c) = count {
+            cmd.arg("COUNT").arg(c);
+        }
+        if let Some(b) = block {
+            cmd.arg("BLOCK").arg(b);
+        }
+        if noack {
+            cmd.arg("NOACK");
+        }
+
+        cmd.arg("STREAMS");
+        for key in keys {
+            cmd.arg(key);
+        }
+        for id in ids {
+            cmd.arg(id);
+        }
+
+        cmd.query_async(&mut conn).await
+    }
+
+    /// Acknowledge messages as processed (XACK command).
+    ///
+    /// Returns the number of messages successfully acknowledged.
+    pub async fn xack(&self, key: &str, group: &str, ids: &[String]) -> RedisResult<i64> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("XACK");
+        cmd.arg(key).arg(group);
+        for id in ids {
+            cmd.arg(id);
+        }
+        cmd.query_async(&mut conn).await
+    }
+
+    /// Delete entries from a stream (XDEL command).
+    ///
+    /// Returns the number of entries deleted.
+    pub async fn xdel(&self, key: &str, ids: &[String]) -> RedisResult<i64> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("XDEL");
+        cmd.arg(key);
+        for id in ids {
+            cmd.arg(id);
+        }
+        cmd.query_async(&mut conn).await
+    }
+
+    /// Trim a stream to a maximum length (XTRIM command).
+    ///
+    /// Returns the number of entries deleted.
+    pub async fn xtrim(&self, key: &str, maxlen: i64, approximate: bool) -> RedisResult<i64> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("XTRIM");
+        cmd.arg(key).arg("MAXLEN");
+        if approximate {
+            cmd.arg("~");
+        }
+        cmd.arg(maxlen);
+        cmd.query_async(&mut conn).await
+    }
+
+    /// Get pending entries for a consumer group (XPENDING command).
+    ///
+    /// Without start/end/count, returns a summary of pending entries.
+    /// With start/end/count, returns detailed information about specific entries.
+    pub async fn xpending(
+        &self,
+        key: &str,
+        group: &str,
+        start: Option<&str>,
+        end: Option<&str>,
+        count: Option<i64>,
+        consumer: Option<&str>,
+    ) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("XPENDING");
+        cmd.arg(key).arg(group);
+
+        // If start/end/count are provided, use the detailed form
+        if let (Some(s), Some(e), Some(c)) = (start, end, count) {
+            cmd.arg(s).arg(e).arg(c);
+            // Consumer filter is optional in detailed form
+            if let Some(cons) = consumer {
+                cmd.arg(cons);
+            }
+        }
+
+        cmd.query_async(&mut conn).await
+    }
+
+    /// Claim pending messages (XCLAIM command).
+    #[allow(clippy::too_many_arguments)]
+    pub async fn xclaim(
+        &self,
+        key: &str,
+        group: &str,
+        consumer: &str,
+        min_idle_time: i64,
+        ids: &[String],
+        idle: Option<i64>,
+        time: Option<i64>,
+        retrycount: Option<i64>,
+        force: bool,
+        justid: bool,
+    ) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("XCLAIM");
+        cmd.arg(key).arg(group).arg(consumer).arg(min_idle_time);
+
+        for id in ids {
+            cmd.arg(id);
+        }
+
+        if let Some(i) = idle {
+            cmd.arg("IDLE").arg(i);
+        }
+        if let Some(t) = time {
+            cmd.arg("TIME").arg(t);
+        }
+        if let Some(r) = retrycount {
+            cmd.arg("RETRYCOUNT").arg(r);
+        }
+        if force {
+            cmd.arg("FORCE");
+        }
+        if justid {
+            cmd.arg("JUSTID");
+        }
+
+        cmd.query_async(&mut conn).await
+    }
+
+    /// Auto-claim pending messages (XAUTOCLAIM command).
+    ///
+    /// Automatically transfers ownership of pending messages that have been idle for at least min_idle_time.
+    #[allow(clippy::too_many_arguments)]
+    pub async fn xautoclaim(
+        &self,
+        key: &str,
+        group: &str,
+        consumer: &str,
+        min_idle_time: i64,
+        start: &str,
+        count: Option<i64>,
+        justid: bool,
+    ) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("XAUTOCLAIM");
+        cmd.arg(key)
+            .arg(group)
+            .arg(consumer)
+            .arg(min_idle_time)
+            .arg(start);
+
+        if let Some(c) = count {
+            cmd.arg("COUNT").arg(c);
+        }
+        if justid {
+            cmd.arg("JUSTID");
+        }
+
+        cmd.query_async(&mut conn).await
+    }
+
+    // ========== PUB/SUB OPERATIONS ==========
+
+    /// Publish a message to a channel (PUBLISH command).
+    ///
+    /// Returns the number of clients that received the message.
+    pub async fn publish(&self, channel: &str, message: &str) -> RedisResult<i64> {
+        let mut conn = self.conn.clone();
+        redis::cmd("PUBLISH")
+            .arg(channel)
+            .arg(message)
+            .query_async(&mut conn)
+            .await
+    }
+
+    /// List active channels (PUBSUB CHANNELS command).
+    ///
+    /// If pattern is provided, only channels matching the pattern are returned.
+    pub async fn pubsub_channels(&self, pattern: Option<&str>) -> RedisResult<Vec<String>> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("PUBSUB");
+        cmd.arg("CHANNELS");
+        if let Some(p) = pattern {
+            cmd.arg(p);
+        }
+        cmd.query_async(&mut conn).await
+    }
+
+    /// Get subscriber count for channels (PUBSUB NUMSUB command).
+    pub async fn pubsub_numsub(&self, channels: &[String]) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("PUBSUB");
+        cmd.arg("NUMSUB");
+        for channel in channels {
+            cmd.arg(channel);
+        }
+        cmd.query_async(&mut conn).await
+    }
+
+    /// Get the number of pattern subscriptions (PUBSUB NUMPAT command).
+    pub async fn pubsub_numpat(&self) -> RedisResult<i64> {
+        let mut conn = self.conn.clone();
+        redis::cmd("PUBSUB")
+            .arg("NUMPAT")
+            .query_async(&mut conn)
+            .await
+    }
 }
 
 // ========== OPTION STRUCTS FOR MODULE COMMANDS ==========
@@ -1834,6 +2280,11 @@ pub const WRITE_COMMANDS: &[&str] = &[
     "XDEL",
     "XTRIM",
     "XSETID",
+    "XGROUP",
+    "XACK",
+    "XCLAIM",
+    "XAUTOCLAIM",
+    "PUBLISH",
     "GEOADD",
     "GEORADIUS",
     "GEORADIUSBYMEMBER",
