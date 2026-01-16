@@ -482,6 +482,555 @@ fn default_zrange_stop() -> isize {
     -1
 }
 
+// ========== WRITE OPERATION PARAMS ==========
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseSetParam {
+    /// Redis key name
+    pub key: String,
+    /// Value to set
+    pub value: String,
+    /// Expiration time in seconds (optional, mutually exclusive with px)
+    #[serde(default)]
+    pub ex: Option<u64>,
+    /// Expiration time in milliseconds (optional, mutually exclusive with ex)
+    #[serde(default)]
+    pub px: Option<u64>,
+    /// Only set if key does not exist (optional)
+    #[serde(default)]
+    pub nx: bool,
+    /// Only set if key already exists (optional)
+    #[serde(default)]
+    pub xx: bool,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseDelParam {
+    /// Redis key(s) to delete - can be a single key or multiple keys
+    pub keys: Vec<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseExpireParam {
+    /// Redis key name
+    pub key: String,
+    /// Expiration time in seconds
+    pub seconds: i64,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseIncrbyParam {
+    /// Redis key name
+    pub key: String,
+    /// Amount to increment by (can be negative to decrement)
+    pub increment: i64,
+}
+
+// ========== HASH WRITE PARAMS ==========
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseHsetParam {
+    /// Redis key name for the hash
+    pub key: String,
+    /// Field name within the hash
+    pub field: String,
+    /// Value to set
+    pub value: String,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseHsetMultipleParam {
+    /// Redis key name for the hash
+    pub key: String,
+    /// Field-value pairs to set (array of objects with "field" and "value" properties)
+    pub fields: Vec<FieldValuePair>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct FieldValuePair {
+    /// Field name
+    pub field: String,
+    /// Field value
+    pub value: String,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseHdelParam {
+    /// Redis key name for the hash
+    pub key: String,
+    /// Field(s) to delete from the hash
+    pub fields: Vec<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseHgetParam {
+    /// Redis key name for the hash
+    pub key: String,
+    /// Field name to get
+    pub field: String,
+}
+
+// ========== LIST WRITE PARAMS ==========
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseListPushParam {
+    /// Redis key name for the list
+    pub key: String,
+    /// Value(s) to push onto the list
+    pub values: Vec<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseLindexParam {
+    /// Redis key name for the list
+    pub key: String,
+    /// Index to get (0-based, negative counts from end)
+    pub index: isize,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseLsetParam {
+    /// Redis key name for the list
+    pub key: String,
+    /// Index to set (0-based, negative counts from end)
+    pub index: isize,
+    /// Value to set at the index
+    pub value: String,
+}
+
+// ========== SET WRITE PARAMS ==========
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseSetMembersParam {
+    /// Redis key name for the set
+    pub key: String,
+    /// Member(s) to add or remove
+    pub members: Vec<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseSismemberParam {
+    /// Redis key name for the set
+    pub key: String,
+    /// Member to check
+    pub member: String,
+}
+
+// ========== SORTED SET PARAMS ==========
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseZaddParam {
+    /// Redis key name for the sorted set
+    pub key: String,
+    /// Members with scores to add (array of objects with "score" and "member" properties)
+    pub members: Vec<ScoreMemberPair>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct ScoreMemberPair {
+    /// Score for the member
+    pub score: f64,
+    /// Member value
+    pub member: String,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseZremParam {
+    /// Redis key name for the sorted set
+    pub key: String,
+    /// Member(s) to remove
+    pub members: Vec<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseZscoreParam {
+    /// Redis key name for the sorted set
+    pub key: String,
+    /// Member to get the score for
+    pub member: String,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseZrangebyscoreParam {
+    /// Redis key name for the sorted set
+    pub key: String,
+    /// Minimum score (use "-inf" for negative infinity)
+    pub min: String,
+    /// Maximum score (use "+inf" for positive infinity)
+    pub max: String,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseZincrbyParam {
+    /// Redis key name for the sorted set
+    pub key: String,
+    /// Member to increment
+    pub member: String,
+    /// Amount to increment the score by (can be negative)
+    pub increment: f64,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabaseRenameParam {
+    /// Current key name
+    pub key: String,
+    /// New key name
+    pub new_key: String,
+}
+
+// ========== REDISEARCH PARAMS ==========
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct FtSearchParam {
+    /// Index name to search
+    pub index: String,
+    /// Search query (e.g., "@title:hello @body:world", "*" for all)
+    pub query: String,
+    /// Return only document IDs, not content
+    #[serde(default)]
+    pub nocontent: bool,
+    /// Disable stemming - search terms exactly as provided
+    #[serde(default)]
+    pub verbatim: bool,
+    /// Include relevance scores in results
+    #[serde(default)]
+    pub withscores: bool,
+    /// Fields to return (if not specified, returns all fields)
+    #[serde(default)]
+    pub return_fields: Option<Vec<String>>,
+    /// Field to sort results by
+    #[serde(default)]
+    pub sortby: Option<String>,
+    /// Sort in descending order (default is ascending)
+    #[serde(default)]
+    pub sortby_desc: bool,
+    /// Number of results to skip (for pagination)
+    #[serde(default)]
+    pub limit_offset: Option<i64>,
+    /// Maximum number of results to return (default: 10)
+    #[serde(default)]
+    pub limit_num: Option<i64>,
+    /// Fields to highlight matches in
+    #[serde(default)]
+    pub highlight_fields: Option<Vec<String>>,
+    /// Opening tag for highlighting (e.g., "<b>")
+    #[serde(default)]
+    pub highlight_open: Option<String>,
+    /// Closing tag for highlighting (e.g., "</b>")
+    #[serde(default)]
+    pub highlight_close: Option<String>,
+    /// Language for stemming (e.g., "english", "spanish", "chinese")
+    #[serde(default)]
+    pub language: Option<String>,
+    /// Maximum distance between query terms for phrase matching
+    #[serde(default)]
+    pub slop: Option<i64>,
+    /// Require query terms to appear in order
+    #[serde(default)]
+    pub inorder: bool,
+    /// Query timeout in milliseconds
+    #[serde(default)]
+    pub timeout: Option<i64>,
+    /// Query dialect version (1, 2, or 3)
+    #[serde(default)]
+    pub dialect: Option<i32>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct FtAggregateParam {
+    /// Index name to aggregate
+    pub index: String,
+    /// Base filter query (e.g., "@category:{electronics}", "*" for all)
+    pub query: String,
+    /// Disable stemming
+    #[serde(default)]
+    pub verbatim: bool,
+    /// Fields to load from documents (empty array loads all)
+    #[serde(default)]
+    pub load: Option<Vec<String>>,
+    /// GROUPBY clauses with REDUCE functions
+    #[serde(default)]
+    pub groupby: Vec<FtGroupByParam>,
+    /// APPLY transformations
+    #[serde(default)]
+    pub apply: Vec<FtApplyParam>,
+    /// Sort by fields with direction (e.g., [["@count", "DESC"]])
+    #[serde(default)]
+    pub sortby: Option<Vec<Vec<String>>>,
+    /// Maximum results for SORTBY optimization
+    #[serde(default)]
+    pub sortby_max: Option<i64>,
+    /// Post-aggregation filter expression
+    #[serde(default)]
+    pub filter: Option<String>,
+    /// Number of results to skip
+    #[serde(default)]
+    pub limit_offset: Option<i64>,
+    /// Maximum number of results
+    #[serde(default)]
+    pub limit_num: Option<i64>,
+    /// Query timeout in milliseconds
+    #[serde(default)]
+    pub timeout: Option<i64>,
+    /// Query dialect version
+    #[serde(default)]
+    pub dialect: Option<i32>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct FtGroupByParam {
+    /// Properties to group by (e.g., ["@category", "@brand"])
+    pub properties: Vec<String>,
+    /// Reducer functions to apply
+    #[serde(default)]
+    pub reducers: Vec<FtReducerParam>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct FtReducerParam {
+    /// Reducer function (COUNT, SUM, AVG, MIN, MAX, COUNT_DISTINCT, etc.)
+    pub function: String,
+    /// Arguments for the reducer (e.g., ["@price"] for SUM)
+    #[serde(default)]
+    pub args: Vec<String>,
+    /// Alias for the result
+    #[serde(default)]
+    pub alias: Option<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct FtApplyParam {
+    /// Expression to apply (e.g., "sqrt(@foo)/log(@bar)")
+    pub expression: String,
+    /// Name for the result
+    pub alias: String,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct FtIndexParam {
+    /// Index name
+    pub index: String,
+}
+
+// ========== REDISJSON PARAMS ==========
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct JsonGetParam {
+    /// Key name
+    pub key: String,
+    /// JSONPath expressions (default: "$" for root)
+    #[serde(default)]
+    pub paths: Vec<String>,
+    /// Indentation string for pretty printing
+    #[serde(default)]
+    pub indent: Option<String>,
+    /// String to print at end of each line
+    #[serde(default)]
+    pub newline: Option<String>,
+    /// String between key and value
+    #[serde(default)]
+    pub space: Option<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct JsonSetParam {
+    /// Key name
+    pub key: String,
+    /// JSONPath where to set the value (default: "$" for root)
+    #[serde(default = "default_json_path")]
+    pub path: String,
+    /// JSON value to set (must be valid JSON)
+    pub value: String,
+    /// Only set if path does not exist
+    #[serde(default)]
+    pub nx: bool,
+    /// Only set if path already exists
+    #[serde(default)]
+    pub xx: bool,
+}
+
+fn default_json_path() -> String {
+    "$".to_string()
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct JsonDelParam {
+    /// Key name
+    pub key: String,
+    /// JSONPath to delete (default: "$" deletes entire document)
+    #[serde(default)]
+    pub path: Option<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct JsonPathParam {
+    /// Key name
+    pub key: String,
+    /// JSONPath (default: "$")
+    #[serde(default)]
+    pub path: Option<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct JsonArrAppendParam {
+    /// Key name
+    pub key: String,
+    /// JSONPath to the array
+    pub path: String,
+    /// JSON values to append (each must be valid JSON)
+    pub values: Vec<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct JsonNumIncrByParam {
+    /// Key name
+    pub key: String,
+    /// JSONPath to the number
+    pub path: String,
+    /// Amount to increment by (can be negative)
+    pub value: f64,
+}
+
+// ========== REDISTIMESERIES PARAMS ==========
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct TsAddParam {
+    /// Time series key name
+    pub key: String,
+    /// Timestamp in milliseconds, or "*" for server time
+    pub timestamp: String,
+    /// Sample value
+    pub value: f64,
+    /// Retention period in milliseconds (only for new series)
+    #[serde(default)]
+    pub retention: Option<i64>,
+    /// Encoding: COMPRESSED or UNCOMPRESSED
+    #[serde(default)]
+    pub encoding: Option<String>,
+    /// Memory chunk size in bytes
+    #[serde(default)]
+    pub chunk_size: Option<i64>,
+    /// Duplicate handling: BLOCK, FIRST, LAST, MIN, MAX, SUM
+    #[serde(default)]
+    pub on_duplicate: Option<String>,
+    /// Labels as key-value pairs
+    #[serde(default)]
+    pub labels: Option<Vec<LabelPair>>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct LabelPair {
+    /// Label name
+    pub label: String,
+    /// Label value
+    pub value: String,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct TsRangeParam {
+    /// Time series key name
+    pub key: String,
+    /// Start timestamp ("-" for earliest)
+    pub from: String,
+    /// End timestamp ("+" for latest)
+    pub to: String,
+    /// Include latest possibly-partial bucket
+    #[serde(default)]
+    pub latest: bool,
+    /// Filter by specific timestamps
+    #[serde(default)]
+    pub filter_by_ts: Option<Vec<i64>>,
+    /// Minimum value filter
+    #[serde(default)]
+    pub filter_by_value_min: Option<f64>,
+    /// Maximum value filter
+    #[serde(default)]
+    pub filter_by_value_max: Option<f64>,
+    /// Maximum number of samples to return
+    #[serde(default)]
+    pub count: Option<i64>,
+    /// Alignment for aggregation buckets
+    #[serde(default)]
+    pub align: Option<String>,
+    /// Aggregation type (avg, sum, min, max, count, first, last, etc.)
+    #[serde(default)]
+    pub aggregation: Option<String>,
+    /// Bucket duration in milliseconds
+    #[serde(default)]
+    pub bucket_duration: Option<i64>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct TsCreateParam {
+    /// Time series key name
+    pub key: String,
+    /// Retention period in milliseconds
+    #[serde(default)]
+    pub retention: Option<i64>,
+    /// Encoding: COMPRESSED or UNCOMPRESSED
+    #[serde(default)]
+    pub encoding: Option<String>,
+    /// Memory chunk size in bytes
+    #[serde(default)]
+    pub chunk_size: Option<i64>,
+    /// Duplicate policy: BLOCK, FIRST, LAST, MIN, MAX, SUM
+    #[serde(default)]
+    pub duplicate_policy: Option<String>,
+    /// Labels as key-value pairs
+    #[serde(default)]
+    pub labels: Option<Vec<LabelPair>>,
+}
+
+// ========== REDISBLOOM PARAMS ==========
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct BfReserveParam {
+    /// Bloom filter key name
+    pub key: String,
+    /// Desired false positive rate (0 to 1, e.g., 0.001 for 0.1%)
+    pub error_rate: f64,
+    /// Expected number of items
+    pub capacity: u64,
+    /// Sub-filter size multiplier when capacity reached (default: 2)
+    #[serde(default)]
+    pub expansion: Option<u32>,
+    /// Prevent auto-scaling (returns error when full)
+    #[serde(default)]
+    pub nonscaling: bool,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct BfAddParam {
+    /// Bloom filter key name
+    pub key: String,
+    /// Item to add
+    pub item: String,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct BfMaddParam {
+    /// Bloom filter key name
+    pub key: String,
+    /// Items to add
+    pub items: Vec<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct BfExistsParam {
+    /// Bloom filter key name
+    pub key: String,
+    /// Item to check
+    pub item: String,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct BfMexistsParam {
+    /// Bloom filter key name
+    pub key: String,
+    /// Items to check
+    pub items: Vec<String>,
+}
+
 impl RedisCtlMcp {
     /// Create a new MCP server instance
     pub fn new(profile: Option<&str>, read_only: bool) -> anyhow::Result<Self> {
@@ -2790,6 +3339,1772 @@ impl RedisCtlMcp {
             serde_json::json!({
                 "key": params.key,
                 "cardinality": card
+            })
+            .to_string(),
+        )]))
+    }
+
+    // ========== WRITE OPERATIONS ==========
+
+    #[tool(
+        description = "Set a string value (SET command). Creates or overwrites the key. Supports optional expiration (ex for seconds, px for milliseconds) and conditional set (nx: only if not exists, xx: only if exists). Use this to store strings, numbers, or serialized data. Returns true if set succeeded, false if NX/XX condition failed."
+    )]
+    async fn database_set(
+        &self,
+        Parameters(params): Parameters<DatabaseSetParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_set");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "SET is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let success = tools
+            .set(
+                &params.key,
+                &params.value,
+                params.ex,
+                params.px,
+                params.nx,
+                params.xx,
+            )
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "success": success,
+                "message": if success { "Value set successfully" } else { "Set failed (NX/XX condition not met)" }
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Delete one or more keys (DEL command). Removes keys and their associated values from the database. Returns the number of keys that were actually deleted (keys that didn't exist are not counted). Use this to remove data or clean up expired/unused keys."
+    )]
+    async fn database_del(
+        &self,
+        Parameters(params): Parameters<DatabaseDelParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(keys = ?params.keys, "Tool called: database_del");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "DEL is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let deleted = tools
+            .del(&params.keys)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "keys": params.keys,
+                "deleted": deleted
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Set a key's expiration time in seconds (EXPIRE command). After the timeout, the key will be automatically deleted. Returns true if the timeout was set, false if the key doesn't exist. Use this to implement cache expiration, session timeouts, or temporary data."
+    )]
+    async fn database_expire(
+        &self,
+        Parameters(params): Parameters<DatabaseExpireParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, seconds = params.seconds, "Tool called: database_expire");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "EXPIRE is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let success = tools
+            .expire(&params.key, params.seconds)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "seconds": params.seconds,
+                "success": success
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Remove a key's expiration (PERSIST command). Makes the key persistent (no expiration). Returns true if the timeout was removed, false if the key doesn't exist or has no timeout."
+    )]
+    async fn database_persist(
+        &self,
+        Parameters(params): Parameters<DatabaseKeyParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_persist");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "PERSIST is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let success = tools
+            .persist(&params.key)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "success": success
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Increment a key's integer value by 1 (INCR command). If the key doesn't exist, it's created with value 0 before incrementing. Returns the new value. Use this for counters, rate limiters, or sequence generators. The value must be a valid integer string."
+    )]
+    async fn database_incr(
+        &self,
+        Parameters(params): Parameters<DatabaseKeyParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_incr");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "INCR is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let new_value = tools
+            .incr(&params.key)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "value": new_value
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Decrement a key's integer value by 1 (DECR command). If the key doesn't exist, it's created with value 0 before decrementing. Returns the new value. Use this for countdown counters or decrementing stock levels."
+    )]
+    async fn database_decr(
+        &self,
+        Parameters(params): Parameters<DatabaseKeyParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_decr");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "DECR is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let new_value = tools
+            .decr(&params.key)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "value": new_value
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Increment a key's integer value by a specific amount (INCRBY command). If the key doesn't exist, it's created with value 0 before incrementing. Use negative increment to decrement. Returns the new value. Use this for counters with custom increments like adding points or adjusting balances."
+    )]
+    async fn database_incrby(
+        &self,
+        Parameters(params): Parameters<DatabaseIncrbyParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, increment = params.increment, "Tool called: database_incrby");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "INCRBY is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let new_value = tools
+            .incrby(&params.key, params.increment)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "increment": params.increment,
+                "value": new_value
+            })
+            .to_string(),
+        )]))
+    }
+
+    // ========== HASH WRITE OPERATIONS ==========
+
+    #[tool(
+        description = "Set a field in a hash (HSET command). Creates the hash if it doesn't exist. Returns 1 if the field is new, 0 if the field was updated. Use hashes to store objects like user profiles, product details, or configuration settings where you need to access individual fields."
+    )]
+    async fn database_hset(
+        &self,
+        Parameters(params): Parameters<DatabaseHsetParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, field = %params.field, "Tool called: database_hset");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "HSET is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let added = tools
+            .hset(&params.key, &params.field, &params.value)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "field": params.field,
+                "added": added,
+                "message": if added == 1 { "New field created" } else { "Existing field updated" }
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Set multiple fields in a hash at once (HSET with multiple field-value pairs). More efficient than multiple HSET calls. Creates the hash if it doesn't exist. Returns the number of new fields added. Use this to create or update entire objects in one operation."
+    )]
+    async fn database_hset_multiple(
+        &self,
+        Parameters(params): Parameters<DatabaseHsetMultipleParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, field_count = params.fields.len(), "Tool called: database_hset_multiple");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "HSET is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let fields: Vec<(String, String)> = params
+            .fields
+            .into_iter()
+            .map(|f| (f.field, f.value))
+            .collect();
+        let added = tools
+            .hset_multiple(&params.key, &fields)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "fields_processed": fields.len(),
+                "fields_added": added
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Delete one or more fields from a hash (HDEL command). Returns the number of fields that were removed (non-existing fields are not counted). Use this to remove specific properties from an object without deleting the entire hash."
+    )]
+    async fn database_hdel(
+        &self,
+        Parameters(params): Parameters<DatabaseHdelParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, fields = ?params.fields, "Tool called: database_hdel");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "HDEL is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let deleted = tools
+            .hdel(&params.key, &params.fields)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "fields": params.fields,
+                "deleted": deleted
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get a specific field from a hash (HGET command). Returns null if the field or hash doesn't exist. Use this when you only need one field from a hash instead of fetching all fields with HGETALL."
+    )]
+    async fn database_hget(
+        &self,
+        Parameters(params): Parameters<DatabaseHgetParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, field = %params.field, "Tool called: database_hget");
+
+        let tools = self.get_database_tools().await?;
+        let value = tools
+            .hget(&params.key, &params.field)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "field": params.field,
+                "value": value
+            })
+            .to_string(),
+        )]))
+    }
+
+    // ========== LIST WRITE OPERATIONS ==========
+
+    #[tool(
+        description = "Push values to the left (head) of a list (LPUSH command). Creates the list if it doesn't exist. Values are inserted at the head, so the last value in the input array will be the first element in the list. Returns the new length of the list. Use this for implementing stacks (LIFO) or adding items to the front of a queue."
+    )]
+    async fn database_lpush(
+        &self,
+        Parameters(params): Parameters<DatabaseListPushParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, value_count = params.values.len(), "Tool called: database_lpush");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "LPUSH is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let new_length = tools
+            .lpush(&params.key, &params.values)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "values_pushed": params.values.len(),
+                "new_length": new_length
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Push values to the right (tail) of a list (RPUSH command). Creates the list if it doesn't exist. Values are appended to the end in order. Returns the new length of the list. Use this for implementing queues (FIFO), event logs, or message lists where order matters."
+    )]
+    async fn database_rpush(
+        &self,
+        Parameters(params): Parameters<DatabaseListPushParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, value_count = params.values.len(), "Tool called: database_rpush");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "RPUSH is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let new_length = tools
+            .rpush(&params.key, &params.values)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "values_pushed": params.values.len(),
+                "new_length": new_length
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Pop and return a value from the left (head) of a list (LPOP command). Removes and returns the first element. Returns null if the list is empty or doesn't exist. Use this with RPUSH for queue (FIFO) behavior or with LPUSH for stack (LIFO) behavior."
+    )]
+    async fn database_lpop(
+        &self,
+        Parameters(params): Parameters<DatabaseKeyParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_lpop");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "LPOP is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let value = tools
+            .lpop(&params.key)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "value": value
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Pop and return a value from the right (tail) of a list (RPOP command). Removes and returns the last element. Returns null if the list is empty or doesn't exist. Use this with LPUSH for queue (FIFO) behavior."
+    )]
+    async fn database_rpop(
+        &self,
+        Parameters(params): Parameters<DatabaseKeyParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_rpop");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "RPOP is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let value = tools
+            .rpop(&params.key)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "value": value
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get an element from a list by index (LINDEX command). Index is 0-based; negative indices count from the end (-1 is the last element). Returns null if the index is out of range. Use this to peek at specific positions without removing elements."
+    )]
+    async fn database_lindex(
+        &self,
+        Parameters(params): Parameters<DatabaseLindexParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, index = params.index, "Tool called: database_lindex");
+
+        let tools = self.get_database_tools().await?;
+        let value = tools
+            .lindex(&params.key, params.index)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "index": params.index,
+                "value": value
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Set an element in a list at a specific index (LSET command). The index must be within the list bounds or an error is returned. Use this to update specific elements in a list without rebuilding the entire list."
+    )]
+    async fn database_lset(
+        &self,
+        Parameters(params): Parameters<DatabaseLsetParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, index = params.index, "Tool called: database_lset");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "LSET is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        tools
+            .lset(&params.key, params.index, &params.value)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "index": params.index,
+                "success": true
+            })
+            .to_string(),
+        )]))
+    }
+
+    // ========== SET WRITE OPERATIONS ==========
+
+    #[tool(
+        description = "Add members to a set (SADD command). Creates the set if it doesn't exist. Sets store unique values - duplicates are automatically ignored. Returns the number of members that were actually added (not already present). Use sets for tags, categories, unique visitor tracking, or any collection where uniqueness matters."
+    )]
+    async fn database_sadd(
+        &self,
+        Parameters(params): Parameters<DatabaseSetMembersParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, member_count = params.members.len(), "Tool called: database_sadd");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "SADD is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let added = tools
+            .sadd(&params.key, &params.members)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "members_provided": params.members.len(),
+                "members_added": added
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Remove members from a set (SREM command). Returns the number of members that were actually removed (members that didn't exist are not counted). Use this to untag items, remove categories, or delete specific values from a set."
+    )]
+    async fn database_srem(
+        &self,
+        Parameters(params): Parameters<DatabaseSetMembersParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, member_count = params.members.len(), "Tool called: database_srem");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "SREM is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let removed = tools
+            .srem(&params.key, &params.members)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "members_provided": params.members.len(),
+                "members_removed": removed
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Check if a member exists in a set (SISMEMBER command). Returns true if the member is in the set, false otherwise. Use this to check membership before adding, or to verify tags/permissions."
+    )]
+    async fn database_sismember(
+        &self,
+        Parameters(params): Parameters<DatabaseSismemberParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, member = %params.member, "Tool called: database_sismember");
+
+        let tools = self.get_database_tools().await?;
+        let is_member = tools
+            .sismember(&params.key, &params.member)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "member": params.member,
+                "is_member": is_member
+            })
+            .to_string(),
+        )]))
+    }
+
+    // ========== SORTED SET OPERATIONS ==========
+
+    #[tool(
+        description = "Add members with scores to a sorted set (ZADD command). Creates the sorted set if it doesn't exist. Members are automatically ordered by score. If a member already exists, its score is updated. Returns the number of new members added (not updated). Use sorted sets for leaderboards, priority queues, time-series data, or any ranked data."
+    )]
+    async fn database_zadd(
+        &self,
+        Parameters(params): Parameters<DatabaseZaddParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, member_count = params.members.len(), "Tool called: database_zadd");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "ZADD is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let members: Vec<(f64, String)> = params
+            .members
+            .into_iter()
+            .map(|m| (m.score, m.member))
+            .collect();
+        let added = tools
+            .zadd(&params.key, &members)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "members_provided": members.len(),
+                "members_added": added
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Remove members from a sorted set (ZREM command). Returns the number of members that were actually removed. Use this to remove players from leaderboards, delete scheduled tasks, or clean up ranked data."
+    )]
+    async fn database_zrem(
+        &self,
+        Parameters(params): Parameters<DatabaseZremParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, member_count = params.members.len(), "Tool called: database_zrem");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "ZREM is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let removed = tools
+            .zrem(&params.key, &params.members)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "members_provided": params.members.len(),
+                "members_removed": removed
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get the score of a member in a sorted set (ZSCORE command). Returns null if the member doesn't exist. Use this to look up a player's score, check priority levels, or get the timestamp of a scheduled item."
+    )]
+    async fn database_zscore(
+        &self,
+        Parameters(params): Parameters<DatabaseZscoreParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, member = %params.member, "Tool called: database_zscore");
+
+        let tools = self.get_database_tools().await?;
+        let score = tools
+            .zscore(&params.key, &params.member)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "member": params.member,
+                "score": score
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get the rank (position) of a member in a sorted set (ZRANK command). Rank is 0-based with the lowest score at rank 0. Returns null if the member doesn't exist. Use this to find a player's position on a leaderboard or determine priority order."
+    )]
+    async fn database_zrank(
+        &self,
+        Parameters(params): Parameters<DatabaseZscoreParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, member = %params.member, "Tool called: database_zrank");
+
+        let tools = self.get_database_tools().await?;
+        let rank = tools
+            .zrank(&params.key, &params.member)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "member": params.member,
+                "rank": rank
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get the reverse rank (position from highest score) of a member in a sorted set (ZREVRANK command). Rank is 0-based with the highest score at rank 0. Returns null if the member doesn't exist. Use this for leaderboards where higher scores are better."
+    )]
+    async fn database_zrevrank(
+        &self,
+        Parameters(params): Parameters<DatabaseZscoreParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, member = %params.member, "Tool called: database_zrevrank");
+
+        let tools = self.get_database_tools().await?;
+        let rank = tools
+            .zrevrank(&params.key, &params.member)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "member": params.member,
+                "rank": rank
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get a range of members from a sorted set in reverse order, highest to lowest score (ZREVRANGE command). Use start=0, stop=-1 to get all members. Perfect for leaderboards where you want the top scorers first. Use this instead of ZRANGE when higher scores should appear first."
+    )]
+    async fn database_zrevrange(
+        &self,
+        Parameters(params): Parameters<DatabaseZrangeParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, start = params.start, stop = params.stop, "Tool called: database_zrevrange");
+
+        let tools = self.get_database_tools().await?;
+        let members = tools
+            .zrevrange(&params.key, params.start, params.stop)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "start": params.start,
+                "stop": params.stop,
+                "members": members
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get members from a sorted set within a score range (ZRANGEBYSCORE command). Use \"-inf\" for negative infinity and \"+inf\" for positive infinity. Returns members with scores between min and max (inclusive). Use this to query time ranges, price ranges, or any score-based filtering."
+    )]
+    async fn database_zrangebyscore(
+        &self,
+        Parameters(params): Parameters<DatabaseZrangebyscoreParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, min = %params.min, max = %params.max, "Tool called: database_zrangebyscore");
+
+        let tools = self.get_database_tools().await?;
+
+        // Parse min/max, handling special values
+        let min: f64 = match params.min.as_str() {
+            "-inf" => f64::NEG_INFINITY,
+            "+inf" => f64::INFINITY,
+            s => s.parse().map_err(|_| {
+                RmcpError::invalid_params(format!("Invalid min score: {}", s), None)
+            })?,
+        };
+        let max: f64 = match params.max.as_str() {
+            "-inf" => f64::NEG_INFINITY,
+            "+inf" => f64::INFINITY,
+            s => s.parse().map_err(|_| {
+                RmcpError::invalid_params(format!("Invalid max score: {}", s), None)
+            })?,
+        };
+
+        let members = tools
+            .zrangebyscore(&params.key, min, max)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "min": params.min,
+                "max": params.max,
+                "members": members
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Increment a member's score in a sorted set (ZINCRBY command). Creates the member with the increment as its score if it doesn't exist. Returns the new score. Use negative increment to decrement. Perfect for updating leaderboard scores, adjusting priorities, or accumulating points."
+    )]
+    async fn database_zincrby(
+        &self,
+        Parameters(params): Parameters<DatabaseZincrbyParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, member = %params.member, increment = params.increment, "Tool called: database_zincrby");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "ZINCRBY is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let new_score = tools
+            .zincrby(&params.key, params.increment, &params.member)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "member": params.member,
+                "increment": params.increment,
+                "new_score": new_score
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get a range of members with their scores from a sorted set (ZRANGE WITHSCORES). Returns members ordered from lowest to highest score, each with their score. Use this when you need both the member and its score, like displaying a leaderboard with points."
+    )]
+    async fn database_zrange_withscores(
+        &self,
+        Parameters(params): Parameters<DatabaseZrangeParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, start = params.start, stop = params.stop, "Tool called: database_zrange_withscores");
+
+        let tools = self.get_database_tools().await?;
+        let members = tools
+            .zrange_withscores(&params.key, params.start, params.stop)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        let result: Vec<serde_json::Value> = members
+            .into_iter()
+            .map(|(member, score)| serde_json::json!({"member": member, "score": score}))
+            .collect();
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "start": params.start,
+                "stop": params.stop,
+                "members": result
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get a range of members with their scores in reverse order, highest to lowest (ZREVRANGE WITHSCORES). Returns members from highest to lowest score, each with their score. Perfect for leaderboards showing top players with their points."
+    )]
+    async fn database_zrevrange_withscores(
+        &self,
+        Parameters(params): Parameters<DatabaseZrangeParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, start = params.start, stop = params.stop, "Tool called: database_zrevrange_withscores");
+
+        let tools = self.get_database_tools().await?;
+        let members = tools
+            .zrevrange_withscores(&params.key, params.start, params.stop)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        let result: Vec<serde_json::Value> = members
+            .into_iter()
+            .map(|(member, score)| serde_json::json!({"member": member, "score": score}))
+            .collect();
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "start": params.start,
+                "stop": params.stop,
+                "members": result
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Rename a key (RENAME command). Atomically renames a key to a new name. If the new key already exists, it will be overwritten. Returns an error if the source key doesn't exist. Use this to reorganize your key namespace or implement atomic key swaps."
+    )]
+    async fn database_rename(
+        &self,
+        Parameters(params): Parameters<DatabaseRenameParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, new_key = %params.new_key, "Tool called: database_rename");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "RENAME is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        tools
+            .rename(&params.key, &params.new_key)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "old_key": params.key,
+                "new_key": params.new_key,
+                "success": true
+            })
+            .to_string(),
+        )]))
+    }
+
+    // ==================== REDISEARCH TOOLS ====================
+
+    #[tool(
+        description = "Search a RediSearch index (FT.SEARCH command). Executes a full-text search query against an index, returning matching documents. Supports filters, sorting, pagination, highlighting, and scoring. Use NOCONTENT to get only document IDs for large result sets."
+    )]
+    async fn database_ft_search(
+        &self,
+        Parameters(params): Parameters<FtSearchParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(index = %params.index, query = %params.query, "Tool called: database_ft_search");
+
+        let tools = self.get_database_tools().await?;
+
+        use crate::database_tools::FtSearchOptions;
+        let options = FtSearchOptions {
+            nocontent: params.nocontent,
+            verbatim: params.verbatim,
+            withscores: params.withscores,
+            return_fields: params.return_fields,
+            sortby: params.sortby,
+            sortby_desc: params.sortby_desc,
+            limit_offset: params.limit_offset,
+            limit_num: params.limit_num,
+            highlight_fields: params.highlight_fields,
+            highlight_tags_open: params.highlight_open,
+            highlight_tags_close: params.highlight_close,
+            language: params.language,
+            slop: params.slop,
+            inorder: params.inorder,
+            timeout: params.timeout,
+            dialect: params.dialect,
+        };
+
+        let result = tools
+            .ft_search(&params.index, &params.query, &options)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "index": params.index,
+                "query": params.query,
+                "result": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Run an aggregation query on a RediSearch index (FT.AGGREGATE command). Performs complex aggregations including grouping, sorting, applying transformations, and reducing. Powerful for analytics and reporting on indexed data."
+    )]
+    async fn database_ft_aggregate(
+        &self,
+        Parameters(params): Parameters<FtAggregateParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(index = %params.index, query = %params.query, "Tool called: database_ft_aggregate");
+
+        let tools = self.get_database_tools().await?;
+
+        use crate::database_tools::{FtAggregateOptions, FtApply, FtGroupBy, FtReducer};
+
+        let groupby = params
+            .groupby
+            .into_iter()
+            .map(|g| FtGroupBy {
+                properties: g.properties,
+                reducers: g
+                    .reducers
+                    .into_iter()
+                    .map(|r| FtReducer {
+                        function: r.function,
+                        args: r.args,
+                        alias: r.alias,
+                    })
+                    .collect(),
+            })
+            .collect();
+
+        let apply = params
+            .apply
+            .into_iter()
+            .map(|a| FtApply {
+                expression: a.expression,
+                alias: a.alias,
+            })
+            .collect();
+
+        // Convert sortby from Vec<Vec<String>> to Vec<(String, String)>
+        let sortby = params.sortby.map(|sb| {
+            sb.into_iter()
+                .filter_map(|pair| {
+                    if pair.len() >= 2 {
+                        Some((pair[0].clone(), pair[1].clone()))
+                    } else if pair.len() == 1 {
+                        Some((pair[0].clone(), "ASC".to_string()))
+                    } else {
+                        None
+                    }
+                })
+                .collect()
+        });
+
+        let options = FtAggregateOptions {
+            verbatim: params.verbatim,
+            load: params.load,
+            groupby,
+            apply,
+            sortby,
+            sortby_max: params.sortby_max,
+            filter: params.filter,
+            limit_offset: params.limit_offset,
+            limit_num: params.limit_num,
+            timeout: params.timeout,
+            dialect: params.dialect,
+        };
+
+        let result = tools
+            .ft_aggregate(&params.index, &params.query, &options)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "index": params.index,
+                "query": params.query,
+                "result": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get information about a RediSearch index (FT.INFO command). Returns index schema, number of documents, indexing status, memory usage, and configuration. Useful for monitoring and debugging index performance."
+    )]
+    async fn database_ft_info(
+        &self,
+        Parameters(params): Parameters<FtIndexParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(index = %params.index, "Tool called: database_ft_info");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .ft_info(&params.index)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "index": params.index,
+                "info": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "List all RediSearch indexes (FT._LIST command). Returns the names of all full-text search indexes in the database. Use FT.INFO on individual indexes for detailed information."
+    )]
+    async fn database_ft_list(&self) -> Result<CallToolResult, RmcpError> {
+        info!("Tool called: database_ft_list");
+
+        let tools = self.get_database_tools().await?;
+        let indexes = tools
+            .ft_list()
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "indexes": indexes
+            })
+            .to_string(),
+        )]))
+    }
+
+    // ==================== REDISJSON TOOLS ====================
+
+    #[tool(
+        description = "Get JSON value(s) from a key (JSON.GET command). Retrieves JSON data at one or more paths. Returns the JSON-encoded value. Use JSONPath syntax for paths (e.g., '$.store.book[0].title' or '$..price' for recursive). Multiple paths return an object with path keys."
+    )]
+    async fn database_json_get(
+        &self,
+        Parameters(params): Parameters<JsonGetParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_json_get");
+
+        let tools = self.get_database_tools().await?;
+        let paths = if params.paths.is_empty() {
+            vec!["$".to_string()]
+        } else {
+            params.paths
+        };
+        let result = tools
+            .json_get(
+                &params.key,
+                &paths,
+                params.indent.as_deref(),
+                params.newline.as_deref(),
+                params.space.as_deref(),
+            )
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "paths": paths,
+                "value": result
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Set a JSON value at a path (JSON.SET command). Creates or updates JSON data. Use NX to only set if path doesn't exist, XX to only update existing paths. The value must be valid JSON. Path '$' sets the root."
+    )]
+    async fn database_json_set(
+        &self,
+        Parameters(params): Parameters<JsonSetParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, path = %params.path, "Tool called: database_json_set");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "JSON.SET is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let success = tools
+            .json_set(
+                &params.key,
+                &params.path,
+                &params.value,
+                params.nx,
+                params.xx,
+            )
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "path": params.path,
+                "success": success
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Delete a JSON value at a path (JSON.DEL command). Removes the JSON value at the specified path. Returns the number of paths deleted. If path is omitted, deletes the entire key."
+    )]
+    async fn database_json_del(
+        &self,
+        Parameters(params): Parameters<JsonDelParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_json_del");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "JSON.DEL is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let deleted = tools
+            .json_del(&params.key, params.path.as_deref())
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "path": params.path,
+                "deleted": deleted
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get the type of JSON value at a path (JSON.TYPE command). Returns the JSON type: object, array, string, integer, number, boolean, or null. Useful for introspecting JSON structure."
+    )]
+    async fn database_json_type(
+        &self,
+        Parameters(params): Parameters<JsonPathParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_json_type");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .json_type(&params.key, params.path.as_deref())
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "path": params.path,
+                "type": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Append values to a JSON array (JSON.ARRAPPEND command). Adds one or more JSON values to the end of the array at the specified path. Returns the new array length. Values must be valid JSON."
+    )]
+    async fn database_json_arrappend(
+        &self,
+        Parameters(params): Parameters<JsonArrAppendParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, path = %params.path, "Tool called: database_json_arrappend");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "JSON.ARRAPPEND is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .json_arrappend(&params.key, &params.path, &params.values)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "path": params.path,
+                "new_length": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get the length of a JSON array (JSON.ARRLEN command). Returns the number of elements in the array at the specified path. Returns null if the path doesn't exist or isn't an array."
+    )]
+    async fn database_json_arrlen(
+        &self,
+        Parameters(params): Parameters<JsonPathParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_json_arrlen");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .json_arrlen(&params.key, params.path.as_deref())
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "path": params.path,
+                "length": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Increment a JSON number by a value (JSON.NUMINCRBY command). Atomically increments the number at the specified path. Returns the new value. Use negative values to decrement."
+    )]
+    async fn database_json_numincrby(
+        &self,
+        Parameters(params): Parameters<JsonNumIncrByParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, path = %params.path, value = %params.value, "Tool called: database_json_numincrby");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "JSON.NUMINCRBY is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .json_numincrby(&params.key, &params.path, params.value)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "path": params.path,
+                "increment": params.value,
+                "new_value": result
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get the length of a JSON string (JSON.STRLEN command). Returns the length of the string at the specified path. Returns null if the path doesn't exist or isn't a string."
+    )]
+    async fn database_json_strlen(
+        &self,
+        Parameters(params): Parameters<JsonPathParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_json_strlen");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .json_strlen(&params.key, params.path.as_deref())
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "path": params.path,
+                "length": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    // ==================== REDISTIMESERIES TOOLS ====================
+
+    #[tool(
+        description = "Add a sample to a time series (TS.ADD command). Appends a timestamp-value pair. Use '*' for timestamp to auto-generate. Supports retention policy, encoding, chunk size, duplicate policy, and labels. Creates the key if it doesn't exist."
+    )]
+    async fn database_ts_add(
+        &self,
+        Parameters(params): Parameters<TsAddParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, timestamp = %params.timestamp, value = %params.value, "Tool called: database_ts_add");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "TS.ADD is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+
+        use crate::database_tools::TsAddOptions;
+        let labels = params
+            .labels
+            .map(|l| l.into_iter().map(|lp| (lp.label, lp.value)).collect());
+        let options = TsAddOptions {
+            retention: params.retention,
+            encoding: params.encoding,
+            chunk_size: params.chunk_size,
+            on_duplicate: params.on_duplicate,
+            labels,
+        };
+
+        let result_ts = tools
+            .ts_add(&params.key, &params.timestamp, params.value, &options)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "timestamp": result_ts,
+                "value": params.value
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get the last sample from a time series (TS.GET command). Returns the most recent timestamp-value pair. Useful for getting current/latest readings from sensors, metrics, etc."
+    )]
+    async fn database_ts_get(
+        &self,
+        Parameters(params): Parameters<DatabaseKeyParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_ts_get");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .ts_get(&params.key)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "sample": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Query a range of samples from a time series (TS.RANGE command). Returns samples between two timestamps. Supports filtering, counting, alignment, and aggregation (avg, sum, min, max, count, first, last, range, std.p, std.s, var.p, var.s)."
+    )]
+    async fn database_ts_range(
+        &self,
+        Parameters(params): Parameters<TsRangeParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, from = %params.from, to = %params.to, "Tool called: database_ts_range");
+
+        let tools = self.get_database_tools().await?;
+
+        use crate::database_tools::{TsAggregation, TsRangeOptions};
+
+        // Build aggregation from separate fields if aggregation type is provided
+        let aggregation = params.aggregation.map(|agg_type| TsAggregation {
+            aggregator: agg_type,
+            bucket_duration: params.bucket_duration.unwrap_or(1000), // default 1 second
+            bucket_timestamp: None,
+            empty: false,
+        });
+
+        let options = TsRangeOptions {
+            latest: params.latest,
+            filter_by_ts: params.filter_by_ts,
+            filter_by_value_min: params.filter_by_value_min,
+            filter_by_value_max: params.filter_by_value_max,
+            count: params.count,
+            align: params.align,
+            aggregation,
+        };
+
+        let result = tools
+            .ts_range(&params.key, &params.from, &params.to, &options)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "from": params.from,
+                "to": params.to,
+                "samples": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get information about a time series (TS.INFO command). Returns metadata including retention, chunk count, memory usage, first/last timestamps, labels, and rules. Useful for monitoring and debugging."
+    )]
+    async fn database_ts_info(
+        &self,
+        Parameters(params): Parameters<DatabaseKeyParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_ts_info");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .ts_info(&params.key)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "info": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Create a new time series (TS.CREATE command). Creates an empty time series with optional retention, encoding, chunk size, duplicate policy, and labels. Use this to pre-configure a time series before adding samples."
+    )]
+    async fn database_ts_create(
+        &self,
+        Parameters(params): Parameters<TsCreateParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_ts_create");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "TS.CREATE is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+
+        use crate::database_tools::TsCreateOptions;
+        let labels = params
+            .labels
+            .map(|l| l.into_iter().map(|lp| (lp.label, lp.value)).collect());
+        let options = TsCreateOptions {
+            retention: params.retention,
+            encoding: params.encoding,
+            chunk_size: params.chunk_size,
+            duplicate_policy: params.duplicate_policy,
+            labels,
+        };
+
+        tools
+            .ts_create(&params.key, &options)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "created": true
+            })
+            .to_string(),
+        )]))
+    }
+
+    // ==================== REDISBLOOM TOOLS ====================
+
+    #[tool(
+        description = "Create an empty Bloom filter (BF.RESERVE command). Initializes a Bloom filter with specified error rate and capacity. Use expansion factor for auto-scaling, or nonscaling to fix size. Lower error rate = more memory but fewer false positives."
+    )]
+    async fn database_bf_reserve(
+        &self,
+        Parameters(params): Parameters<BfReserveParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, error_rate = %params.error_rate, capacity = %params.capacity, "Tool called: database_bf_reserve");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "BF.RESERVE is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        tools
+            .bf_reserve(
+                &params.key,
+                params.error_rate,
+                params.capacity,
+                params.expansion,
+                params.nonscaling,
+            )
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "error_rate": params.error_rate,
+                "capacity": params.capacity,
+                "created": true
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Add an item to a Bloom filter (BF.ADD command). Adds a single item to the filter. Returns true if the item is newly added, false if it may have existed (could be false positive). Creates the filter with default parameters if it doesn't exist."
+    )]
+    async fn database_bf_add(
+        &self,
+        Parameters(params): Parameters<BfAddParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, item = %params.item, "Tool called: database_bf_add");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "BF.ADD is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let added = tools
+            .bf_add(&params.key, &params.item)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "item": params.item,
+                "added": added
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Add multiple items to a Bloom filter (BF.MADD command). Adds multiple items in a single operation. Returns an array of booleans indicating whether each item was newly added. More efficient than multiple BF.ADD calls."
+    )]
+    async fn database_bf_madd(
+        &self,
+        Parameters(params): Parameters<BfMaddParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, count = %params.items.len(), "Tool called: database_bf_madd");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "BF.MADD is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.".to_string(),
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let results = tools
+            .bf_madd(&params.key, &params.items)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "results": params.items.iter().zip(results.iter()).map(|(item, added)| {
+                    serde_json::json!({"item": item, "added": added})
+                }).collect::<Vec<_>>()
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Check if an item exists in a Bloom filter (BF.EXISTS command). Returns true if the item may exist (with false positive probability), false if it definitely doesn't exist. Bloom filters never have false negatives."
+    )]
+    async fn database_bf_exists(
+        &self,
+        Parameters(params): Parameters<BfExistsParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, item = %params.item, "Tool called: database_bf_exists");
+
+        let tools = self.get_database_tools().await?;
+        let exists = tools
+            .bf_exists(&params.key, &params.item)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "item": params.item,
+                "exists": exists
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Check if multiple items exist in a Bloom filter (BF.MEXISTS command). Checks multiple items in a single operation. Returns an array of booleans. More efficient than multiple BF.EXISTS calls."
+    )]
+    async fn database_bf_mexists(
+        &self,
+        Parameters(params): Parameters<BfMexistsParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, count = %params.items.len(), "Tool called: database_bf_mexists");
+
+        let tools = self.get_database_tools().await?;
+        let results = tools
+            .bf_mexists(&params.key, &params.items)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "results": params.items.iter().zip(results.iter()).map(|(item, exists)| {
+                    serde_json::json!({"item": item, "exists": exists})
+                }).collect::<Vec<_>>()
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get information about a Bloom filter (BF.INFO command). Returns filter metadata including capacity, size, number of filters, items inserted, and expansion rate. Useful for monitoring filter health and memory usage."
+    )]
+    async fn database_bf_info(
+        &self,
+        Parameters(params): Parameters<DatabaseKeyParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_bf_info");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .bf_info(&params.key)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "info": value_to_json(&result)
             })
             .to_string(),
         )]))
