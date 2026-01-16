@@ -74,6 +74,34 @@ impl DatabaseTools {
         redis_cmd.query_async(&mut self.conn.clone()).await
     }
 
+    /// Execute multiple Redis commands in a pipeline.
+    ///
+    /// Commands are batched and sent to Redis in a single network round-trip,
+    /// significantly improving performance for bulk operations.
+    ///
+    /// If `atomic` is true, commands are wrapped in MULTI/EXEC for transactional execution.
+    pub async fn execute_pipeline(
+        &self,
+        commands: &[PipelineCommand],
+        atomic: bool,
+    ) -> RedisResult<Vec<Value>> {
+        let mut pipe = redis::pipe();
+
+        if atomic {
+            pipe.atomic();
+        }
+
+        for command in commands {
+            let mut redis_cmd = cmd(&command.command);
+            for arg in &command.args {
+                redis_cmd.arg(arg);
+            }
+            pipe.add_command(redis_cmd);
+        }
+
+        pipe.query_async(&mut self.conn.clone()).await
+    }
+
     /// Get Redis server information (INFO command).
     pub async fn info(&self, section: Option<&str>) -> RedisResult<String> {
         let mut conn = self.conn.clone();
@@ -1587,6 +1615,15 @@ impl DatabaseTools {
 }
 
 // ========== OPTION STRUCTS FOR MODULE COMMANDS ==========
+
+/// A single command in a pipeline.
+#[derive(Debug, Clone)]
+pub struct PipelineCommand {
+    /// The Redis command to execute (e.g., "SET", "HSET", "JSON.SET").
+    pub command: String,
+    /// Arguments for the command.
+    pub args: Vec<String>,
+}
 
 /// Options for FT.SEARCH command.
 #[derive(Debug, Default, Clone)]

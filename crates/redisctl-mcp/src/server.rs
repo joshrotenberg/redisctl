@@ -403,6 +403,24 @@ pub struct DatabaseExecuteParam {
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabasePipelineCommand {
+    /// Redis command to execute (e.g., "SET", "HSET", "JSON.SET")
+    pub command: String,
+    /// Command arguments
+    #[serde(default)]
+    pub args: Vec<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct DatabasePipelineParam {
+    /// Array of commands to execute in the pipeline
+    pub commands: Vec<DatabasePipelineCommand>,
+    /// Whether to execute atomically with MULTI/EXEC (default: false)
+    #[serde(default)]
+    pub atomic: bool,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub struct DatabaseInfoParam {
     /// INFO section to retrieve (e.g., "server", "memory", "stats"). Optional, returns all sections if not specified.
     #[serde(default)]
@@ -3421,6 +3439,78 @@ impl RedisCtlMcp {
         let json = value_to_json(&result);
         Ok(CallToolResult::success(vec![Content::text(
             serde_json::to_string_pretty(&json).unwrap_or_else(|_| json.to_string()),
+        )]))
+    }
+
+    #[tool(
+        description = "Execute multiple Redis commands in a single pipeline for improved performance. Reduces network round-trips by batching commands. Use atomic=true for MULTI/EXEC transactional execution."
+    )]
+    async fn database_pipeline(
+        &self,
+        Parameters(params): Parameters<DatabasePipelineParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(
+            command_count = params.commands.len(),
+            atomic = params.atomic,
+            "Tool called: database_pipeline"
+        );
+
+        // Check if any command is a write operation in read-only mode
+        if self.config.read_only {
+            for cmd in &params.commands {
+                if is_write_command(&cmd.command) {
+                    return Err(RmcpError::invalid_request(
+                        format!(
+                            "Command '{}' is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.",
+                            cmd.command
+                        ),
+                        None,
+                    ));
+                }
+            }
+        }
+
+        // Convert to internal PipelineCommand type
+        let pipeline_commands: Vec<crate::database_tools::PipelineCommand> = params
+            .commands
+            .iter()
+            .map(|c| crate::database_tools::PipelineCommand {
+                command: c.command.clone(),
+                args: c.args.clone(),
+            })
+            .collect();
+
+        let tools = self.get_database_tools().await?;
+        let start = std::time::Instant::now();
+        let results = tools
+            .execute_pipeline(&pipeline_commands, params.atomic)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+        let elapsed = start.elapsed();
+
+        // Build response with individual command results
+        let response: Vec<serde_json::Value> = params
+            .commands
+            .iter()
+            .zip(results.iter())
+            .map(|(cmd, result)| {
+                serde_json::json!({
+                    "command": cmd.command,
+                    "args": cmd.args,
+                    "result": value_to_json(result)
+                })
+            })
+            .collect();
+
+        let output = serde_json::json!({
+            "commands": response,
+            "count": params.commands.len(),
+            "atomic": params.atomic,
+            "execution_time_ms": elapsed.as_secs_f64() * 1000.0
+        });
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::to_string_pretty(&output).unwrap_or_else(|_| output.to_string()),
         )]))
     }
 
