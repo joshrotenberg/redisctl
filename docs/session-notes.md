@@ -1,14 +1,149 @@
 # MCP Database Tools & jpx Discovery - Session Notes
 
-## Current Status (Updated)
+## Current Status (Updated after JSON session)
 
 **Branch:** `feat/mcp-database-tools`
 
+**Recent commits:**
+- `d3e8484` - feat(mcp): add RedisJSON tools for array and object operations (+525 lines)
+- `7c8f825` - feat(mcp): add RediSearch index management, query debugging, and autocomplete tools (+2738 lines)
+
 **What we built:**
-- 189+ MCP tool handlers total
+- 200+ MCP tool handlers total
 - Full CRUD operations for all Redis data types
-- Redis Stack module support (RediSearch, RedisJSON, RedisTimeSeries, RedisBloom)
-- Discovery spec v0.3.0 with 77 documented tools
+- Comprehensive Redis Stack module support:
+  - **RediSearch**: 21 tools (search, aggregate, index management, aliases, autocomplete, synonyms)
+  - **RedisJSON**: 18 tools (full JSON document manipulation)
+  - **RedisTimeSeries**: 5 tools (samples, ranges, aggregation)
+  - **RedisBloom**: 5 tools (bloom filter operations)
+
+---
+
+## Next Session: Testing & Index Tuning Plan
+
+### Goal
+Add test data for both HASH and JSON document types, build and execute searches, measure performance, and tune indexes. Also validate jpx discovery integration with Redis command schemas.
+
+### 1. Create Test Data Sets
+
+**HASH-based product catalog:**
+```bash
+# Use database_execute for HSET operations
+database_execute command="HSET" args=["product:hash:1", "name", "Gaming Laptop", "category", "electronics", "price", "1299.99", "brand", "TechPro", "description", "High-performance gaming laptop with RTX 4080"]
+database_execute command="HSET" args=["product:hash:2", "name", "Wireless Mouse", "category", "electronics", "price", "49.99", "brand", "LogiTech", "description", "Ergonomic wireless mouse with precision tracking"]
+# ... add 50-100 products for meaningful testing
+```
+
+**JSON-based product catalog:**
+```bash
+database_json_set key="product:json:1" path="$" value='{"name":"Gaming Laptop","category":"electronics","subcategory":"computers","price":1299.99,"brand":"TechPro","specs":{"ram":"32GB","storage":"1TB SSD","gpu":"RTX 4080"},"tags":["gaming","portable","high-performance"],"description":"High-performance gaming laptop with RTX 4080","rating":4.8,"reviews_count":245}'
+# ... add matching JSON products
+```
+
+### 2. Create Search Indexes
+
+**HASH index:**
+```bash
+database_ft_create index="idx:products:hash" on="HASH" prefixes=["product:hash:"] schema=[
+  {"name":"name","field_type":"TEXT","weight":2.0,"sortable":true},
+  {"name":"category","field_type":"TAG"},
+  {"name":"brand","field_type":"TAG"},
+  {"name":"price","field_type":"NUMERIC","sortable":true},
+  {"name":"description","field_type":"TEXT"}
+]
+```
+
+**JSON index (with nested fields):**
+```bash
+database_ft_create index="idx:products:json" on="JSON" prefixes=["product:json:"] schema=[
+  {"name":"$.name","alias":"name","field_type":"TEXT","weight":2.0,"sortable":true},
+  {"name":"$.category","alias":"category","field_type":"TAG"},
+  {"name":"$.subcategory","alias":"subcategory","field_type":"TAG"},
+  {"name":"$.brand","alias":"brand","field_type":"TAG"},
+  {"name":"$.price","alias":"price","field_type":"NUMERIC","sortable":true},
+  {"name":"$.tags[*]","alias":"tags","field_type":"TAG"},
+  {"name":"$.description","alias":"description","field_type":"TEXT"},
+  {"name":"$.rating","alias":"rating","field_type":"NUMERIC","sortable":true}
+]
+```
+
+### 3. Search Queries to Test
+
+**Basic queries:**
+```bash
+database_ft_search index="idx:products:hash" query="laptop" withscores=true
+database_ft_search index="idx:products:json" query="laptop" withscores=true
+```
+
+**Filtered queries:**
+```bash
+database_ft_search index="idx:products:json" query="@category:{electronics} @price:[0 500]" sortby="price"
+database_ft_search index="idx:products:json" query="@tags:{gaming|portable}" limit_num=20
+```
+
+**Aggregations:**
+```bash
+database_ft_aggregate index="idx:products:json" query="*" groupby=[{"properties":["@category"],"reducers":[{"function":"COUNT","alias":"count"},{"function":"AVG","args":["@price"],"alias":"avg_price"}]}]
+```
+
+### 4. Performance Testing & Tuning
+
+**Measure query times:**
+```bash
+# Use FT.PROFILE for query analysis
+database_execute command="FT.PROFILE" args=["idx:products:json", "SEARCH", "QUERY", "@category:{electronics}"]
+```
+
+**Index tuning experiments:**
+- Compare SORTABLE vs non-SORTABLE fields (memory vs query speed)
+- Test NOSTEM on specific fields for exact matching
+- Adjust TEXT field weights for relevance tuning
+- Try TAG vs TEXT for categorical fields
+
+**Use FT.EXPLAIN to understand query plans:**
+```bash
+database_ft_explain index="idx:products:json" query="@category:{electronics} @price:[100 500]"
+```
+
+### 5. jpx Discovery Integration Testing
+
+**Register Redis tools with jpx:**
+```bash
+# Test that jpx can index our tool schemas
+mcp__jpx__query_tools query="redis search"
+mcp__jpx__query_tools query="json array"
+```
+
+**Test search result transformation with jpx:**
+```bash
+# Get search results and transform with JMESPath
+database_ft_search index="idx:products:json" query="laptop"
+# Then pipe through jpx to extract/reshape results
+mcp__jpx__evaluate input='<search_results>' expression='results[*].{name: name, price: price}'
+```
+
+**Validate tool discoverability:**
+- Check jpx can find tools by functionality ("how to create an index")
+- Check tool descriptions are being indexed
+- Test fuzzy matching on tool names
+
+### 6. Continue Implementation
+
+After testing, continue adding tools:
+- **RedisTimeSeries**: TS.MRANGE, TS.MGET, TS.QUERYINDEX
+- **RedisBloom**: CF.* (Cuckoo filters), CMS.* (Count-Min Sketch), TOPK.*
+- **RediSearch**: FT.PROFILE (dedicated tool), FT.CURSOR commands
+
+### 7. PR Update
+
+Once testing validates the implementations:
+```bash
+git push origin feat/mcp-database-tools
+# Update PR description with:
+# - Tool counts and categories
+# - Testing results
+# - jpx integration notes
+```
 
 ---
 
@@ -27,29 +162,72 @@ Similarly for `server.rs` tool handlers - could split by module category.
 
 ---
 
-## Redis Stack Module Tools Added This Session
+## Redis Stack Module Tools Summary
 
-### RediSearch (4 tools)
+### RediSearch (21 tools)
+**Search & Aggregation:**
 - `database_ft_search` - Full-text search with filtering, sorting, pagination, highlighting, scoring
 - `database_ft_aggregate` - Complex aggregations with GROUPBY, REDUCE, APPLY, SORTBY
 - `database_ft_info` - Index schema, document count, memory usage
 - `database_ft_list` - List all indexes
 
-### RedisJSON (8 tools)
-- `database_json_get` - Get JSON at paths (JSONPath syntax: `$.store.book[0]`, `$..price`)
+**Index Management:**
+- `database_ft_create` - Create search index with full schema support (TEXT, TAG, NUMERIC, GEO, VECTOR)
+- `database_ft_dropindex` - Delete index (optionally with documents)
+- `database_ft_alter` - Add fields to existing index
+
+**Query Debugging:**
+- `database_ft_explain` - Get query execution plan
+- `database_ft_tagvals` - Get unique values for TAG field
+- `database_ft_spellcheck` - Suggest spelling corrections
+
+**Aliases:**
+- `database_ft_aliasadd` - Create index alias
+- `database_ft_aliasdel` - Delete index alias
+- `database_ft_aliasupdate` - Update index alias
+
+**Autocomplete:**
+- `database_ft_sugadd` - Add autocomplete suggestion
+- `database_ft_sugget` - Get autocomplete suggestions
+- `database_ft_sugdel` - Delete suggestion
+- `database_ft_suglen` - Get suggestion dictionary size
+
+**Synonyms:**
+- `database_ft_syndump` - Get all synonym groups
+- `database_ft_synupdate` - Update synonym group
+
+### RedisJSON (18 tools)
+**Core Operations:**
+- `database_json_get` - Get JSON at paths (JSONPath syntax)
 - `database_json_set` - Set JSON with NX/XX conditions
 - `database_json_del` - Delete JSON at path
-- `database_json_type` - Get value type (object, array, string, number, boolean, null)
-- `database_json_arrappend` - Append to JSON arrays
+- `database_json_type` - Get value type
+- `database_json_mget` - Get values from multiple keys
+
+**Object Operations:**
+- `database_json_objkeys` - Get all keys from JSON object
+- `database_json_objlen` - Get number of keys in object
+
+**Array Operations:**
+- `database_json_arrappend` - Append to arrays
 - `database_json_arrlen` - Get array length
+- `database_json_arrindex` - Find element index in array
+- `database_json_arrpop` - Pop element from array
+- `database_json_arrtrim` - Trim array to range
+- `database_json_arrinsert` - Insert elements into array
+
+**Other Operations:**
 - `database_json_numincrby` - Atomic increment/decrement numbers
 - `database_json_strlen` - Get string length
+- `database_json_clear` - Clear containers or set numbers to 0
+- `database_json_toggle` - Toggle boolean values
+- `database_json_forget` - Alias for JSON.DEL
 
 ### RedisTimeSeries (5 tools)
-- `database_ts_add` - Add samples with retention, encoding, labels, duplicate policy
+- `database_ts_add` - Add samples with retention, encoding, labels
 - `database_ts_get` - Get latest sample
-- `database_ts_range` - Query with aggregation (avg, sum, min, max, count, first, last, range, std.p, std.s, var.p, var.s)
-- `database_ts_info` - Time series metadata (retention, chunks, memory, labels)
+- `database_ts_range` - Query with aggregation (avg, sum, min, max, etc.)
+- `database_ts_info` - Time series metadata
 - `database_ts_create` - Create with options
 
 ### RedisBloom (5 tools)
@@ -62,210 +240,11 @@ Similarly for `server.rs` tool handlers - could split by module category.
 
 ---
 
-## Next Session: Testing Plan
-
-### 1. Verify Basic Setup
-
-```bash
-# Restart MCP server to pick up new tools
-# Then test:
-database_ping  # Should return PONG
-database_dbsize  # Check key count
-database_module_list  # Verify Redis Stack modules loaded
-```
-
-### 2. Test RediSearch Tools
-
-**Create a test index and documents:**
-```
-# Using database_execute or JSON tools first:
-# Create some JSON documents
-database_json_set key="product:1" path="$" value='{"name":"Laptop","category":"electronics","price":999.99,"description":"High performance laptop with 16GB RAM"}'
-database_json_set key="product:2" path="$" value='{"name":"Headphones","category":"electronics","price":149.99,"description":"Wireless noise-canceling headphones"}'
-database_json_set key="product:3" path="$" value='{"name":"Coffee Maker","category":"kitchen","price":79.99,"description":"Programmable drip coffee maker"}'
-
-# Create index (use database_execute for FT.CREATE)
-database_execute command="FT.CREATE" args=["idx:products", "ON", "JSON", "PREFIX", "1", "product:", "SCHEMA", "$.name", "AS", "name", "TEXT", "$.category", "AS", "category", "TAG", "$.price", "AS", "price", "NUMERIC", "$.description", "AS", "description", "TEXT"]
-```
-
-**Test search tools:**
-```
-# List indexes
-database_ft_list  # Should show idx:products
-
-# Get index info
-database_ft_info index="idx:products"
-
-# Basic search
-database_ft_search index="idx:products" query="laptop"
-
-# Search with filters
-database_ft_search index="idx:products" query="@category:{electronics}" withscores=true
-
-# Search with sorting
-database_ft_search index="idx:products" query="*" sortby="price" limit_num=10
-
-# Aggregation - count by category
-database_ft_aggregate index="idx:products" query="*" groupby=[{"properties":["@category"],"reducers":[{"function":"COUNT","args":[],"alias":"count"}]}]
-
-# Aggregation - average price by category
-database_ft_aggregate index="idx:products" query="*" groupby=[{"properties":["@category"],"reducers":[{"function":"AVG","args":["@price"],"alias":"avg_price"}]}]
-```
-
-### 3. Test RedisJSON Tools
-
-```
-# Create nested JSON
-database_json_set key="user:json:1" path="$" value='{"name":"Alice","profile":{"age":30,"city":"NYC"},"orders":[{"id":1,"total":99.99},{"id":2,"total":149.99}]}'
-
-# Read paths
-database_json_get key="user:json:1" paths=["$.name"]
-database_json_get key="user:json:1" paths=["$.profile.city"]
-database_json_get key="user:json:1" paths=["$.orders[*].total"]
-database_json_get key="user:json:1" paths=["$..id"]  # Recursive
-
-# Get type
-database_json_type key="user:json:1" path="$.orders"  # Should be "array"
-database_json_type key="user:json:1" path="$.profile"  # Should be "object"
-
-# Array operations
-database_json_arrlen key="user:json:1" path="$.orders"  # Should be 2
-database_json_arrappend key="user:json:1" path="$.orders" values=['{"id":3,"total":49.99}']
-database_json_arrlen key="user:json:1" path="$.orders"  # Should be 3
-
-# Numeric operations
-database_json_numincrby key="user:json:1" path="$.profile.age" value=1  # Age becomes 31
-
-# Delete path
-database_json_del key="user:json:1" path="$.orders[0]"  # Remove first order
-```
-
-### 4. Test RedisTimeSeries Tools
-
-```
-# Create a time series with labels
-database_ts_create key="sensor:temp:1" retention=86400000 labels=[{"label":"sensor","value":"temperature"},{"label":"location","value":"room1"}]
-
-# Add samples (use "*" for auto-timestamp)
-database_ts_add key="sensor:temp:1" timestamp="*" value=22.5
-database_ts_add key="sensor:temp:1" timestamp="*" value=23.1
-database_ts_add key="sensor:temp:1" timestamp="*" value=22.8
-
-# Or with specific timestamps
-database_ts_add key="sensor:temp:2" timestamp="1704067200000" value=20.0
-database_ts_add key="sensor:temp:2" timestamp="1704067260000" value=20.5
-database_ts_add key="sensor:temp:2" timestamp="1704067320000" value=21.0
-
-# Get latest
-database_ts_get key="sensor:temp:1"
-
-# Get info
-database_ts_info key="sensor:temp:1"
-
-# Query range
-database_ts_range key="sensor:temp:1" from="-" to="+"
-
-# Query with aggregation
-database_ts_range key="sensor:temp:1" from="-" to="+" aggregation="avg" bucket_duration=60000
-
-# Query with count limit
-database_ts_range key="sensor:temp:1" from="-" to="+" count=10
-```
-
-### 5. Test RedisBloom Tools
-
-```
-# Create a bloom filter
-database_bf_reserve key="users:seen" error_rate=0.01 capacity=10000
-
-# Add items
-database_bf_add key="users:seen" item="user123"
-database_bf_add key="users:seen" item="user456"
-
-# Bulk add
-database_bf_madd key="users:seen" items=["user789","user101","user102"]
-
-# Check existence
-database_bf_exists key="users:seen" item="user123"  # Should be true
-database_bf_exists key="users:seen" item="unknown"  # Should be false (probably)
-
-# Bulk check
-database_bf_mexists key="users:seen" items=["user123","user456","nothere"]
-
-# Get filter info
-database_bf_info key="users:seen"
-```
-
-### 6. Test jpx Integration with Module Data
-
-After the jpx bugs are fixed, test pipelines:
-
-```
-# Get Redis INFO and parse with jpx
-database_info section="memory"
-# Then use jpx to extract specific values
-
-# Get time series data and aggregate with jpx
-database_ts_range key="sensor:temp:1" from="-" to="+"
-# Then use jpx: avg(samples[*].value)
-
-# Get JSON and transform with jpx
-database_json_get key="user:json:1" paths=["$"]
-# Then use jpx to reshape/filter
-```
-
-### 7. Verify Read-Only Mode Works
-
-All write operations should fail in read-only mode:
-```
-# These should return errors about read-only mode:
-database_json_set key="test" path="$" value="{}"
-database_ts_add key="test" timestamp="*" value=1.0
-database_bf_add key="test" item="foo"
-database_ft_aggregate  # This is actually read-only, should work
-```
-
-### 8. Error Handling Tests
-
-```
-# Non-existent index
-database_ft_search index="nonexistent" query="*"
-
-# Invalid JSON
-database_json_set key="test" path="$" value="not json"
-
-# Non-existent time series
-database_ts_get key="nonexistent:ts"
-
-# Non-existent bloom filter
-database_bf_exists key="nonexistent:bf" item="test"
-```
-
----
-
-## jpx Bugs (For Reference)
-
-These were fixed in the jpx project. Test with correct syntax:
-
-**Correct JMESPath literal syntax:**
-- Single quotes `'text'` create **identifiers** (field references)
-- Backticks with JSON `\`"text"\`` create **string literals**
-
-```
-# Correct: split on newline
-split(info, `"\n"`)
-
-# Correct: regex extract
-regex_extract(info, `"\\w+"`)
-```
-
----
-
 ## Key Files
 
-- `crates/redisctl-mcp/src/server.rs` - MCP tool handlers (189 tools)
+- `crates/redisctl-mcp/src/server.rs` - MCP tool handlers (200+ tools)
 - `crates/redisctl-mcp/src/database_tools.rs` - Database operations layer
-- `docs/mcp-discovery.json` - Discovery spec v0.3.0 (77 tools documented)
+- `docs/mcp-discovery.json` - Discovery spec (needs update with new tools)
 
 ---
 
@@ -275,13 +254,13 @@ regex_extract(info, `"\\w+"`)
 |----------|-------|
 | Cloud tools | ~50 |
 | Enterprise tools | ~80 |
-| Database tools | ~60 |
-| **Total MCP handlers** | **189** |
+| Database tools | ~70 |
+| **Total MCP handlers** | **200+** |
 
 | Module | Tools |
 |--------|-------|
-| RediSearch | 4 |
-| RedisJSON | 8 |
+| RediSearch | 21 |
+| RedisJSON | 18 |
 | RedisTimeSeries | 5 |
 | RedisBloom | 5 |
-| **Module total** | **22** |
+| **Module total** | **49** |
