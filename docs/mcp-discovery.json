@@ -23,7 +23,9 @@
         "search": "RediSearch full-text search",
         "json": "RedisJSON document store",
         "timeseries": "RedisTimeSeries time-series data",
-        "bloom": "RedisBloom probabilistic data structures"
+        "bloom": "RedisBloom probabilistic data structures",
+        "streams": "Redis Streams for event sourcing and message queues",
+        "pubsub": "Pub/Sub messaging operations"
       }
     },
     "cloud": {
@@ -1158,6 +1160,258 @@
       "aliases": ["bloom info", "bloom filter info", "bloom metadata"],
       "summary": "Get Bloom filter information",
       "description": "Get metadata about a Bloom filter including capacity, size, number of filters, items inserted, and expansion rate. Useful for monitoring filter health."
+    },
+    {
+      "name": "database_xadd",
+      "category": "database",
+      "subcategory": "streams",
+      "tags": [
+        "write",
+        "streams",
+        "add",
+        "append",
+        "event",
+        "message",
+        "log",
+        "queue"
+      ],
+      "aliases": ["add to stream", "append event", "log message", "stream add"],
+      "summary": "Add entry to stream",
+      "description": "Append an entry to a stream with field-value pairs. Use '*' for auto-generated ID. Supports MAXLEN for capped streams. Creates the stream if it doesn't exist. Use for event sourcing, message queues, and activity logs."
+    },
+    {
+      "name": "database_xread",
+      "category": "database",
+      "subcategory": "streams",
+      "tags": [
+        "read",
+        "streams",
+        "consume",
+        "read",
+        "events",
+        "messages",
+        "block"
+      ],
+      "aliases": [
+        "read stream",
+        "consume events",
+        "get messages",
+        "stream read"
+      ],
+      "summary": "Read entries from streams",
+      "description": "Read entries from one or more streams. Use '$' to read only new entries, or specific IDs to read from a position. Supports blocking with timeout. Use for consuming events without consumer groups."
+    },
+    {
+      "name": "database_xrange",
+      "category": "database",
+      "subcategory": "streams",
+      "tags": ["read", "streams", "range", "history", "entries", "query"],
+      "aliases": [
+        "stream range",
+        "get stream entries",
+        "stream history",
+        "query stream"
+      ],
+      "summary": "Get stream entries by ID range",
+      "description": "Get entries from a stream between two IDs. Use '-' for minimum ID and '+' for maximum ID. Supports COUNT to limit results. Perfect for reading stream history or replaying events."
+    },
+    {
+      "name": "database_xrevrange",
+      "category": "database",
+      "subcategory": "streams",
+      "tags": ["read", "streams", "range", "reverse", "latest", "recent"],
+      "aliases": ["stream reverse range", "latest entries", "recent events"],
+      "summary": "Get stream entries in reverse order",
+      "description": "Get entries from a stream in reverse order (newest first). Use '+' for maximum ID and '-' for minimum ID. Perfect for getting the most recent entries."
+    },
+    {
+      "name": "database_xlen",
+      "category": "database",
+      "subcategory": "streams",
+      "tags": ["read", "streams", "length", "count", "size"],
+      "aliases": ["stream length", "stream size", "how many entries"],
+      "summary": "Get stream length",
+      "description": "Get the number of entries in a stream. Use to monitor stream size and growth."
+    },
+    {
+      "name": "database_xinfo_stream",
+      "category": "database",
+      "subcategory": "streams",
+      "tags": ["read", "streams", "info", "metadata", "details"],
+      "aliases": ["stream info", "stream details", "stream metadata"],
+      "summary": "Get stream information",
+      "description": "Get detailed information about a stream including length, radix tree stats, first/last entry, and consumer groups. Use 'full' option for complete details including all entries and consumers."
+    },
+    {
+      "name": "database_xinfo_groups",
+      "category": "database",
+      "subcategory": "streams",
+      "tags": ["read", "streams", "info", "groups", "consumers"],
+      "aliases": ["list consumer groups", "stream groups", "group info"],
+      "summary": "List consumer groups for stream",
+      "description": "Get information about all consumer groups for a stream including name, consumers count, pending entries, and last delivered ID."
+    },
+    {
+      "name": "database_xinfo_consumers",
+      "category": "database",
+      "subcategory": "streams",
+      "tags": ["read", "streams", "info", "consumers", "group"],
+      "aliases": ["list consumers", "group consumers", "consumer info"],
+      "summary": "List consumers in a group",
+      "description": "Get information about all consumers in a consumer group including name, pending count, and idle time."
+    },
+    {
+      "name": "database_xgroup_create",
+      "category": "database",
+      "subcategory": "streams",
+      "tags": ["write", "streams", "group", "create", "consumer group"],
+      "aliases": ["create consumer group", "new group", "add group"],
+      "summary": "Create consumer group",
+      "description": "Create a new consumer group for a stream. Use '$' to only receive new messages, '0' to receive all messages, or specific ID. Use MKSTREAM to create stream if it doesn't exist."
+    },
+    {
+      "name": "database_xgroup_destroy",
+      "category": "database",
+      "subcategory": "streams",
+      "tags": ["write", "streams", "group", "delete", "destroy"],
+      "aliases": ["delete consumer group", "destroy group", "remove group"],
+      "summary": "Delete consumer group",
+      "description": "Delete a consumer group from a stream. All pending entries and consumers are removed. Returns 1 if successful, 0 if group didn't exist."
+    },
+    {
+      "name": "database_xgroup_delconsumer",
+      "category": "database",
+      "subcategory": "streams",
+      "tags": ["write", "streams", "group", "consumer", "delete"],
+      "aliases": ["remove consumer", "delete consumer", "consumer leave"],
+      "summary": "Remove consumer from group",
+      "description": "Remove a consumer from a consumer group. Returns the number of pending messages that were owned by the consumer. The pending entries become unassigned."
+    },
+    {
+      "name": "database_xgroup_setid",
+      "category": "database",
+      "subcategory": "streams",
+      "tags": ["write", "streams", "group", "setid", "reset"],
+      "aliases": ["reset group position", "set group id", "rewind group"],
+      "summary": "Set consumer group last ID",
+      "description": "Set the last delivered ID for a consumer group. Use to reprocess messages or skip ahead. Use '$' for latest, '0' for beginning."
+    },
+    {
+      "name": "database_xreadgroup",
+      "category": "database",
+      "subcategory": "streams",
+      "tags": ["read", "streams", "group", "consume", "consumer", "messages"],
+      "aliases": [
+        "consume as group",
+        "read group",
+        "consumer read",
+        "group consume"
+      ],
+      "summary": "Read stream entries as consumer group",
+      "description": "Read entries from streams as a consumer in a consumer group. Use '>' for new messages never delivered to any consumer, or specific ID for pending entries. Supports blocking and NOACK for fire-and-forget."
+    },
+    {
+      "name": "database_xack",
+      "category": "database",
+      "subcategory": "streams",
+      "tags": ["write", "streams", "group", "ack", "acknowledge", "confirm"],
+      "aliases": ["acknowledge message", "confirm processed", "ack entry"],
+      "summary": "Acknowledge stream entries",
+      "description": "Acknowledge one or more stream entries as processed by a consumer group. Removes entries from the pending entries list. Returns the number of entries acknowledged."
+    },
+    {
+      "name": "database_xdel",
+      "category": "database",
+      "subcategory": "streams",
+      "tags": ["write", "streams", "delete", "remove", "entry"],
+      "aliases": [
+        "delete stream entry",
+        "remove from stream",
+        "delete message"
+      ],
+      "summary": "Delete stream entries",
+      "description": "Delete one or more entries from a stream by ID. Returns the number of entries actually deleted. Note: entries in pending lists may still reference deleted IDs."
+    },
+    {
+      "name": "database_xtrim",
+      "category": "database",
+      "subcategory": "streams",
+      "tags": ["write", "streams", "trim", "cap", "limit", "cleanup"],
+      "aliases": ["trim stream", "cap stream", "limit stream size"],
+      "summary": "Trim stream to max length",
+      "description": "Trim a stream to approximately (with ~) or exactly the specified maximum length. Removes oldest entries first. Use for capped streams to limit memory usage."
+    },
+    {
+      "name": "database_xpending",
+      "category": "database",
+      "subcategory": "streams",
+      "tags": ["read", "streams", "group", "pending", "unacknowledged"],
+      "aliases": ["pending messages", "unacked entries", "pending entries"],
+      "summary": "Get pending entries information",
+      "description": "Get information about pending entries in a consumer group - entries delivered but not yet acknowledged. Can filter by consumer, ID range, and count. Essential for monitoring message processing."
+    },
+    {
+      "name": "database_xclaim",
+      "category": "database",
+      "subcategory": "streams",
+      "tags": ["write", "streams", "group", "claim", "reassign", "takeover"],
+      "aliases": ["claim message", "reassign entry", "take over message"],
+      "summary": "Claim pending entries",
+      "description": "Transfer ownership of pending entries to a different consumer. Use min-idle-time to only claim entries idle for at least that many milliseconds. Useful for handling consumer failures."
+    },
+    {
+      "name": "database_xautoclaim",
+      "category": "database",
+      "subcategory": "streams",
+      "tags": ["write", "streams", "group", "autoclaim", "scan", "recover"],
+      "aliases": ["auto claim", "scan and claim", "recover messages"],
+      "summary": "Auto-claim pending entries",
+      "description": "Scan and claim pending entries that have been idle for at least min-idle-time milliseconds. Combines XPENDING and XCLAIM into one command. Returns claimed entries and cursor for next scan."
+    },
+    {
+      "name": "database_publish",
+      "category": "database",
+      "subcategory": "pubsub",
+      "tags": ["write", "pubsub", "publish", "broadcast", "message", "notify"],
+      "aliases": [
+        "send message",
+        "broadcast",
+        "publish message",
+        "notify subscribers"
+      ],
+      "summary": "Publish message to channel",
+      "description": "Publish a message to a Pub/Sub channel. Returns the number of subscribers that received the message. Messages are fire-and-forget - not stored. Use for real-time notifications and broadcasting."
+    },
+    {
+      "name": "database_pubsub_channels",
+      "category": "database",
+      "subcategory": "pubsub",
+      "tags": ["read", "pubsub", "channels", "list", "active"],
+      "aliases": ["list channels", "active channels", "pubsub list"],
+      "summary": "List active Pub/Sub channels",
+      "description": "List active Pub/Sub channels with at least one subscriber. Optionally filter by glob pattern. Use to discover what channels are currently in use."
+    },
+    {
+      "name": "database_pubsub_numsub",
+      "category": "database",
+      "subcategory": "pubsub",
+      "tags": ["read", "pubsub", "subscribers", "count", "channels"],
+      "aliases": [
+        "subscriber count",
+        "channel subscribers",
+        "how many subscribers"
+      ],
+      "summary": "Get subscriber count for channels",
+      "description": "Get the number of subscribers for specified channels. Returns channel-count pairs. Use to monitor channel activity and subscriber distribution."
+    },
+    {
+      "name": "database_pubsub_numpat",
+      "category": "database",
+      "subcategory": "pubsub",
+      "tags": ["read", "pubsub", "patterns", "count"],
+      "aliases": ["pattern count", "how many patterns", "psubscribe count"],
+      "summary": "Get pattern subscription count",
+      "description": "Get the number of pattern subscriptions (PSUBSCRIBE). Returns the total count of unique patterns being subscribed to across all clients."
     }
   ]
 }
