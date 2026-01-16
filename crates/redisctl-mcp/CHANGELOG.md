@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2](https://github.com/redis-developer/redisctl/compare/redisctl-mcp-v0.1.1...redisctl-mcp-v0.1.2) - 2026-01-16
+
+### Added
+
+- *(mcp)* add database tools for direct Redis connections ([#572](https://github.com/redis-developer/redisctl/pull/572))
+
 ## [0.1.1](https://github.com/redis-developer/redisctl/compare/redisctl-mcp-v0.1.0...redisctl-mcp-v0.1.1) - 2026-01-14
 
 ### Added
