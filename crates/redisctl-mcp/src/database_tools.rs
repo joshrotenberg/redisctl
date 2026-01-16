@@ -738,6 +738,400 @@ impl DatabaseTools {
         redis::cmd("FT._LIST").query_async(&mut conn).await
     }
 
+    /// Create a new index (FT.CREATE command).
+    pub async fn ft_create(&self, params: &crate::server::FtCreateParam) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("FT.CREATE");
+        cmd.arg(&params.index);
+
+        // ON HASH|JSON
+        cmd.arg("ON").arg(&params.on);
+
+        // PREFIX
+        if let Some(ref prefixes) = params.prefixes {
+            cmd.arg("PREFIX").arg(prefixes.len());
+            for prefix in prefixes {
+                cmd.arg(prefix);
+            }
+        }
+
+        // FILTER
+        if let Some(ref filter) = params.filter {
+            cmd.arg("FILTER").arg(filter);
+        }
+
+        // LANGUAGE
+        if let Some(ref language) = params.language {
+            cmd.arg("LANGUAGE").arg(language);
+        }
+
+        // LANGUAGE_FIELD
+        if let Some(ref language_field) = params.language_field {
+            cmd.arg("LANGUAGE_FIELD").arg(language_field);
+        }
+
+        // SCORE
+        if let Some(score) = params.score {
+            cmd.arg("SCORE").arg(score);
+        }
+
+        // SCORE_FIELD
+        if let Some(ref score_field) = params.score_field {
+            cmd.arg("SCORE_FIELD").arg(score_field);
+        }
+
+        // PAYLOAD_FIELD
+        if let Some(ref payload_field) = params.payload_field {
+            cmd.arg("PAYLOAD_FIELD").arg(payload_field);
+        }
+
+        // MAXTEXTFIELDS
+        if params.maxtextfields {
+            cmd.arg("MAXTEXTFIELDS");
+        }
+
+        // TEMPORARY
+        if let Some(temporary) = params.temporary {
+            cmd.arg("TEMPORARY").arg(temporary);
+        }
+
+        // NOOFFSETS
+        if params.nooffsets {
+            cmd.arg("NOOFFSETS");
+        }
+
+        // NOHL
+        if params.nohl {
+            cmd.arg("NOHL");
+        }
+
+        // NOFIELDS
+        if params.nofields {
+            cmd.arg("NOFIELDS");
+        }
+
+        // NOFREQS
+        if params.nofreqs {
+            cmd.arg("NOFREQS");
+        }
+
+        // STOPWORDS
+        if let Some(ref stopwords) = params.stopwords {
+            cmd.arg("STOPWORDS").arg(stopwords.len());
+            for word in stopwords {
+                cmd.arg(word);
+            }
+        }
+
+        // SKIPINITIALSCAN
+        if params.skip_initial_scan {
+            cmd.arg("SKIPINITIALSCAN");
+        }
+
+        // SCHEMA
+        cmd.arg("SCHEMA");
+        for field in &params.schema {
+            Self::add_schema_field(&mut cmd, field);
+        }
+
+        cmd.query_async(&mut conn).await
+    }
+
+    /// Helper to add a schema field to the FT.CREATE or FT.ALTER command.
+    fn add_schema_field(cmd: &mut redis::Cmd, field: &crate::server::FtSchemaField) {
+        cmd.arg(&field.name);
+
+        // AS alias
+        if let Some(ref alias) = field.alias {
+            cmd.arg("AS").arg(alias);
+        }
+
+        // Field type
+        cmd.arg(&field.field_type);
+
+        // Type-specific options
+        match field.field_type.to_uppercase().as_str() {
+            "TEXT" => {
+                if let Some(weight) = field.weight {
+                    cmd.arg("WEIGHT").arg(weight);
+                }
+                if field.nostem {
+                    cmd.arg("NOSTEM");
+                }
+                if let Some(ref phonetic) = field.phonetic {
+                    cmd.arg("PHONETIC").arg(phonetic);
+                }
+                if field.withsuffixtrie {
+                    cmd.arg("WITHSUFFIXTRIE");
+                }
+                if field.sortable {
+                    cmd.arg("SORTABLE");
+                }
+                if field.noindex {
+                    cmd.arg("NOINDEX");
+                }
+            }
+            "TAG" => {
+                if let Some(ref separator) = field.separator {
+                    cmd.arg("SEPARATOR").arg(separator);
+                }
+                if field.casesensitive {
+                    cmd.arg("CASESENSITIVE");
+                }
+                if field.sortable {
+                    cmd.arg("SORTABLE");
+                }
+                if field.noindex {
+                    cmd.arg("NOINDEX");
+                }
+            }
+            "NUMERIC" | "GEO" => {
+                if field.sortable {
+                    cmd.arg("SORTABLE");
+                }
+                if field.noindex {
+                    cmd.arg("NOINDEX");
+                }
+            }
+            "VECTOR" => {
+                if let Some(ref algorithm) = field.vector_algorithm {
+                    cmd.arg(algorithm);
+
+                    // Count attributes (each attribute is a key-value pair)
+                    let mut attr_count = 0;
+                    if field.vector_type.is_some() {
+                        attr_count += 2;
+                    }
+                    if field.vector_dim.is_some() {
+                        attr_count += 2;
+                    }
+                    if field.vector_distance_metric.is_some() {
+                        attr_count += 2;
+                    }
+
+                    cmd.arg(attr_count);
+
+                    if let Some(ref vtype) = field.vector_type {
+                        cmd.arg("TYPE").arg(vtype);
+                    }
+                    if let Some(dim) = field.vector_dim {
+                        cmd.arg("DIM").arg(dim);
+                    }
+                    if let Some(ref metric) = field.vector_distance_metric {
+                        cmd.arg("DISTANCE_METRIC").arg(metric);
+                    }
+                }
+            }
+            "GEOSHAPE" => {
+                if field.noindex {
+                    cmd.arg("NOINDEX");
+                }
+            }
+            _ => {}
+        }
+    }
+
+    /// Drop an index (FT.DROPINDEX command).
+    pub async fn ft_dropindex(&self, index: &str, dd: bool) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("FT.DROPINDEX");
+        cmd.arg(index);
+        if dd {
+            cmd.arg("DD");
+        }
+        cmd.query_async(&mut conn).await
+    }
+
+    /// Add a field to an existing index (FT.ALTER command).
+    pub async fn ft_alter(
+        &self,
+        index: &str,
+        skip_initial_scan: bool,
+        field: &crate::server::FtSchemaField,
+    ) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("FT.ALTER");
+        cmd.arg(index);
+        if skip_initial_scan {
+            cmd.arg("SKIPINITIALSCAN");
+        }
+        cmd.arg("SCHEMA").arg("ADD");
+        Self::add_schema_field(&mut cmd, field);
+        cmd.query_async(&mut conn).await
+    }
+
+    /// Get query execution plan (FT.EXPLAIN command).
+    pub async fn ft_explain(
+        &self,
+        index: &str,
+        query: &str,
+        dialect: Option<i32>,
+    ) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("FT.EXPLAIN");
+        cmd.arg(index).arg(query);
+        if let Some(d) = dialect {
+            cmd.arg("DIALECT").arg(d);
+        }
+        cmd.query_async(&mut conn).await
+    }
+
+    /// Get unique values for a TAG field (FT.TAGVALS command).
+    pub async fn ft_tagvals(&self, index: &str, field: &str) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        redis::cmd("FT.TAGVALS")
+            .arg(index)
+            .arg(field)
+            .query_async(&mut conn)
+            .await
+    }
+
+    /// Spell check query terms (FT.SPELLCHECK command).
+    pub async fn ft_spellcheck(
+        &self,
+        index: &str,
+        query: &str,
+        distance: Option<i32>,
+        dialect: Option<i32>,
+    ) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("FT.SPELLCHECK");
+        cmd.arg(index).arg(query);
+        if let Some(d) = distance {
+            cmd.arg("DISTANCE").arg(d);
+        }
+        if let Some(dialect) = dialect {
+            cmd.arg("DIALECT").arg(dialect);
+        }
+        cmd.query_async(&mut conn).await
+    }
+
+    /// Create an alias for an index (FT.ALIASADD command).
+    pub async fn ft_aliasadd(&self, alias: &str, index: &str) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        redis::cmd("FT.ALIASADD")
+            .arg(alias)
+            .arg(index)
+            .query_async(&mut conn)
+            .await
+    }
+
+    /// Delete an index alias (FT.ALIASDEL command).
+    pub async fn ft_aliasdel(&self, alias: &str) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        redis::cmd("FT.ALIASDEL")
+            .arg(alias)
+            .query_async(&mut conn)
+            .await
+    }
+
+    /// Update an index alias (FT.ALIASUPDATE command).
+    pub async fn ft_aliasupdate(&self, alias: &str, index: &str) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        redis::cmd("FT.ALIASUPDATE")
+            .arg(alias)
+            .arg(index)
+            .query_async(&mut conn)
+            .await
+    }
+
+    /// Add a suggestion to autocomplete dictionary (FT.SUGADD command).
+    pub async fn ft_sugadd(
+        &self,
+        key: &str,
+        string: &str,
+        score: f64,
+        incr: bool,
+        payload: Option<&str>,
+    ) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("FT.SUGADD");
+        cmd.arg(key).arg(string).arg(score);
+        if incr {
+            cmd.arg("INCR");
+        }
+        if let Some(p) = payload {
+            cmd.arg("PAYLOAD").arg(p);
+        }
+        cmd.query_async(&mut conn).await
+    }
+
+    /// Get autocomplete suggestions (FT.SUGGET command).
+    pub async fn ft_sugget(
+        &self,
+        key: &str,
+        prefix: &str,
+        fuzzy: bool,
+        max: Option<i64>,
+        withscores: bool,
+        withpayloads: bool,
+    ) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("FT.SUGGET");
+        cmd.arg(key).arg(prefix);
+        if fuzzy {
+            cmd.arg("FUZZY");
+        }
+        if let Some(m) = max {
+            cmd.arg("MAX").arg(m);
+        }
+        if withscores {
+            cmd.arg("WITHSCORES");
+        }
+        if withpayloads {
+            cmd.arg("WITHPAYLOADS");
+        }
+        cmd.query_async(&mut conn).await
+    }
+
+    /// Delete a suggestion from autocomplete dictionary (FT.SUGDEL command).
+    pub async fn ft_sugdel(&self, key: &str, string: &str) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        redis::cmd("FT.SUGDEL")
+            .arg(key)
+            .arg(string)
+            .query_async(&mut conn)
+            .await
+    }
+
+    /// Get the number of suggestions in autocomplete dictionary (FT.SUGLEN command).
+    pub async fn ft_suglen(&self, key: &str) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        redis::cmd("FT.SUGLEN")
+            .arg(key)
+            .query_async(&mut conn)
+            .await
+    }
+
+    /// Get all synonym groups (FT.SYNDUMP command).
+    pub async fn ft_syndump(&self, index: &str) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        redis::cmd("FT.SYNDUMP")
+            .arg(index)
+            .query_async(&mut conn)
+            .await
+    }
+
+    /// Update a synonym group (FT.SYNUPDATE command).
+    pub async fn ft_synupdate(
+        &self,
+        index: &str,
+        group_id: &str,
+        skip_initial_scan: bool,
+        terms: &[String],
+    ) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("FT.SYNUPDATE");
+        cmd.arg(index).arg(group_id);
+        if skip_initial_scan {
+            cmd.arg("SKIPINITIALSCAN");
+        }
+        for term in terms {
+            cmd.arg(term);
+        }
+        cmd.query_async(&mut conn).await
+    }
+
     // ========== REDISJSON OPERATIONS ==========
 
     /// Get JSON value at path (JSON.GET command).
@@ -1307,6 +1701,12 @@ pub const WRITE_COMMANDS: &[&str] = &[
     "FT.DROP",
     "FT.DROPINDEX",
     "FT.ALTER",
+    "FT.ALIASADD",
+    "FT.ALIASDEL",
+    "FT.ALIASUPDATE",
+    "FT.SUGADD",
+    "FT.SUGDEL",
+    "FT.SYNUPDATE",
     "BF.ADD",
     "BF.MADD",
     "BF.INSERT",

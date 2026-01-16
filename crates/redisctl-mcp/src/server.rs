@@ -812,6 +812,415 @@ pub struct FtIndexParam {
     pub index: String,
 }
 
+// ========== REDISEARCH INDEX MANAGEMENT PARAMS ==========
+
+/// Schema field definition for FT.CREATE. Defines how a field should be indexed and queried.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct FtSchemaField {
+    /// Field name in HASH, or JSONPath for JSON documents (e.g., "title" or "$.product.name").
+    /// For JSON, use JSONPath syntax starting with "$."
+    pub name: String,
+
+    /// Alias for the field in queries. If provided, use this name in search queries instead of
+    /// the original field name. Useful for giving short names to long JSONPath expressions.
+    #[serde(default)]
+    pub alias: Option<String>,
+
+    /// Field type determining indexing and query behavior:
+    /// - "TEXT": Full-text search with stemming, tokenization, and scoring. Best for: titles,
+    ///   descriptions, content. Supports: fuzzy matching, prefix search, phonetic matching.
+    /// - "TAG": Exact-match on comma-separated or custom-delimited values. Best for: categories,
+    ///   tags, status, IDs. Faster than TEXT for exact matches. Case-insensitive by default.
+    /// - "NUMERIC": Numeric range queries and sorting. Best for: prices, quantities, timestamps,
+    ///   ratings. Supports: >, <, >=, <=, == operators.
+    /// - "GEO": Geospatial queries within radius. Store as "longitude,latitude" string.
+    ///   Supports: GEOFILTER for distance-based search.
+    /// - "VECTOR": Vector similarity search for AI/ML embeddings. Requires: vector_algorithm,
+    ///   vector_dim, vector_distance_metric, vector_type. Used for semantic search.
+    /// - "GEOSHAPE": Polygon/geometry queries. For complex geographic boundaries.
+    pub field_type: String,
+
+    /// Enable sorting by this field. Adds memory overhead but allows SORTBY in queries.
+    /// Recommended for fields you'll frequently sort on (e.g., date, price, rating).
+    #[serde(default)]
+    pub sortable: bool,
+
+    /// Store field without indexing. Field can be returned in results but not searched.
+    /// Useful for display-only data like images URLs or formatted text.
+    #[serde(default)]
+    pub noindex: bool,
+
+    /// (TEXT only) Disable stemming for exact token matching. Use for: proper names, product
+    /// codes, URLs, email addresses - anything that shouldn't be stemmed.
+    #[serde(default)]
+    pub nostem: bool,
+
+    /// (TEXT only) Enable phonetic matching for sounds-like search. Values:
+    /// - "dm:en": Double Metaphone for English
+    /// - "dm:fr": Double Metaphone for French
+    /// - "dm:pt": Double Metaphone for Portuguese
+    /// - "dm:es": Double Metaphone for Spanish
+    /// Useful for name search where spelling varies.
+    #[serde(default)]
+    pub phonetic: Option<String>,
+
+    /// (TEXT only) Field importance weight (default: 1.0). Higher weights boost relevance
+    /// scores when field matches. Example: weight title at 2.0, description at 1.0.
+    #[serde(default)]
+    pub weight: Option<f64>,
+
+    /// (TAG only) Character separating tag values (default: ","). Common alternatives: "|", ";".
+    /// Example: with separator="|", "red|blue|green" becomes three separate tags.
+    #[serde(default)]
+    pub separator: Option<String>,
+
+    /// (TAG only) Enable case-sensitive matching. By default, tags are case-insensitive.
+    /// Enable when tag values are case-significant (e.g., ticker symbols, codes).
+    #[serde(default)]
+    pub casesensitive: bool,
+
+    /// (TEXT only) Optimize for suffix and contains queries. Adds memory overhead but enables
+    /// efficient *suffix and *contains* searches. Use sparingly on high-cardinality fields.
+    #[serde(default)]
+    pub withsuffixtrie: bool,
+
+    /// (VECTOR only) Indexing algorithm: "FLAT" for brute-force (exact, slower), "HNSW" for
+    /// approximate nearest neighbor (faster, uses more memory). HNSW recommended for >10K vectors.
+    #[serde(default)]
+    pub vector_algorithm: Option<String>,
+
+    /// (VECTOR only) Number of dimensions in the vector. Must match your embedding model output
+    /// (e.g., 384 for MiniLM, 768 for BERT, 1536 for OpenAI ada-002).
+    #[serde(default)]
+    pub vector_dim: Option<i64>,
+
+    /// (VECTOR only) Distance metric for similarity:
+    /// - "L2": Euclidean distance (lower = more similar)
+    /// - "COSINE": Cosine similarity (higher = more similar) - best for normalized embeddings
+    /// - "IP": Inner product (higher = more similar)
+    #[serde(default)]
+    pub vector_distance_metric: Option<String>,
+
+    /// (VECTOR only) Vector element data type: "FLOAT32" (default), "FLOAT64", "BFLOAT16".
+    /// FLOAT32 balances precision and memory. BFLOAT16 saves memory with slight precision loss.
+    #[serde(default)]
+    pub vector_type: Option<String>,
+}
+
+fn default_on_hash() -> String {
+    "HASH".to_string()
+}
+
+/// Parameters for FT.CREATE - create a new RediSearch index with schema definition.
+/// This is the most important RediSearch command for setting up full-text search.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct FtCreateParam {
+    /// Name for the new index. Use descriptive names like "idx:products" or "search:users".
+    /// Index names should follow your key naming convention for clarity.
+    pub index: String,
+
+    /// Data structure to index: "HASH" (default) or "JSON".
+    /// - HASH: Traditional Redis hashes, fields accessed by name
+    /// - JSON: RedisJSON documents, fields accessed by JSONPath
+    #[serde(default = "default_on_hash")]
+    pub on: String,
+
+    /// Key prefixes to index. Only keys matching these prefixes will be indexed.
+    /// Examples: ["product:", "item:"] indexes all keys starting with product: or item:
+    /// If not specified, indexes keys matching the default prefix.
+    #[serde(default)]
+    pub prefixes: Option<Vec<String>>,
+
+    /// Filter expression to selectively index documents. Uses the same syntax as FT.SEARCH.
+    /// Example: "@status:active" only indexes documents where status field equals "active".
+    /// Useful for creating partial indexes to reduce memory usage.
+    #[serde(default)]
+    pub filter: Option<String>,
+
+    /// Default language for TEXT field stemming. Affects how words are normalized for search.
+    /// Options: "arabic", "armenian", "basque", "catalan", "danish", "dutch", "english",
+    /// "finnish", "french", "german", "greek", "hindi", "hungarian", "indonesian", "irish",
+    /// "italian", "lithuanian", "nepali", "norwegian", "portuguese", "romanian", "russian",
+    /// "serbian", "spanish", "swedish", "tamil", "turkish", "yiddish", "chinese".
+    #[serde(default)]
+    pub language: Option<String>,
+
+    /// Document field containing per-document language override. Allows multilingual indexes
+    /// where each document specifies its own language for proper stemming.
+    #[serde(default)]
+    pub language_field: Option<String>,
+
+    /// Default relevance score for documents (0.0-1.0). Used in ranking when no other
+    /// scoring is specified. Higher scores rank documents higher in results.
+    #[serde(default)]
+    pub score: Option<f64>,
+
+    /// Document field containing per-document score (0.0-1.0). Allows documents to have
+    /// individual importance weights affecting their ranking in search results.
+    #[serde(default)]
+    pub score_field: Option<String>,
+
+    /// Document field containing a binary payload retrievable with WITHPAYLOADS option.
+    /// Useful for storing pre-computed data to return with search results.
+    #[serde(default)]
+    pub payload_field: Option<String>,
+
+    /// Allow more than 32 TEXT fields in the schema. Increases memory usage but removes
+    /// the default limit on text fields.
+    #[serde(default)]
+    pub maxtextfields: bool,
+
+    /// Create a lightweight temporary index that expires after given seconds of inactivity.
+    /// Useful for session-specific or cache-like search functionality.
+    #[serde(default)]
+    pub temporary: Option<i64>,
+
+    /// Don't store term offsets. Saves memory but disables exact phrase queries and highlighting.
+    /// Use when you only need simple keyword matching without phrase search.
+    #[serde(default)]
+    pub nooffsets: bool,
+
+    /// Disable highlighting support. Saves memory when you don't need search term highlighting.
+    #[serde(default)]
+    pub nohl: bool,
+
+    /// Don't store field bits. Saves memory but disables filtering by specific fields.
+    /// Documents will still be searchable but you can't restrict search to specific fields.
+    #[serde(default)]
+    pub nofields: bool,
+
+    /// Don't store term frequencies. Saves memory but affects relevance scoring accuracy.
+    /// Use when you don't need TF-IDF based ranking.
+    #[serde(default)]
+    pub nofreqs: bool,
+
+    /// Custom stopwords list. Stopwords are common words excluded from indexing (like "the", "a").
+    /// Provide empty array [] to disable stopwords, or custom list like ["the", "a", "an"].
+    /// If not specified, uses default English stopwords.
+    #[serde(default)]
+    pub stopwords: Option<Vec<String>>,
+
+    /// Skip initial scan of existing keys. Index will only include documents created/modified
+    /// after index creation. Useful when you'll be adding documents immediately after.
+    #[serde(default)]
+    pub skip_initial_scan: bool,
+
+    /// Schema definition - array of field definitions. This is the core of index configuration.
+    /// Each field specifies what data to index and how to index it. Order doesn't matter.
+    pub schema: Vec<FtSchemaField>,
+}
+
+/// Parameters for FT.DROPINDEX - delete a RediSearch index.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct FtDropIndexParam {
+    /// Name of the index to delete
+    pub index: String,
+
+    /// Also delete the indexed documents (keys). WARNING: This permanently deletes the
+    /// actual Redis keys, not just the index. Use with caution in production.
+    /// If false (default), only the index is removed and documents remain.
+    #[serde(default)]
+    pub dd: bool,
+}
+
+/// Parameters for FT.ALTER - add new fields to an existing index schema.
+/// Note: You can only ADD fields, not modify or remove existing ones.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct FtAlterParam {
+    /// Name of the index to modify
+    pub index: String,
+
+    /// Skip scanning existing documents for the new field. If true, only new/modified
+    /// documents will have this field indexed. Useful for large indexes where rescanning
+    /// would be expensive.
+    #[serde(default)]
+    pub skip_initial_scan: bool,
+
+    /// New field definition to add to the schema. Uses same format as FtSchemaField.
+    pub field: FtSchemaField,
+}
+
+/// Parameters for FT.EXPLAIN - get the execution plan for a query without running it.
+/// Essential for debugging slow queries and understanding how RediSearch interprets your query.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct FtExplainParam {
+    /// Index name to explain query against
+    pub index: String,
+
+    /// Query to explain (same syntax as FT.SEARCH). Example: "@title:hello @body:world"
+    /// The explanation shows how the query will be parsed and executed.
+    pub query: String,
+
+    /// Query dialect version (1, 2, 3, or 4). Different dialects have different query syntax.
+    /// Use dialect 2 or higher for modern query features. Default depends on server config.
+    #[serde(default)]
+    pub dialect: Option<i32>,
+}
+
+/// Parameters for FT.TAGVALS - get all unique values for a TAG field.
+/// Useful for building filter UIs, understanding data distribution, and debugging.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct FtTagvalsParam {
+    /// Index name
+    pub index: String,
+
+    /// Name of the TAG field to get values from. Must be a TAG type field in the schema.
+    /// Returns all unique tag values that exist in indexed documents.
+    pub field: String,
+}
+
+/// Parameters for FT.SPELLCHECK - get spelling suggestions for query terms.
+/// Useful for "did you mean?" functionality in search interfaces.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct FtSpellcheckParam {
+    /// Index name (used as the term dictionary)
+    pub index: String,
+
+    /// Query to spellcheck. Each term in the query will be checked against the index vocabulary.
+    pub query: String,
+
+    /// Maximum Levenshtein distance for suggestions (1-4, default: 1). Higher values find
+    /// more suggestions but may include less relevant ones. 1 finds typos like "helo" -> "hello".
+    #[serde(default)]
+    pub distance: Option<i32>,
+
+    /// Query dialect version (1, 2, 3, or 4)
+    #[serde(default)]
+    pub dialect: Option<i32>,
+}
+
+// ========== REDISEARCH ALIAS PARAMS ==========
+
+/// Parameters for FT.ALIASADD - create an alias pointing to an index.
+/// Aliases allow zero-downtime index rebuilds by pointing queries to different indexes.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct FtAliasAddParam {
+    /// Alias name to create. Use this name in queries instead of the actual index name.
+    /// Example: Create alias "products" pointing to "products_v1", later update to "products_v2".
+    pub alias: String,
+
+    /// Target index name that the alias will point to
+    pub index: String,
+}
+
+/// Parameters for FT.ALIASDEL - delete an index alias.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct FtAliasDelParam {
+    /// Alias name to delete
+    pub alias: String,
+}
+
+/// Parameters for FT.ALIASUPDATE - update an alias to point to a different index.
+/// This is atomic - queries will instantly switch to the new index.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct FtAliasUpdateParam {
+    /// Alias name to update (will be created if doesn't exist)
+    pub alias: String,
+
+    /// New target index name
+    pub index: String,
+}
+
+// ========== REDISEARCH AUTOCOMPLETE PARAMS ==========
+
+/// Parameters for FT.SUGADD - add a suggestion to an autocomplete dictionary.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct FtSugAddParam {
+    /// Autocomplete dictionary key. This is a Redis key storing the suggestion trie.
+    /// Example: "ac:products" for product name suggestions.
+    pub key: String,
+
+    /// Suggestion string to add. This is the text that will be suggested to users.
+    pub string: String,
+
+    /// Score/weight for this suggestion (higher = ranked higher in results).
+    /// Use to prioritize popular or important suggestions.
+    pub score: f64,
+
+    /// Increment existing score instead of replacing. Useful for updating suggestion
+    /// popularity based on usage (e.g., increment each time a suggestion is selected).
+    #[serde(default)]
+    pub incr: bool,
+
+    /// Optional payload data to store with the suggestion. Retrieved with WITHPAYLOADS.
+    /// Useful for storing metadata like IDs or categories with each suggestion.
+    #[serde(default)]
+    pub payload: Option<String>,
+}
+
+/// Parameters for FT.SUGGET - get autocomplete suggestions matching a prefix.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct FtSugGetParam {
+    /// Autocomplete dictionary key
+    pub key: String,
+
+    /// Prefix to complete. Returns suggestions starting with this string.
+    /// Example: "lap" might return "laptop", "laptop case", "lap desk".
+    pub prefix: String,
+
+    /// Include fuzzy matches (Levenshtein distance 1). Helps with typos.
+    /// Example: "laptp" would still match "laptop".
+    #[serde(default)]
+    pub fuzzy: bool,
+
+    /// Maximum number of suggestions to return (default: 5)
+    #[serde(default)]
+    pub max: Option<i64>,
+
+    /// Include suggestion scores in results
+    #[serde(default)]
+    pub withscores: bool,
+
+    /// Include payloads in results (if stored with SUGADD)
+    #[serde(default)]
+    pub withpayloads: bool,
+}
+
+/// Parameters for FT.SUGDEL - delete a suggestion from an autocomplete dictionary.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct FtSugDelParam {
+    /// Autocomplete dictionary key
+    pub key: String,
+
+    /// Exact suggestion string to delete
+    pub string: String,
+}
+
+/// Parameters for FT.SUGLEN - get the number of suggestions in an autocomplete dictionary.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct FtSugLenParam {
+    /// Autocomplete dictionary key
+    pub key: String,
+}
+
+// ========== REDISEARCH SYNONYM PARAMS ==========
+
+/// Parameters for FT.SYNDUMP - get all synonym groups from an index.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct FtSynDumpParam {
+    /// Index name
+    pub index: String,
+}
+
+/// Parameters for FT.SYNUPDATE - add or update a synonym group.
+/// Synonyms allow searching for one term to match documents containing related terms.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct FtSynUpdateParam {
+    /// Index name
+    pub index: String,
+
+    /// Synonym group ID. All terms in the same group are treated as synonyms.
+    /// Example: group "color" might contain ["red", "crimson", "scarlet"].
+    pub group_id: String,
+
+    /// Skip scanning existing documents. If true, synonyms only apply to new documents.
+    #[serde(default)]
+    pub skip_initial_scan: bool,
+
+    /// Terms to add to this synonym group. Searching for any term will match all terms in group.
+    pub terms: Vec<String>,
+}
+
 // ========== REDISJSON PARAMS ==========
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
@@ -4490,6 +4899,485 @@ impl RedisCtlMcp {
         Ok(CallToolResult::success(vec![Content::text(
             serde_json::json!({
                 "indexes": indexes
+            })
+            .to_string(),
+        )]))
+    }
+
+    // ==================== REDISEARCH INDEX MANAGEMENT TOOLS ====================
+
+    #[tool(
+        description = "Create a new RediSearch index with schema definition (FT.CREATE command). This is the primary command for setting up full-text search. Define which keys to index using prefixes, and specify fields with their types (TEXT for full-text, TAG for exact match, NUMERIC for ranges, GEO for location, VECTOR for embeddings). Each field can have options like SORTABLE, NOSTEM, PHONETIC matching, etc. Use 'on' parameter to choose between HASH and JSON document types."
+    )]
+    async fn database_ft_create(
+        &self,
+        Parameters(params): Parameters<FtCreateParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(index = %params.index, "Tool called: database_ft_create");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "FT.CREATE is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .ft_create(&params)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "index": params.index,
+                "result": value_to_json(&result),
+                "message": "Index created successfully"
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Delete a RediSearch index (FT.DROPINDEX command). Removes the index and optionally deletes the indexed documents. Without 'dd' flag, only the index is removed and documents remain. With 'dd' flag, both the index AND the actual Redis keys are deleted - use with caution in production!"
+    )]
+    async fn database_ft_dropindex(
+        &self,
+        Parameters(params): Parameters<FtDropIndexParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(index = %params.index, dd = %params.dd, "Tool called: database_ft_dropindex");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "FT.DROPINDEX is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .ft_dropindex(&params.index, params.dd)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "index": params.index,
+                "documents_deleted": params.dd,
+                "result": value_to_json(&result),
+                "message": if params.dd { "Index and documents deleted" } else { "Index deleted (documents preserved)" }
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Add a new field to an existing RediSearch index (FT.ALTER command). Only supports adding fields - you cannot modify or remove existing fields. Useful for evolving your search schema as requirements change. Use skip_initial_scan=true to avoid rescanning existing documents (the new field will only be indexed for new/modified documents)."
+    )]
+    async fn database_ft_alter(
+        &self,
+        Parameters(params): Parameters<FtAlterParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(index = %params.index, field = %params.field.name, "Tool called: database_ft_alter");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "FT.ALTER is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .ft_alter(&params.index, params.skip_initial_scan, &params.field)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "index": params.index,
+                "field_added": params.field.name,
+                "result": value_to_json(&result),
+                "message": "Field added to index schema"
+            })
+            .to_string(),
+        )]))
+    }
+
+    // ==================== REDISEARCH QUERY DEBUGGING TOOLS ====================
+
+    #[tool(
+        description = "Get the execution plan for a query without running it (FT.EXPLAIN command). Essential for debugging slow queries and understanding how RediSearch parses and executes your query. Returns a textual representation of the query tree showing INTERSECT, UNION, NUMERIC, TAG operations. Use this to optimize complex queries by understanding which operations are most expensive."
+    )]
+    async fn database_ft_explain(
+        &self,
+        Parameters(params): Parameters<FtExplainParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(index = %params.index, query = %params.query, "Tool called: database_ft_explain");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .ft_explain(&params.index, &params.query, params.dialect)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "index": params.index,
+                "query": params.query,
+                "execution_plan": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get all unique values for a TAG field (FT.TAGVALS command). Returns every distinct tag value that exists in the indexed documents. Useful for: building filter UIs/facets, understanding data distribution, debugging why tag filters aren't matching, validating data quality. Note: Only works on TAG type fields, not TEXT fields."
+    )]
+    async fn database_ft_tagvals(
+        &self,
+        Parameters(params): Parameters<FtTagvalsParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(index = %params.index, field = %params.field, "Tool called: database_ft_tagvals");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .ft_tagvals(&params.index, &params.field)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "index": params.index,
+                "field": params.field,
+                "values": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get spelling suggestions for query terms (FT.SPELLCHECK command). Checks each term in the query against the index vocabulary and suggests corrections. Perfect for implementing 'did you mean?' functionality. The distance parameter controls how different suggestions can be (1=one character difference like typos, up to 4 for more aggressive matching). Returns suggestions ranked by how common the suggested term is in the index."
+    )]
+    async fn database_ft_spellcheck(
+        &self,
+        Parameters(params): Parameters<FtSpellcheckParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(index = %params.index, query = %params.query, "Tool called: database_ft_spellcheck");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .ft_spellcheck(
+                &params.index,
+                &params.query,
+                params.distance,
+                params.dialect,
+            )
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "index": params.index,
+                "query": params.query,
+                "suggestions": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    // ==================== REDISEARCH ALIAS TOOLS ====================
+
+    #[tool(
+        description = "Create an alias pointing to an index (FT.ALIASADD command). Aliases enable zero-downtime index rebuilds: create alias 'products' -> 'products_v1', rebuild to 'products_v2', then update alias. Your application always queries 'products' and instantly switches to the new index. Aliases also allow multiple names for the same index for different use cases."
+    )]
+    async fn database_ft_aliasadd(
+        &self,
+        Parameters(params): Parameters<FtAliasAddParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(alias = %params.alias, index = %params.index, "Tool called: database_ft_aliasadd");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "FT.ALIASADD is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .ft_aliasadd(&params.alias, &params.index)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "alias": params.alias,
+                "index": params.index,
+                "result": value_to_json(&result),
+                "message": format!("Alias '{}' now points to index '{}'", params.alias, params.index)
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Delete an index alias (FT.ALIASDEL command). Removes the alias but does NOT affect the underlying index or its data. After deletion, queries using the alias name will fail until a new alias is created."
+    )]
+    async fn database_ft_aliasdel(
+        &self,
+        Parameters(params): Parameters<FtAliasDelParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(alias = %params.alias, "Tool called: database_ft_aliasdel");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "FT.ALIASDEL is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .ft_aliasdel(&params.alias)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "alias": params.alias,
+                "result": value_to_json(&result),
+                "message": format!("Alias '{}' deleted", params.alias)
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Update an alias to point to a different index (FT.ALIASUPDATE command). This is atomic - queries instantly switch to the new index with no downtime. If the alias doesn't exist, it will be created. Use for blue-green deployments: rebuild index, test it, then atomically switch production traffic."
+    )]
+    async fn database_ft_aliasupdate(
+        &self,
+        Parameters(params): Parameters<FtAliasUpdateParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(alias = %params.alias, index = %params.index, "Tool called: database_ft_aliasupdate");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "FT.ALIASUPDATE is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .ft_aliasupdate(&params.alias, &params.index)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "alias": params.alias,
+                "index": params.index,
+                "result": value_to_json(&result),
+                "message": format!("Alias '{}' updated to point to index '{}'", params.alias, params.index)
+            })
+            .to_string(),
+        )]))
+    }
+
+    // ==================== REDISEARCH AUTOCOMPLETE TOOLS ====================
+
+    #[tool(
+        description = "Add a suggestion to an autocomplete dictionary (FT.SUGADD command). Build type-ahead search functionality by storing suggestions with scores. Higher scores rank suggestions higher. Use 'incr' to update scores based on popularity (e.g., increment each time a suggestion is selected). Optionally store payload data like IDs or categories with each suggestion."
+    )]
+    async fn database_ft_sugadd(
+        &self,
+        Parameters(params): Parameters<FtSugAddParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, string = %params.string, score = %params.score, "Tool called: database_ft_sugadd");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "FT.SUGADD is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .ft_sugadd(
+                &params.key,
+                &params.string,
+                params.score,
+                params.incr,
+                params.payload.as_deref(),
+            )
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "suggestion": params.string,
+                "score": params.score,
+                "incremented": params.incr,
+                "result": value_to_json(&result),
+                "message": "Suggestion added to autocomplete dictionary"
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get autocomplete suggestions matching a prefix (FT.SUGGET command). Returns suggestions starting with the given prefix, ranked by score. Enable 'fuzzy' for typo tolerance (matches with 1 character difference). Use 'max' to limit results. 'withscores' returns ranking scores, 'withpayloads' returns stored metadata. Perfect for search-as-you-type interfaces."
+    )]
+    async fn database_ft_sugget(
+        &self,
+        Parameters(params): Parameters<FtSugGetParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, prefix = %params.prefix, "Tool called: database_ft_sugget");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .ft_sugget(
+                &params.key,
+                &params.prefix,
+                params.fuzzy,
+                params.max,
+                params.withscores,
+                params.withpayloads,
+            )
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "prefix": params.prefix,
+                "fuzzy": params.fuzzy,
+                "suggestions": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Delete a suggestion from an autocomplete dictionary (FT.SUGDEL command). Removes the exact suggestion string from the dictionary. Returns 1 if the suggestion was found and deleted, 0 if not found."
+    )]
+    async fn database_ft_sugdel(
+        &self,
+        Parameters(params): Parameters<FtSugDelParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, string = %params.string, "Tool called: database_ft_sugdel");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "FT.SUGDEL is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .ft_sugdel(&params.key, &params.string)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "suggestion": params.string,
+                "deleted": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get the number of suggestions in an autocomplete dictionary (FT.SUGLEN command). Returns the total count of unique suggestions stored. Useful for monitoring dictionary size and capacity planning."
+    )]
+    async fn database_ft_suglen(
+        &self,
+        Parameters(params): Parameters<FtSugLenParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, "Tool called: database_ft_suglen");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .ft_suglen(&params.key)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "count": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    // ==================== REDISEARCH SYNONYM TOOLS ====================
+
+    #[tool(
+        description = "Get all synonym groups from an index (FT.SYNDUMP command). Returns a mapping of terms to their synonym group IDs. Useful for reviewing current synonym configuration, debugging why searches aren't matching expected synonyms, and exporting synonym data for backup."
+    )]
+    async fn database_ft_syndump(
+        &self,
+        Parameters(params): Parameters<FtSynDumpParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(index = %params.index, "Tool called: database_ft_syndump");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .ft_syndump(&params.index)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "index": params.index,
+                "synonyms": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Add or update a synonym group (FT.SYNUPDATE command). Synonyms make searching for one term match documents containing related terms. Example: group 'color' with terms ['red', 'crimson', 'scarlet'] - searching for 'red' finds documents with any of these terms. Each call adds terms to the group (doesn't replace). Use skip_initial_scan=true to only apply to new documents."
+    )]
+    async fn database_ft_synupdate(
+        &self,
+        Parameters(params): Parameters<FtSynUpdateParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(index = %params.index, group_id = %params.group_id, terms = ?params.terms, "Tool called: database_ft_synupdate");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "FT.SYNUPDATE is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .ft_synupdate(
+                &params.index,
+                &params.group_id,
+                params.skip_initial_scan,
+                &params.terms,
+            )
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "index": params.index,
+                "group_id": params.group_id,
+                "terms": params.terms,
+                "result": value_to_json(&result),
+                "message": format!("Synonym group '{}' updated with {} terms", params.group_id, params.terms.len())
             })
             .to_string(),
         )]))
