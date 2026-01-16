@@ -392,6 +392,146 @@ Create alert-driven workflows:
 2. **High Utilization** → Capacity analysis → Upgrade recommendations
 3. **Trial Expiring** → Conversion reminder → Schedule customer call
 
+## Database Operations Workflows
+
+With the `--database-url` flag, you can work directly with Redis data through natural language.
+
+### Data Exploration
+
+> **You**: What keys are in my database?
+>
+> **AI**: *uses `database_scan` to list keys*
+>
+> Found 247 keys. Here's a sample:
+>
+> | Pattern | Count | Type |
+> |---------|-------|------|
+> | `user:*` | 150 | hash |
+> | `session:*` | 45 | string |
+> | `product:*` | 32 | JSON |
+> | `leaderboard:*` | 5 | sorted set |
+> | `events` | 1 | stream |
+
+### Leaderboard Management
+
+> **You**: Show me the top 10 players on the global leaderboard
+>
+> **AI**: *uses `database_zrevrange_withscores` with key="leaderboard:global"*
+>
+> | Rank | Player | Score |
+> |------|--------|-------|
+> | 1 | alice | 15,230 |
+> | 2 | bob | 14,100 |
+> | 3 | charlie | 12,890 |
+> | ... | ... | ... |
+
+> **You**: Add 500 points to alice's score
+>
+> **AI**: *uses `database_zincrby` with key="leaderboard:global", member="alice", increment=500*
+>
+> Updated alice's score: 15,230 → 15,730
+
+### Full-Text Search
+
+> **You**: Create a search index for my products
+>
+> **AI**: *uses `database_ft_create`*
+>
+> Created index `idx:products` with schema:
+> - `name` (TEXT, weight 2.0)
+> - `description` (TEXT)
+> - `category` (TAG)
+> - `price` (NUMERIC, sortable)
+
+> **You**: Search for wireless headphones under $100
+>
+> **AI**: *uses `database_ft_search` with query="@name:wireless headphones @price:[0 100]"*
+>
+> Found 3 products:
+>
+> 1. **Sony WH-1000XM4** - $89.99 - Premium noise-cancelling headphones
+> 2. **JBL Tune 500BT** - $49.99 - Wireless on-ear headphones
+> 3. **Anker Soundcore Life Q20** - $59.99 - Hybrid active noise cancelling
+
+### Stream Processing
+
+> **You**: Show me the last 10 orders from my orders stream
+>
+> **AI**: *uses `database_xrevrange` with key="orders", count=10*
+>
+> | ID | Time | Order | Status |
+> |----|------|-------|--------|
+> | 1705432100000-0 | 12:35:00 | ORD-789 | shipped |
+> | 1705431900000-0 | 12:31:40 | ORD-788 | processing |
+> | 1705431700000-0 | 12:28:20 | ORD-787 | completed |
+> | ... | ... | ... | ... |
+
+> **You**: What's the status of consumer group "order-processors"?
+>
+> **AI**: *uses `database_xinfo_groups` and `database_xpending`*
+>
+> **Consumer Group: order-processors**
+>
+> - Consumers: 3 active (worker-1, worker-2, worker-3)
+> - Pending entries: 5
+> - Last delivered: 1705432100000-0
+>
+> **Pending Messages:**
+> | Consumer | Pending | Idle Time |
+> |----------|---------|-----------|
+> | worker-1 | 2 | 5s |
+> | worker-2 | 3 | 12s |
+> | worker-3 | 0 | 1s |
+
+### JSON Document Operations
+
+> **You**: Get the user profile for user:123
+>
+> **AI**: *uses `database_json_get` with key="user:123"*
+>
+> ```json
+> {
+>   "name": "Alice Smith",
+>   "email": "alice@example.com",
+>   "preferences": {
+>     "theme": "dark",
+>     "notifications": true
+>   },
+>   "orders": ["ORD-100", "ORD-150", "ORD-200"]
+> }
+> ```
+
+> **You**: Add order ORD-250 to their orders array
+>
+> **AI**: *uses `database_json_arrappend` with path="$.orders", value="ORD-250"*
+>
+> Appended "ORD-250" to orders array. New length: 4 orders.
+
+### Time Series Analytics
+
+> **You**: What's the average CPU usage over the last hour?
+>
+> **AI**: *uses `database_ts_range` with aggregation="avg", bucket_duration=3600000*
+>
+> **CPU Metrics (Last Hour)**
+>
+> - Average: 42.3%
+> - Min: 12.1%
+> - Max: 87.5%
+> - Samples: 3,600
+
+### Bulk Operations with Pipeline
+
+> **You**: Add these 5 users to the active_users set and increment the user_count
+>
+> **AI**: *uses `database_pipeline` with atomic=true*
+>
+> Executed 6 commands atomically:
+> - SADD active_users user:1 user:2 user:3 user:4 user:5 → 5 added
+> - INCR user_count → 105
+>
+> All commands succeeded in 0.8ms (380x faster than individual calls).
+
 ## Next Steps
 
 - [Advanced Usage](advanced-usage.md) - More JMESPath patterns and functions
