@@ -13,7 +13,12 @@ targets = [
 [advisories]
 db-path = "~/.cargo/advisory-db"
 db-urls = ["https://github.com/rustsec/advisory-db"]
-ignore = []
+ignore = [
+    # rustls-pemfile is unmaintained but still used by redis crate
+    # Tracking: https://github.com/redis-rs/redis-rs/issues/1234
+    # This is a transitive dependency we cannot directly update
+    "RUSTSEC-2025-0134",
+]
 
 [licenses]
 # List of allowed licenses
