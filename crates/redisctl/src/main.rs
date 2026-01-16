@@ -318,7 +318,36 @@ async fn execute_mcp_command(cli: &Cli, mcp_cmd: &cli::McpCommands) -> Result<()
             println!("  enterprise_debuginfo_list   - List debug info tasks");
             println!("  enterprise_debuginfo_status - Get debug info task status");
             println!();
-            println!("Total: 55 tools (7 Cloud + 48 Enterprise)");
+            println!("Database Tools - Server Info (6):");
+            println!("  database_ping               - Ping the Redis server");
+            println!("  database_info               - Get server information (INFO)");
+            println!("  database_dbsize             - Get number of keys in database");
+            println!("  database_module_list        - List loaded modules");
+            println!("  database_client_list        - Get connected clients");
+            println!("  database_config_get         - Get configuration values");
+            println!();
+            println!("Database Tools - Key Operations (7):");
+            println!("  database_scan               - Scan keys matching a pattern");
+            println!("  database_type               - Get key type");
+            println!("  database_ttl                - Get key TTL in seconds");
+            println!("  database_exists             - Check if key exists");
+            println!("  database_memory_usage       - Get memory usage of a key");
+            println!("  database_get                - Get string key value");
+            println!("  database_execute            - Execute arbitrary Redis command");
+            println!();
+            println!("Database Tools - Data Structures (10):");
+            println!("  database_hgetall            - Get all hash fields");
+            println!("  database_hlen               - Get hash length");
+            println!("  database_lrange             - Get list range");
+            println!("  database_llen               - Get list length");
+            println!("  database_smembers           - Get set members");
+            println!("  database_scard              - Get set cardinality");
+            println!("  database_zrange             - Get sorted set range");
+            println!("  database_zcard              - Get sorted set cardinality");
+            println!("  database_slowlog            - Get slow log entries");
+            println!("  database_slowlog_len        - Get slow log length");
+            println!();
+            println!("Total: 78 tools (7 Cloud + 48 Enterprise + 23 Database)");
             Ok(())
         }
     }

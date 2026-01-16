@@ -19,6 +19,7 @@
 //! ```
 
 pub mod cloud_tools;
+pub mod database_tools;
 pub mod enterprise_tools;
 pub mod error;
 pub mod server;
