@@ -216,11 +216,23 @@ pub enum McpCommands {
 
     # Enable write operations (destructive operations allowed)
     redisctl mcp serve --allow-writes
+
+    # Connect to a specific Redis database
+    redisctl mcp serve --database-url redis://localhost:6379
+
+    # Full access with database connection
+    redisctl mcp serve --allow-writes --database-url redis://:password@localhost:6379
 ")]
     Serve {
         /// Allow write operations (create, update, delete). Default is read-only.
         #[arg(long)]
         allow_writes: bool,
+
+        /// Redis database URL for direct database operations.
+        /// Format: redis[s]://[[username:]password@]host[:port][/db]
+        /// If not specified, uses the default database profile from config.
+        #[arg(long, env = "REDIS_URL")]
+        database_url: Option<String>,
     },
 
     /// List available MCP tools

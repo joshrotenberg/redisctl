@@ -22,6 +22,8 @@ pub struct ServerConfig {
     pub profile: Option<String>,
     /// Whether the server is in read-only mode
     pub read_only: bool,
+    /// Optional database URL for direct connections (overrides profile)
+    pub database_url: Option<String>,
 }
 
 /// MCP server for Redis Cloud and Enterprise management
@@ -1873,15 +1875,21 @@ pub struct PubsubNumsubParam {
 
 impl RedisCtlMcp {
     /// Create a new MCP server instance
-    pub fn new(profile: Option<&str>, read_only: bool) -> anyhow::Result<Self> {
+    pub fn new(
+        profile: Option<&str>,
+        read_only: bool,
+        database_url: Option<&str>,
+    ) -> anyhow::Result<Self> {
         let config = Arc::new(ServerConfig {
             profile: profile.map(String::from),
             read_only,
+            database_url: database_url.map(String::from),
         });
 
         info!(
             profile = ?config.profile,
             read_only = config.read_only,
+            database_url = config.database_url.as_ref().map(|_| "[configured]"),
             "Initializing RedisCtlMcp server"
         );
 
@@ -1924,13 +1932,24 @@ impl RedisCtlMcp {
     }
 
     /// Initialize Database tools lazily
+    ///
+    /// If `database_url` is configured, connects directly using that URL.
+    /// Otherwise, uses the profile-based connection (falls back to default database profile).
     async fn get_database_tools(&self) -> Result<DatabaseTools, RmcpError> {
         let mut guard = self.database_tools.write().await;
         if guard.is_none() {
             debug!("Initializing Database tools");
-            let tools = DatabaseTools::new(self.config.profile.as_deref())
-                .await
-                .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+            let tools = if let Some(ref url) = self.config.database_url {
+                debug!("Using direct database URL connection");
+                DatabaseTools::new_from_url(url)
+                    .await
+                    .map_err(|e| RmcpError::internal_error(e.to_string(), None))?
+            } else {
+                debug!("Using profile-based database connection");
+                DatabaseTools::new(self.config.profile.as_deref())
+                    .await
+                    .map_err(|e| RmcpError::internal_error(e.to_string(), None))?
+            };
             *guard = Some(tools);
         }
         Ok(guard.clone().unwrap())
@@ -7450,19 +7469,34 @@ mod tests {
 
     #[test]
     fn test_server_creation() {
-        let server = RedisCtlMcp::new(None, true);
+        let server = RedisCtlMcp::new(None, true, None);
         assert!(server.is_ok());
         let server = server.unwrap();
         assert!(server.config().read_only);
         assert!(server.config().profile.is_none());
+        assert!(server.config().database_url.is_none());
     }
 
     #[test]
     fn test_server_with_profile() {
-        let server = RedisCtlMcp::new(Some("test-profile"), false);
+        let server = RedisCtlMcp::new(Some("test-profile"), false, None);
         assert!(server.is_ok());
         let server = server.unwrap();
         assert!(!server.config().read_only);
         assert_eq!(server.config().profile, Some("test-profile".to_string()));
+        assert!(server.config().database_url.is_none());
+    }
+
+    #[test]
+    fn test_server_with_database_url() {
+        let server = RedisCtlMcp::new(None, true, Some("redis://localhost:6379"));
+        assert!(server.is_ok());
+        let server = server.unwrap();
+        assert!(server.config().read_only);
+        assert!(server.config().profile.is_none());
+        assert_eq!(
+            server.config().database_url,
+            Some("redis://localhost:6379".to_string())
+        );
     }
 }

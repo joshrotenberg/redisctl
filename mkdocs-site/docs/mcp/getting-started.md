@@ -83,7 +83,11 @@ redisctl mcp tools
 
 ### Database Connection Options
 
-The `--database-url` flag enables 125+ database tools for direct Redis operations including all data types, Redis Stack modules (Search, JSON, TimeSeries, Bloom), Streams, and Pub/Sub.
+The MCP server provides 125+ database tools for direct Redis operations including all data types, Redis Stack modules (Search, JSON, TimeSeries, Bloom), Streams, and Pub/Sub. You can connect in two ways:
+
+#### Option 1: Direct URL (Recommended for Ad-Hoc Connections)
+
+Use `--database-url` for quick connections to any Redis database:
 
 ```bash
 # Local Redis
@@ -92,12 +96,50 @@ The `--database-url` flag enables 125+ database tools for direct Redis operation
 # With password
 --database-url redis://:mypassword@localhost:6379
 
+# With username and password
+--database-url redis://myuser:mypassword@localhost:6379
+
 # Redis Cloud/Enterprise database
 --database-url redis://default:password@redis-12345.cloud.redislabs.com:12345
 
-# TLS connection
+# TLS connection (use rediss:// scheme)
 --database-url rediss://default:password@redis-12345.cloud.redislabs.com:12345
+
+# Using environment variable
+REDIS_URL=redis://localhost:6379 redisctl mcp serve
 ```
+
+#### Option 2: Database Profile (Recommended for Regular Use)
+
+Configure a database profile in your redisctl config file (`~/.config/redisctl/config.toml` or `~/Library/Application Support/redisctl/config.toml` on macOS):
+
+```toml
+# Default database profile to use when none specified
+default_database_profile = "local-redis"
+
+[profiles.local-redis]
+deployment_type = "database"
+
+[profiles.local-redis.credentials.database]
+host = "localhost"
+port = 6379
+password = "mypassword"  # optional
+tls = false
+username = "default"     # optional, defaults to "default"
+db = 0                   # optional, defaults to 0
+```
+
+Then start the MCP server with that profile:
+
+```bash
+# Uses the default database profile from config
+redisctl mcp serve
+
+# Or specify a profile explicitly
+redisctl -p local-redis mcp serve
+```
+
+**Note**: If both `--database-url` and a database profile are available, the `--database-url` takes precedence.
 
 ## IDE Configuration
 
