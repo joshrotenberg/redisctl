@@ -71,8 +71,32 @@ redisctl -p my-profile mcp serve
 # Enable write operations (create, update, delete)
 redisctl -p my-profile mcp serve --allow-writes
 
+# Connect to a Redis database for direct data operations
+redisctl -p my-profile mcp serve --database-url redis://localhost:6379
+
+# Full access: Cloud/Enterprise management + database operations + writes
+redisctl -p my-profile mcp serve --allow-writes --database-url redis://localhost:6379
+
 # List available tools
 redisctl mcp tools
+```
+
+### Database Connection Options
+
+The `--database-url` flag enables 125+ database tools for direct Redis operations including all data types, Redis Stack modules (Search, JSON, TimeSeries, Bloom), Streams, and Pub/Sub.
+
+```bash
+# Local Redis
+--database-url redis://localhost:6379
+
+# With password
+--database-url redis://:mypassword@localhost:6379
+
+# Redis Cloud/Enterprise database
+--database-url redis://default:password@redis-12345.cloud.redislabs.com:12345
+
+# TLS connection
+--database-url rediss://default:password@redis-12345.cloud.redislabs.com:12345
 ```
 
 ## IDE Configuration
@@ -98,14 +122,18 @@ Choose your AI assistant below:
     }
     ```
 
-    For write operations:
+    For write operations with database access:
 
     ```json
     {
       "mcpServers": {
         "redisctl": {
           "command": "/path/to/redisctl",
-          "args": ["-p", "my-profile", "mcp", "serve", "--allow-writes"]
+          "args": [
+            "-p", "my-profile", "mcp", "serve",
+            "--allow-writes",
+            "--database-url", "redis://localhost:6379"
+          ]
         }
       }
     }
@@ -120,7 +148,11 @@ Choose your AI assistant below:
       "mcpServers": {
         "redisctl": {
           "command": "redisctl",
-          "args": ["-p", "my-profile", "mcp", "serve", "--allow-writes"]
+          "args": [
+            "-p", "my-profile", "mcp", "serve",
+            "--allow-writes",
+            "--database-url", "redis://localhost:6379"
+          ]
         }
       }
     }
@@ -139,7 +171,11 @@ Choose your AI assistant below:
       "mcpServers": {
         "redisctl": {
           "command": "/path/to/redisctl",
-          "args": ["-p", "my-profile", "mcp", "serve", "--allow-writes"]
+          "args": [
+            "-p", "my-profile", "mcp", "serve",
+            "--allow-writes",
+            "--database-url", "redis://localhost:6379"
+          ]
         }
       }
     }
@@ -160,7 +196,11 @@ Choose your AI assistant below:
       "mcpServers": {
         "redisctl": {
           "command": "/path/to/redisctl",
-          "args": ["-p", "my-profile", "mcp", "serve", "--allow-writes"]
+          "args": [
+            "-p", "my-profile", "mcp", "serve",
+            "--allow-writes",
+            "--database-url", "redis://localhost:6379"
+          ]
         }
       }
     }
@@ -182,7 +222,11 @@ Choose your AI assistant below:
             "transport": {
               "type": "stdio",
               "command": "/path/to/redisctl",
-              "args": ["-p", "my-profile", "mcp", "serve", "--allow-writes"]
+              "args": [
+                "-p", "my-profile", "mcp", "serve",
+                "--allow-writes",
+                "--database-url", "redis://localhost:6379"
+              ]
             }
           }
         ]
@@ -200,7 +244,11 @@ Choose your AI assistant below:
         "redisctl": {
           "command": {
             "path": "/path/to/redisctl",
-            "args": ["-p", "my-profile", "mcp", "serve", "--allow-writes"]
+            "args": [
+              "-p", "my-profile", "mcp", "serve",
+              "--allow-writes",
+              "--database-url", "redis://localhost:6379"
+            ]
           }
         }
       }
