@@ -1268,6 +1268,129 @@ impl DatabaseTools {
         cmd.query_async(&mut conn).await
     }
 
+    /// Get JSON values from multiple keys (JSON.MGET command).
+    pub async fn json_mget(&self, keys: &[String], path: &str) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("JSON.MGET");
+        for key in keys {
+            cmd.arg(key);
+        }
+        cmd.arg(path);
+        cmd.query_async(&mut conn).await
+    }
+
+    /// Get all keys from a JSON object (JSON.OBJKEYS command).
+    pub async fn json_objkeys(&self, key: &str, path: &str) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        redis::cmd("JSON.OBJKEYS")
+            .arg(key)
+            .arg(path)
+            .query_async(&mut conn)
+            .await
+    }
+
+    /// Get the number of keys in a JSON object (JSON.OBJLEN command).
+    pub async fn json_objlen(&self, key: &str, path: &str) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        redis::cmd("JSON.OBJLEN")
+            .arg(key)
+            .arg(path)
+            .query_async(&mut conn)
+            .await
+    }
+
+    /// Find the index of an element in a JSON array (JSON.ARRINDEX command).
+    pub async fn json_arrindex(
+        &self,
+        key: &str,
+        path: &str,
+        value: &str,
+        start: Option<i64>,
+        stop: Option<i64>,
+    ) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("JSON.ARRINDEX");
+        cmd.arg(key).arg(path).arg(value);
+        if let Some(s) = start {
+            cmd.arg(s);
+            if let Some(e) = stop {
+                cmd.arg(e);
+            }
+        }
+        cmd.query_async(&mut conn).await
+    }
+
+    /// Pop an element from a JSON array (JSON.ARRPOP command).
+    pub async fn json_arrpop(
+        &self,
+        key: &str,
+        path: &str,
+        index: Option<i64>,
+    ) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("JSON.ARRPOP");
+        cmd.arg(key).arg(path);
+        if let Some(i) = index {
+            cmd.arg(i);
+        }
+        cmd.query_async(&mut conn).await
+    }
+
+    /// Trim a JSON array to a specified range (JSON.ARRTRIM command).
+    pub async fn json_arrtrim(
+        &self,
+        key: &str,
+        path: &str,
+        start: i64,
+        stop: i64,
+    ) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        redis::cmd("JSON.ARRTRIM")
+            .arg(key)
+            .arg(path)
+            .arg(start)
+            .arg(stop)
+            .query_async(&mut conn)
+            .await
+    }
+
+    /// Insert elements into a JSON array (JSON.ARRINSERT command).
+    pub async fn json_arrinsert(
+        &self,
+        key: &str,
+        path: &str,
+        index: i64,
+        values: &[String],
+    ) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        let mut cmd = redis::cmd("JSON.ARRINSERT");
+        cmd.arg(key).arg(path).arg(index);
+        for value in values {
+            cmd.arg(value);
+        }
+        cmd.query_async(&mut conn).await
+    }
+
+    /// Clear container values or set numbers to 0 (JSON.CLEAR command).
+    pub async fn json_clear(&self, key: &str, path: &str) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        redis::cmd("JSON.CLEAR")
+            .arg(key)
+            .arg(path)
+            .query_async(&mut conn)
+            .await
+    }
+
+    /// Toggle a boolean value (JSON.TOGGLE command).
+    pub async fn json_toggle(&self, key: &str, path: &str) -> RedisResult<Value> {
+        let mut conn = self.conn.clone();
+        redis::cmd("JSON.TOGGLE")
+            .arg(key)
+            .arg(path)
+            .query_async(&mut conn)
+            .await
+    }
+
     // ========== REDISTIMESERIES OPERATIONS ==========
 
     /// Add a sample to a time series (TS.ADD command).
@@ -1691,6 +1814,8 @@ pub const WRITE_COMMANDS: &[&str] = &[
     "JSON.ARRINSERT",
     "JSON.ARRPOP",
     "JSON.ARRTRIM",
+    "JSON.CLEAR",
+    "JSON.TOGGLE",
     "TS.CREATE",
     "TS.DEL",
     "TS.ADD",

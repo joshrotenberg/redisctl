@@ -1300,6 +1300,139 @@ pub struct JsonNumIncrByParam {
     pub value: f64,
 }
 
+/// Parameters for JSON.MGET - get values from multiple keys at once.
+/// Essential for batch operations when you need the same path from many documents.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct JsonMgetParam {
+    /// Keys to get values from. All keys should contain JSON documents.
+    /// Non-existent keys return null in the result array.
+    pub keys: Vec<String>,
+
+    /// JSONPath to extract from each document. The same path is applied to all keys.
+    /// Use "$" for root, "$.field" for specific field, "$..field" for recursive.
+    pub path: String,
+}
+
+/// Parameters for JSON.OBJKEYS - get all keys from a JSON object.
+/// Useful for introspecting document structure and building dynamic UIs.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct JsonObjKeysParam {
+    /// Key name containing the JSON document
+    pub key: String,
+
+    /// JSONPath to the object (default: "$" for root). Must point to an object, not array/scalar.
+    #[serde(default = "default_json_path")]
+    pub path: String,
+}
+
+/// Parameters for JSON.OBJLEN - get the number of keys in a JSON object.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct JsonObjLenParam {
+    /// Key name containing the JSON document
+    pub key: String,
+
+    /// JSONPath to the object (default: "$" for root). Must point to an object.
+    #[serde(default = "default_json_path")]
+    pub path: String,
+}
+
+/// Parameters for JSON.ARRINDEX - find the index of an element in a JSON array.
+/// Returns -1 if not found. Useful for checking if a value exists in an array.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct JsonArrIndexParam {
+    /// Key name containing the JSON document
+    pub key: String,
+
+    /// JSONPath to the array
+    pub path: String,
+
+    /// JSON value to search for (must be valid JSON - use quotes for strings: "\"value\"")
+    pub value: String,
+
+    /// Start index for search (default: 0). Negative values count from end.
+    #[serde(default)]
+    pub start: Option<i64>,
+
+    /// Stop index for search (default: end of array). Exclusive. Negative values count from end.
+    #[serde(default)]
+    pub stop: Option<i64>,
+}
+
+/// Parameters for JSON.ARRPOP - remove and return element from a JSON array.
+/// Can pop from beginning, end, or specific index.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct JsonArrPopParam {
+    /// Key name containing the JSON document
+    pub key: String,
+
+    /// JSONPath to the array
+    #[serde(default = "default_json_path")]
+    pub path: String,
+
+    /// Index to pop from (default: -1, last element). Negative values count from end.
+    /// Use 0 for first element, -1 for last element.
+    #[serde(default)]
+    pub index: Option<i64>,
+}
+
+/// Parameters for JSON.ARRTRIM - trim a JSON array to a specified range.
+/// Elements outside the range are removed. Useful for maintaining bounded arrays.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct JsonArrTrimParam {
+    /// Key name containing the JSON document
+    pub key: String,
+
+    /// JSONPath to the array
+    pub path: String,
+
+    /// Start index (inclusive). Negative values count from end.
+    pub start: i64,
+
+    /// Stop index (inclusive). Negative values count from end. Use -1 for last element.
+    pub stop: i64,
+}
+
+/// Parameters for JSON.ARRINSERT - insert elements into a JSON array at a specific index.
+/// Existing elements are shifted to make room.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct JsonArrInsertParam {
+    /// Key name containing the JSON document
+    pub key: String,
+
+    /// JSONPath to the array
+    pub path: String,
+
+    /// Index to insert at. Elements at and after this index shift right.
+    /// Negative values count from end (-1 = before last element).
+    pub index: i64,
+
+    /// JSON values to insert (each must be valid JSON)
+    pub values: Vec<String>,
+}
+
+/// Parameters for JSON.CLEAR - clear arrays/objects or set numbers to 0.
+/// For arrays: becomes empty []. For objects: becomes empty {}. For numbers: becomes 0.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct JsonClearParam {
+    /// Key name containing the JSON document
+    pub key: String,
+
+    /// JSONPath to clear (default: "$" for root)
+    #[serde(default = "default_json_path")]
+    pub path: String,
+}
+
+/// Parameters for JSON.TOGGLE - toggle a boolean value.
+/// true becomes false, false becomes true. Error if path is not a boolean.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct JsonToggleParam {
+    /// Key name containing the JSON document
+    pub key: String,
+
+    /// JSONPath to the boolean value
+    pub path: String,
+}
+
 // ========== REDISTIMESERIES PARAMS ==========
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
@@ -5626,6 +5759,273 @@ impl RedisCtlMcp {
                 "key": params.key,
                 "path": params.path,
                 "length": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get JSON values from multiple keys at once (JSON.MGET command). Efficiently retrieves the same JSONPath from many documents in a single operation. Returns an array with values for each key (null for missing keys). Essential for batch reads - much faster than multiple JSON.GET calls."
+    )]
+    async fn database_json_mget(
+        &self,
+        Parameters(params): Parameters<JsonMgetParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(keys = ?params.keys, path = %params.path, "Tool called: database_json_mget");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .json_mget(&params.keys, &params.path)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "keys": params.keys,
+                "path": params.path,
+                "values": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get all keys from a JSON object (JSON.OBJKEYS command). Returns an array of field names at the specified path. Useful for introspecting document structure, building dynamic UIs, or validating schemas. Path must point to an object, not an array or scalar."
+    )]
+    async fn database_json_objkeys(
+        &self,
+        Parameters(params): Parameters<JsonObjKeysParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, path = %params.path, "Tool called: database_json_objkeys");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .json_objkeys(&params.key, &params.path)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "path": params.path,
+                "keys": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Get the number of keys in a JSON object (JSON.OBJLEN command). Returns the count of fields at the specified path. Useful for checking object size without retrieving all keys. Path must point to an object."
+    )]
+    async fn database_json_objlen(
+        &self,
+        Parameters(params): Parameters<JsonObjLenParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, path = %params.path, "Tool called: database_json_objlen");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .json_objlen(&params.key, &params.path)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "path": params.path,
+                "length": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Find the index of an element in a JSON array (JSON.ARRINDEX command). Returns the first index where the value is found, or -1 if not found. Supports optional start/stop indices to search within a range. The value must be valid JSON (use '\"string\"' for string values)."
+    )]
+    async fn database_json_arrindex(
+        &self,
+        Parameters(params): Parameters<JsonArrIndexParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, path = %params.path, value = %params.value, "Tool called: database_json_arrindex");
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .json_arrindex(
+                &params.key,
+                &params.path,
+                &params.value,
+                params.start,
+                params.stop,
+            )
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "path": params.path,
+                "value": params.value,
+                "index": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Remove and return an element from a JSON array (JSON.ARRPOP command). By default pops the last element (-1). Use index 0 for first element. Negative indices count from end. Returns the popped value as JSON. Useful for implementing queues or stacks."
+    )]
+    async fn database_json_arrpop(
+        &self,
+        Parameters(params): Parameters<JsonArrPopParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, path = %params.path, "Tool called: database_json_arrpop");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "JSON.ARRPOP is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .json_arrpop(&params.key, &params.path, params.index)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "path": params.path,
+                "popped": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Trim a JSON array to a specified range (JSON.ARRTRIM command). Keeps only elements from start to stop (inclusive). Elements outside this range are removed. Useful for maintaining bounded arrays like activity logs or recent items. Negative indices count from end."
+    )]
+    async fn database_json_arrtrim(
+        &self,
+        Parameters(params): Parameters<JsonArrTrimParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, path = %params.path, start = %params.start, stop = %params.stop, "Tool called: database_json_arrtrim");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "JSON.ARRTRIM is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .json_arrtrim(&params.key, &params.path, params.start, params.stop)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "path": params.path,
+                "new_length": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Insert elements into a JSON array at a specific index (JSON.ARRINSERT command). Existing elements at and after the index shift right to make room. Negative indices count from end. Returns the new array length. Useful for inserting at specific positions."
+    )]
+    async fn database_json_arrinsert(
+        &self,
+        Parameters(params): Parameters<JsonArrInsertParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, path = %params.path, index = %params.index, "Tool called: database_json_arrinsert");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "JSON.ARRINSERT is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .json_arrinsert(&params.key, &params.path, params.index, &params.values)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "path": params.path,
+                "new_length": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Clear container values or set numbers to 0 (JSON.CLEAR command). For arrays: becomes []. For objects: becomes {}. For numbers: becomes 0. Strings and booleans are unchanged. Returns the count of values cleared. Useful for resetting parts of a document."
+    )]
+    async fn database_json_clear(
+        &self,
+        Parameters(params): Parameters<JsonClearParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, path = %params.path, "Tool called: database_json_clear");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "JSON.CLEAR is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .json_clear(&params.key, &params.path)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "path": params.path,
+                "cleared_count": value_to_json(&result)
+            })
+            .to_string(),
+        )]))
+    }
+
+    #[tool(
+        description = "Toggle a boolean value (JSON.TOGGLE command). true becomes false, false becomes true. Returns the new boolean value(s). Errors if the path doesn't point to a boolean. Useful for feature flags and status toggles."
+    )]
+    async fn database_json_toggle(
+        &self,
+        Parameters(params): Parameters<JsonToggleParam>,
+    ) -> Result<CallToolResult, RmcpError> {
+        info!(key = %params.key, path = %params.path, "Tool called: database_json_toggle");
+
+        if self.config.read_only {
+            return Err(RmcpError::invalid_request(
+                "JSON.TOGGLE is a write operation. Server is in read-only mode. Use --allow-writes to enable write operations.",
+                None,
+            ));
+        }
+
+        let tools = self.get_database_tools().await?;
+        let result = tools
+            .json_toggle(&params.key, &params.path)
+            .await
+            .map_err(|e| RmcpError::internal_error(e.to_string(), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(
+            serde_json::json!({
+                "key": params.key,
+                "path": params.path,
+                "new_value": value_to_json(&result)
             })
             .to_string(),
         )]))
