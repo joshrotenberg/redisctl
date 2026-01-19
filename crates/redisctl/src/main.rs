@@ -225,7 +225,14 @@ fn format_command(command: &Commands) -> String {
         Commands::Mcp(cmd) => {
             use cli::McpCommands::*;
             match cmd {
-                Serve { allow_writes } => format!("mcp serve (allow_writes={})", allow_writes),
+                Serve {
+                    allow_writes,
+                    database_url,
+                } => format!(
+                    "mcp serve (allow_writes={}, database_url={:?})",
+                    allow_writes,
+                    database_url.as_ref().map(|_| "[redacted]")
+                ),
                 Tools => "mcp tools".to_string(),
             }
         }
@@ -237,10 +244,17 @@ async fn execute_mcp_command(cli: &Cli, mcp_cmd: &cli::McpCommands) -> Result<()
     use cli::McpCommands::*;
 
     match mcp_cmd {
-        Serve { allow_writes } => {
+        Serve {
+            allow_writes,
+            database_url,
+        } => {
             let read_only = !allow_writes;
-            debug!("Starting MCP server (read_only={})", read_only);
-            redisctl_mcp::serve_stdio(cli.profile.as_deref(), read_only)
+            debug!(
+                "Starting MCP server (read_only={}, database_url={:?})",
+                read_only,
+                database_url.as_ref().map(|_| "[redacted]")
+            );
+            redisctl_mcp::serve_stdio(cli.profile.as_deref(), read_only, database_url.as_deref())
                 .await
                 .map_err(|e| RedisCtlError::Configuration(e.to_string()))
         }

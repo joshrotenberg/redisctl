@@ -63,6 +63,21 @@ impl DatabaseTools {
         Ok(Self { conn })
     }
 
+    /// Create a new DatabaseTools instance from a direct Redis URL.
+    ///
+    /// URL format: redis[s]://[[username:]password@]host[:port][/db]
+    ///
+    /// This is useful for ad-hoc connections to Redis databases that aren't
+    /// configured as profiles, such as standalone Redis instances.
+    pub async fn new_from_url(url: &str) -> anyhow::Result<Self> {
+        debug!(url = %url.split('@').next_back().unwrap_or("[redacted]"), "Connecting to Redis via URL");
+
+        let client = redis::Client::open(url)?;
+        let conn = ConnectionManager::new(client).await?;
+
+        Ok(Self { conn })
+    }
+
     /// Execute an arbitrary Redis command.
     ///
     /// This is the generic execute function that can run any Redis command.
