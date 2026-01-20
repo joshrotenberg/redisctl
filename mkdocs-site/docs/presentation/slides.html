@@ -196,7 +196,7 @@ ENDPOINT=$(curl -s ... | jq -r '.publicEndpoint')
 
                 <!-- Architecture Overview -->
                 <section>
-                    <h2>Four Layers</h2>
+                    <h2>Five Layers</h2>
                     <ul>
                         <li>
                             <span class="redis-red">Profiles</span> - Manage
@@ -213,6 +213,10 @@ ENDPOINT=$(curl -s ... | jq -r '.publicEndpoint')
                         <li>
                             <span class="cloud-blue">Workflows</span> -
                             Multi-step orchestration
+                        </li>
+                        <li>
+                            <span style="color: #c678dd">AI Integration</span> -
+                            MCP server for AI assistants
                         </li>
                     </ul>
                 </section>
@@ -337,97 +341,23 @@ redisctl enterprise database update 1 --memory-size 2147483648</code></pre>
                         <span class="green">Human Commands:</span> JMESPath
                         Queries
                     </h2>
-                    <p>Filter, reshape, and transform any JSON output</p>
-                    <pre><code class="language-bash"># Count all subscriptions
-$ redisctl cloud subscription list -o json -q 'length(@)'
-192
-
-# Get unique cloud providers
-$ redisctl cloud subscription list -o json -q '[*].cloudDetails[0].provider | unique(@)'
-["AWS", "GCP"]
-
-# Aggregate statistics
+                    <p>
+                        Filter, reshape, and transform any JSON output with 300+
+                        extended functions
+                    </p>
+                    <pre><code class="language-bash"># Count and aggregate
 $ redisctl cloud subscription list -o json \
   -q '{total: length(@), size_gb: sum([*].cloudDetails[0].totalSizeInGb)}'
-{"total": 192, "size_gb": 23.56}</code></pre>
-                </section>
+{"total": 192, "size_gb": 23.56}
 
-                <!-- JMESPath Projections -->
-                <section>
-                    <h2><span class="green">JMESPath:</span> Projections</h2>
-                    <p>Reshape data with custom fields</p>
-                    <pre><code class="language-bash"># Extract and reshape subscription details
+# Reshape with projections
 $ redisctl cloud subscription list -o json \
-  -q '[*].{id: id, name: name, provider: cloudDetails[0].provider} | [:3]'</code></pre>
-                    <pre><code class="language-json">[
-  {"id": 2983053, "name": "time-series-demo", "provider": "AWS"},
-  {"id": 2988697, "name": "workshop-sub", "provider": "AWS"},
-  {"id": 3034552, "name": "test-db", "provider": "GCP"}
-]</code></pre>
-                </section>
+  -q '[*].{id: id, name: name, provider: cloudDetails[0].provider} | [:3]'
+[{"id": 2983053, "name": "time-series-demo", "provider": "AWS"}, ...]
 
-                <!-- JMESPath Pipelines -->
-                <section>
-                    <h2><span class="green">JMESPath:</span> Pipelines</h2>
-                    <p>Chain operations with <code>|</code></p>
-                    <pre><code class="language-bash"># Get unique regions -> sort -> count
-$ redisctl cloud subscription list -o json \
-  -q '[*].cloudDetails[0].regions[0].region | unique(@) | sort(@) | length(@)'
-7
-
-# Sort by name length (find shortest names)
-$ redisctl cloud subscription list -o json \
-  -q "[*].{name: name, len: length(name)} | sort_by(@, &len) | [:3]"</code></pre>
-                    <pre><code class="language-json">[{"len": 5, "name": "bgiri"}, {"len": 6, "name": "abhidb"}, {"len": 6, "name": "CM-rag"}]</code></pre>
-                </section>
-
-                <!-- JMESPath String Functions -->
-                <section>
-                    <h2>
-                        <span class="green">JMESPath:</span> String Functions
-                    </h2>
-                    <p>Transform and filter text</p>
-                    <pre><code class="language-bash"># Convert to uppercase
-$ redisctl cloud subscription list -o json -q 'map(&upper(name), [*]) | [:3]'
-["XW-TIME-SERIES-DEMO", "GABS-AWS-WORKSHOP-SUB", "BAMOS-TEST"]
-
-# Filter by pattern
-$ redisctl cloud subscription list -o json -q "[*].name | [?contains(@, 'demo')] | [:5]"
-["xw-time-series-demo", "gabs-redis-streams-demo", "anton-live-demo", ...]
-
-# Replace substrings
-$ redisctl cloud subscription list -o json \
-  -q "[*].{name: name, modified: replace(name, 'demo', 'DEMO')} | [:2]"
-[{"name": "xw-time-series-demo", "modified": "xw-time-series-DEMO"}, ...]</code></pre>
-                </section>
-
-                <!-- JMESPath Extended Functions -->
-                <section>
-                    <h2><span class="green">JMESPath:</span> 300+ Functions</h2>
-                    <div class="columns">
-                        <div class="column">
-                            <p class="tiny"><strong>Fuzzy Matching</strong></p>
-                            <pre><code class="language-bash"># Find similar names
--q "[*].{name: name, dist: levenshtein(name, 'prod')}"</code></pre>
-                            <p class="tiny"><strong>Math & Stats</strong></p>
-                            <pre><code class="language-bash"># Aggregate stats
--q '{max: max([*].size), avg: avg([*].size)}'</code></pre>
-                            <p class="tiny"><strong>Formatting</strong></p>
-                            <pre><code class="language-bash"># Human-readable bytes
--q '[*].{mem: format_bytes(memory_size)}'</code></pre>
-                        </div>
-                        <div class="column">
-                            <p class="tiny"><strong>DateTime</strong></p>
-                            <pre><code class="language-bash"># Current timestamp
--q '{checked: now()}'</code></pre>
-                            <p class="tiny"><strong>Type Checking</strong></p>
-                            <pre><code class="language-bash"># Inspect types
--q '[*].{name: name, type: type_of(id)}'</code></pre>
-                            <p class="tiny"><strong>Semver</strong></p>
-                            <pre><code class="language-bash"># Version comparison
--q 'semver_compare(version, `"7.4.0"`)'</code></pre>
-                        </div>
-                    </div>
+# Filter and transform
+$ redisctl cloud subscription list -o json -q "[*].name | [?contains(@, 'demo')]"
+["xw-time-series-demo", "gabs-redis-streams-demo", "anton-live-demo", ...]</code></pre>
                 </section>
 
                 <!-- Layer 4: Workflows - Cloud -->
@@ -493,6 +423,125 @@ Case: https://files.redis.com/f/abc123</code></pre>
                     <p class="small">
                         What used to take 30+ minutes now takes 30 seconds
                     </p>
+                </section>
+
+                <!-- Layer 5: MCP / AI Integration -->
+                <section class="center">
+                    <h2>
+                        <span class="redis-red">Layer 5:</span> AI Integration
+                    </h2>
+                    <h3>Model Context Protocol (MCP) Server</h3>
+                    <p style="margin-top: 1em">
+                        Let AI assistants manage your Redis infrastructure
+                    </p>
+                </section>
+
+                <!-- MCP: What It Is -->
+                <section>
+                    <h2>MCP: AI-Powered Redis Management</h2>
+                    <p>
+                        redisctl includes an MCP server with
+                        <strong>237 tools</strong> for AI assistants
+                    </p>
+                    <div class="columns">
+                        <div class="column">
+                            <h3 class="cloud-blue small">Cloud & Enterprise</h3>
+                            <ul class="small">
+                                <li>Subscriptions & databases</li>
+                                <li>Cluster management</li>
+                                <li>User & ACL management</li>
+                                <li>Monitoring & alerts</li>
+                            </ul>
+                        </div>
+                        <div class="column">
+                            <h3 class="green small">Direct Database Access</h3>
+                            <ul class="small">
+                                <li>All Redis data types</li>
+                                <li>RediSearch queries</li>
+                                <li>JSON, TimeSeries, Bloom</li>
+                                <li>Streams & Pub/Sub</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <pre><code class="language-bash"># Start the MCP server
+redisctl mcp serve --database-url redis://localhost:6379</code></pre>
+                </section>
+
+                <!-- MCP: Demo Conversation -->
+                <section>
+                    <h2>MCP in Action</h2>
+                    <p class="small">Natural language Redis management</p>
+                    <div
+                        style="
+                            background: #1e1e1e;
+                            padding: 0.8em;
+                            border-radius: 8px;
+                            font-size: 0.65em;
+                        "
+                    >
+                        <p>
+                            <strong style="color: #61afef">You:</strong> Show me
+                            all databases over 2GB in my production subscription
+                        </p>
+                        <p style="margin-top: 0.5em">
+                            <strong style="color: #98c379">Claude:</strong> I'll
+                            query your Cloud subscription...
+                        </p>
+                        <p style="color: #888; font-style: italic">
+                            → Uses cloud_databases_list tool
+                        </p>
+                        <p style="margin-top: 0.5em">
+                            Found 3 databases over 2GB: user-sessions (4GB),
+                            analytics-cache (8GB), search-index (3GB)
+                        </p>
+                        <hr style="border-color: #444; margin: 0.8em 0" />
+                        <p>
+                            <strong style="color: #61afef">You:</strong> Check
+                            memory usage on the search-index database
+                        </p>
+                        <p style="margin-top: 0.5em">
+                            <strong style="color: #98c379">Claude:</strong> Let
+                            me check the database info...
+                        </p>
+                        <p style="color: #888; font-style: italic">
+                            → Uses database_info tool
+                        </p>
+                        <p style="margin-top: 0.5em">
+                            Memory: 2.8GB used / 3GB limit (93%). 1.2M keys.
+                            Consider increasing memory or enabling eviction.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- MCP: IDE Integration -->
+                <section>
+                    <h2>Works with Your AI Tools</h2>
+                    <p>Configure once, use everywhere</p>
+                    <div class="columns">
+                        <div class="column">
+                            <ul>
+                                <li><strong>Claude Desktop</strong></li>
+                                <li><strong>Claude Code</strong></li>
+                                <li><strong>Cursor</strong></li>
+                            </ul>
+                        </div>
+                        <div class="column">
+                            <ul>
+                                <li><strong>Windsurf</strong></li>
+                                <li><strong>VS Code + Continue</strong></li>
+                                <li><strong>Zed</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <pre><code class="language-json">{
+  "mcpServers": {
+    "redisctl": {
+      "command": "redisctl",
+      "args": ["mcp", "serve", "--allow-writes",
+               "--database-url", "redis://localhost:6379"]
+    }
+  }
+}</code></pre>
                 </section>
 
                 <!-- Docker -->
