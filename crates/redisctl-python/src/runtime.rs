@@ -36,7 +36,7 @@ where
     T: Send,
 {
     // Release the GIL while we block on the future
-    py.allow_threads(|| get_runtime().block_on(future))
+    py.detach(|| get_runtime().block_on(future))
 }
 
 /// Convert a Rust future into a Python awaitable
@@ -45,7 +45,7 @@ where
 /// `await` on Rust futures.
 pub fn future_into_py<'py, F>(py: Python<'py>, future: F) -> PyResult<Bound<'py, PyAny>>
 where
-    F: std::future::Future<Output = PyResult<PyObject>> + Send + 'static,
+    F: std::future::Future<Output = PyResult<Py<PyAny>>> + Send + 'static,
 {
     pyo3_async_runtimes::tokio::future_into_py(py, future)
 }

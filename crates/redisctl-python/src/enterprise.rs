@@ -116,12 +116,12 @@ impl PyEnterpriseClient {
             let info = handler.info().await.into_py_result()?;
             let json = serde_json::to_value(&info)
                 .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
-            Python::with_gil(|py| Ok(json_to_py(py, json)))
+            Python::attach(|py| Ok(json_to_py(py, json)))
         })
     }
 
     /// Get cluster information (sync/blocking)
-    fn cluster_info_sync(&self, py: Python<'_>) -> PyResult<PyObject> {
+    fn cluster_info_sync(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         let client = self.client.clone();
         let result = block_on(py, async move {
             let handler = ClusterHandler::new((*client).clone());
@@ -138,12 +138,12 @@ impl PyEnterpriseClient {
         future_into_py(py, async move {
             let handler = ClusterHandler::new((*client).clone());
             let stats = handler.stats().await.into_py_result()?;
-            Python::with_gil(|py| Ok(json_to_py(py, stats)))
+            Python::attach(|py| Ok(json_to_py(py, stats)))
         })
     }
 
     /// Get cluster statistics (sync/blocking)
-    fn cluster_stats_sync(&self, py: Python<'_>) -> PyResult<PyObject> {
+    fn cluster_stats_sync(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         let client = self.client.clone();
         let result = block_on(py, async move {
             let handler = ClusterHandler::new((*client).clone());
@@ -160,12 +160,12 @@ impl PyEnterpriseClient {
             let license = handler.license().await.into_py_result()?;
             let json = serde_json::to_value(&license)
                 .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
-            Python::with_gil(|py| Ok(json_to_py(py, json)))
+            Python::attach(|py| Ok(json_to_py(py, json)))
         })
     }
 
     /// Get license information (sync/blocking)
-    fn license_sync(&self, py: Python<'_>) -> PyResult<PyObject> {
+    fn license_sync(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         let client = self.client.clone();
         let result = block_on(py, async move {
             let handler = ClusterHandler::new((*client).clone());
@@ -191,12 +191,12 @@ impl PyEnterpriseClient {
             let dbs = handler.list().await.into_py_result()?;
             let json = serde_json::to_value(&dbs)
                 .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
-            Python::with_gil(|py| Ok(json_to_py(py, json)))
+            Python::attach(|py| Ok(json_to_py(py, json)))
         })
     }
 
     /// List all databases (sync/blocking)
-    fn databases_sync(&self, py: Python<'_>) -> PyResult<PyObject> {
+    fn databases_sync(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         let client = self.client.clone();
         let result = block_on(py, async move {
             let handler = BdbHandler::new((*client).clone());
@@ -221,12 +221,12 @@ impl PyEnterpriseClient {
             let db = handler.get(uid).await.into_py_result()?;
             let json = serde_json::to_value(&db)
                 .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
-            Python::with_gil(|py| Ok(json_to_py(py, json)))
+            Python::attach(|py| Ok(json_to_py(py, json)))
         })
     }
 
     /// Get a specific database by ID (sync/blocking)
-    fn database_sync(&self, py: Python<'_>, uid: u32) -> PyResult<PyObject> {
+    fn database_sync(&self, py: Python<'_>, uid: u32) -> PyResult<Py<PyAny>> {
         let client = self.client.clone();
         let result = block_on(py, async move {
             let handler = BdbHandler::new((*client).clone());
@@ -244,12 +244,12 @@ impl PyEnterpriseClient {
             let handler = BdbHandler::new((*client).clone());
             let stats = handler.stats(uid).await.into_py_result()?;
             // stats is already a serde_json::Value
-            Python::with_gil(|py| Ok(json_to_py(py, stats)))
+            Python::attach(|py| Ok(json_to_py(py, stats)))
         })
     }
 
     /// Get database statistics (sync/blocking)
-    fn database_stats_sync(&self, py: Python<'_>, uid: u32) -> PyResult<PyObject> {
+    fn database_stats_sync(&self, py: Python<'_>, uid: u32) -> PyResult<Py<PyAny>> {
         let client = self.client.clone();
         let result = block_on(py, async move {
             let handler = BdbHandler::new((*client).clone());
@@ -273,12 +273,12 @@ impl PyEnterpriseClient {
             let nodes = handler.list().await.into_py_result()?;
             let json = serde_json::to_value(&nodes)
                 .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
-            Python::with_gil(|py| Ok(json_to_py(py, json)))
+            Python::attach(|py| Ok(json_to_py(py, json)))
         })
     }
 
     /// List all nodes (sync/blocking)
-    fn nodes_sync(&self, py: Python<'_>) -> PyResult<PyObject> {
+    fn nodes_sync(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         let client = self.client.clone();
         let result = block_on(py, async move {
             let handler = NodeHandler::new((*client).clone());
@@ -297,12 +297,12 @@ impl PyEnterpriseClient {
             let node = handler.get(uid).await.into_py_result()?;
             let json = serde_json::to_value(&node)
                 .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
-            Python::with_gil(|py| Ok(json_to_py(py, json)))
+            Python::attach(|py| Ok(json_to_py(py, json)))
         })
     }
 
     /// Get a specific node by ID (sync/blocking)
-    fn node_sync(&self, py: Python<'_>, uid: u32) -> PyResult<PyObject> {
+    fn node_sync(&self, py: Python<'_>, uid: u32) -> PyResult<Py<PyAny>> {
         let client = self.client.clone();
         let result = block_on(py, async move {
             let handler = NodeHandler::new((*client).clone());
@@ -321,12 +321,12 @@ impl PyEnterpriseClient {
             let stats = handler.stats(uid).await.into_py_result()?;
             let json = serde_json::to_value(&stats)
                 .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
-            Python::with_gil(|py| Ok(json_to_py(py, json)))
+            Python::attach(|py| Ok(json_to_py(py, json)))
         })
     }
 
     /// Get node statistics (sync/blocking)
-    fn node_stats_sync(&self, py: Python<'_>, uid: u32) -> PyResult<PyObject> {
+    fn node_stats_sync(&self, py: Python<'_>, uid: u32) -> PyResult<Py<PyAny>> {
         let client = self.client.clone();
         let result = block_on(py, async move {
             let handler = NodeHandler::new((*client).clone());
@@ -352,12 +352,12 @@ impl PyEnterpriseClient {
             let users = handler.list().await.into_py_result()?;
             let json = serde_json::to_value(&users)
                 .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
-            Python::with_gil(|py| Ok(json_to_py(py, json)))
+            Python::attach(|py| Ok(json_to_py(py, json)))
         })
     }
 
     /// List all users (sync/blocking)
-    fn users_sync(&self, py: Python<'_>) -> PyResult<PyObject> {
+    fn users_sync(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         let client = self.client.clone();
         let result = block_on(py, async move {
             let handler = UserHandler::new((*client).clone());
@@ -376,12 +376,12 @@ impl PyEnterpriseClient {
             let user = handler.get(uid).await.into_py_result()?;
             let json = serde_json::to_value(&user)
                 .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
-            Python::with_gil(|py| Ok(json_to_py(py, json)))
+            Python::attach(|py| Ok(json_to_py(py, json)))
         })
     }
 
     /// Get a specific user by ID (sync/blocking)
-    fn user_sync(&self, py: Python<'_>, uid: u32) -> PyResult<PyObject> {
+    fn user_sync(&self, py: Python<'_>, uid: u32) -> PyResult<Py<PyAny>> {
         let client = self.client.clone();
         let result = block_on(py, async move {
             let handler = UserHandler::new((*client).clone());
@@ -407,12 +407,12 @@ impl PyEnterpriseClient {
         let client = self.client.clone();
         future_into_py(py, async move {
             let result = client.get_raw(&path).await.into_py_result()?;
-            Python::with_gil(|py| Ok(json_to_py(py, result)))
+            Python::attach(|py| Ok(json_to_py(py, result)))
         })
     }
 
     /// Execute a raw GET request (sync/blocking)
-    fn get_sync(&self, py: Python<'_>, path: String) -> PyResult<PyObject> {
+    fn get_sync(&self, py: Python<'_>, path: String) -> PyResult<Py<PyAny>> {
         let client = self.client.clone();
         let result = block_on(
             py,
@@ -426,18 +426,18 @@ impl PyEnterpriseClient {
         &self,
         py: Python<'py>,
         path: String,
-        body: PyObject,
+        body: Py<PyAny>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let body_json = py_to_json(py, body)?;
         let client = self.client.clone();
         future_into_py(py, async move {
             let result = client.post_raw(&path, body_json).await.into_py_result()?;
-            Python::with_gil(|py| Ok(json_to_py(py, result)))
+            Python::attach(|py| Ok(json_to_py(py, result)))
         })
     }
 
     /// Execute a raw POST request (sync/blocking)
-    fn post_sync(&self, py: Python<'_>, path: String, body: PyObject) -> PyResult<PyObject> {
+    fn post_sync(&self, py: Python<'_>, path: String, body: Py<PyAny>) -> PyResult<Py<PyAny>> {
         let client = self.client.clone();
         let body_json = py_to_json(py, body)?;
         let result = block_on(py, async move {
@@ -451,18 +451,18 @@ impl PyEnterpriseClient {
         &self,
         py: Python<'py>,
         path: String,
-        body: PyObject,
+        body: Py<PyAny>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let body_json = py_to_json(py, body)?;
         let client = self.client.clone();
         future_into_py(py, async move {
             let result = client.put_raw(&path, body_json).await.into_py_result()?;
-            Python::with_gil(|py| Ok(json_to_py(py, result)))
+            Python::attach(|py| Ok(json_to_py(py, result)))
         })
     }
 
     /// Execute a raw PUT request (sync/blocking)
-    fn put_sync(&self, py: Python<'_>, path: String, body: PyObject) -> PyResult<PyObject> {
+    fn put_sync(&self, py: Python<'_>, path: String, body: Py<PyAny>) -> PyResult<Py<PyAny>> {
         let client = self.client.clone();
         let body_json = py_to_json(py, body)?;
         let result = block_on(py, async move {
@@ -476,12 +476,12 @@ impl PyEnterpriseClient {
         let client = self.client.clone();
         future_into_py(py, async move {
             let result = client.delete_raw(&path).await.into_py_result()?;
-            Python::with_gil(|py| Ok(json_to_py(py, result)))
+            Python::attach(|py| Ok(json_to_py(py, result)))
         })
     }
 
     /// Execute a raw DELETE request (sync/blocking)
-    fn delete_sync(&self, py: Python<'_>, path: String) -> PyResult<PyObject> {
+    fn delete_sync(&self, py: Python<'_>, path: String) -> PyResult<Py<PyAny>> {
         let client = self.client.clone();
         let result = block_on(py, async move {
             client.delete_raw(&path).await.into_py_result()

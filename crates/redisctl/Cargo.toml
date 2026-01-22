@@ -88,6 +88,9 @@ serial_test = "3.1"
 wiremock = { workspace = true }
 tokio = { workspace = true }
 serde_json = { workspace = true }
+redis = { workspace = true }
+# Using git until testing feature is released
+docker-wrapper = { git = "https://github.com/joshrotenberg/docker-wrapper", features = ["testing", "template-redis"] }
 
 [[bench]]
 name = "api_performance"

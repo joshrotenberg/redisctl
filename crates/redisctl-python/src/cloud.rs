@@ -143,7 +143,7 @@ impl PyCloudClient {
             let subs = handler.get_all_subscriptions().await.into_py_result()?;
             let json = serde_json::to_value(&subs)
                 .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
-            Python::with_gil(|py| Ok(json_to_py(py, json)))
+            Python::attach(|py| Ok(json_to_py(py, json)))
         })
     }
 
@@ -151,7 +151,7 @@ impl PyCloudClient {
     ///
     /// Returns:
     ///     List of subscription dictionaries
-    fn subscriptions_sync(&self, py: Python<'_>) -> PyResult<PyObject> {
+    fn subscriptions_sync(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         let client = self.client.clone();
         let result = block_on(py, async move {
             let handler = SubscriptionHandler::new((*client).clone());
@@ -183,12 +183,12 @@ impl PyCloudClient {
                 .into_py_result()?;
             let json = serde_json::to_value(&sub)
                 .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
-            Python::with_gil(|py| Ok(json_to_py(py, json)))
+            Python::attach(|py| Ok(json_to_py(py, json)))
         })
     }
 
     /// Get a specific subscription by ID (sync/blocking)
-    fn subscription_sync(&self, py: Python<'_>, subscription_id: i64) -> PyResult<PyObject> {
+    fn subscription_sync(&self, py: Python<'_>, subscription_id: i64) -> PyResult<Py<PyAny>> {
         let client = self.client.clone();
         let result = block_on(py, async move {
             let handler = SubscriptionHandler::new((*client).clone());
@@ -232,7 +232,7 @@ impl PyCloudClient {
                 .into_py_result()?;
             let json = serde_json::to_value(&dbs)
                 .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
-            Python::with_gil(|py| Ok(json_to_py(py, json)))
+            Python::attach(|py| Ok(json_to_py(py, json)))
         })
     }
 
@@ -244,7 +244,7 @@ impl PyCloudClient {
         subscription_id: i64,
         offset: Option<i32>,
         limit: Option<i32>,
-    ) -> PyResult<PyObject> {
+    ) -> PyResult<Py<PyAny>> {
         let client = self.client.clone();
         let result = block_on(py, async move {
             let handler = DatabaseHandler::new((*client).clone());
@@ -281,7 +281,7 @@ impl PyCloudClient {
                 .into_py_result()?;
             let json = serde_json::to_value(&db)
                 .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
-            Python::with_gil(|py| Ok(json_to_py(py, json)))
+            Python::attach(|py| Ok(json_to_py(py, json)))
         })
     }
 
@@ -291,7 +291,7 @@ impl PyCloudClient {
         py: Python<'_>,
         subscription_id: i64,
         database_id: i64,
-    ) -> PyResult<PyObject> {
+    ) -> PyResult<Py<PyAny>> {
         let client = self.client.clone();
         let result = block_on(py, async move {
             let handler = DatabaseHandler::new((*client).clone());
@@ -320,12 +320,12 @@ impl PyCloudClient {
         let client = self.client.clone();
         future_into_py(py, async move {
             let result = client.get_raw(&path).await.into_py_result()?;
-            Python::with_gil(|py| Ok(json_to_py(py, result)))
+            Python::attach(|py| Ok(json_to_py(py, result)))
         })
     }
 
     /// Execute a raw GET request (sync/blocking)
-    fn get_sync(&self, py: Python<'_>, path: String) -> PyResult<PyObject> {
+    fn get_sync(&self, py: Python<'_>, path: String) -> PyResult<Py<PyAny>> {
         let client = self.client.clone();
         let result = block_on(
             py,
@@ -346,18 +346,18 @@ impl PyCloudClient {
         &self,
         py: Python<'py>,
         path: String,
-        body: PyObject,
+        body: Py<PyAny>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let body_json = py_to_json(py, body)?;
         let client = self.client.clone();
         future_into_py(py, async move {
             let result = client.post_raw(&path, body_json).await.into_py_result()?;
-            Python::with_gil(|py| Ok(json_to_py(py, result)))
+            Python::attach(|py| Ok(json_to_py(py, result)))
         })
     }
 
     /// Execute a raw POST request (sync/blocking)
-    fn post_sync(&self, py: Python<'_>, path: String, body: PyObject) -> PyResult<PyObject> {
+    fn post_sync(&self, py: Python<'_>, path: String, body: Py<PyAny>) -> PyResult<Py<PyAny>> {
         let client = self.client.clone();
         let body_json = py_to_json(py, body)?;
         let result = block_on(py, async move {
@@ -371,18 +371,18 @@ impl PyCloudClient {
         &self,
         py: Python<'py>,
         path: String,
-        body: PyObject,
+        body: Py<PyAny>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let body_json = py_to_json(py, body)?;
         let client = self.client.clone();
         future_into_py(py, async move {
             let result = client.put_raw(&path, body_json).await.into_py_result()?;
-            Python::with_gil(|py| Ok(json_to_py(py, result)))
+            Python::attach(|py| Ok(json_to_py(py, result)))
         })
     }
 
     /// Execute a raw PUT request (sync/blocking)
-    fn put_sync(&self, py: Python<'_>, path: String, body: PyObject) -> PyResult<PyObject> {
+    fn put_sync(&self, py: Python<'_>, path: String, body: Py<PyAny>) -> PyResult<Py<PyAny>> {
         let client = self.client.clone();
         let body_json = py_to_json(py, body)?;
         let result = block_on(py, async move {
@@ -396,12 +396,12 @@ impl PyCloudClient {
         let client = self.client.clone();
         future_into_py(py, async move {
             let result = client.delete_raw(&path).await.into_py_result()?;
-            Python::with_gil(|py| Ok(json_to_py(py, result)))
+            Python::attach(|py| Ok(json_to_py(py, result)))
         })
     }
 
     /// Execute a raw DELETE request (sync/blocking)
-    fn delete_sync(&self, py: Python<'_>, path: String) -> PyResult<PyObject> {
+    fn delete_sync(&self, py: Python<'_>, path: String) -> PyResult<Py<PyAny>> {
         let client = self.client.clone();
         let result = block_on(py, async move {
             client.delete_raw(&path).await.into_py_result()
@@ -415,7 +415,7 @@ impl PyCloudClient {
 // -----------------------------------------------------------------------------
 
 /// Convert a serde_json::Value to a Python object
-pub fn json_to_py(py: Python<'_>, value: serde_json::Value) -> PyObject {
+pub fn json_to_py(py: Python<'_>, value: serde_json::Value) -> Py<PyAny> {
     match value {
         serde_json::Value::Null => py.None(),
         serde_json::Value::Bool(b) => b.into_pyobject(py).unwrap().to_owned().into_any().unbind(),
@@ -444,7 +444,7 @@ pub fn json_to_py(py: Python<'_>, value: serde_json::Value) -> PyObject {
 }
 
 /// Convert a Python object to serde_json::Value
-pub fn py_to_json(py: Python<'_>, obj: PyObject) -> PyResult<serde_json::Value> {
+pub fn py_to_json(py: Python<'_>, obj: Py<PyAny>) -> PyResult<serde_json::Value> {
     let obj = obj.bind(py);
 
     if obj.is_none() {
@@ -457,13 +457,13 @@ pub fn py_to_json(py: Python<'_>, obj: PyObject) -> PyResult<serde_json::Value> 
         Ok(serde_json::json!(f))
     } else if let Ok(s) = obj.extract::<String>() {
         Ok(serde_json::Value::String(s))
-    } else if let Ok(list) = obj.downcast::<PyList>() {
+    } else if let Ok(list) = obj.cast::<PyList>() {
         let arr: PyResult<Vec<serde_json::Value>> = list
             .iter()
             .map(|item| py_to_json(py, item.unbind()))
             .collect();
         Ok(serde_json::Value::Array(arr?))
-    } else if let Ok(dict) = obj.downcast::<PyDict>() {
+    } else if let Ok(dict) = obj.cast::<PyDict>() {
         let mut map = serde_json::Map::new();
         for (k, v) in dict.iter() {
             let key: String = k.extract()?;
