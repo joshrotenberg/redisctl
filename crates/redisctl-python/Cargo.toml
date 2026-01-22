@@ -13,6 +13,7 @@ categories = ["api-bindings", "database"]
 [lib]
 name = "redisctl"
 crate-type = ["cdylib"]
+doc = false
 
 [dependencies]
 # PyO3 for Python bindings
