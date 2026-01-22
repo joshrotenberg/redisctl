@@ -6,6 +6,7 @@ __version__: str
 
 class RedisCtlError(Exception):
     """Base exception for redisctl errors."""
+
     ...
 
 class CloudClient:
@@ -40,6 +41,17 @@ class CloudClient:
             api_secret: Redis Cloud API secret
             base_url: Optional base URL (default: https://api.redislabs.com/v1)
             timeout_secs: Optional timeout in seconds (default: 30)
+        """
+        ...
+
+    @staticmethod
+    def from_env() -> "CloudClient":
+        """Create client from environment variables.
+
+        Reads (tries each in order):
+            - API Key: REDIS_CLOUD_API_KEY, REDIS_CLOUD_ACCOUNT_KEY
+            - API Secret: REDIS_CLOUD_API_SECRET, REDIS_CLOUD_SECRET_KEY, REDIS_CLOUD_USER_KEY
+            - Base URL: REDIS_CLOUD_BASE_URL, REDIS_CLOUD_API_URL (optional)
         """
         ...
 
@@ -127,7 +139,6 @@ class CloudClient:
     def delete_sync(self, path: str) -> dict[str, Any]:
         """Execute a raw DELETE request (sync)."""
         ...
-
 
 class EnterpriseClient:
     """Redis Enterprise API client.
