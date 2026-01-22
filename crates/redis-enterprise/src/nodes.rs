@@ -192,7 +192,7 @@ impl NodeHandler {
 
     /// Get node stats
     pub async fn stats(&self, uid: u32) -> Result<NodeStats> {
-        self.client.get(&format!("/v1/nodes/{}/stats", uid)).await
+        self.client.get(&format!("/v1/nodes/stats/{}", uid)).await
     }
 
     /// Get node actions

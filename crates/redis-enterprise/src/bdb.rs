@@ -573,12 +573,12 @@ impl DatabaseHandler {
 
     /// Get database stats (BDB.STATS)
     pub async fn stats(&self, uid: u32) -> Result<Value> {
-        self.client.get(&format!("/v1/bdbs/{}/stats", uid)).await
+        self.client.get(&format!("/v1/bdbs/stats/{}", uid)).await
     }
 
     /// Get database metrics (BDB.METRICS)
     pub async fn metrics(&self, uid: u32) -> Result<Value> {
-        self.client.get(&format!("/v1/bdbs/{}/metrics", uid)).await
+        self.client.get(&format!("/v1/bdbs/metrics/{}", uid)).await
     }
 
     /// Export database (BDB.EXPORT)
