@@ -78,6 +78,56 @@ impl PyCloudClient {
         })
     }
 
+    /// Create client from environment variables
+    ///
+    /// Reads configuration from (tries each in order):
+    /// - API Key: REDIS_CLOUD_API_KEY, REDIS_CLOUD_ACCOUNT_KEY
+    /// - API Secret: REDIS_CLOUD_API_SECRET, REDIS_CLOUD_SECRET_KEY, REDIS_CLOUD_USER_KEY
+    /// - Base URL: REDIS_CLOUD_BASE_URL, REDIS_CLOUD_API_URL (optional)
+    ///
+    /// Returns:
+    ///     CloudClient instance
+    ///
+    /// Raises:
+    ///     ValueError: If required environment variables are missing
+    #[staticmethod]
+    fn from_env() -> PyResult<Self> {
+        // Try multiple env var names for API key (account key)
+        let api_key = std::env::var("REDIS_CLOUD_API_KEY")
+            .or_else(|_| std::env::var("REDIS_CLOUD_ACCOUNT_KEY"))
+            .map_err(|_| {
+                pyo3::exceptions::PyValueError::new_err(
+                    "API key not found. Set REDIS_CLOUD_API_KEY or REDIS_CLOUD_ACCOUNT_KEY",
+                )
+            })?;
+
+        // Try multiple env var names for API secret (user key)
+        let api_secret = std::env::var("REDIS_CLOUD_API_SECRET")
+            .or_else(|_| std::env::var("REDIS_CLOUD_SECRET_KEY"))
+            .or_else(|_| std::env::var("REDIS_CLOUD_USER_KEY"))
+            .map_err(|_| {
+                pyo3::exceptions::PyValueError::new_err(
+                    "API secret not found. Set REDIS_CLOUD_API_SECRET, REDIS_CLOUD_SECRET_KEY, or REDIS_CLOUD_USER_KEY",
+                )
+            })?;
+
+        let mut builder = CloudClient::builder()
+            .api_key(api_key)
+            .api_secret(api_secret);
+
+        // Try multiple env var names for base URL
+        if let Ok(base_url) =
+            std::env::var("REDIS_CLOUD_BASE_URL").or_else(|_| std::env::var("REDIS_CLOUD_API_URL"))
+        {
+            builder = builder.base_url(base_url);
+        }
+
+        let client = builder.build().into_py_result()?;
+        Ok(Self {
+            client: Arc::new(client),
+        })
+    }
+
     // -------------------------------------------------------------------------
     // Subscriptions API
     // -------------------------------------------------------------------------
