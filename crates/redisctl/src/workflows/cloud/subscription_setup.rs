@@ -301,9 +301,9 @@ impl Workflow for SubscriptionSetupWorkflow {
             }
 
             // Step 4: Get database details (database was created with subscription)
-            if !setup_args.skip_database && outputs.subscription_id.is_some() {
-                let subscription_id = outputs.subscription_id.unwrap();
-
+            if let Some(subscription_id) = outputs.subscription_id
+                && !setup_args.skip_database
+            {
                 // Database was created with the subscription, so just get its details
                 if setup_args.wait {
                     // Give it a moment for the database to be available
