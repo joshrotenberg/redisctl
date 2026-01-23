@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.4](https://github.com/redis-developer/redisctl/compare/redis-enterprise-v0.7.3...redis-enterprise-v0.7.4) - 2026-01-23
+
+### Added
+
+- Add Python bindings via PyO3 ([#578](https://github.com/redis-developer/redisctl/pull/578))
+
+### Fixed
+
+- use local README.md for crates to fix sdist build ([#580](https://github.com/redis-developer/redisctl/pull/580))
+
 ## [0.7.3](https://github.com/redis-developer/redisctl/compare/redis-enterprise-v0.7.2...redis-enterprise-v0.7.3) - 2026-01-12
 
 ### Added

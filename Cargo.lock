@@ -2800,7 +2800,7 @@ dependencies = [
 
 [[package]]
 name = "redis-cloud"
-version = "0.7.5"
+version = "0.7.6"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2824,7 +2824,7 @@ dependencies = [
 
 [[package]]
 name = "redis-enterprise"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -2852,7 +2852,7 @@ dependencies = [
 
 [[package]]
 name = "redisctl"
-version = "0.7.5"
+version = "0.7.6"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -2904,7 +2904,7 @@ dependencies = [
 
 [[package]]
 name = "redisctl-config"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "clap",
  "directories",
@@ -2919,7 +2919,7 @@ dependencies = [
 
 [[package]]
 name = "redisctl-mcp"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "anyhow",
  "async-trait",
