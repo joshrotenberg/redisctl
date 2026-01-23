@@ -6,6 +6,7 @@ members = [
     "crates/redis-enterprise",
     "crates/redisctl",
     "crates/redisctl-mcp",
+    "crates/redisctl-python",
 ]
 default-members = [
     "crates/redisctl-config",
@@ -13,6 +14,8 @@ default-members = [
     "crates/redis-enterprise",
     "crates/redisctl",
     "crates/redisctl-mcp",
+    # Note: redisctl-python is excluded from default members
+    # as it requires Python dev headers to build
 ]
 
 # External dependencies (not part of workspace)
