@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.8](https://github.com/redis-developer/redisctl/compare/redisctl-v0.7.7...redisctl-v0.7.8) - 2026-01-23
+
+### Added
+
+- add one-shot cost-report export command ([#595](https://github.com/redis-developer/redisctl/pull/595))
+
+### Fixed
+
+- handle rate limits (429) and processing-completed state in task polling ([#587](https://github.com/redis-developer/redisctl/pull/587))
+
 ## [0.7.7](https://github.com/redis-developer/redisctl/compare/redisctl-v0.7.6...redisctl-v0.7.7) - 2026-01-23
 
 ### Other

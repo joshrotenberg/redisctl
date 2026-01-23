@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3](https://github.com/redis-developer/redisctl/compare/redisctl-mcp-v0.1.2...redisctl-mcp-v0.1.3) - 2026-01-23
+
+### Other
+
+- updated the following local packages: redis-cloud
+
 ## [0.1.2](https://github.com/redis-developer/redisctl/compare/redisctl-mcp-v0.1.1...redisctl-mcp-v0.1.2) - 2026-01-23
 
 ### Added
