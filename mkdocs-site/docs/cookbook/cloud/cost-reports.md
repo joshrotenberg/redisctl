@@ -38,13 +38,13 @@ redisctl cloud cost-report generate \
   --start-date 2025-01-01 \
   --end-date 2025-01-31 \
   --wait \
-  -o json -q 'response.resourceId'
+  -o json -q 'response.resource.costReportId'
 ```
 
 This outputs just the ID:
 
 ```
-cost-report-xyz789
+0f99c2fd-0d8a-4345-8543-8adb4e02f4dd.csv
 ```
 
 ### Step 3: Download the Report
@@ -69,7 +69,7 @@ redisctl cloud cost-report download \
       --start-date 2025-01-01 \
       --end-date 2025-01-31 \
       --wait \
-      -o json -q 'response.resourceId') \
+      -o json -q 'response.resource.costReportId') \
   --file january-costs.csv
 ```
 
@@ -109,14 +109,36 @@ redisctl cloud cost-report download $REPORT_ID \
   -q '[?Region == `us-east-1`].{name: ResourceName, cost: BilledCost}'
 ```
 
-### Sum Costs by Region
+### Aggregate Costs by Resource Name
 
-Using extended JMESPath functions:
+Using extended JMESPath functions to group and sum:
 
 ```bash
 redisctl cloud cost-report download $REPORT_ID \
-  --format json \
-  -q 'group_by(@, &Region) | @.{region: [0].Region, total: sum([].BilledCost)}'
+  -q 'group_by(@, `ResourceName`) | items(@) | [*].{name: [0], total: sum([1][*].BilledCost)} | sort_by(@, &total) | reverse(@) | [:10]'
+```
+
+Output:
+```json
+[
+  {"name": "database-ck", "total": 159.98},
+  {"name": "jsd-aa-demo", "total": 32.69},
+  {"name": "Autoscaling Subscription", "total": 10.96}
+]
+```
+
+### Sum Costs by Region
+
+```bash
+redisctl cloud cost-report download $REPORT_ID \
+  -q 'group_by(@, `RegionName`) | items(@) | [*].{region: [0], total: sum([1][*].BilledCost)} | sort_by(@, &total) | reverse(@)'
+```
+
+### Sum Costs by Charge Category
+
+```bash
+redisctl cloud cost-report download $REPORT_ID \
+  -q 'group_by(@, `ChargeCategory`) | items(@) | [*].{category: [0], total: sum([1][*].BilledCost)}'
 ```
 
 ### Filter by Resource Type
@@ -173,7 +195,7 @@ REPORT_ID=$(redisctl cloud cost-report generate \
   --start-date "$START_DATE" \
   --end-date "$END_DATE" \
   --wait \
-  -o json -q 'response.resourceId')
+  -o json -q 'response.resource.costReportId')
 
 echo "Report ID: $REPORT_ID"
 
@@ -219,7 +241,7 @@ for team in "${TEAMS[@]}"; do
     --end-date "$END_DATE" \
     --tag "team:$team" \
     --wait \
-    -o json -q 'response.resourceId')
+    -o json -q 'response.resource.costReportId')
   
   redisctl cloud cost-report download "$REPORT_ID" \
     --file "costs-${team}-$(date +%Y-%m).csv"
@@ -250,7 +272,7 @@ REPORT_ID=$(redisctl cloud cost-report generate \
   --start-date 2025-01-01 \
   --end-date 2025-01-31 \
   --wait \
-  -o json -q 'response.resourceId')
+  -o json -q 'response.resource.costReportId')
 
 # Download and upload to Cloud Storage
 redisctl cloud cost-report download "$REPORT_ID" \

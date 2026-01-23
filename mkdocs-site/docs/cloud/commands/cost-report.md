@@ -109,14 +109,14 @@ redisctl cloud cost-report generate \
   --start-date 2025-01-01 \
   --end-date 2025-01-31 \
   --wait \
-  -o json -q 'response.resourceId'
+  -o json -q 'response.resource.costReportId'
 ```
 
 If you don't use `--wait`, check the task status:
 
 ```bash
 # Check task status to get the costReportId
-redisctl cloud task get <task-id> -o json -q 'response.resourceId'
+redisctl cloud task get <task-id> -o json -q 'response.resource.costReportId'
 ```
 
 ## Download a Cost Report
@@ -189,7 +189,7 @@ redisctl cloud cost-report generate \
   -o json > task-response.json
 
 # 2. Extract the cost report ID
-REPORT_ID=$(jq -r '.response.resourceId' task-response.json)
+REPORT_ID=$(jq -r '.response.resource.costReportId' task-response.json)
 
 # 3. Download the report
 redisctl cloud cost-report download "$REPORT_ID" \
@@ -211,7 +211,7 @@ for team in platform backend frontend; do
     --end-date 2025-01-31 \
     --tag team:$team \
     --wait \
-    -o json | jq -r '.response.resourceId' > /tmp/${team}-report-id.txt
+    -o json | jq -r '.response.resource.costReportId' > /tmp/${team}-report-id.txt
     
   REPORT_ID=$(cat /tmp/${team}-report-id.txt)
   redisctl cloud cost-report download "$REPORT_ID" \
