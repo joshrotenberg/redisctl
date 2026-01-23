@@ -1673,6 +1673,65 @@ NOTE: The costReportId is returned in the task response after the generation com
         #[arg(long = "file", short = 'f')]
         file: Option<String>,
     },
+
+    /// Generate and download a cost report in one step
+    #[command(after_help = "EXAMPLES:
+    # Export January 2025 costs to CSV file
+    redisctl cloud cost-report export --start-date 2025-01-01 --end-date 2025-01-31 \\
+      --file january-costs.csv
+
+    # Export as JSON to stdout
+    redisctl cloud cost-report export --start-date 2025-01-01 --end-date 2025-01-31 \\
+      --format json
+
+    # Export filtered by subscription and tags
+    redisctl cloud cost-report export --start-date 2025-01-01 --end-date 2025-01-31 \\
+      --subscription 12345 --tag team:platform --file team-costs.csv
+
+NOTE: This command combines 'generate --wait' and 'download' into a single operation.
+      The maximum date range is 40 days.
+")]
+    Export {
+        /// Start date (YYYY-MM-DD format)
+        #[arg(long)]
+        start_date: String,
+
+        /// End date (YYYY-MM-DD format, max 40 days from start)
+        #[arg(long)]
+        end_date: String,
+
+        /// Output format (csv or json)
+        #[arg(long, value_parser = ["csv", "json"], default_value = "csv")]
+        format: String,
+
+        /// Output file path (defaults to stdout if not specified)
+        #[arg(long = "file", short = 'f')]
+        file: Option<String>,
+
+        /// Filter by subscription IDs (can be specified multiple times)
+        #[arg(long = "subscription", value_name = "ID")]
+        subscription_ids: Vec<i32>,
+
+        /// Filter by database IDs (can be specified multiple times)
+        #[arg(long = "database", value_name = "ID")]
+        database_ids: Vec<i32>,
+
+        /// Filter by subscription type (pro or essentials)
+        #[arg(long, value_parser = ["pro", "essentials"])]
+        subscription_type: Option<String>,
+
+        /// Filter by regions (can be specified multiple times)
+        #[arg(long = "region", value_name = "REGION")]
+        regions: Vec<String>,
+
+        /// Filter by tags (format: key:value, can be specified multiple times)
+        #[arg(long = "tag", value_name = "KEY:VALUE")]
+        tags: Vec<String>,
+
+        /// Maximum time to wait for report generation in seconds
+        #[arg(long, default_value = "300")]
+        timeout: u64,
+    },
 }
 
 /// Enterprise workflow commands

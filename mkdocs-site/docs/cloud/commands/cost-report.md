@@ -21,8 +21,72 @@ Cost reports provide detailed billing data in the [FOCUS (FinOps Open Cost & Usa
 
 | Command | Description |
 |---------|-------------|
+| `export` | Generate and download in one step (recommended) |
 | `generate` | Generate a cost report for a date range |
 | `download` | Download a completed cost report |
+
+## Export a Cost Report (Recommended)
+
+The simplest way to get a cost report - combines generate, wait, and download into one command:
+
+```bash
+redisctl cloud cost-report export \
+  --start-date 2025-01-01 \
+  --end-date 2025-01-31 \
+  --file january-costs.csv
+```
+
+### Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--start-date` | Start date in YYYY-MM-DD format | required |
+| `--end-date` | End date in YYYY-MM-DD format (max 40 days from start) | required |
+| `--format` | Report format: `csv` or `json` | `csv` |
+| `--file`, `-f` | Output file path (defaults to stdout) | - |
+| `--timeout` | Maximum time to wait in seconds | 300 |
+| `--subscription` | Filter by subscription ID (repeatable) | - |
+| `--database` | Filter by database ID (repeatable) | - |
+| `--subscription-type` | Filter by type: `pro` or `essentials` | - |
+| `--region` | Filter by cloud region (repeatable) | - |
+| `--tag` | Filter by tag in `key:value` format (repeatable) | - |
+
+### Examples
+
+```bash
+# Export monthly CSV report to file
+redisctl cloud cost-report export \
+  --start-date 2025-01-01 \
+  --end-date 2025-01-31 \
+  --file january-costs.csv
+
+# Export as JSON for programmatic processing
+redisctl cloud cost-report export \
+  --start-date 2025-01-01 \
+  --end-date 2025-01-31 \
+  --format json \
+  --file january-costs.json
+
+# Export filtered by team tag
+redisctl cloud cost-report export \
+  --start-date 2025-01-01 \
+  --end-date 2025-01-31 \
+  --tag team:platform \
+  --file team-costs.csv
+
+# Export Pro subscriptions only
+redisctl cloud cost-report export \
+  --start-date 2025-01-01 \
+  --end-date 2025-01-31 \
+  --subscription-type pro \
+  --file pro-costs.csv
+
+# Export to stdout and pipe to analysis tools
+redisctl cloud cost-report export \
+  --start-date 2025-01-01 \
+  --end-date 2025-01-31 \
+  --format json | jq 'sum([].BilledCost)'
+```
 
 ## Generate a Cost Report
 
