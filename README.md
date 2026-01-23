@@ -407,6 +407,32 @@ redisctl enterprise cluster get -o json | jq
 redisctl enterprise cluster get -o yaml
 ```
 
+### Python Bindings
+
+Use the same APIs from Python via PyO3 bindings:
+
+```bash
+pip install redisctl
+```
+
+```python
+from redisctl import CloudClient, EnterpriseClient
+
+# Redis Cloud
+cloud = CloudClient.from_env()
+subs = cloud.subscriptions_sync()
+
+# Redis Enterprise
+enterprise = EnterpriseClient.from_env()
+dbs = enterprise.databases_sync()
+
+# Async support
+async def main():
+    subs = await cloud.subscriptions()
+```
+
+[**Python Documentation →**](https://redis-field-engineering.github.io/redisctl-docs/developer/python/)
+
 ---
 
 ## Documentation

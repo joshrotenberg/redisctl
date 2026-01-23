@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add Python bindings via PyO3 for `redis-cloud` and `redis-enterprise` libraries ([#578](https://github.com/redis-developer/redisctl/pull/578))
+  - `CloudClient` with async and sync methods for subscriptions and databases
+  - `EnterpriseClient` with async and sync methods for cluster, databases, nodes, and users
+  - Environment variable support via `from_env()` factory methods
+  - Raw API access for unsupported endpoints
+  - Available on PyPI: `pip install redisctl`
+
 ## [0.7.5](https://github.com/redis-developer/redisctl/compare/redisctl-v0.7.4...redisctl-v0.7.5) - 2026-01-14
 
 ### Added
