@@ -255,6 +255,7 @@ impl CloudClient {
                 403 => Err(RestError::Forbidden { message: text }),
                 404 => Err(RestError::NotFound { message: text }),
                 412 => Err(RestError::PreconditionFailed),
+                429 => Err(RestError::RateLimited { message: text }),
                 500 => Err(RestError::InternalServerError { message: text }),
                 503 => Err(RestError::ServiceUnavailable { message: text }),
                 _ => Err(RestError::ApiError {
@@ -305,6 +306,7 @@ impl CloudClient {
                 403 => Err(RestError::Forbidden { message: text }),
                 404 => Err(RestError::NotFound { message: text }),
                 412 => Err(RestError::PreconditionFailed),
+                429 => Err(RestError::RateLimited { message: text }),
                 500 => Err(RestError::InternalServerError { message: text }),
                 503 => Err(RestError::ServiceUnavailable { message: text }),
                 _ => Err(RestError::ApiError {
@@ -384,6 +386,7 @@ impl CloudClient {
                 403 => Err(RestError::Forbidden { message: text }),
                 404 => Err(RestError::NotFound { message: text }),
                 412 => Err(RestError::PreconditionFailed),
+                429 => Err(RestError::RateLimited { message: text }),
                 500 => Err(RestError::InternalServerError { message: text }),
                 503 => Err(RestError::ServiceUnavailable { message: text }),
                 _ => Err(RestError::ApiError {
@@ -451,6 +454,7 @@ impl CloudClient {
                 403 => Err(RestError::Forbidden { message: text }),
                 404 => Err(RestError::NotFound { message: text }),
                 412 => Err(RestError::PreconditionFailed),
+                429 => Err(RestError::RateLimited { message: text }),
                 500 => Err(RestError::InternalServerError { message: text }),
                 503 => Err(RestError::ServiceUnavailable { message: text }),
                 _ => Err(RestError::ApiError {

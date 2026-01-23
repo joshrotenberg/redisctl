@@ -103,6 +103,58 @@ mod tests {
         assert_eq!(err.to_string(), "API error (400): Bad request");
     }
 
+    #[test]
+    fn test_cloud_error_is_retryable() {
+        // Retryable errors
+        assert!(
+            CloudError::RateLimited {
+                message: "Too many requests".to_string()
+            }
+            .is_retryable()
+        );
+        assert!(
+            CloudError::ServiceUnavailable {
+                message: "Service down".to_string()
+            }
+            .is_retryable()
+        );
+        assert!(CloudError::Request("Connection reset".to_string()).is_retryable());
+        assert!(CloudError::ConnectionError("DNS failed".to_string()).is_retryable());
+
+        // Non-retryable errors
+        assert!(
+            !CloudError::BadRequest {
+                message: "Invalid input".to_string()
+            }
+            .is_retryable()
+        );
+        assert!(
+            !CloudError::AuthenticationFailed {
+                message: "Bad creds".to_string()
+            }
+            .is_retryable()
+        );
+        assert!(
+            !CloudError::Forbidden {
+                message: "No access".to_string()
+            }
+            .is_retryable()
+        );
+        assert!(
+            !CloudError::NotFound {
+                message: "Not found".to_string()
+            }
+            .is_retryable()
+        );
+        assert!(
+            !CloudError::ApiError {
+                code: 400,
+                message: "Error".to_string()
+            }
+            .is_retryable()
+        );
+    }
+
     #[tokio::test]
     async fn test_url_normalization() {
         // Test various combinations of base URLs and paths to ensure no double slashes

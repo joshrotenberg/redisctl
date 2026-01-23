@@ -363,6 +363,9 @@ pub enum CloudError {
     #[error("Precondition Failed (412): Feature flag for this flow is off")]
     PreconditionFailed,
 
+    #[error("Rate Limited (429): {message}")]
+    RateLimited { message: String },
+
     #[error("Internal Server Error (500): {message}")]
     InternalServerError { message: String },
 
@@ -377,6 +380,24 @@ pub enum CloudError {
 
     #[error("JSON error: {0}")]
     JsonError(String),
+}
+
+impl CloudError {
+    /// Returns true if this error is retryable.
+    ///
+    /// Retryable errors include:
+    /// - Rate limited (429)
+    /// - Service unavailable (503)
+    /// - Connection/request errors (may be transient network issues)
+    pub fn is_retryable(&self) -> bool {
+        matches!(
+            self,
+            CloudError::RateLimited { .. }
+                | CloudError::ServiceUnavailable { .. }
+                | CloudError::Request(_)
+                | CloudError::ConnectionError(_)
+        )
+    }
 }
 
 impl From<reqwest::Error> for CloudError {
