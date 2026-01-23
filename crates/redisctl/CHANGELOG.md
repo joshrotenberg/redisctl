@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.7](https://github.com/redis-developer/redisctl/compare/redisctl-v0.7.6...redisctl-v0.7.7) - 2026-01-23
+
+### Other
+
+- update Cargo.toml dependencies
+
 ## [0.7.6](https://github.com/redis-developer/redisctl/compare/redisctl-v0.7.5...redisctl-v0.7.6) - 2026-01-23
 
 ### Added
