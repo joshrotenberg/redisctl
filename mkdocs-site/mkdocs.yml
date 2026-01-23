@@ -125,6 +125,7 @@ nav:
           - Essentials Databases: cloud/commands/fixed-databases.md
           - Access Control: cloud/commands/access-control.md
           - Networking: cloud/commands/networking.md
+          - Cost Reports: cloud/commands/cost-report.md
           - Tasks: cloud/commands/tasks.md
       - Workflows: cloud/workflows.md
   - Redis Enterprise:
@@ -149,6 +150,7 @@ nav:
           - cookbook/cloud/vpc-peering.md
           - cookbook/cloud/acls.md
           - cookbook/cloud/backup-restore.md
+          - cookbook/cloud/cost-reports.md
       - Redis Enterprise:
           - cookbook/enterprise/create-database.md
           - cookbook/enterprise/support-package.md
