@@ -50,16 +50,9 @@ pub async fn handle_cost_report_command(
         }
         CloudCostReportCommands::Download {
             cost_report_id,
-            output,
+            file,
         } => {
-            download_cost_report(
-                conn_mgr,
-                profile_name,
-                cost_report_id,
-                output,
-                output_format,
-            )
-            .await
+            download_cost_report(conn_mgr, profile_name, cost_report_id, file, output_format).await
         }
     }
 }

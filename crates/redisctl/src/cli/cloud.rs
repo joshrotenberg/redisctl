@@ -1660,7 +1660,7 @@ NOTE: The maximum date range is 40 days. Cost reports are generated asynchronous
     redisctl cloud cost-report download cost-report-12345-abcdef
 
     # Download cost report to a file
-    redisctl cloud cost-report download cost-report-12345-abcdef --output report.csv
+    redisctl cloud cost-report download cost-report-12345-abcdef --file report.csv
 
 NOTE: The costReportId is returned in the task response after the generation completes.
       Check task status with 'redisctl cloud task get <task-id>' to get the costReportId.
@@ -1670,8 +1670,8 @@ NOTE: The costReportId is returned in the task response after the generation com
         cost_report_id: String,
 
         /// Output file path (defaults to stdout if not specified)
-        #[arg(long, short)]
-        output: Option<String>,
+        #[arg(long = "file", short = 'f')]
+        file: Option<String>,
     },
 }
 
