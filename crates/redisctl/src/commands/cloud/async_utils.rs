@@ -102,6 +102,11 @@ pub async fn handle_async_response(
     Ok(())
 }
 
+/// Configuration for retry behavior
+const MAX_RETRY_ATTEMPTS: u32 = 5;
+const INITIAL_RETRY_DELAY_MS: u64 = 1000;
+const MAX_RETRY_DELAY_MS: u64 = 30000;
+
 /// Wait for a task to complete
 pub async fn wait_for_task(
     conn_mgr: &ConnectionManager,
@@ -114,7 +119,7 @@ pub async fn wait_for_task(
     let client = conn_mgr.create_cloud_client(profile_name).await?;
     let start = Instant::now();
     let timeout = Duration::from_secs(timeout_secs);
-    let interval = Duration::from_secs(interval_secs);
+    let base_interval = Duration::from_secs(interval_secs);
 
     // Create progress bar
     let pb = ProgressBar::new_spinner();
@@ -125,8 +130,32 @@ pub async fn wait_for_task(
     );
     pb.set_message(format!("Waiting for task {}", task_id));
 
+    // Track consecutive retryable errors for backoff
+    let mut retry_count: u32 = 0;
+
     loop {
-        let task = fetch_task(&client, task_id).await?;
+        // Fetch task with retry logic for transient errors
+        let task = match fetch_task_with_retry(&client, task_id, &mut retry_count, &pb).await {
+            Ok(task) => {
+                retry_count = 0; // Reset on success
+                task
+            }
+            Err(e) => {
+                // Check timeout before giving up
+                if start.elapsed() > timeout {
+                    pb.finish_with_message(format!("Task {} timed out", task_id));
+                    return Err(RedisCtlError::Timeout {
+                        message: format!(
+                            "Task {} did not complete within {} seconds (last error: {})",
+                            task_id, timeout_secs, e
+                        ),
+                    });
+                }
+                // If we exhausted retries, return the error
+                return Err(e);
+            }
+        };
+
         let state = get_task_state(&task);
 
         pb.set_message(format!("Task {}: {}", task_id, format_task_state(&state)));
@@ -168,18 +197,45 @@ pub async fn wait_for_task(
         }
 
         // Wait before next poll
-        sleep(interval).await;
+        sleep(base_interval).await;
     }
 }
 
-/// Fetch task details from the API
-async fn fetch_task(client: &redis_cloud::CloudClient, task_id: &str) -> CliResult<Value> {
-    client
-        .get_raw(&format!("/tasks/{}", task_id))
-        .await
-        .map_err(|e| RedisCtlError::ApiError {
-            message: format!("Failed to fetch task {}: {}", task_id, e),
-        })
+/// Fetch task with retry logic for transient errors (429, 503, etc.)
+async fn fetch_task_with_retry(
+    client: &redis_cloud::CloudClient,
+    task_id: &str,
+    retry_count: &mut u32,
+    pb: &ProgressBar,
+) -> CliResult<Value> {
+    loop {
+        match client.get_raw(&format!("/tasks/{}", task_id)).await {
+            Ok(task) => return Ok(task),
+            Err(e) if e.is_retryable() && *retry_count < MAX_RETRY_ATTEMPTS => {
+                *retry_count += 1;
+
+                // Calculate exponential backoff with jitter
+                let base_delay = INITIAL_RETRY_DELAY_MS * 2u64.pow(*retry_count - 1);
+                let delay_ms = base_delay.min(MAX_RETRY_DELAY_MS);
+                let delay = Duration::from_millis(delay_ms);
+
+                pb.set_message(format!(
+                    "Rate limited, retrying in {}s ({}/{})",
+                    delay.as_secs(),
+                    retry_count,
+                    MAX_RETRY_ATTEMPTS
+                ));
+
+                sleep(delay).await;
+                // Continue to retry
+            }
+            Err(e) => {
+                return Err(RedisCtlError::ApiError {
+                    message: format!("Failed to fetch task {}: {}", task_id, e),
+                });
+            }
+        }
+    }
 }
 
 /// Get task state from task response
@@ -203,13 +259,16 @@ fn is_terminal_state(state: &str) -> bool {
             | "error"
             | "cancelled"
             | "processing-error"
+            | "processing-completed"
     )
 }
 
 /// Format task state for display
 fn format_task_state(state: &str) -> String {
     match state.to_lowercase().as_str() {
-        "completed" | "complete" | "succeeded" | "success" => format!("✓ {}", state),
+        "completed" | "complete" | "succeeded" | "success" | "processing-completed" => {
+            format!("✓ {}", state)
+        }
         "failed" | "error" | "processing-error" => format!("✗ {}", state),
         "cancelled" => format!("⊘ {}", state),
         "processing" | "running" | "in_progress" => format!("⟳ {}", state),
@@ -282,7 +341,9 @@ mod tests {
         assert!(is_terminal_state("complete"));
         assert!(is_terminal_state("succeeded"));
         assert!(is_terminal_state("success"));
+        assert!(is_terminal_state("processing-completed")); // cost report API uses this
         assert!(is_terminal_state("COMPLETED")); // case insensitive
+        assert!(is_terminal_state("PROCESSING-COMPLETED")); // case insensitive
     }
 
     #[test]
@@ -346,6 +407,10 @@ mod tests {
         assert_eq!(format_task_state("complete"), "✓ complete");
         assert_eq!(format_task_state("succeeded"), "✓ succeeded");
         assert_eq!(format_task_state("success"), "✓ success");
+        assert_eq!(
+            format_task_state("processing-completed"),
+            "✓ processing-completed"
+        );
         assert_eq!(format_task_state("COMPLETED"), "✓ COMPLETED");
     }
 
