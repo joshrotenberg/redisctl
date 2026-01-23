@@ -159,18 +159,22 @@ jobs:
           name: wheel-windows-x86_64
           path: target/wheels/*.whl
 
-  # Run Python tests
+  # Run Python tests across multiple versions
   test:
-    name: Python Tests
+    name: Python Tests (${{ matrix.python-version }})
     needs: build-linux
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
 
       - name: Download wheel
         uses: actions/download-artifact@v4
@@ -185,7 +189,7 @@ jobs:
 
       - name: Run tests
         working-directory: crates/redisctl-python
-        run: pytest tests/ -v || echo "No tests yet - skipping"
+        run: pytest tests/ -v
 
   # Status check
   python-ci-status:
