@@ -12,7 +12,35 @@ Step-by-step guides for generating and analyzing Redis Cloud billing data.
 redisctl cloud subscription list
 ```
 
-## Generate Your First Cost Report
+## Quick Start: Export a Cost Report
+
+The `export` command is the easiest way to get a cost report - it handles everything in one step:
+
+```bash
+redisctl cloud cost-report export \
+  --start-date 2025-01-01 \
+  --end-date 2025-01-31 \
+  --file january-costs.csv
+```
+
+That's it! The command will:
+1. Generate the report
+2. Wait for it to complete
+3. Download it to your file
+
+For JSON format:
+
+```bash
+redisctl cloud cost-report export \
+  --start-date 2025-01-01 \
+  --end-date 2025-01-31 \
+  --format json \
+  --file january-costs.json
+```
+
+## Manual Workflow (Generate + Download)
+
+If you need more control, you can use the separate `generate` and `download` commands.
 
 ### Step 1: Generate the Report
 
@@ -23,15 +51,11 @@ redisctl cloud cost-report generate \
   --wait
 ```
 
-The `--wait` flag tells redisctl to poll until the report is ready. You'll see output like:
-
-```
-Task abc123-def456 completed successfully
-```
+The `--wait` flag tells redisctl to poll until the report is ready.
 
 ### Step 2: Get the Cost Report ID
 
-The task response contains the `costReportId` needed for download:
+Extract the `costReportId` from the task response:
 
 ```bash
 redisctl cloud cost-report generate \
@@ -50,26 +74,7 @@ This outputs just the ID:
 ### Step 3: Download the Report
 
 ```bash
-# Save to file
-redisctl cloud cost-report download cost-report-xyz789 \
-  --file january-costs.csv
-
-# Or view directly
-redisctl cloud cost-report download cost-report-xyz789
-```
-
-## One-Liner: Generate and Download
-
-Combine steps using shell substitution:
-
-```bash
-# Generate, wait, extract ID, and download in one command
-redisctl cloud cost-report download \
-  $(redisctl cloud cost-report generate \
-      --start-date 2025-01-01 \
-      --end-date 2025-01-31 \
-      --wait \
-      -o json -q 'response.resource.costReportId') \
+redisctl cloud cost-report download 0f99c2fd-0d8a-4345-8543-8adb4e02f4dd.csv \
   --file january-costs.csv
 ```
 
@@ -190,19 +195,11 @@ OUTPUT_FILE="redis-cloud-costs-${MONTH_NAME}.csv"
 
 echo "Generating cost report for $START_DATE to $END_DATE..."
 
-# Generate and get report ID
-REPORT_ID=$(redisctl cloud cost-report generate \
+# Export the report (generate + wait + download in one step)
+redisctl cloud cost-report export \
   --start-date "$START_DATE" \
   --end-date "$END_DATE" \
-  --wait \
-  -o json -q 'response.resource.costReportId')
-
-echo "Report ID: $REPORT_ID"
-
-# Download
-redisctl cloud cost-report download "$REPORT_ID" --file "$OUTPUT_FILE"
-
-echo "Saved to $OUTPUT_FILE"
+  --file "$OUTPUT_FILE"
 
 # Print summary
 echo ""
@@ -236,22 +233,13 @@ TEAMS=("platform" "backend" "frontend" "data")
 for team in "${TEAMS[@]}"; do
   echo "Generating report for team: $team"
   
-  REPORT_ID=$(redisctl cloud cost-report generate \
+  OUTPUT_FILE="costs-${team}-$(date +%Y-%m).csv"
+  
+  redisctl cloud cost-report export \
     --start-date "$START_DATE" \
     --end-date "$END_DATE" \
     --tag "team:$team" \
-    --wait \
-    -o json -q 'response.resource.costReportId')
-  
-  redisctl cloud cost-report download "$REPORT_ID" \
-    --file "costs-${team}-$(date +%Y-%m).csv"
-  
-  # Show total for this team
-  TOTAL=$(redisctl cloud cost-report download "$REPORT_ID" \
-    --format json \
-    -q 'sum([].BilledCost)')
-  
-  echo "  Team $team total: \$${TOTAL}"
+    --file "$OUTPUT_FILE"
 done
 ```
 
@@ -267,15 +255,10 @@ done
 ### Option 2: Automated with gcloud
 
 ```bash
-# Generate report
-REPORT_ID=$(redisctl cloud cost-report generate \
+# Export report and upload to Cloud Storage
+redisctl cloud cost-report export \
   --start-date 2025-01-01 \
   --end-date 2025-01-31 \
-  --wait \
-  -o json -q 'response.resource.costReportId')
-
-# Download and upload to Cloud Storage
-redisctl cloud cost-report download "$REPORT_ID" \
   --file /tmp/costs.csv
 
 gsutil cp /tmp/costs.csv gs://your-bucket/cost-reports/
