@@ -1,6 +1,6 @@
 [package]
 name = "redisctl-mcp"
-version = "0.1.1"
+version = "0.1.2"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -17,9 +17,9 @@ rmcp = { version = "0.12", features = ["server", "transport-io", "macros"] }
 schemars = "0.8"
 
 # Internal crates
-redisctl-config = { version = "0.2.1", path = "../redisctl-config" }
-redis-cloud = { version = "0.7.5", path = "../redis-cloud" }
-redis-enterprise = { version = "0.7.3", path = "../redis-enterprise" }
+redisctl-config = { version = "0.2.2", path = "../redisctl-config" }
+redis-cloud = { version = "0.7.6", path = "../redis-cloud" }
+redis-enterprise = { version = "0.7.4", path = "../redis-enterprise" }
 
 # Redis client for direct database connections
 redis = { workspace = true }

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.6](https://github.com/redis-developer/redisctl/compare/redis-cloud-v0.7.5...redis-cloud-v0.7.6) - 2026-01-23
+
+### Fixed
+
+- use local README.md for crates to fix sdist build ([#580](https://github.com/redis-developer/redisctl/pull/580))
+
 ## [0.7.5](https://github.com/redis-developer/redisctl/compare/redis-cloud-v0.7.4...redis-cloud-v0.7.5) - 2025-12-17
 
 ### Fixed

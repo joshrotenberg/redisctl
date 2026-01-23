@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2](https://github.com/redis-developer/redisctl/compare/redisctl-config-v0.2.1...redisctl-config-v0.2.2) - 2026-01-23
+
+### Added
+
+- *(config)* add database profile type for direct Redis connections ([#566](https://github.com/redis-developer/redisctl/pull/566))
+
 ## [0.2.1](https://github.com/redis-developer/redisctl/compare/redisctl-config-v0.2.0...redisctl-config-v0.2.1) - 2025-12-16
 
 ### Other

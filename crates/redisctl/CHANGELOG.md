@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.6](https://github.com/redis-developer/redisctl/compare/redisctl-v0.7.5...redisctl-v0.7.6) - 2026-01-23
+
+### Added
+
+- Add Python bindings via PyO3 ([#578](https://github.com/redis-developer/redisctl/pull/578))
+- *(mcp)* add --database-url CLI option for direct Redis connections ([#574](https://github.com/redis-developer/redisctl/pull/574))
+- *(mcp)* add database tools for direct Redis connections ([#572](https://github.com/redis-developer/redisctl/pull/572))
+- *(config)* add database profile type for direct Redis connections ([#566](https://github.com/redis-developer/redisctl/pull/566))
+
+### Other
+
+- add Python bindings documentation and update CHANGELOGs ([#581](https://github.com/redis-developer/redisctl/pull/581))
+- add assert_cmd tests for MCP commands ([#570](https://github.com/redis-developer/redisctl/pull/570))
+
 ### Added
 
 - Add Python bindings via PyO3 for `redis-cloud` and `redis-enterprise` libraries ([#578](https://github.com/redis-developer/redisctl/pull/578))
